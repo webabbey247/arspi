@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { createWorkshop, getWorkshops, slugify } from "@/services/workshop.service"
+import { createWorkshop, getWorkshops, slugify, WorkshopCategory, WorkshopType } from "@/services/workshop.service"
 import { z } from "zod"
-import type { WorkshopType, WorkshopCategory } from "@prisma/client"
+// import type { WorkshopType, WorkshopCategory } from "@prisma/client"
 
 const createSchema = z.object({
   title:       z.string().min(2).max(255),
