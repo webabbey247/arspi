@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { getUsers } from "@/services/user.service"
-import { Role, UserStatus } from "@prisma/client"
+import { getUsers, Role, UserStatus } from "@/services/user.service"
+// import { Role, UserStatus } from "@prisma/client"
+
 
 /** GET /api/admin/users — list all users (admin only) */
 export async function GET(req: NextRequest) {
