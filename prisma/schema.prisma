@@ -1,0 +1,507 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+ provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  INSTRUCTOR
+  USER
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  DROPPED
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String?    // nullable — OAuth users have no password
+  role      Role       @default(USER)
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+
+  // NextAuth
+  accounts Account[]
+  sessions Session[]
+
+  // Onboarding flags
+  hasProfile   Boolean  @default(false)
+  hasInterests Boolean  @default(false)
+
+  // Email verification
+  emailVerified            Boolean   @default(false)
+  emailVerificationToken   String?   @unique
+  emailVerificationExpires DateTime?
+
+  // Relations
+  profile             Profile?
+  enrollments         Enrollment[]
+  lessonCompletions   LessonCompletion[]
+  certificates        Certificate[]
+  taughtCourses       Course[]           @relation("CourseInstructor")
+  passwordResetTokens PasswordResetToken[]
+  createdInsights     Insight[]              @relation("InsightAuthor")
+
+  @@map("users")
+}
+
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  firstName      String?
+  lastName       String?
+  avatar         String?  // URL to S3 / R2
+  bio            String?
+  phone          String?
+  country        String?
+  jobTitle       String?
+  organisation   String?
+  roleType       String?
+  interests      String[] @default([])
+  referralSource String?
+  emailOptIn     Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("profiles")
+}
+
+// NextAuth required models
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================================
+// COURSES
+// ============================================================
+
+
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  courses   Course[]
+  createdAt DateTime @default(now())
+
+  @@map("categories")
+}
+
+model Course {
+  id           String      @id @default(cuid())
+  title        String
+  slug         String      @unique
+  description  String
+  thumbnail    String?     // URL
+  price        Float       @default(0)
+  level        CourseLevel @default(BEGINNER)
+  published    Boolean     @default(false)
+  featured     Boolean     @default(false)
+
+  // Instructor
+  instructorId String
+  instructor   User        @relation("CourseInstructor", fields: [instructorId], references: [id])
+
+  // Category
+  categoryId   String?
+  category     Category?   @relation(fields: [categoryId], references: [id])
+
+  // Relations
+  sections     Section[]
+  enrollments  Enrollment[]
+  certificates Certificate[]
+  tags         CourseTag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("courses")
+}
+
+model CourseTag {
+  id       String @id @default(cuid())
+  name     String
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("course_tags")
+}
+
+
+// ============================================================
+// SECTIONS + LESSONS
+// ============================================================
+model Section {
+  id       String   @id @default(cuid())
+  title    String
+  order    Int
+  courseId String
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons  Lesson[]
+
+  @@map("sections")
+}
+
+model Lesson {
+  id          String           @id @default(cuid())
+  title       String
+  description String?
+  videoUrl    String?          // URL to hosted video
+  duration    Int?             // seconds
+  order       Int
+  isFree      Boolean          @default(false) // preview lessons
+  sectionId   String
+  section     Section          @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  completions LessonCompletion[]
+  resources   LessonResource[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("lessons")
+}
+
+model LessonResource {
+  id       String @id @default(cuid())
+  title    String
+  url      String
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@map("lesson_resources")
+}
+
+// ============================================================
+// ENROLLMENTS + PROGRESS
+// ============================================================
+model Enrollment {
+  id          String           @id @default(cuid())
+  userId      String
+  courseId    String
+  status      EnrollmentStatus @default(ACTIVE)
+  enrolledAt  DateTime         @default(now())
+  completedAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
+
+model LessonCompletion {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  completedAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("lesson_completions")
+}
+// ============================================================
+// CERTIFICATES
+// ============================================================
+model Certificate {
+  id         String    @id @default(cuid())
+  userId     String
+  courseId   String
+  verifyCode String    @unique @default(cuid())
+  pdfUrl     String?   // URL to generated PDF in S3 / R2
+  issuedAt   DateTime  @default(now())
+  expiresAt  DateTime? // null = never expires
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId]) // one cert per user per course
+  @@map("certificates")
+}
+
+// ============================================================
+// PAYMENTS
+// ============================================================
+
+model Payment {
+  id              String        @id @default(cuid())
+  userId          String
+  courseId        String
+  amount          Float
+  currency        String        @default("USD")
+  status          PaymentStatus @default(PENDING)
+  stripePaymentId String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("payments")
+}
+
+// ============================================================
+// WORKSHOPS
+// ============================================================
+
+enum WorkshopType {
+  FREE
+  PAID
+}
+
+enum WorkshopCategory {
+  SHORT_COURSE
+  WEBINAR
+  MASTERCLASS
+  CONFERENCE
+  WORKSHOP
+}
+
+enum WorkshopPaymentMethod {
+  CARD
+  PAYPAL
+  BANK_TRANSFER
+}
+
+enum WorkshopRegistrationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model Workshop {
+  id          String           @id @default(cuid())
+  title       String
+  slug        String           @unique
+  description String           @db.Text
+  type        WorkshopType     @default(FREE)
+  category    WorkshopCategory @default(WORKSHOP)
+  fee         Float            @default(0)
+  featured    Boolean          @default(false)
+  published   Boolean          @default(false)
+  date        DateTime?
+  time        String           @default("")
+  duration    String           @default("2 Hours")
+  facilitator String           @default("")
+  capacity    Int              @default(100)
+  registered  Int              @default(0)
+  coverImage  String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  registrations WorkshopRegistration[]
+
+  @@map("workshops")
+}
+
+model WorkshopRegistration {
+  id            String                     @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String
+  organisation  String?
+  workshopTitle String
+  workshopDate  String
+  workshopTime  String
+  fee           Float
+  paymentMethod           WorkshopPaymentMethod?
+  status                  WorkshopRegistrationStatus @default(PENDING)
+  stripeCheckoutSessionId String?                    @unique
+  createdAt               DateTime                   @default(now())
+
+  workshopId    String?
+  workshop      Workshop?                  @relation(fields: [workshopId], references: [id], onDelete: SetNull)
+
+  @@map("workshop_registrations")
+}
+
+// ============================================================
+// CONTACT
+// ============================================================
+
+// ============================================================
+// INSIGHTS
+// ============================================================
+
+model InsightCategory {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  insights  Insight[]
+  createdAt DateTime  @default(now())
+
+  @@map("insight_categories")
+}
+
+model Author {
+  id        String    @id @default(cuid())
+  name      String
+  jobTitle  String?
+  bio       String?
+  avatar    String?   // URL
+  insights  Insight[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("authors")
+}
+
+model Insight {
+  id          String           @id @default(cuid())
+  title       String
+  slug        String           @unique
+  excerpt     String
+  body        String           @db.Text
+  featured    Boolean          @default(false)
+  published   Boolean          @default(false)
+  readTime    String           @default("5 min read")
+  coverImage  String?
+  publishedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  authorId    String?
+  author      Author?          @relation(fields: [authorId], references: [id])
+
+  categoryId  String?
+  category    InsightCategory? @relation(fields: [categoryId], references: [id])
+
+  createdById String
+  createdBy   User             @relation("InsightAuthor", fields: [createdById], references: [id])
+
+  @@map("insights")
+}
+
+enum ContactSubject {
+  ENQUIRY
+  PROGRAMS
+  PARTNERSHIPS
+  MEDIA
+  OTHER
+}
+
+enum ContactStatus {
+  NEW
+  READ
+  REPLIED
+}
+
+model ContactMessage {
+  id          String         @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String
+  phone       String?
+  subject     ContactSubject @default(ENQUIRY)
+  message     String
+  status      ContactStatus  @default(NEW)
+  createdAt   DateTime       @default(now())
+
+  @@map("contact_messages")
+}
+
+// ============================================================
+// NEWSLETTER
+// ============================================================
+
+enum SubscriptionStatus {
+  ACTIVE
+  UNSUBSCRIBED
+}
+
+model NewsletterSubscriber {
+  id         String             @id @default(cuid())
+  email      String             @unique
+  status     SubscriptionStatus @default(ACTIVE)
+  subscribedAt DateTime         @default(now())
+  unsubscribedAt DateTime?
+
+  @@map("newsletter_subscribers")
+}
+
+// ============================================================
+// AUTH TOKENS
+// ============================================================
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
