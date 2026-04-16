@@ -118,6 +118,32 @@ const NAV: NavSection[] = [
     ],
   },
   {
+    section: "Communication",
+    role: "ADMIN",
+    items: [
+      {
+        label: "Enquiries",
+        href: "/administrator/enquiries",
+        icon: (
+          <>
+            <path d="M4 4h16v16H4z" />
+            <path d="m22 6-10 7L2 6" />
+          </>
+        ),
+      },
+      {
+        label: "Subscribers",
+        href: "/administrator/subscribers",
+        icon: (
+          <>
+            <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a2 2 0 0 0 3.4 0" />
+          </>
+        ),
+      },
+    ],
+  },
+  {
     section: "System",
     role: "ADMIN",
     items: [

@@ -337,6 +337,12 @@ export default function WorkshopDetailPage() {
             </div>
           </div>
 
+        
+        </div>
+
+        {/* Right — status + capacity */}
+        <div className="space-y-5">
+
           {/* Description */}
           <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
             <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
@@ -347,10 +353,6 @@ export default function WorkshopDetailPage() {
             </div>
           </div>
 
-        </div>
-
-        {/* Right — status + capacity */}
-        <div className="space-y-5">
 
           {/* Status card */}
           <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">

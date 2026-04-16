@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Calendar, ChevronRight, Clock, DollarSign, Monitor, TargetIcon, User, Users } from "lucide-react";
+import { Calendar, ChevronRight, Clock, DollarSign, Monitor, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import withLayout from "@/hooks/useLayout";
@@ -11,6 +11,7 @@ import WorkshopRegistrationForm from "@/components/forms/WorkshopRegistrationFor
 type PublicWorkshop = {
   id:          string
   title:       string
+  description: string
   type:        "FREE" | "PAID"
   category:    "SHORT_COURSE" | "WEBINAR" | "MASTERCLASS" | "CONFERENCE" | "WORKSHOP"
   fee:         number
@@ -62,11 +63,15 @@ const WorkshopPage = () => {
       .finally(() => setLoading(false))
   }, [])
 
-  const featured = workshops.find(w => w.featured) ?? workshops[0]
+  const now = new Date()
+  const upcoming = workshops.filter(w => !w.date || new Date(w.date) >= now)
+  const past     = workshops.filter(w => !!w.date && new Date(w.date) < now)
+
+  const featured = upcoming.find(w => w.featured) ?? upcoming[0]
 
   const visible = active === "all"
-    ? workshops
-    : workshops.filter(w => {
+    ? upcoming
+    : upcoming.filter(w => {
         if (active === "free") return w.type === "FREE"
         if (active === "paid") return w.type === "PAID"
         return w.category === active
@@ -142,122 +147,122 @@ const WorkshopPage = () => {
 
 
           {/* Featured event */}
-          {featured && (active === "all" || active === "free") && (
+          {featured && (
+            active === "all" ||
+            (active === "free" && featured.type === "FREE") ||
+            (active === "paid" && featured.type === "PAID") ||
+            active === featured.category
+          ) && (
             <div className="grid lg:grid-cols-[1fr_340px] border border-[#0474C4]/25 rounded-sm overflow-hidden mb-6 bg-sky-pale hover:border-[#0474C4]/50 transition-colors">
               <div className="p-8 md:p-10">
 
-  <div className="flex gap-2 mb-5 flex-wrap">
-                    <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]/10 text-[#0474C4] border-0 p-2">
-    Free</Badge>
-                    <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]/10 text-[#0474C4] border-0 p-2">
-    Featured</Badge>
-                    <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]/10 text-[#0474C4] border-0 p-2">
-    M&E</Badge>
-  </div>
+                <div className="flex gap-2 mb-5 flex-wrap">
+                  <Badge className={`font-body text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-2 ${featured.type === "FREE" ? "bg-emerald-600/10 text-emerald-600" : "bg-[#0474C4]/10 text-[#0474C4]"}`}>
+                    {featured.type === "FREE" ? "Free" : "Paid"}
+                  </Badge>
+                  <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]/10 text-[#0474C4] border-0 p-2">
+                    Featured
+                  </Badge>
+                  <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#FEF3C7] text-[#B45309] border-0 p-2">
+                    {CATEGORY_LABEL[featured.category] ?? featured.category}
+                  </Badge>
+                </div>
 
-  <h3 className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-ink mb-3">
-    Introduction to Monitoring &amp; Evaluation: Foundations &amp; Frameworks
-  </h3>
+                <h3 className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-ink mb-3">
+                  {featured.title}
+                </h3>
 
-  <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 mb-6 max-w-lg">
-    A free 3-hour introductory workshop covering the core principles of M&E —
-    what it is, why it matters, and how to build a basic results framework.
-    Ideal for development professionals, NGO staff, and researchers new to M&E.
-    Includes live Q&A and a downloadable starter toolkit.
-  </p>
+                <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 mb-6 max-w-lg">
+                  {featured.description}
+                </p>
 
-  <div className="flex gap-6 flex-wrap mb-6">
-    {[
-      { icon: Calendar, val: "Wednesday, 9 April 2026" },
-      { icon: Clock,    val: "10:00 AM – 1:00 PM UTC"  },
-      { icon: Monitor,  val: "Zoom · Live Online"       },
-      { icon: Users,    val: "200 Seats Available"      },
-    ].map(({ icon: Icon, val }) => (
-      <div key={val} className="flex items-center gap-2">
-        <Icon className="h-3.5 w-3.5 text-[#0474C4] shrink-0" />
-        <span className="font-body text-[0.875rem] tracking-[0em] leading-normal font-normal text-slate-500">
-          {val}
-        </span>
-      </div>
-    ))}
-  </div>
+                <div className="flex gap-6 flex-wrap mb-6">
+                  {[
+                    { icon: Calendar, val: fmtDate(featured.date) },
+                    { icon: Clock,    val: featured.time           },
+                    { icon: Monitor,  val: "Zoom · Live Online"    },
+                    { icon: Users,    val: `${featured.capacity} Seats Available` },
+                  ].map(({ icon: Icon, val }) => (
+                    <div key={val} className="flex items-center gap-2">
+                      <Icon className="h-3.5 w-3.5 text-[#0474C4] shrink-0" />
+                      <span className="font-body text-[0.875rem] tracking-[0em] leading-normal font-normal text-slate-500">
+                        {val}
+                      </span>
+                    </div>
+                  ))}
+                </div>
 
-  <div className="flex gap-3 flex-wrap">
-    <Button
-    className="h-12 rounded-[32px] py-2.5 px-5 font-body text-[0.875rem] tracking-[0.02em] font-medium text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f]"
-      onClick={() => featured && openModal(featured)}
-    >
-      Register Free <ChevronRight className="h-4 w-4" />{" "}
-    </Button>
-    <Button
-      variant="outline"
-    className="h-12 rounded-[32px] py-2.5 px-5 font-body text-[0.875rem] tracking-[0.02em] font-medium text-[#0474C4] hover:text-white bg-white border hover:border-none border-[#0474C4] hover:bg-[#06457f]"
-    >
-      Add to Calendar
-    </Button>
-  </div>
+                <div className="flex gap-3 flex-wrap">
+                  <Button
+                    className="h-12 rounded-[32px] py-2.5 px-5 font-body text-[0.875rem] tracking-[0.02em] font-medium text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f]"
+                    onClick={() => featured && openModal(featured)}
+                  >
+                    {featured.type === "FREE" ? "Register Free" : "Enrol Now"} <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-12 rounded-[32px] py-2.5 px-5 font-body text-[0.875rem] tracking-[0.02em] font-medium text-[#0474C4] hover:text-white bg-white border hover:border-none border-[#0474C4] hover:bg-[#06457f]"
+                  >
+                    Add to Calendar
+                  </Button>
+                </div>
 
-</div>
+              </div>
               {/* Right panel */}
-             <div className="bg-[#262b40] p-8 flex flex-col">
-  <div className="font-heading text-[3rem] tracking-[-0.02em] leading-[1.1] font-bold text-[#A8C4EC]">
-    09
-  </div>
+              <div className="bg-[#262b40] p-8 flex flex-col">
+                <div className="font-heading text-[3rem] tracking-[-0.02em] leading-[1.1] font-bold text-[#A8C4EC]">
+                  {featured.date ? new Date(featured.date).getDate().toString().padStart(2, "0") : "—"}
+                </div>
 
-  <div className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white/35 mb-6">
-    April 2026
-  </div>
+                <div className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white/35 mb-6">
+                  {featured.date
+                    ? new Date(featured.date).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
+                    : "Date TBA"}
+                </div>
 
-  <div className="flex flex-col gap-3 mb-6 flex-1">
-    {[
-      { icon: Clock,      label: "Duration",    value: "3 Hours"        },
-      { icon: User,       label: "Facilitator", value: "Dr. Rachel Osei"},
-      { icon: TargetIcon, label: "Level",       value: "Beginner"       },
-      { icon: DollarSign, label: "Fee",         value: "Free"           },
-    ].map(({ icon: Icon, label, value }) => (
-      <div key={label} className="flex items-start gap-3">
-        <div className="w-7 h-7 rounded-md bg-[#0474C4]/8 border border-[#0474C4]/15 flex items-center justify-center shrink-0 mt-0.5">
-          <Icon className="h-3 w-3 text-[#0474C4]" />
-        </div>
-        <div className="flex flex-col">
-          <span className="font-body text-[0.6875rem] tracking-[0.05em] font-medium text-white/35">
-            {label}
-          </span>
-          <span className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-white/80">
-            {value}
-          </span>
-        </div>
-      </div>
-    ))}
-  </div>
+                <div className="flex flex-col gap-3 mb-6 flex-1">
+                  {[
+                    { icon: Clock,      label: "Duration",    value: featured.duration    },
+                    { icon: User,       label: "Facilitator", value: featured.facilitator },
+                    { icon: DollarSign, label: "Fee",         value: featured.type === "FREE" ? "Free" : `$${featured.fee}` },
+                  ].map(({ icon: Icon, label, value }) => (
+                    <div key={label} className="flex items-start gap-3">
+                      <div className="w-7 h-7 rounded-md bg-[#0474C4]/8 border border-[#0474C4]/15 flex items-center justify-center shrink-0 mt-0.5">
+                        <Icon className="h-3 w-3 text-[#0474C4]" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-body text-[0.6875rem] tracking-[0.05em] font-medium text-white/35">
+                          {label}
+                        </span>
+                        <span className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-white/80">
+                          {value}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-  <div className="mb-4">
-    <div className="flex justify-between mb-1.5">
-      {/* Label — DM Sans, 12px, +0.07em, font-medium, uppercase */}
-      <span className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white/35">
-        Registered
-      </span>
-      <span className="font-body text-[0.75rem] tracking-[0.07em] font-medium text-[#0474C4]">
-        62%
-      </span>
-    </div>
-    <div className="h-1 bg-white/8 rounded-full">
-      <div className="h-full bg-[#0474C4] rounded-full" style={{ width: "62%" }} />
-    </div>
-    {/* Small muted — DM Sans, 12px, 0em, lh 1.5 */}
-    <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-white/25 mt-1">
-      124 of 200 seats registered
-    </div>
-  </div>
+                <div className="mb-4">
+                  <div className="flex justify-between mb-1.5">
+                    <span className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white/35">
+                      Registered
+                    </span>
+                    <span className="font-body text-[0.75rem] tracking-[0.07em] font-medium text-[#0474C4]">
+                      {featured.capacity > 0 ? Math.round((featured.registered / featured.capacity) * 100) : 0}%
+                    </span>
+                  </div>
+                  <div className="h-1 bg-white/8 rounded-full">
+                    <div
+                      className="h-full bg-[#0474C4] rounded-full"
+                      style={{ width: `${featured.capacity > 0 ? Math.round((featured.registered / featured.capacity) * 100) : 0}%` }}
+                    />
+                  </div>
+                  <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-white/25 mt-1">
+                    {featured.registered} of {featured.capacity} seats registered
+                  </div>
+                </div>
 
-  <Button
-    className="h-12 rounded-[32px] py-2.5 px-5 font-body text-[0.875rem] tracking-[0.02em] font-medium text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f]"
-    onClick={() => featured && openModal(featured)}
-  >
-    Register Free <ChevronRight className="h-4 w-4" />
-  </Button>
-
-</div>
+              </div>
             </div>
           )}
 
@@ -327,50 +332,47 @@ const WorkshopPage = () => {
       </section>
 
       {/* Past events */}
-<section className="bg-[#EDF2FB] px-8 md:px-16 py-16 w-full">
-  <div className="max-w-350 mx-auto flex flex-col gap-12 w-full">
+      {past.length > 0 && (
+        <section className="bg-[#EDF2FB] px-8 md:px-16 py-16 w-full">
+          <div className="max-w-350 mx-auto flex flex-col gap-12 w-full">
 
-    <div className="flex flex-col gap-2">
-      <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3]">
-        Archive
-      </p>
-<h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
-  Past Workshops
-</h2>
+            <div className="flex flex-col gap-2">
+              <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3]">
+                Archive
+              </p>
+              <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
+                Past Workshops
+              </h2>
+              <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-[#637AA3]">
+                Recordings are available for most past events.{" "}
+                <Link href="#" className="text-[#0474C4] hover:text-ink transition-colors">
+                  Access the library →
+                </Link>
+              </p>
+            </div>
 
-      <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-[#637AA3]">
-        Recordings are available for most past events.{" "}
-        <Link href="#" className="text-[#0474C4] hover:text-ink transition-colors">
-          Access the library →
-        </Link>
-      </p>
-    </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {past.map((p) => (
+                <div
+                  key={p.id}
+                  className="bg-white border border-[#0474C4]/22 rounded-sm p-4 opacity-70 hover:opacity-100 transition-opacity"
+                >
+                  <div className="font-body text-[0.75rem] tracking-[0.05em] font-medium text-slate-400 mb-1.5">
+                    {fmtDate(p.date)}
+                  </div>
+                  <div className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-ink mb-2">
+                    {p.title}
+                  </div>
+                  <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400">
+                    {p.type === "FREE" ? "Free" : "Paid"} · {CATEGORY_LABEL[p.category] ?? p.category} · {p.duration}
+                  </div>
+                </div>
+              ))}
+            </div>
 
-    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {[
-        { date: "January 2026",  title: "Research Ethics & Responsible Scholarship",          tag: "Free · Webinar · 3 hrs"       },
-        { date: "February 2026", title: "Introduction to Quantitative Data Analysis",         tag: "Paid · Boot Camp · 2 days"    },
-        { date: "February 2026", title: "Grant Writing for Development Professionals",        tag: "Paid · Masterclass · 4 hrs"   },
-        { date: "March 2026",    title: "Academic Writing: Structuring a Journal Article",    tag: "Free · Webinar · 90 min"      },
-      ].map((p) => (
-        <div
-          key={p.title}
-          className="bg-white border border-[#0474C4]/22 rounded-sm p-4 opacity-70 hover:opacity-100 transition-opacity"
-        >          <div className="font-body text-[0.75rem] tracking-[0.05em] font-medium text-slate-400 mb-1.5">
-            {p.date}
           </div>
-          <div className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-ink mb-2">
-            {p.title}
-          </div>
-          <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400">
-            {p.tag}
-          </div>
-        </div>
-      ))}
-    </div>
-
-  </div>
-</section>
+        </section>
+      )}
 
 {/* Registration Modal */}
 {modalOpen && modalEvent && (

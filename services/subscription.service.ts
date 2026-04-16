@@ -1,4 +1,15 @@
 import { db } from "@/lib/db"
+import { SubscriptionStatus } from "@prisma/client"
+
+export type { SubscriptionStatus }
+
+export type NewsletterSubscriberRow = {
+  id: string
+  email: string
+  status: SubscriptionStatus
+  subscribedAt: Date
+  unsubscribedAt: Date | null
+}
 
 export type SubscribeResult =
   | { success: true; alreadySubscribed: false }
@@ -30,4 +41,19 @@ export async function subscribeEmail(email: string): Promise<SubscribeResult> {
   })
 
   return { success: true, alreadySubscribed: false }
+}
+
+export async function getNewsletterSubscribers(filters?: {
+  status?: SubscriptionStatus
+  search?: string
+}): Promise<NewsletterSubscriberRow[]> {
+  return db.newsletterSubscriber.findMany({
+    where: {
+      ...(filters?.status !== undefined && { status: filters.status }),
+      ...(filters?.search && {
+        email: { contains: filters.search, mode: "insensitive" },
+      }),
+    },
+    orderBy: { subscribedAt: "desc" },
+  })
 }

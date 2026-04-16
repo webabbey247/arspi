@@ -1,6 +1,5 @@
-// lib/db.ts — singleton to avoid connection issues in Next.js hot-reload
-import { PrismaClient } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { PrismaClient } from "@prisma/client"
 
 function createClient() {
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })

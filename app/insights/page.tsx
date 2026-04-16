@@ -4,17 +4,51 @@
 import * as React from "react";
 import Link from "next/link";
 import { Clock, ArrowRight, Search } from "lucide-react";
-import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { Badge } from "@/components/ui/badge";
-import { insights } from "@/lib/data";
 import withLayout from "@/hooks/useLayout";
-import { Button } from "@/components/ui/button";
 
-const categories = ["All", "Research", "Technology", "Policy", "Education", "News"];
+type PublicInsight = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  featured: boolean;
+  readTime: string;
+  author: string;
+  authorInitials: string;
+  category: string;
+  date: string;
+  publishedAt: string | null;
+  coverImage: string | null;
+};
 
  const InsightsPage =() => {
   const [activeCategory, setActiveCategory] = React.useState("All");
   const [query, setQuery] = React.useState("");
+  const [insights, setInsights] = React.useState<PublicInsight[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch("/api/insights/public")
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.error ?? "Failed to fetch insights");
+        }
+        setInsights(data?.insights ?? []);
+      })
+      .catch(() => {
+        setInsights([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const categories = React.useMemo(
+    () => ["All", ...Array.from(new Set(insights.map((ins) => ins.category)))],
+    [insights]
+  );
 
   const featured = insights.filter((i) => i.featured);
   const filtered = insights.filter((ins) => {
@@ -133,6 +167,16 @@ const categories = ["All", "Research", "Technology", "Policy", "Education", "New
                 </span>
               </div>
 
+                <label className="ml-auto min-w-55 max-w-80 relative hidden md:flex items-center">
+                  <Search className="h-3.5 w-3.5 text-[#637AA3] absolute left-3" />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search insights"
+                    className="w-full bg-white border border-[#0474C4]/25 rounded-full pl-9 pr-3 py-1.5 text-[0.75rem] text-[#262B40] placeholder:text-[#637AA3] outline-none focus:border-[#0474C4]"
+                  />
+                </label>
+
             </div>
           </Link>
         ))}
@@ -145,7 +189,13 @@ const categories = ["All", "Research", "Technology", "Policy", "Education", "New
       {/* All articles grid */}
       <section className="bg-sky-light px-8 md:px-16 py-16">
         <div className="max-w-350 mx-auto">
-          {activeCategory !== "All" || query ? (
+          {loading ? (
+            <div className="text-center py-20">
+              <p className="text-slate-500 font-light text-sm">Loading insights...</p>
+            </div>
+          ) : null}
+
+          {!loading && (activeCategory !== "All" || query) ? (
             <div className="mb-6">
               <p className="text-sm text-slate-500 font-light">
                 {filtered.length} article{filtered.length !== 1 ? "s" : ""}
@@ -153,7 +203,7 @@ const categories = ["All", "Research", "Technology", "Policy", "Education", "New
                 {query ? ` matching "${query}"` : ""}
               </p>
             </div>
-          ) : (
+          ) : !loading ? (
             <div className="mb-8">
                 <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-2">
        All Insights
@@ -162,9 +212,9 @@ const categories = ["All", "Research", "Technology", "Policy", "Education", "New
      Latest Articles
       </h2>
             </div>
-          )}
+          ) : null}
 
-          {filtered.length === 0 ? (
+          {!loading && filtered.length === 0 ? (
             <div className="text-center py-20">
               <div className="font-serif text-4xl text-[#0474C4]/20 mb-4">∅</div>
               <h3 className="font-serif text-xl text-ink mb-2">No articles found</h3>
@@ -172,7 +222,7 @@ const categories = ["All", "Research", "Technology", "Policy", "Education", "New
                 Try a different search term or category.
               </p>
             </div>
-          ) : (
+          ) : !loading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filtered.map((ins) => (
                 <Link
@@ -214,7 +264,7 @@ const categories = ["All", "Research", "Technology", "Policy", "Education", "New
                 </Link>
               ))}
             </div>
-          )}
+          ) : null}
         </div>
       </section>
 
