@@ -517,7 +517,12 @@ export default function AdminInsightsPage() {
 
   async function handleDeleteInsight() {
     if (!deleteInsight) return
-    await fetch(`/api/insights/${deleteInsight.id}`, { method: "DELETE" })
+    const res = await fetch(`/api/insights/${deleteInsight.id}`, { method: "DELETE" })
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      alert(d.error ?? "Failed to delete insight.")
+      return
+    }
     setDeleteInsight(null)
     await fetchInsights()
   }
@@ -539,8 +544,12 @@ export default function AdminInsightsPage() {
 
   async function handleDeleteCategory() {
     if (!deleteCategory) return
-    const res  = await fetch(`/api/insights/categories/${deleteCategory.id}`, { method: "DELETE" })
-    if (!res.ok) { const d = await res.json(); alert(d.error ?? "Failed to delete.") }
+    const res = await fetch(`/api/insights/categories/${deleteCategory.id}`, { method: "DELETE" })
+    if (!res.ok) {
+      const d = await res.json()
+      alert(d.error ?? "Failed to delete.")
+      return
+    }
     setDeleteCategory(null)
     await fetchCategories()
   }

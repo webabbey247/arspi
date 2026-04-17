@@ -6,7 +6,6 @@ import { ChevronRight, Loader2, X } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
-import { workshopSchema, type WorkshopInput } from "@/lib/validators/workshop"
 import * as yup from "yup"
 
 // Free-only schema — no paymentMethod field needed
@@ -82,6 +81,7 @@ const WorkshopRegistrationForm = ({
             lastName:      data.lastName,
             email:         data.email,
             organisation:  data.organisation,
+            workshopId:    modalEvent.id,
             workshopTitle: modalEvent.title,
             workshopDate:  modalEvent.date,
             workshopTime:  modalEvent.time,

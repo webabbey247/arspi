@@ -1,49 +1,36 @@
-/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import * as React from "react";
 import Link from "next/link";
-import { Clock, ArrowRight, Search } from "lucide-react";
+import { Clock, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import withLayout from "@/hooks/useLayout";
-
-type PublicInsight = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  featured: boolean;
-  readTime: string;
-  author: string;
-  authorInitials: string;
-  category: string;
-  date: string;
-  publishedAt: string | null;
-  coverImage: string | null;
-};
+import { getInsights, type PublicInsight } from "@/services/public-insight.service";
 
  const InsightsPage =() => {
   const [activeCategory, setActiveCategory] = React.useState("All");
-  const [query, setQuery] = React.useState("");
   const [insights, setInsights] = React.useState<PublicInsight[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
-    fetch("/api/insights/public")
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data?.error ?? "Failed to fetch insights");
-        }
-        setInsights(data?.insights ?? []);
-      })
-      .catch(() => {
+  const loadInsights = React.useCallback(() => {
+    setLoading(true);
+    setError(null);
+
+    getInsights()
+      .then(setInsights)
+      .catch((err: unknown) => {
         setInsights([]);
+        setError(err instanceof Error ? err.message : "Failed to load insights");
       })
       .finally(() => {
         setLoading(false);
       });
   }, []);
+
+  React.useEffect(() => {
+    loadInsights();
+  }, [loadInsights]);
 
   const categories = React.useMemo(
     () => ["All", ...Array.from(new Set(insights.map((ins) => ins.category)))],
@@ -52,14 +39,9 @@ type PublicInsight = {
 
   const featured = insights.filter((i) => i.featured);
   const filtered = insights.filter((ins) => {
-    const matchCat = activeCategory === "All" || ins.category === activeCategory;
-    const matchQ =
-      !query ||
-      ins.title.toLowerCase().includes(query.toLowerCase()) ||
-      ins.excerpt.toLowerCase().includes(query.toLowerCase()) ||
-      ins.author.toLowerCase().includes(query.toLowerCase());
-    return matchCat && matchQ;
+    return activeCategory === "All" || ins.category === activeCategory;
   });
+  const nonFeaturedFiltered = filtered.filter((ins) => !ins.featured);
 
   return (
     <>
@@ -106,7 +88,7 @@ type PublicInsight = {
 </div>
 
       {/* Featured articles */}
-     {activeCategory === "All" && !query && (
+      {activeCategory === "All" && featured.length >= 1 && (
   <section className="bg-white px-8 md:px-16 py-16 w-full">
     <div className="max-w-350 mx-auto flex flex-col gap-8 w-full">
    <div className="flex flex-col gap-2">
@@ -133,7 +115,7 @@ type PublicInsight = {
                 <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]/10 text-[#0474C4] border-0 px-2 py-0.5">
                   {ins.category}
                 </Badge>
-                <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400">
+                <span className="bg-[#0474C4] text-white font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium px-2 py-0.5 rounded-sm">
                   Featured
                 </span>
               </div>
@@ -167,16 +149,6 @@ type PublicInsight = {
                 </span>
               </div>
 
-                <label className="ml-auto min-w-55 max-w-80 relative hidden md:flex items-center">
-                  <Search className="h-3.5 w-3.5 text-[#637AA3] absolute left-3" />
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search insights"
-                    className="w-full bg-white border border-[#0474C4]/25 rounded-full pl-9 pr-3 py-1.5 text-[0.75rem] text-[#262B40] placeholder:text-[#637AA3] outline-none focus:border-[#0474C4]"
-                  />
-                </label>
-
             </div>
           </Link>
         ))}
@@ -193,17 +165,21 @@ type PublicInsight = {
             <div className="text-center py-20">
               <p className="text-slate-500 font-light text-sm">Loading insights...</p>
             </div>
+          ) : error ? (
+            <div className="text-center py-20">
+              <h3 className="font-serif text-xl text-ink mb-2">Unable to load insights</h3>
+              <p className="text-slate-400 font-light text-sm">{error}</p>
+            </div>
           ) : null}
 
-          {!loading && (activeCategory !== "All" || query) ? (
+          {!loading && !error && activeCategory !== "All" ? (
             <div className="mb-6">
               <p className="text-sm text-slate-500 font-light">
-                {filtered.length} article{filtered.length !== 1 ? "s" : ""}
+                {nonFeaturedFiltered.length} article{nonFeaturedFiltered.length !== 1 ? "s" : ""}
                 {activeCategory !== "All" ? ` in ${activeCategory}` : ""}
-                {query ? ` matching "${query}"` : ""}
               </p>
             </div>
-          ) : !loading ? (
+          ) : !loading && !error && nonFeaturedFiltered.length > 0 ? (
             <div className="mb-8">
                 <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-2">
        All Insights
@@ -214,17 +190,9 @@ type PublicInsight = {
             </div>
           ) : null}
 
-          {!loading && filtered.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="font-serif text-4xl text-[#0474C4]/20 mb-4">∅</div>
-              <h3 className="font-serif text-xl text-ink mb-2">No articles found</h3>
-              <p className="text-slate-400 font-light text-sm">
-                Try a different search term or category.
-              </p>
-            </div>
-          ) : !loading ? (
+          {!loading && !error && nonFeaturedFiltered.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filtered.map((ins) => (
+              {nonFeaturedFiltered.map((ins) => (
                 <Link
                   key={ins.slug}
                   href={`/insights/${ins.slug}`}

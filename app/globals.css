@@ -141,6 +141,9 @@
    p, a, span, div {
     @apply font-body
    }
+   p {
+    @apply text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600
+   }
   html {
     @apply font-sans;
   }

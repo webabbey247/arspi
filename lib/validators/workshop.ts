@@ -40,6 +40,7 @@ export type WorkshopInput = {
 
 // Shape sent to the API — includes event metadata from the parent
 export type WorkshopRegistrationPayload = WorkshopInput & {
+  workshopId?: string
   workshopTitle: string
   workshopDate: string
   workshopTime: string

@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
-    const { workshopTitle, workshopDate, workshopTime, fee, ...userFields } = body
+    const { workshopId, workshopTitle, workshopDate, workshopTime, fee, ...userFields } = body
 
     // Validate event metadata presence
     if (!workshopTitle || !workshopDate || !workshopTime || fee === undefined) {
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
 
     const payload: WorkshopRegistrationPayload = {
       ...validated,
+      workshopId:    workshopId ? String(workshopId) : undefined,
       workshopTitle: String(workshopTitle),
       workshopDate:  String(workshopDate),
       workshopTime:  String(workshopTime),

@@ -34,40 +34,74 @@ export async function POST(req: NextRequest) {
   try {
     switch (event.type) {
       case "checkout.session.completed": {
-        const session        = event.data.object as Stripe.Checkout.Session
-        const registrationId = session.metadata?.registrationId
-        const workshopId     = session.metadata?.workshopId
+        const session = event.data.object as Stripe.Checkout.Session
 
-        if (!registrationId) break
+        if (session.metadata?.type === "program") {
+          // ── Program payment ───────────────────────────────────────────────
+          const { paymentId, courseId, userId } = session.metadata ?? {}
+          if (!paymentId || !courseId || !userId) break
 
-        await db.workshopRegistration.update({
-          where: { id: registrationId },
-          data:  {
-            status:                  "CONFIRMED",
-            stripeCheckoutSessionId: session.id,
-          },
-        })
-
-        // Increment workshop.registered count
-        if (workshopId) {
-          await db.workshop.update({
-            where: { id: workshopId },
-            data:  { registered: { increment: 1 } },
+          // Mark payment as succeeded
+          await db.payment.update({
+            where: { id: paymentId },
+            data:  { status: "SUCCEEDED", stripePaymentId: session.id },
           })
+
+          // Create enrollment (skip if somehow already enrolled)
+          const existing = await db.enrollment.findUnique({
+            where: { userId_courseId: { userId, courseId } },
+          })
+          if (!existing) {
+            await db.enrollment.create({
+              data: { userId, courseId, status: "ACTIVE" },
+            })
+          }
+        } else {
+          // ── Workshop payment ──────────────────────────────────────────────
+          const registrationId = session.metadata?.registrationId
+          const workshopId     = session.metadata?.workshopId
+
+          if (!registrationId) break
+
+          await db.workshopRegistration.update({
+            where: { id: registrationId },
+            data:  {
+              status:                  "CONFIRMED",
+              stripeCheckoutSessionId: session.id,
+            },
+          })
+
+          if (workshopId) {
+            await db.workshop.update({
+              where: { id: workshopId },
+              data:  { registered: { increment: 1 } },
+            })
+          }
         }
         break
       }
 
       case "checkout.session.expired": {
-        const session        = event.data.object as Stripe.Checkout.Session
-        const registrationId = session.metadata?.registrationId
+        const session = event.data.object as Stripe.Checkout.Session
 
-        if (!registrationId) break
+        if (session.metadata?.type === "program") {
+          // Mark pending payment as failed
+          const { paymentId } = session.metadata ?? {}
+          if (paymentId) {
+            await db.payment.update({
+              where: { id: paymentId },
+              data:  { status: "FAILED" },
+            })
+          }
+        } else {
+          const registrationId = session.metadata?.registrationId
+          if (!registrationId) break
 
-        await db.workshopRegistration.update({
-          where: { id: registrationId },
-          data:  { status: "CANCELLED" },
-        })
+          await db.workshopRegistration.update({
+            where: { id: registrationId },
+            data:  { status: "CANCELLED" },
+          })
+        }
         break
       }
 

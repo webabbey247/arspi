@@ -27,7 +27,8 @@ export async function registerForWorkshop(
         ? (input.paymentMethod as WorkshopPaymentMethod)
         : null,
       // Free workshops are confirmed immediately; paid workshops use the Stripe checkout flow
-      status: input.fee === 0 ? "CONFIRMED" : "PENDING",
+      status:     input.fee === 0 ? "CONFIRMED" : "PENDING",
+      workshopId: input.workshopId ?? null,
     },
     select: { id: true },
   })
@@ -54,6 +55,7 @@ export type WorkshopRow = {
   capacity: number
   registered: number
   coverImage: string | null
+  instructorId: string | null
   createdAt: Date
   updatedAt: Date
   _count?: { registrations: number }
@@ -74,6 +76,7 @@ export type WorkshopInput = {
   facilitator?: string
   capacity?: number
   coverImage?: string | null
+  instructorId?: string | null
 }
 
 export type WorkshopServiceResult<T> =
@@ -94,13 +97,15 @@ export async function getWorkshops(filters?: {
   category?: WorkshopCategory
   published?: boolean
   featured?: boolean
+  instructorId?: string
 }): Promise<WorkshopRow[]> {
   return db.workshop.findMany({
     where: {
-      ...(filters?.type      !== undefined && { type:      filters.type }),
-      ...(filters?.category  !== undefined && { category:  filters.category }),
-      ...(filters?.published !== undefined && { published: filters.published }),
-      ...(filters?.featured  !== undefined && { featured:  filters.featured }),
+      ...(filters?.type         !== undefined && { type:         filters.type }),
+      ...(filters?.category     !== undefined && { category:     filters.category }),
+      ...(filters?.published    !== undefined && { published:    filters.published }),
+      ...(filters?.featured     !== undefined && { featured:     filters.featured }),
+      ...(filters?.instructorId !== undefined && { instructorId: filters.instructorId }),
     },
     include: { _count: { select: { registrations: true } } },
     orderBy: { createdAt: "desc" },
@@ -133,20 +138,21 @@ export async function createWorkshop(
 
   const workshop = await db.workshop.create({
     data: {
-      title:       input.title,
+      title:        input.title,
       slug,
-      description: input.description,
-      type:        input.type        ?? "FREE",
-      category:    input.category    ?? "WORKSHOP",
-      fee:         input.fee         ?? 0,
-      featured:    input.featured    ?? false,
-      published:   input.published   ?? false,
-      date:        input.date        ? new Date(input.date) : null,
-      time:        input.time        ?? "",
-      duration:    input.duration    ?? "2 Hours",
-      facilitator: input.facilitator ?? "",
-      capacity:    input.capacity    ?? 100,
-      coverImage:  input.coverImage  ?? null,
+      description:  input.description,
+      type:         input.type        ?? "FREE",
+      category:     input.category    ?? "WORKSHOP",
+      fee:          input.fee         ?? 0,
+      featured:     input.featured    ?? false,
+      published:    input.published   ?? false,
+      date:         input.date        ? new Date(input.date) : null,
+      time:         input.time        ?? "",
+      duration:     input.duration    ?? "2 Hours",
+      facilitator:  input.facilitator ?? "",
+      capacity:     input.capacity    ?? 100,
+      coverImage:   input.coverImage  ?? null,
+      instructorId: input.instructorId ?? null,
     },
     include: { _count: { select: { registrations: true } } },
   })
@@ -184,7 +190,8 @@ export async function updateWorkshop(
       ...(input.duration    !== undefined && { duration:    input.duration }),
       ...(input.facilitator !== undefined && { facilitator: input.facilitator }),
       ...(input.capacity    !== undefined && { capacity:    input.capacity }),
-      ...(input.coverImage  !== undefined && { coverImage:  input.coverImage }),
+      ...(input.coverImage   !== undefined && { coverImage:   input.coverImage }),
+      ...(input.instructorId !== undefined && { instructorId: input.instructorId }),
     },
     include: { _count: { select: { registrations: true } } },
   })

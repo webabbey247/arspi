@@ -36,10 +36,10 @@ const DashboardHeader = ({ user }: { user: SessionPayload }) => {
       <header className="col-span-full bg-white border-b border-[rgba(200,169,110,0.15)] flex items-center justify-between pr-6 sticky top-0 z-200 h-15">
 
         {/* Brand */}
-        <div className="w-56 flex items-center gap-2.5 px-[1.2rem] shrink-0">
+        <div className="w-70 flex flex-row items-center gap-2.5 px-[1.2rem] shrink-0">
           <div className="w-7 h-7 border-[1.5px] border-[#0474C4] rounded-full flex items-center justify-center text-[10px] text-[#0474C4] font-medium [font-family:var(--font-playfair-display),serif] shrink-0">A</div>
           <span className="font-heading text-[0.95rem] text-[#0474C4] tracking-[0.06em]">ARPS Institute</span>
-          <span className="text-[0.55rem] bg-[#DC2626] text-white px-1.5 py-0.5 rounded-[3px] tracking-widest uppercase font-medium ml-0.5">{user?.role}</span>
+          <span className="text-[0.55rem] bg-[#0474C4] text-white px-1.5 py-0.5 rounded-[3px] tracking-widest uppercase font-medium ml-0.5">{user?.role}</span>
         </div>
         {/* <div className="w-80 flex items-center gap-2.5 px-[1.2rem] shrink-0">
           <div className="w-12 h-12 rounded-[22px] bg-[#0474C4] flex items-center justify-center text-[38px]">

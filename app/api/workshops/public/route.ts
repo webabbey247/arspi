@@ -21,7 +21,7 @@ export async function GET() {
       duration:    w.duration,
       facilitator: w.facilitator,
       capacity:    w.capacity,
-      registered:  w.registered,
+      registered:  w._count?.registrations ?? 0,
       coverImage:  w.coverImage,
     }))
 

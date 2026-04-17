@@ -7,77 +7,45 @@ import { Clock, ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import withLayout from "@/hooks/useLayout";
-
-type InsightDetail = {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  body: string;
-  featured: boolean;
-  readTime: string;
-  author: string;
-  authorInitials: string;
-  authorJobTitle: string | null;
-  authorBio: string | null;
-  category: string;
-  date: string;
-  publishedAt: string | null;
-  coverImage: string | null;
-};
-
-type InsightCard = {
-  slug: string;
-  title: string;
-  category: string;
-  date: string;
-  readTime: string;
-  author: string;
-};
-
-type InsightDetailResponse = {
-  insight: InsightDetail;
-  prev: InsightCard | null;
-  next: InsightCard | null;
-  related: InsightCard[];
-};
+import { getInsightBySlug, type PublicInsightDetailResponse } from "@/services/public-insight.service";
 
 const InsightDetailPage = () => {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug;
 
-  const [payload, setPayload] = React.useState<InsightDetailResponse | null>(null);
+  const [payload, setPayload] = React.useState<PublicInsightDetailResponse | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [notFound, setNotFound] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
+  const loadInsight = React.useCallback(() => {
     if (!slug) return;
 
     setLoading(true);
     setNotFound(false);
+    setError(null);
 
-    fetch(`/api/insights/public/${slug}`)
-      .then(async (res) => {
-        if (res.status === 404) {
+    getInsightBySlug(slug)
+      .then(setPayload)
+      .catch((err: unknown) => {
+        const typedError = err as Error & { status?: number };
+        if (typedError?.status === 404) {
           setNotFound(true);
           setPayload(null);
           return;
         }
 
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data?.error ?? "Failed to fetch insight");
-        }
-
-        setPayload(data);
-      })
-      .catch(() => {
         setPayload(null);
+        setError(typedError?.message ?? "Failed to load insight");
       })
       .finally(() => {
         setLoading(false);
       });
   }, [slug]);
+
+  React.useEffect(() => {
+    loadInsight();
+  }, [loadInsight]);
 
   if (loading) {
     return (
@@ -91,8 +59,14 @@ const InsightDetailPage = () => {
     return (
       <section className="bg-sky-light px-8 md:px-16 py-24 w-full">
         <div className="max-w-200 mx-auto flex flex-col gap-4">
-          <h1 className="font-heading text-[2rem] text-[#262B40]">Insight not found</h1>
-          <p className="text-slate-500">The article you are looking for does not exist or is not published.</p>
+          <h1 className="font-heading text-[2rem] text-[#262B40]">
+            {notFound ? "Insight not found" : "Unable to load insight"}
+          </h1>
+          <p className="text-slate-500">
+            {notFound
+              ? "The article you are looking for does not exist or is not published."
+              : (error ?? "Something went wrong while loading this insight.")}
+          </p>
           <div>
             <Button asChild className="bg-[#0474C4] hover:bg-[#0474C4]/80 text-[#EBF3FC] rounded-[32px] px-5 py-2">
               <Link href="/insights">Back to Insights</Link>
@@ -160,10 +134,9 @@ const InsightDetailPage = () => {
       <div className="max-w-300 mx-auto px-8 md:px-16 py-16 grid lg:grid-cols-[1fr_280px] gap-14 items-start w-full">
         <article>
           <div
-            className="prose prose-slate max-w-none prose-headings:text-[#262B40] prose-p:text-slate-600 prose-a:text-[#0474C4]"
+            className="prose flex flex-col gap-2 prose-slate max-w-none prose-headings:text-[#262B40] prose-p:text-slate-600 prose-p:font-normal prose-p:font-body prose-p:text-[1rem] prose-p:tracking-[-0.005em] prose-p:leading-[1.7] prose-a:text-[#0474C4]"
             dangerouslySetInnerHTML={{ __html: ins.body }}
           />
-
           <div className="mt-10 pt-8 border-t border-sapphire/20 flex items-center gap-4 flex-wrap">
             <span className="text-[0.68rem] uppercase tracking-widest text-slate-400">
               Share:
@@ -215,7 +188,7 @@ const InsightDetailPage = () => {
           </div>
         </article>
 
-        <aside className="flex flex-col gap-6">
+        <aside className="sticky top-16 flex flex-col gap-6">
           <div className="bg-white border border-[#0474C4]/25 rounded-sm p-5 flex flex-col gap-4">
             <div className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4]">
               About the Author
@@ -244,7 +217,7 @@ const InsightDetailPage = () => {
             </div>
           </div>
 
-          {related.length > 0 && (
+          {/* {related.length > 0 && (
             <div className="bg-white border border-[#0474C4]/25 rounded-sm p-5">
               <div className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4] mb-4">
                 Related Articles
@@ -268,7 +241,7 @@ const InsightDetailPage = () => {
                 ))}
               </div>
             </div>
-          )}
+          )} */}
 
           <div className="bg-ink rounded-sm p-5">
             <div className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4] mb-2">

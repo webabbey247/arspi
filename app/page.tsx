@@ -1,9 +1,61 @@
-/* eslint-disable react/no-unescaped-entities */
+"use client"
+
+import * as React from "react";
 import withLayout from "@/hooks/useLayout";
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { getInsights, type PublicInsight } from "@/services/public-insight.service";
+import { getWorkshops, type PublicWorkshop } from "@/services/public-workshop.service";
+
 const HomePage = () => {
+  const [insights, setInsights] = React.useState<PublicInsight[]>([]);
+  const [insightsLoading, setInsightsLoading] = React.useState(true);
+  const [insightsError, setInsightsError] = React.useState<string | null>(null);
+
+  const [workshops, setWorkshops] = React.useState<PublicWorkshop[]>([]);
+  const [workshopsLoading, setWorkshopsLoading] = React.useState(true);
+  const [workshopsError, setWorkshopsError] = React.useState<string | null>(null);
+
+  const loadInsights = React.useCallback(() => {
+    setInsightsLoading(true);
+    setInsightsError(null);
+
+    getInsights()
+      .then(setInsights)
+      .catch((err: unknown) => {
+        const typedError = err as Error;
+        setInsightsError(typedError?.message ?? "Failed to load insights");
+        setInsights([]);
+      })
+      .finally(() => {
+        setInsightsLoading(false);
+      });
+  }, []);
+
+  const loadWorkshops = React.useCallback(() => {
+    setWorkshopsLoading(true);
+    setWorkshopsError(null);
+
+    getWorkshops({ limit: 6, sort: "upcoming" })
+      .then(setWorkshops)
+      .catch((err: unknown) => {
+        const typedError = err as Error;
+        setWorkshopsError(typedError?.message ?? "Failed to load workshops");
+        setWorkshops([]);
+      })
+      .finally(() => {
+        setWorkshopsLoading(false);
+      });
+  }, []);
+
+  React.useEffect(() => {
+    loadInsights();
+  }, [loadInsights]);
+
+  React.useEffect(() => {
+    loadWorkshops();
+  }, [loadWorkshops]);
   return (
     <>
       <section className="bg-[#060D14] min-h-[88vh] grid grid-cols-1 md:grid-cols-2 relative overflow-hidden w-full">
@@ -734,125 +786,99 @@ const HomePage = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-[1.6fr_1fr_1fr] gap-6 items-start">
-          {/* Featured article */}
-          <Link
-            href="/insights/article-1"
-            className="group bg-transparent rounded-sm border border-[rgba(200,169,110,0.15)] overflow-hidden cursor-pointer transition-[border-color,background] duration-300 hover:border-[rgba(200,169,110,0.4)] hover:bg-[rgba(247,243,237,0.07)]"
-          >
-            <Image
-              className="w-full aspect-video object-cover block opacity-75 transition-opacity duration-300 group-hover:opacity-90"
-              src="/images/dummy/article-1.jpg"
-              alt="Research methods article"
-              width={700}
-              height={400}
-            />
-            <div className="pt-[1.6rem] px-[1.8rem] pb-8 bg-white">
-              <span className="inline-block font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4]/10 text-[#0474C4] border border-[#0474C4]/10 py-0.75 px-2.5 rounded-full mb-4">
-                Research Methods
-              </span>
-              <h3 className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.35] font-medium text-[#071639] mb-3 transition-colors duration-200 group-hover:text-[#0474C4]">
-                How Evidence-Based Decision Making Is Transforming Development
-                Practice
-              </h3>
-              <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.7] font-normal text-slate-600 mb-5">
-                Across governments and international organisations, the shift
-                toward data-driven policymaking is reshaping how development
-                outcomes are planned, measured, and sustained.
-              </p>
-              <div className="flex justify-between items-center pt-4 border-t border-t-[rgba(200,169,110,0.1)]">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#0474C4] border border-[#0474C4] font-body text-[0.8125rem] font-medium text-white flex items-center justify-center">
-                    RO
-                  </div>
-                  <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
-                    Dr. Rachel Osei
+        {!insightsLoading && !insightsError && insights.length > 0 ? (
+          <div className="grid grid-cols-[1.6fr_1fr_1fr] gap-6 items-start">
+            {/* Featured article */}
+            {insights[0] && (
+              <Link
+                href={`/insights/${insights[0].slug}`}
+                className="group bg-transparent rounded-sm border border-[rgba(200,169,110,0.15)] overflow-hidden cursor-pointer transition-[border-color,background] duration-300 hover:border-[rgba(200,169,110,0.4)] hover:bg-[rgba(247,243,237,0.07)]"
+              >
+                <Image
+                  className="w-full aspect-video object-cover block opacity-75 transition-opacity duration-300 group-hover:opacity-90"
+                  src={insights[0].coverImage || "/images/dummy/article-1.jpg"}
+                  alt={insights[0].title}
+                  width={700}
+                  height={400}
+                />
+                <div className="pt-[1.6rem] px-[1.8rem] pb-8 bg-white">
+                  <span className="inline-block font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4]/10 text-[#0474C4] border border-[#0474C4]/10 py-0.75 px-2.5 rounded-full mb-4">
+                    {insights[0].category}
                   </span>
-                </div>
-                <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
-                  Mar 10, 2026
-                </span>
-              </div>
-            </div>
-          </Link>
-
-          {/* Small article columns — refactored into maps */}
-          {[
-            [
-              {
-                initials: "AA",
-                author: "Dr. Ama Asante",
-                date: "Feb 28, 2026",
-                category: "Technology",
-                title: "Five Ways AI Is Reshaping Academic Research in 2026",
-              },
-              {
-                initials: "PK",
-                author: "Prof. Kenneth Addo",
-                date: "Feb 14, 2026",
-                category: "Academic Publishing",
-                title:
-                  "Getting Published: A Practical Guide for Early-Career Researchers",
-              },
-            ],
-            [
-              {
-                initials: "SM",
-                author: "Dr. Sarah Mensah",
-                date: "Jan 30, 2026",
-                category: "Leadership",
-                title:
-                  "Building High-Performance Teams in Research Institutions",
-              },
-              {
-                initials: "JB",
-                author: "James Boateng, MSc",
-                date: "Jan 12, 2026",
-                category: "MEL",
-                title:
-                  "Why Monitoring & Evaluation Must Evolve for the Data Age",
-              },
-            ],
-          ].map((col, ci) => (
-            <div key={ci} className="flex flex-col gap-6">
-              {col.map(({ initials, author, date, category, title }) => (
-                <div
-                  key={title}
-                  className="group bg-transparent border border-transparent rounded-sm overflow-hidden cursor-pointer transition-[border-color,background] duration-300 hover:border-[rgba(200,169,110,0.4)] hover:bg-[rgba(247,243,237,0.07)]"
-                >
-                  <Image
-                    className="w-full aspect-video object-cover block opacity-75 transition-opacity duration-300 group-hover:opacity-90"
-                    src="/images/dummy/article-1.jpg"
-                    alt={title}
-                    width={500}
-                    height={300}
-                  />
-                  <div className="pt-[1.3rem] px-6 pb-[1.6rem] bg-white">
-                    <span className="inline-block font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4]/10 text-[#0474C4] border border-[#0474C4]/10 py-0.75 px-2.5 rounded-full mb-4">
-                      {category}
-                    </span>
-                    <h3 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.4] font-medium text-[#071639] mb-3 transition-colors duration-200 group-hover:text-[#0474C4]">
-                      {title}
-                    </h3>
-                    <div className="flex justify-between items-center pt-4 border-t border-t-[rgba(200,169,110,0.1)]">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#0474C4] border border-[#0474C4] font-body text-[0.8125rem] font-medium text-white flex items-center justify-center">
-                          {initials}
-                        </div>
-                        <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
-                          {author}
-                        </span>
+                  <h3 className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.35] font-medium text-[#071639] mb-3 transition-colors duration-200 group-hover:text-[#0474C4]">
+                    {insights[0].title}
+                  </h3>
+                  <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.7] font-normal text-slate-600 mb-5">
+                    {insights[0].excerpt}
+                  </p>
+                  <div className="flex justify-between items-center pt-4 border-t border-t-[rgba(200,169,110,0.1)]">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-[#0474C4] border border-[#0474C4] font-body text-[0.8125rem] font-medium text-white flex items-center justify-center">
+                        {insights[0].authorInitials}
                       </div>
                       <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
-                        {date}
+                        {insights[0].author}
                       </span>
                     </div>
+                    <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
+                      {insights[0].date}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          ))}
-        </div>
+              </Link>
+            )}
+
+            {/* Small article columns */}
+            {[insights.slice(1, 3), insights.slice(3, 5)].map((col, ci) => (
+              <div key={ci} className="flex flex-col gap-6">
+                {col.map((insight) => (
+                  <Link
+                    key={insight.slug}
+                    href={`/insights/${insight.slug}`}
+                    className="group bg-transparent border border-transparent rounded-sm overflow-hidden cursor-pointer transition-[border-color,background] duration-300 hover:border-[rgba(200,169,110,0.4)] hover:bg-[rgba(247,243,237,0.07)]"
+                  >
+                    <Image
+                      className="w-full aspect-video object-cover block opacity-75 transition-opacity duration-300 group-hover:opacity-90"
+                      src={insight.coverImage || "/images/dummy/article-1.jpg"}
+                      alt={insight.title}
+                      width={500}
+                      height={300}
+                    />
+                    <div className="pt-[1.3rem] px-6 pb-[1.6rem] bg-white">
+                      <span className="inline-block font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4]/10 text-[#0474C4] border border-[#0474C4]/10 py-0.75 px-2.5 rounded-full mb-4">
+                        {insight.category}
+                      </span>
+                      <h3 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.4] font-medium text-[#071639] mb-3 transition-colors duration-200 group-hover:text-[#0474C4]">
+                        {insight.title}
+                      </h3>
+                      <div className="flex justify-between items-center pt-4 border-t border-t-[rgba(200,169,110,0.1)]">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-[#0474C4] border border-[#0474C4] font-body text-[0.8125rem] font-medium text-white flex items-center justify-center">
+                            {insight.authorInitials}
+                          </div>
+                          <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
+                            {insight.author}
+                          </span>
+                        </div>
+                        <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
+                          {insight.date}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : insightsLoading ? (
+          <div className="text-slate-300 py-12">Loading insights...</div>
+        ) : insightsError ? (
+          <div className="text-red-300 py-12">
+            {insightsError}
+          </div>
+        ) : (
+          <div className="text-slate-300 py-12">No insights available yet.</div>
+        )}
       </section>
 
       {/* ============ EVENTS SECTION ============ */}
@@ -860,7 +886,7 @@ const HomePage = () => {
         <div className="flex justify-between items-end mb-14 gap-8">
           <div>
             <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-4">
-              What's On
+              What&apos;s On
             </p>
             <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639]">
               Upcoming Events
@@ -960,141 +986,83 @@ const HomePage = () => {
 
           {/* Event list */}
           <div className="flex flex-col gap-px bg-transparent border border-transparent rounded-sm overflow-hidden">
-            {[
-              {
-                day: "17",
-                month: "Mar",
-                type: "Webinar",
-                title: "Introduction to Systematic Reviews & Meta-Analysis",
-                meta: ["2:00 PM – 4:00 PM GMT", "Online · Zoom", "Free"],
-                spots: "8 spots left",
-                spotsUrgent: true,
-                cta: "Register",
-              },
-              {
-                day: "20",
-                month: "Mar",
-                type: "Workshop",
-                title:
-                  "Quantitative Data Analysis with SPSS & R — Hands-On Workshop",
-                meta: ["9:00 AM – 1:00 PM GMT", "Online · Zoom", "$45"],
-                spots: "24 spots left",
-                cta: "Register",
-              },
-              {
-                day: "25",
-                month: "Mar",
-                type: "Conference",
-                title: "ARPS Annual Research & Leadership Summit 2026",
-                meta: [
-                  "All Day · 3 Sessions",
-                  "Hybrid · Accra + Online",
-                  "$120 / Free online",
-                ],
-                spots: "142 spots left",
-                cta: "Register",
-              },
-              {
-                day: "28",
-                month: "Mar",
-                type: "Masterclass",
-                title:
-                  "Writing & Publishing in High-Impact Journals — Live Masterclass",
-                meta: ["3:00 PM – 5:30 PM GMT", "Online · Zoom", "$30"],
-                spots: "3 spots left",
-                spotsUrgent: true,
-                cta: "Register",
-              },
-              {
-                day: "10",
-                month: "Apr",
-                type: "Short Course",
-                title:
-                  "AI for Development Research — 4-Week Intensive Online Course",
-                meta: [
-                  "Starts Apr 10 · 4 Weeks",
-                  "Online · Self-paced",
-                  "$199",
-                ],
-                spots: "Open enrolment",
-                cta: "Enrol Now",
-              },
-              {
-                day: "22",
-                month: "Apr",
-                type: "Webinar",
-                title: "Grant Writing Strategies for Research Professionals",
-                meta: ["11:00 AM – 12:30 PM GMT", "Online · Zoom", "Free"],
-                spots: "Waitlist only",
-                full: true,
-                cta: "Full",
-              },
-            ].map(
-              ({
-                day,
-                month,
-                type,
-                title,
-                meta,
-                spots,
-                spotsUrgent,
-                full,
-                cta,
-              }) => (
-                <div
-                  key={title}
-                  className="group bg-white grid grid-cols-[72px_1fr_auto] gap-6 py-[1.6rem] px-[1.8rem] items-center transition-[background] duration-250 cursor-pointer hover:bg-[#EDF2FB]/50"
-                >
-                  {/* Date block */}
-                  <div className="text-center bg-[#0474C4] rounded-xs py-2.5 px-2 shrink-0">
-                    <span className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.1] font-semibold text-[#EDF2FB] block">
-                      {day}
-                    </span>
-                    <span className="font-body text-[0.625rem] tracking-[0.07em] uppercase font-medium text-[#EDF2FB] block mt-0.75">
-                      {month}
-                    </span>
-                  </div>
+            {!workshopsLoading && !workshopsError && workshops.length > 0 ? (
+              workshops.map((workshop) => {
+                const availableSpots = Math.max(0, workshop.capacity - workshop.registered);
+                const isFull = availableSpots === 0;
+                const isUrgent = availableSpots <= 3 && availableSpots > 0;
+                const workshopDate = new Date(workshop.date);
 
-                  {/* Event info */}
-                  <div className="min-w-0">
-                    <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-1.5 block">
-                      {type}
-                    </span>
-                    <h3 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#071639] mb-1.5 transition-colors duration-200 group-hover:text-[#0474C4]">
-                      {title}
-                    </h3>
-                    <div className="flex gap-4 items-center flex-wrap">
-                      {meta.map((m) => (
-                        <span
-                          key={m}
-                          className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400"
-                        >
-                          {m}
+                return (
+                  <div
+                    key={workshop.id}
+                    className="group bg-white grid grid-cols-[72px_1fr_auto] gap-6 py-[1.6rem] px-[1.8rem] items-center transition-[background] duration-250 cursor-pointer hover:bg-[#EDF2FB]/50"
+                >
+                    {/* Date block */}
+                    <div className="text-center bg-[#0474C4] rounded-xs py-2.5 px-2 shrink-0">
+                      <span className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.1] font-semibold text-[#EDF2FB] block">
+                        {workshopDate.getDate()}
+                      </span>
+                      <span className="font-body text-[0.625rem] tracking-[0.07em] uppercase font-medium text-[#EDF2FB] block mt-0.75">
+                        {workshopDate.toLocaleDateString("en-US", { month: "short" })}
+                      </span>
+                    </div>
+
+                    {/* Event info */}
+                    <div className="min-w-0">
+                      <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-1.5 block">
+                        {workshop.type}
+                      </span>
+                      <h3 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#071639] mb-1.5 transition-colors duration-200 group-hover:text-[#0474C4]">
+                        {workshop.title}
+                      </h3>
+                      <div className="flex gap-4 items-center flex-wrap">
+                        <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
+                          {workshop.time}
                         </span>
-                      ))}
+                        <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
+                          {workshop.duration}
+                        </span>
+                        <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
+                          {workshop.fee}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* CTA */}
+                    <div className="shrink-0 text-right">
+                      <span
+                        className={`font-body text-[0.75rem] tracking-[0em] font-normal block mb-2 whitespace-nowrap ${isUrgent ? "text-[#0474C4]" : "text-slate-400"}`}
+                    >
+                    
+                        {isFull ? "Full" : `${availableSpots} spots left`}
+                      </span>
+                      <button
+                        disabled={isFull}
+                        className={`font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium py-1.75 px-4.5 rounded-full whitespace-nowrap transition-all duration-200 ${
+                          isFull
+                            ? "border border-[#0474C4] text-[#0474C4] min-w-20 cursor-not-allowed"
+                            : "bg-transparent border border-[#0474C4] min-w-20 text-[#0474C4] cursor-pointer hover:bg-[#0474C4] hover:text-white"
+                      }`}
+                      >
+                        {isFull ? "Full" : "Register"}
+                      </button>
                     </div>
                   </div>
-
-                  {/* CTA */}
-                  <div className="shrink-0 text-right">
-                    <span
-                      className={`font-body text-[0.75rem] tracking-[0em] font-normal block mb-2 whitespace-nowrap ${spotsUrgent ? "text-[#0474C4]" : "text-slate-400"}`}
-                    >
-                      {spots}
-                    </span>
-                    <button
-                      disabled={full}
-                      className={`font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium py-1.75 px-4.5 rounded-full whitespace-nowrap transition-all duration-200 ${
-                        full
-                          ? "border border-[#0474C4] text-[#0474C4] min-w-20 cursor-not-allowed"
-                          : "bg-transparent border border-[#0474C4] min-w-20 text-[#0474C4] cursor-pointer hover:bg-[#0474C4] hover:text-white"
-                      }`}
-                    >
-                      {cta}
-                    </button>
-                  </div>
-                </div>
-              ),
+                );
+              })
+            ) : workshopsLoading ? (
+              <div className="bg-white py-12 px-[1.8rem] text-slate-400">
+                Loading events...
+              </div>
+            ) : workshopsError ? (
+              <div className="bg-white py-12 px-[1.8rem] text-red-400">
+                {workshopsError}
+              </div>
+            ) : (
+              <div className="bg-white py-12 px-[1.8rem] text-slate-400">
+                No upcoming events.
+              </div>
             )}
           </div>
         </div>

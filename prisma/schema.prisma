@@ -69,6 +69,7 @@ model User {
   lessonCompletions   LessonCompletion[]
   certificates        Certificate[]
   taughtCourses       Course[]           @relation("CourseInstructor")
+  taughtWorkshops     Workshop[]         @relation("WorkshopInstructor")
   passwordResetTokens PasswordResetToken[]
   createdInsights     Insight[]              @relation("InsightAuthor")
 
@@ -169,7 +170,34 @@ model Course {
   published    Boolean     @default(false)
   featured     Boolean     @default(false)
 
-  // Instructor
+  // Programme details
+  tagline              String?
+  duration             String?      // e.g. "8 Weeks"
+  format               String?      // e.g. "Live + Self-Paced Online"
+  startDate            String?
+  endDate              String?
+  cohortSize           Int?         // pool size
+  rating               Float?       // e.g. 4.9
+  reviewCount          Int?         // e.g. 312
+  enrolledCount        Int?         // e.g. 2100 (social proof display)
+  countriesCount       Int?         // e.g. 120
+
+  // Rich content (JSON arrays)
+  overview             String?
+  targetAudience       Json?        // String[]
+  learningObjectives   Json?        // String[]
+  curriculum           Json?        // { week, title, desc, topics[] }[]
+  whatIsIncluded       Json?        // String[]
+  faqs                 Json?        // { q, a }[]
+
+  // Standalone instructor profile (separate from User relation)
+  instructorName        String?
+  instructorTitle       String?
+  instructorBio         String?      @db.Text
+  instructorInitials    String?
+  instructorCredentials Json?        // String[]
+
+  // Instructor (User relation)
   instructorId String
   instructor   User        @relation("CourseInstructor", fields: [instructorId], references: [id])
 
@@ -357,6 +385,9 @@ model Workshop {
   coverImage  String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+
+  instructorId  String?
+  instructor    User?            @relation("WorkshopInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
 
   registrations WorkshopRegistration[]
 
