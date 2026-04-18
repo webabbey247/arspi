@@ -216,7 +216,7 @@ export default function AdminEnquiriesPage() {
                       {SUBJECT_LABELS[enquiry.subject]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[#6B6560] min-w-90 whitespace-normal break-words">{previewMessage(enquiry.message)}</td>
+                  <td className="px-4 py-3 text-[#6B6560] min-w-90 whitespace-normal wrap-break-word">{previewMessage(enquiry.message)}</td>
                   <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{enquiry.phone ?? "-"}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_COLORS[enquiry.status]}`}>

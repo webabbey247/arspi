@@ -21,9 +21,9 @@ export function Navbar() {
         
         <Link
           href="/"
-          className="flex items-center gap-2.5 shrink-0 no-underline w-50"
+          className="flex justify-start gap-2.5 shrink-0 no-underline w-50"
         >
-          <div className="w-70 flex flex-row items-center gap-2.5 px-[1.2rem] shrink-0">
+          <div className="flex flex-row justify-start items-center gap-2.5 px-[1.2rem] shrink-0">
           <div className="w-8 h-8 border-[1.5px] border-[#0474C4] rounded-full flex items-center justify-center font-heading text-lg font-medium text-[#0474C4] shrink-0">
             A
           </div>
