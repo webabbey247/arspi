@@ -377,10 +377,21 @@ model Workshop {
   featured    Boolean          @default(false)
   published   Boolean          @default(false)
   date        DateTime?
-  time        String           @default("")
-  duration    String           @default("2 Hours")
-  facilitator String           @default("")
-  capacity    Int              @default(100)
+  startTime   String           @default("")
+  endTime     String           @default("")
+  timezone    String           @default("UTC")
+  duration    Int              @default(2)
+  level       String           @default("BEGINNER")
+  facilitator    String           @default("")
+  facilitators   Json?
+  medium         String           @default("ONLINE")
+  onlinePlatform String?
+  onlineLink     String?
+  venueAddress   String?
+  venueCity      String?
+  venueState     String?
+  venueCountry   String?
+  capacity       Int              @default(100)
   registered  Int              @default(0)
   coverImage  String?
   createdAt   DateTime         @default(now())

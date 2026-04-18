@@ -49,9 +49,20 @@ export type WorkshopRow = {
   featured: boolean
   published: boolean
   date: Date | null
-  time: string
-  duration: string
-  facilitator: string
+  startTime: string
+  endTime:   string
+  timezone:  string
+  duration: number
+  level: string
+  facilitator:    string
+  facilitators:   unknown | null
+  medium:         string
+  onlinePlatform: string | null
+  onlineLink:     string | null
+  venueAddress:   string | null
+  venueCity:      string | null
+  venueState:     string | null
+  venueCountry:   string | null
   capacity: number
   registered: number
   coverImage: string | null
@@ -71,9 +82,20 @@ export type WorkshopInput = {
   featured?: boolean
   published?: boolean
   date?: string | null
-  time?: string
-  duration?: string
-  facilitator?: string
+  startTime?: string
+  endTime?:   string
+  timezone?:  string
+  duration?: number
+  level?: string
+  facilitator?:    string
+  facilitators?:   unknown | null
+  medium?:         string
+  onlinePlatform?: string | null
+  onlineLink?:     string | null
+  venueAddress?:   string | null
+  venueCity?:      string | null
+  venueState?:     string | null
+  venueCountry?:   string | null
   capacity?: number
   coverImage?: string | null
   instructorId?: string | null
@@ -147,9 +169,20 @@ export async function createWorkshop(
       featured:     input.featured    ?? false,
       published:    input.published   ?? false,
       date:         input.date        ? new Date(input.date) : null,
-      time:         input.time        ?? "",
-      duration:     input.duration    ?? "2 Hours",
-      facilitator:  input.facilitator ?? "",
+      startTime:    input.startTime   ?? "",
+      endTime:      input.endTime     ?? "",
+      timezone:     input.timezone    ?? "UTC",
+      duration:     input.duration    ?? 2,
+      level:        input.level       ?? "BEGINNER",
+      facilitator:    input.facilitator  ?? "",
+      facilitators:   (input.facilitators  ?? null) as never,
+      medium:         input.medium        ?? "ONLINE",
+      onlinePlatform: input.onlinePlatform ?? null,
+      onlineLink:     input.onlineLink     ?? null,
+      venueAddress:   input.venueAddress   ?? null,
+      venueCity:      input.venueCity      ?? null,
+      venueState:     input.venueState     ?? null,
+      venueCountry:   input.venueCountry   ?? null,
       capacity:     input.capacity    ?? 100,
       coverImage:   input.coverImage  ?? null,
       instructorId: input.instructorId ?? null,
@@ -185,10 +218,21 @@ export async function updateWorkshop(
       ...(input.fee         !== undefined && { fee:         input.fee }),
       ...(input.featured    !== undefined && { featured:    input.featured }),
       ...(input.published   !== undefined && { published:   input.published }),
-      ...(input.date        !== undefined && { date: input.date ? new Date(input.date) : null }),
-      ...(input.time        !== undefined && { time:        input.time }),
+      ...(input.date        !== undefined && { date:      input.date ? new Date(input.date) : null }),
+      ...(input.startTime   !== undefined && { startTime: input.startTime }),
+      ...(input.endTime     !== undefined && { endTime:   input.endTime }),
+      ...(input.timezone    !== undefined && { timezone:  input.timezone }),
       ...(input.duration    !== undefined && { duration:    input.duration }),
-      ...(input.facilitator !== undefined && { facilitator: input.facilitator }),
+      ...(input.level       !== undefined && { level:       input.level }),
+      ...(input.facilitator   !== undefined && { facilitator:    input.facilitator }),
+      ...(input.facilitators  !== undefined && { facilitators:   input.facilitators  as never }),
+      ...(input.medium        !== undefined && { medium:         input.medium }),
+      ...(input.onlinePlatform !== undefined && { onlinePlatform: input.onlinePlatform }),
+      ...(input.onlineLink    !== undefined && { onlineLink:     input.onlineLink }),
+      ...(input.venueAddress  !== undefined && { venueAddress:   input.venueAddress }),
+      ...(input.venueCity     !== undefined && { venueCity:      input.venueCity }),
+      ...(input.venueState    !== undefined && { venueState:     input.venueState }),
+      ...(input.venueCountry  !== undefined && { venueCountry:   input.venueCountry }),
       ...(input.capacity    !== undefined && { capacity:    input.capacity }),
       ...(input.coverImage   !== undefined && { coverImage:   input.coverImage }),
       ...(input.instructorId !== undefined && { instructorId: input.instructorId }),

@@ -13,46 +13,42 @@ function SuccessContent() {
   return (
     <div className="min-h-screen bg-[#EBF3FC] flex items-center justify-center px-6">
       <div className="bg-white rounded-2xl border border-[#0474C4]/20 shadow-xl w-full max-w-md p-10 flex flex-col items-center text-center gap-6">
+
         <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
           <CheckCircle2 className="w-8 h-8 text-emerald-600" />
         </div>
 
         <div>
-          <h1 className="font-heading text-[1.75rem] tracking-[-0.01em] font-semibold text-[#0474C4] leading-tight mb-2">
+          {/* H1 — Playfair Display, 28px, -0.01em, lh 1.25 */}
+          <h1 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4] mb-2">
             You&apos;re registered!
           </h1>
-          <p className="font-body text-[0.9375rem] text-slate-500 leading-relaxed">
+          {/* Body — DM Sans, 15px, 0em, lh 1.7 */}
+          <p className="font-body text-[0.9375rem] tracking-[0em] leading-[1.7] font-normal text-slate-500">
             Payment confirmed. A confirmation email will be sent to you shortly
             with joining instructions and calendar details.
           </p>
         </div>
 
         {sessionId && (
-          <p className="font-body text-[0.75rem] text-slate-400">
+          <p className="font-body text-[0.75rem] tracking-[0em] font-normal text-slate-400">
             Reference: <span className="font-medium text-slate-500">{sessionId.slice(-12)}</span>
           </p>
         )}
 
         <div className="flex flex-col gap-2 w-full pt-2">
-          <Button
-            asChild
-            className="w-full h-11 rounded-[32px] font-body text-[0.875rem] font-medium bg-[#0474C4] hover:bg-[#06457f] text-white"
-          >
-            <Link href="/workshops">Browse More Events</Link>
+          <Button asChild className="w-full h-11 rounded-[32px] font-body text-[0.875rem] tracking-[0.02em] font-medium bg-[#0474C4] hover:bg-[#06457f] text-white">
+            <Link href="/workshop">Browse More Events</Link>
           </Button>
-          <Button
-            asChild
-            variant="ghost"
-            className="w-full h-11 font-body text-[0.875rem] text-slate-500 hover:text-[#0474C4]"
-          >
+          <Button asChild variant="ghost" className="w-full h-11 font-body text-[0.875rem] tracking-[0em] font-normal text-slate-500 hover:text-[#0474C4]">
             <Link href="/">Back to Home</Link>
           </Button>
         </div>
+
       </div>
     </div>
   )
 }
-
 export default function WorkshopSuccessPage() {
   return (
     <Suspense>

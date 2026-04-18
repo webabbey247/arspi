@@ -273,7 +273,7 @@ function canAccess(allowed: Role | Role[] | undefined, userRole: Role): boolean 
 
 function navItemClass(isActive: boolean) {
   const base =
-    "flex items-center gap-[9px] px-[1.2rem] py-[9px] cursor-pointer font-body border-l-2 text-[0.82rem] font-light transition-all duration-[180ms] no-underline";
+    "flex items-center gap-[9px] px-[1.2rem] py-[9px] cursor-pointer font-body text-[0.8125rem] tracking-[0em] font-normal border-l-2 transition-all duration-[180ms] no-underline";
   return isActive
     ? `${base} bg-[#0474C4]/10 text-[#0474C4] border-l-[#0474C4]`
     : `${base} text-[#1A1916] border-l-transparent hover:bg-[rgba(247,243,237,0.04)] hover:text-[#0474C4] hover:border-l-[#0474C4]`;

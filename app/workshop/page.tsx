@@ -2,32 +2,70 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Calendar, ChevronRight, Clock, DollarSign, Monitor, User, Users } from "lucide-react";
+import { Calendar, ChevronRight, Clock, DollarSign, GraduationCap, MapPin, Monitor, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import withLayout from "@/hooks/useLayout";
 import WorkshopRegistrationForm from "@/components/forms/WorkshopRegistrationForm";
 
 type PublicWorkshop = {
-  id:          string
-  title:       string
-  description: string
-  type:        "FREE" | "PAID"
-  category:    "SHORT_COURSE" | "WEBINAR" | "MASTERCLASS" | "CONFERENCE" | "WORKSHOP"
-  fee:         number
-  date:        string | null
-  time:        string
-  duration:    string
-  facilitator: string
-  capacity:    number
-  registered:  number
-  coverImage:  string | null
-  featured:    boolean
+  id:             string
+  title:          string
+  description:    string
+  type:           "FREE" | "PAID"
+  category:       "SHORT_COURSE" | "WEBINAR" | "MASTERCLASS" | "CONFERENCE" | "WORKSHOP"
+  fee:            number
+  date:           string | null
+  startTime:      string
+  endTime:        string
+  timezone:       string
+  duration:       number
+  level:          string
+  facilitator:    string
+  medium:         string
+  onlinePlatform: string | null
+  onlineLink:     string | null
+  venueAddress:   string | null
+  venueCity:      string | null
+  venueState:     string | null
+  venueCountry:   string | null
+  capacity:       number
+  registered:     number
+  coverImage:     string | null
+  featured:       boolean
 }
 
 function fmtDate(iso: string | null) {
   if (!iso) return "TBA"
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+  return new Date(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+}
+
+function fmtTime(startTime: string, endTime: string, tz: string) {
+  if (!startTime) return "Time TBA"
+  const tzAbbr = (() => {
+    try {
+      return new Intl.DateTimeFormat("en-US", { timeZone: tz || "UTC", timeZoneName: "short" })
+        .formatToParts(new Date()).find(p => p.type === "timeZoneName")?.value ?? tz
+    } catch { return tz || "UTC" }
+  })()
+  return endTime ? `${startTime} – ${endTime} · ${tzAbbr}` : `${startTime} · ${tzAbbr}`
+}
+
+function fmtDelivery(medium: string, platform: string | null, city: string | null) {
+  if (medium === "IN_PERSON") return city ? `In Person · ${city}` : "In Person"
+  return platform ? `${platform} · Online` : "Live Online"
+}
+
+const LEVEL_LABEL: Record<string, string> = {
+  BEGINNER:     "Beginner",
+  INTERMEDIATE: "Intermediate",
+  ADVANCED:     "Advanced",
+}
+
+const LEVEL_COLOR: Record<string, string> = {
+  BEGINNER:     "bg-emerald-600/10 text-emerald-700",
+  INTERMEDIATE: "bg-amber-500/10 text-amber-700",
+  ADVANCED:     "bg-red-600/10 text-red-700",
 }
 
 const cats = [
@@ -166,6 +204,12 @@ const WorkshopPage = () => {
                   <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#FEF3C7] text-[#B45309] border-0 p-2">
                     {CATEGORY_LABEL[featured.category] ?? featured.category}
                   </Badge>
+                  {featured.level && (
+                    <Badge className={`font-body text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-2 ${LEVEL_COLOR[featured.level] ?? "bg-slate-100 text-slate-600"}`}>
+                      <GraduationCap className="h-3 w-3 mr-1 inline-block" />
+                      {LEVEL_LABEL[featured.level] ?? featured.level}
+                    </Badge>
+                  )}
                 </div>
 
                 <h3 className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-ink mb-3">
@@ -179,8 +223,8 @@ const WorkshopPage = () => {
                 <div className="flex gap-6 flex-wrap mb-6">
                   {[
                     { icon: Calendar, val: fmtDate(featured.date) },
-                    { icon: Clock,    val: featured.time           },
-                    { icon: Monitor,  val: "Zoom · Live Online"    },
+                    { icon: Clock,    val: fmtTime(featured.startTime, featured.endTime, featured.timezone) },
+                    { icon: featured.medium === "IN_PERSON" ? MapPin : Monitor, val: fmtDelivery(featured.medium, featured.onlinePlatform, featured.venueCity) },
                     { icon: Users,    val: `${featured.capacity} Seats Available` },
                   ].map(({ icon: Icon, val }) => (
                     <div key={val} className="flex items-center gap-2">
@@ -209,7 +253,7 @@ const WorkshopPage = () => {
 
               </div>
               {/* Right panel */}
-              <div className="bg-[#262b40] p-8 flex flex-col">
+              <div className="bg-[#0474C4] p-8 flex flex-col">
                 <div className="font-heading text-[3rem] tracking-[-0.02em] leading-[1.1] font-bold text-[#A8C4EC]">
                   {featured.date ? new Date(featured.date).getDate().toString().padStart(2, "0") : "—"}
                 </div>
@@ -223,19 +267,19 @@ const WorkshopPage = () => {
                 <div className="flex flex-col gap-3 mb-6 flex-1">
                   {[
                     { icon: Clock,      label: "Duration",    value: featured.duration    },
-                    { icon: User,       label: "Facilitator", value: featured.facilitator },
+                    { icon: User,       label: "Level", value: featured.level },
                     { icon: DollarSign, label: "Fee",         value: featured.type === "FREE" ? "Free" : `$${featured.fee}` },
                   ].map(({ icon: Icon, label, value }) => (
                     <div key={label} className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-md bg-[#0474C4]/8 border border-[#0474C4]/15 flex items-center justify-center shrink-0 mt-0.5">
-                        <Icon className="h-3 w-3 text-[#0474C4]" />
+                      <div className="w-7 h-7 rounded-md bg-white/10 border border-[#0474C4]/15 flex items-center justify-center shrink-0 mt-0.5">
+                        <Icon className="h-3 w-3 text-white" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-body text-[0.6875rem] tracking-[0.05em] font-medium text-white/35">
+                        <span className="font-body text-[0.6875rem] capitalize tracking-[0.05em] font-medium text-white/60">
                           {label}
                         </span>
-                        <span className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-white/80">
-                          {value}
+                        <span className="font-body text-[0.875rem] capitalize tracking-[0em] leading-[1.6] font-normal text-white/80">
+                          {label === "Duration" ? `${value} hrs` : value}
                         </span>
                       </div>
                     </div>
@@ -244,10 +288,10 @@ const WorkshopPage = () => {
 
                 <div className="mb-4">
                   <div className="flex justify-between mb-1.5">
-                    <span className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white/35">
+                    <span className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white/80">
                       Registered
                     </span>
-                    <span className="font-body text-[0.75rem] tracking-[0.07em] font-medium text-[#0474C4]">
+                    <span className="font-body text-[0.75rem] tracking-[0.07em] font-medium text-white/80">
                       {featured.capacity > 0 ? Math.round((featured.registered / featured.capacity) * 100) : 0}%
                     </span>
                   </div>
@@ -257,7 +301,7 @@ const WorkshopPage = () => {
                       style={{ width: `${featured.capacity > 0 ? Math.round((featured.registered / featured.capacity) * 100) : 0}%` }}
                     />
                   </div>
-                  <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-white/25 mt-1">
+                  <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-white/80 mt-1">
                     {featured.registered} of {featured.capacity} seats registered
                   </div>
                 </div>
@@ -281,13 +325,18 @@ const WorkshopPage = () => {
                     className="bg-white/90 border border-[#0474C4]/25 rounded-sm overflow-hidden hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all flex flex-col"
                   >
                     <div className="p-5 flex flex-col flex-1">
-                      <div className="flex gap-2 mb-3">
+                      <div className="flex gap-2 mb-3 flex-wrap">
                         <Badge className={`font-body text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-2 ${w.type === "FREE" ? "bg-emerald-600/10 text-emerald-600" : "bg-[#0474C4]/10 text-[#0474C4]"}`}>
                           {w.type === "FREE" ? "Free" : "Paid"}
                         </Badge>
-                        <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#FEF3C7] text-[#B45309]">
+                        <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#FEF3C7] text-[#B45309] border-0 p-2">
                           {CATEGORY_LABEL[w.category] ?? w.category}
                         </Badge>
+                        {w.level && (
+                          <Badge className={`font-body text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-2 ${LEVEL_COLOR[w.level] ?? "bg-slate-100 text-slate-600"}`}>
+                            {LEVEL_LABEL[w.level] ?? w.level}
+                          </Badge>
+                        )}
                       </div>
 
                       <h3 className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-ink mb-2">
@@ -297,8 +346,8 @@ const WorkshopPage = () => {
                       <div className="flex flex-col gap-1.5 mt-auto pt-3">
                         {[
                           { icon: Calendar, val: fmtDate(w.date) },
-                          { icon: Clock,    val: w.time },
-                          { icon: Monitor,  val: "Live Online · Zoom" },
+                          { icon: Clock,    val: fmtTime(w.startTime, w.endTime, w.timezone) },
+                          { icon: w.medium === "IN_PERSON" ? MapPin : Monitor, val: fmtDelivery(w.medium, w.onlinePlatform, w.venueCity) },
                           { icon: Users,    val: `${w.capacity} seats · ${w.capacity - w.registered} remaining` },
                         ].map(({ icon: Icon, val }) => (
                           <div key={val} className="flex items-center gap-2">
@@ -381,7 +430,7 @@ const WorkshopPage = () => {
       id:    modalEvent.id,
       title: modalEvent.title,
       date:  fmtDate(modalEvent.date),
-      time:  modalEvent.time,
+      time:  fmtTime(modalEvent.startTime, modalEvent.endTime, modalEvent.timezone),
       fee:   modalEvent.fee,
     }}
     setModalOpen={setModalOpen}

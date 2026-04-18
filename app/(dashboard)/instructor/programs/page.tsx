@@ -394,7 +394,7 @@ function StepIndicator({ current, onJump }: { current: number; onJump?: (n: numb
         return (
           <div key={i} className="flex items-start">
             {i > 0 && (
-              <div className="flex items-center pt-[11px] shrink-0">
+              <div className="flex items-center pt-2.75 shrink-0">
                 <div className={`h-px w-5 ${done ? "bg-[#0474C4]" : "bg-[#E5E2DC]"}`} />
               </div>
             )}
@@ -403,7 +403,7 @@ function StepIndicator({ current, onJump }: { current: number; onJump?: (n: numb
               onClick={() => onJump?.(n)}
               className="flex flex-col items-center gap-1 shrink-0 cursor-pointer group px-1"
             >
-              <span className={`w-[22px] h-[22px] rounded-full text-[10px] font-bold flex items-center justify-center transition-all ${
+              <span className={`w-5.5 h-5.5 rounded-full text-[10px] font-bold flex items-center justify-center transition-all ${
                 done   ? "bg-[#0474C4] text-white" :
                 active ? "bg-[#0474C4] text-white shadow-sm shadow-[#0474C4]/30" :
                          "bg-[#E5E2DC] text-[#A8A39C] group-hover:bg-[#C8E4F8] group-hover:text-[#0474C4]"
@@ -446,7 +446,7 @@ function StringListEditor({
           <button
             type="button"
             onClick={() => onChange(items.filter((_, j) => j !== i))}
-            className="w-8 h-[36px] flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 shrink-0 cursor-pointer"
+            className="w-8 h-9 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 shrink-0 cursor-pointer"
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>

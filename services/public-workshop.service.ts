@@ -1,20 +1,29 @@
 export type PublicWorkshop = {
-  id: string
-  title: string
-  slug: string
-  type: string
-  description: string
-  date: string
-  time: string
-  duration: string
-  facilitator: string
-  category: string
-  fee: string | number
-  capacity: number
-  registered: number
-  featured: boolean
-  coverImage: string | null
-  publishedAt?: string | null
+  id:             string
+  title:          string
+  slug:           string
+  type:           string
+  description:    string
+  date:           string | null
+  startTime:      string
+  endTime:        string
+  timezone:       string
+  duration:       number
+  level:          string
+  facilitator:    string
+  category:       string
+  fee:            string | number
+  medium:         string
+  onlinePlatform: string | null
+  onlineLink:     string | null
+  venueAddress:   string | null
+  venueCity:      string | null
+  venueState:     string | null
+  venueCountry:   string | null
+  capacity:       number
+  registered:     number
+  featured:       boolean
+  coverImage:     string | null
 }
 
 type GetWorkshopsOptions = {

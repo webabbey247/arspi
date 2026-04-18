@@ -9,7 +9,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { navLinks } from "@/lib/data";
 
 export function Navbar() {
@@ -19,18 +18,20 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 h-17 flex items-center bg-white backdrop-blur-[14px] border-b border-[#5379AE]/20 w-full">
       <div className="w-full flex items-center justify-between px-8 md:px-16">
+        
         <Link
           href="/"
           className="flex items-center gap-2.5 shrink-0 no-underline w-50"
         >
-          <Image
-            src="/images/arps-institute-logo.webp"
-            alt="ARPS Institute Logo"
-            width={198}
-            height={39}
-            className="h-9.75 w-49.5"
-            priority
-          />
+          <div className="w-70 flex flex-row items-center gap-2.5 px-[1.2rem] shrink-0">
+          <div className="w-8 h-8 border-[1.5px] border-[#0474C4] rounded-full flex items-center justify-center font-heading text-lg font-medium text-[#0474C4] shrink-0">
+            A
+          </div>
+          {/* Brand name — Playfair Display, 15px, -0.005em */}
+          <span className="font-heading text-xl tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4]">
+            ARPS Institute
+          </span>
+        </div>
         </Link>
 
         {/* Desktop nav */}

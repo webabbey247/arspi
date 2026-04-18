@@ -3,15 +3,20 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { useUploadThing } from "@/lib/uploadthing-client"
+
 import { useForm, useWatch, Controller, type Resolver } from "react-hook-form"
+import RichTextEditor from "@/components/ui/RichTextEditor"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import { format } from "date-fns"
-import { CalendarIcon, Clock } from "lucide-react"
+import { CalendarIcon, Clock, Globe } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+
+// ── Timezone list (built from Intl API — evaluated once at module load) ────────
+const TIMEZONES: string[] = (Intl as unknown as { supportedValuesOf(key: string): string[] })
+  .supportedValuesOf("timeZone")
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -19,25 +24,36 @@ type WorkshopType     = "FREE" | "PAID"
 type WorkshopCategory = "SHORT_COURSE" | "WEBINAR" | "MASTERCLASS" | "CONFERENCE" | "WORKSHOP"
 
 type Workshop = {
-  id:          string
-  title:       string
-  slug:        string
-  description: string
-  type:        WorkshopType
-  category:    WorkshopCategory
-  fee:         number
-  featured:    boolean
-  published:   boolean
-  date:        string | null
-  time:        string
-  duration:    string
-  facilitator: string
-  capacity:    number
-  registered:  number
-  coverImage:  string | null
-  createdAt:   string
-  updatedAt:   string
-  _count?:     { registrations: number }
+  id:             string
+  title:          string
+  slug:           string
+  description:    string
+  type:           WorkshopType
+  category:       WorkshopCategory
+  fee:            number
+  featured:       boolean
+  published:      boolean
+  date:           string | null
+  startTime:      string
+  endTime:        string
+  timezone:       string
+  duration:       number
+  level:          string
+  facilitator:    string
+  facilitators:   unknown | null
+  medium:         string
+  onlinePlatform: string | null
+  onlineLink:     string | null
+  venueAddress:   string | null
+  venueCity:      string | null
+  venueState:     string | null
+  venueCountry:   string | null
+  capacity:       number
+  registered:     number
+  coverImage:     string | null
+  createdAt:      string
+  updatedAt:      string
+  _count?:        { registrations: number }
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -161,71 +177,32 @@ function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onCo
   )
 }
 
-// ── Cover image upload ────────────────────────────────────────────────────────
-
-function CoverImageUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
-  const [uploading, setUploading] = useState(false)
-  const { startUpload } = useUploadThing("imageUploader")
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    try {
-      const res = await startUpload([file])
-      if (res?.[0]?.url) onChange(res[0].url)
-    } finally {
-      setUploading(false)
-      if (inputRef.current) inputRef.current.value = ""
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-2">
-      {value && (
-        <div className="relative w-full h-32 rounded-[10px] overflow-hidden border border-[#E5E2DC]">
-          <Image src={value} alt="Cover" fill className="object-cover" />
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 cursor-pointer"
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={uploading}
-        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        {uploading ? "Uploading…" : value ? "Replace image" : "Upload cover image"}
-      </button>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-    </div>
-  )
-}
 
 // ── Workshop form values & validation ─────────────────────────────────────────
 
 type WorkshopFormValues = {
-  title:       string
-  slug:        string
-  description: string
-  type:        WorkshopType
-  category:    WorkshopCategory
-  fee:         string
-  featured:    boolean
-  published:   boolean
-  date:        string   // yyyy-MM-dd
-  time:        string   // HH:mm
-  duration:    string
-  facilitator: string
-  capacity:    string
-  coverImage:  string
+  title:          string
+  slug:           string
+  description:    string
+  type:           WorkshopType
+  category:       WorkshopCategory
+  fee:            string
+  featured:       boolean
+  published:      boolean
+  date:           string   // yyyy-MM-dd
+  startTime:      string   // HH:mm
+  endTime:        string   // HH:mm
+  timezone:       string   // IANA timezone
+  duration:       string   // stored as number string
+  level:          "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+  capacity:       string
+  medium:         "ONLINE" | "IN_PERSON"
+  onlinePlatform: string
+  onlineLink:     string
+  venueAddress:   string
+  venueCity:      string
+  venueState:     string
+  venueCountry:   string
 }
 
 const workshopFormSchema = yup.object({
@@ -237,31 +214,126 @@ const workshopFormSchema = yup.object({
   type:        yup.string().oneOf(["FREE", "PAID"] as const).required("Type is required"),
   category:    yup.string().oneOf(["SHORT_COURSE", "WEBINAR", "MASTERCLASS", "CONFERENCE", "WORKSHOP"] as const).required("Category is required"),
   fee:         yup.string().required("Fee is required"),
-  facilitator: yup.string().trim().required("Facilitator is required"),
-  duration:    yup.string().trim().required("Duration is required"),
-  date:        yup.string().required("Date is required"),
-  time:        yup.string().required("Time is required"),
+  duration:    yup.string()
+                  .required("Duration is required")
+                  .matches(/^[1-9][0-9]*$/, "Must be a positive whole number"),
+  level:       yup.string().oneOf(["BEGINNER", "INTERMEDIATE", "ADVANCED"] as const).required("Level is required"),
+  date:        yup.string()
+                  .required("Date is required")
+                  .test("not-past", "Date cannot be in the past", value => {
+                    if (!value) return true
+                    const today = new Date(); today.setHours(0, 0, 0, 0)
+                    return new Date(value + "T00:00:00") >= today
+                  }),
+  startTime:   yup.string().required("Start time is required"),
+  endTime:     yup.string().required("End time is required"),
+  timezone:    yup.string().required("Timezone is required"),
   capacity:    yup.string().required("Capacity is required"),
   featured:    yup.boolean().required().default(false),
   published:   yup.boolean().required().default(false),
-  coverImage:  yup.string().optional().default(""),
+  medium:         yup.string().oneOf(["ONLINE", "IN_PERSON"] as const).required().default("ONLINE"),
+  onlinePlatform: yup.string().when("medium", (medium: string[], schema) =>
+    medium[0] === "ONLINE" ? schema.required("Platform is required") : schema.optional()
+  ).default(""),
+  onlineLink:  yup.string().when("medium", (medium: string[], schema) =>
+    medium[0] === "ONLINE" ? schema.required("Meeting link is required") : schema.optional()
+  ).default(""),
+  venueAddress: yup.string().default(""),
+  venueCity:    yup.string().default(""),
+  venueState:   yup.string().default(""),
+  venueCountry: yup.string().when("medium", (medium: string[], schema) =>
+    medium[0] === "IN_PERSON" ? schema.required("Country is required") : schema.optional()
+  ).default(""),
 })
 
 const EMPTY_FORM: WorkshopFormValues = {
-  title:       "",
-  slug:        "",
-  description: "",
-  type:        "FREE",
-  category:    "WORKSHOP",
-  fee:         "0",
-  featured:    false,
-  published:   false,
-  date:        "",
-  time:        "",
-  duration:    "2 Hours",
-  facilitator: "",
-  capacity:    "100",
-  coverImage:  "",
+  title:          "",
+  slug:           "",
+  description:    "",
+  type:           "FREE",
+  category:       "WORKSHOP",
+  fee:            "0",
+  featured:       false,
+  published:      false,
+  date:           "",
+  startTime:      "",
+  endTime:        "",
+  timezone:       "UTC",
+  duration:       "2",
+  level:          "BEGINNER",
+  capacity:       "100",
+  medium:         "ONLINE",
+  onlinePlatform: "",
+  onlineLink:     "",
+  venueAddress:   "",
+  venueCity:      "",
+  venueState:     "",
+  venueCountry:   "",
+}
+
+// ── Timezone searchable select ────────────────────────────────────────────────
+
+function TimezoneSelect({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: string }) {
+  const [open, setOpen]     = useState(false)
+  const [search, setSearch] = useState("")
+  const ref                 = useRef<HTMLDivElement>(null)
+
+  const filtered = search
+    ? TIMEZONES.filter(tz => tz.toLowerCase().includes(search.toLowerCase()))
+    : TIMEZONES
+
+  useEffect(() => {
+    function h(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", h)
+    return () => document.removeEventListener("mousedown", h)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => { setOpen(o => !o); setSearch("") }}
+        className={cn(inputCls, "flex items-center justify-between text-left w-full gap-2", !value && "text-[#A8A39C]")}
+      >
+        <span className="flex items-center gap-1.5 truncate">
+          <Globe className="h-3.5 w-3.5 shrink-0 text-[#A8A39C]" />
+          <span className="truncate">{value || "Select timezone…"}</span>
+        </span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      {open && (
+        <div className="absolute z-30 left-0 right-0 top-[calc(100%+4px)] bg-white border border-[#E5E2DC] rounded-xl shadow-lg overflow-hidden">
+          <div className="px-2 py-1.5 border-b border-[#E5E2DC]">
+            <input
+              autoFocus
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search timezones…"
+              className={inputCls}
+            />
+          </div>
+          <ul className="overflow-y-auto max-h-52">
+            {filtered.length === 0 ? (
+              <li className="px-3.5 py-2 text-[12px] text-[#A8A39C]">No results</li>
+            ) : filtered.map(tz => (
+              <li key={tz}>
+                <button
+                  type="button"
+                  onClick={() => { onChange(tz); setOpen(false) }}
+                  className={`w-full text-left px-3.5 py-2 text-[13px] transition-colors cursor-pointer border-none ${value === tz ? "bg-[#EBF5FF] text-[#0474C4] font-semibold" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
+                >
+                  {tz}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {error && <p className="text-[11px] text-red-500 mt-0.5">{error}</p>}
+    </div>
+  )
 }
 
 // ── Workshop modal ────────────────────────────────────────────────────────────
@@ -287,26 +359,37 @@ function WorkshopModal({
     resolver: yupResolver(workshopFormSchema) as Resolver<WorkshopFormValues>,
     defaultValues: workshop
       ? {
-          title:       workshop.title,
-          slug:        workshop.slug,
-          description: workshop.description,
-          type:        workshop.type,
-          category:    workshop.category,
-          fee:         String(workshop.fee),
-          featured:    workshop.featured,
-          published:   workshop.published,
-          date:        workshop.date ? workshop.date.slice(0, 10) : "",
-          time:        workshop.time,
-          duration:    workshop.duration,
-          facilitator: workshop.facilitator,
-          capacity:    String(workshop.capacity),
-          coverImage:  workshop.coverImage ?? "",
+          title:          workshop.title,
+          slug:           workshop.slug,
+          description:    workshop.description,
+          type:           workshop.type,
+          category:       workshop.category,
+          fee:            String(workshop.fee),
+          featured:       workshop.featured,
+          published:      workshop.published,
+          date:           workshop.date ? workshop.date.slice(0, 10) : "",
+          startTime:      workshop.startTime ?? "",
+          endTime:        workshop.endTime   ?? "",
+          timezone:       workshop.timezone  ?? "UTC",
+          duration:       String(workshop.duration ?? 2),
+          level:          (workshop.level as "BEGINNER" | "INTERMEDIATE" | "ADVANCED") ?? "BEGINNER",
+          capacity:       String(workshop.capacity),
+          medium:         (workshop.medium as "ONLINE" | "IN_PERSON") ?? "ONLINE",
+          onlinePlatform: workshop.onlinePlatform ?? "",
+          onlineLink:     workshop.onlineLink     ?? "",
+          venueAddress:   workshop.venueAddress   ?? "",
+          venueCity:      workshop.venueCity       ?? "",
+          venueState:     workshop.venueState      ?? "",
+          venueCountry:   workshop.venueCountry    ?? "",
         }
       : EMPTY_FORM,
   })
 
   // Auto-generate slug from title for new workshops only
   const titleValue = useWatch({ control, name: "title" })
+
+  // Watch medium for conditional delivery-mode fields
+  const watchedMedium = useWatch({ control, name: "medium" })
 
   useEffect(() => {
     if (!workshop) {
@@ -345,17 +428,6 @@ function WorkshopModal({
         {/* Body */}
         <form id="workshop-form" onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
 
-          {/* Cover image — optional */}
-          <Field label="Cover Image">
-            <Controller
-              name="coverImage"
-              control={control}
-              render={({ field }) => (
-                <CoverImageUpload value={field.value ?? ""} onChange={field.onChange} />
-              )}
-            />
-          </Field>
-
           {/* Title */}
           <Field label="Title" required>
             <input {...register("title")} autoFocus className={inputCls} placeholder="e.g. Advanced Research Methods Masterclass" />
@@ -389,25 +461,40 @@ function WorkshopModal({
             </Field>
           </div>
 
-          {/* Description */}
+          {/* Description — rich text */}
           <Field label="Description" required>
-            <textarea {...register("description")} rows={4} className={inputCls} placeholder="A detailed description of the workshop…" />
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <RichTextEditor
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="A detailed description of the workshop…"
+                  minHeight={160}
+                />
+              )}
+            />
             {errors.description && <p className="text-[11px] text-red-500 mt-0.5">{errors.description.message}</p>}
           </Field>
 
-          {/* Facilitator + Duration */}
+          {/* Level + Duration */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="Facilitator" required>
-              <input {...register("facilitator")} className={inputCls} placeholder="e.g. Dr. Jane Smith" />
-              {errors.facilitator && <p className="text-[11px] text-red-500 mt-0.5">{errors.facilitator.message}</p>}
+            <Field label="Level" required>
+              <select {...register("level")} className={inputCls}>
+                <option value="BEGINNER">Beginner</option>
+                <option value="INTERMEDIATE">Intermediate</option>
+                <option value="ADVANCED">Advanced</option>
+              </select>
+              {errors.level && <p className="text-[11px] text-red-500 mt-0.5">{errors.level.message}</p>}
             </Field>
-            <Field label="Duration" required>
-              <input {...register("duration")} className={inputCls} placeholder="e.g. 3 Hours" />
+            <Field label="Duration (hours)" required>
+              <input type="number" min="1" step="1" {...register("duration")} className={inputCls} placeholder="e.g. 3" />
               {errors.duration && <p className="text-[11px] text-red-500 mt-0.5">{errors.duration.message}</p>}
             </Field>
           </div>
 
-          {/* Date picker + Time picker */}
+          {/* Date + Start Time */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Date" required>
               <Controller
@@ -431,11 +518,11 @@ function WorkshopModal({
                           <Calendar
                             mode="single"
                             selected={selected}
+                            disabled={{ before: new Date(new Date().setHours(0, 0, 0, 0)) }}
                             onSelect={(date) => {
                               field.onChange(date ? format(date, "yyyy-MM-dd") : "")
                               setDateOpen(false)
                             }}
-                            initialFocus
                           />
                         </PopoverContent>
                       </Popover>
@@ -445,12 +532,36 @@ function WorkshopModal({
                 }}
               />
             </Field>
-            <Field label="Time" required>
+            <Field label="Start Time" required>
               <div className="relative">
                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#A8A39C] pointer-events-none" />
-                <input type="time" {...register("time")} className={cn(inputCls, "pl-8")} />
+                <input type="time" {...register("startTime")} className={cn(inputCls, "pl-8")} />
               </div>
-              {errors.time && <p className="text-[11px] text-red-500 mt-0.5">{errors.time.message}</p>}
+              {errors.startTime && <p className="text-[11px] text-red-500 mt-0.5">{errors.startTime.message}</p>}
+            </Field>
+          </div>
+
+          {/* End Time + Timezone */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="End Time" required>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#A8A39C] pointer-events-none" />
+                <input type="time" {...register("endTime")} className={cn(inputCls, "pl-8")} />
+              </div>
+              {errors.endTime && <p className="text-[11px] text-red-500 mt-0.5">{errors.endTime.message}</p>}
+            </Field>
+            <Field label="Timezone" required>
+              <Controller
+                name="timezone"
+                control={control}
+                render={({ field }) => (
+                  <TimezoneSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={errors.timezone?.message}
+                  />
+                )}
+              />
             </Field>
           </div>
 
@@ -465,6 +576,83 @@ function WorkshopModal({
               {errors.capacity && <p className="text-[11px] text-red-500 mt-0.5">{errors.capacity.message}</p>}
             </Field>
           </div>
+
+          {/* Delivery Mode */}
+          <Field label="Delivery Mode" required>
+            <div className="flex items-center gap-2">
+              <Controller
+                name="medium"
+                control={control}
+                render={({ field }) => (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => field.onChange("ONLINE")}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold border transition-colors cursor-pointer ${field.value === "ONLINE" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4]"}`}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                      </svg>
+                      Online
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => field.onChange("IN_PERSON")}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold border transition-colors cursor-pointer ${field.value === "IN_PERSON" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4]"}`}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      In-Person
+                    </button>
+                  </>
+                )}
+              />
+            </div>
+          </Field>
+
+          {watchedMedium === "ONLINE" && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="Platform" required>
+                  <select {...register("onlinePlatform")} className={inputCls}>
+                    <option value="">— Select platform —</option>
+                    <option value="Zoom">Zoom</option>
+                    <option value="Google Meet">Google Meet</option>
+                    <option value="Microsoft Teams">Microsoft Teams</option>
+                    <option value="Webex">Webex</option>
+                    <option value="Hopin">Hopin</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  {errors.onlinePlatform && <p className="text-[11px] text-red-500 mt-0.5">{errors.onlinePlatform.message}</p>}
+                </Field>
+              </div>
+              <Field label="Meeting Link" required>
+                <input {...register("onlineLink")} className={inputCls} placeholder="e.g. https://zoom.us/j/..." />
+                {errors.onlineLink && <p className="text-[11px] text-red-500 mt-0.5">{errors.onlineLink.message}</p>}
+              </Field>
+            </>
+          )}
+
+          {watchedMedium === "IN_PERSON" && (
+            <>
+              <Field label="Address">
+                <input {...register("venueAddress")} className={inputCls} placeholder="e.g. 15 Main Street" />
+              </Field>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="City / County">
+                  <input {...register("venueCity")} className={inputCls} placeholder="e.g. Nairobi" />
+                </Field>
+                <Field label="State / Province">
+                  <input {...register("venueState")} className={inputCls} placeholder="e.g. Nairobi County" />
+                </Field>
+              </div>
+              <Field label="Country" required>
+                <input {...register("venueCountry")} className={inputCls} placeholder="e.g. Kenya" />
+                {errors.venueCountry && <p className="text-[11px] text-red-500 mt-0.5">{errors.venueCountry.message}</p>}
+              </Field>
+            </>
+          )}
 
           {/* Toggles */}
           <div className="flex items-center gap-6 pt-1">
@@ -567,20 +755,28 @@ export default function AdminWorkshopsPage() {
 
   async function handleSave(values: WorkshopFormValues) {
     const payload = {
-      title:       values.title,
-      slug:        values.slug || slugify(values.title),
-      description: values.description,
-      type:        values.type,
-      category:    values.category,
-      fee:         parseFloat(values.fee) || 0,
-      featured:    values.featured,
-      published:   values.published,
-      date:        values.date || null,
-      time:        values.time,
-      duration:    values.duration,
-      facilitator: values.facilitator,
-      capacity:    parseInt(values.capacity, 10) || 100,
-      coverImage:  values.coverImage || null,
+      title:          values.title,
+      slug:           values.slug || slugify(values.title),
+      description:    values.description,
+      type:           values.type,
+      category:       values.category,
+      fee:            parseFloat(values.fee) || 0,
+      featured:       values.featured,
+      published:      values.published,
+      date:           values.date || null,
+      startTime:      values.startTime,
+      endTime:        values.endTime,
+      timezone:       values.timezone,
+      duration:       parseInt(values.duration, 10) || 2,
+      level:          values.level,
+      capacity:       parseInt(values.capacity, 10) || 100,
+      medium:         values.medium,
+      onlinePlatform: values.medium === "ONLINE"    ? (values.onlinePlatform || null) : null,
+      onlineLink:     values.medium === "ONLINE"    ? (values.onlineLink     || null) : null,
+      venueAddress:   values.medium === "IN_PERSON" ? (values.venueAddress   || null) : null,
+      venueCity:      values.medium === "IN_PERSON" ? (values.venueCity      || null) : null,
+      venueState:     values.medium === "IN_PERSON" ? (values.venueState     || null) : null,
+      venueCountry:   values.medium === "IN_PERSON" ? (values.venueCountry   || null) : null,
     }
 
     const isEdit    = modal !== "create" && modal !== null

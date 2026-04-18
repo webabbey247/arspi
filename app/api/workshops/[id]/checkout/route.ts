@@ -77,7 +77,7 @@ export async function POST(req: NextRequest, { params }: Context) {
         organisation:  organisation ?? null,
         workshopTitle: workshop.title,
         workshopDate:  workshop.date ? workshop.date.toISOString().slice(0, 10) : "",
-        workshopTime:  workshop.time,
+        workshopTime:  workshop.startTime,
         fee:           workshop.fee,
         paymentMethod: "CARD",
         status:        "PENDING",

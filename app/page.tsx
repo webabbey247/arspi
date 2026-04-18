@@ -991,7 +991,7 @@ const HomePage = () => {
                 const availableSpots = Math.max(0, workshop.capacity - workshop.registered);
                 const isFull = availableSpots === 0;
                 const isUrgent = availableSpots <= 3 && availableSpots > 0;
-                const workshopDate = new Date(workshop.date);
+                const workshopDate = new Date(workshop.date ?? "");
 
                 return (
                   <div
@@ -1018,7 +1018,11 @@ const HomePage = () => {
                       </h3>
                       <div className="flex gap-4 items-center flex-wrap">
                         <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
-                          {workshop.time}
+                          {workshop.startTime
+                            ? workshop.endTime
+                              ? `${workshop.startTime} – ${workshop.endTime}`
+                              : workshop.startTime
+                            : "Time TBA"}
                         </span>
                         <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
                           {workshop.duration}
