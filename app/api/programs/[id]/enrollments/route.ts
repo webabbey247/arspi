@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { getProgramEnrollments } from "@/services/program.service"
+import { getProgramById, getProgramBySlug, getProgramEnrollments } from "@/services/program.service"
+import { getCertificatesByProgram } from "@/services/certificate.service"
 
 type Context = { params: Promise<{ id: string }> }
 
@@ -12,15 +13,32 @@ export async function GET(_req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { id }      = await params
-    const enrollments = await getProgramEnrollments(id)
+    const { id }  = await params
+    const program = await getProgramBySlug(id) ?? await getProgramById(id)
+    if (!program) {
+      return NextResponse.json({ error: "Program not found." }, { status: 404 })
+    }
+
+    const [enrollments, certificates] = await Promise.all([
+      getProgramEnrollments(program.id),
+      getCertificatesByProgram(program.id),
+    ])
+
+    // Index certs by userId for O(1) lookup
+    const certByUser = new Map(certificates.map(c => [c.userId, c]))
 
     return NextResponse.json({
-      enrollments: enrollments.map(e => ({
-        ...e,
-        enrolledAt:  e.enrolledAt.toISOString(),
-        completedAt: e.completedAt?.toISOString() ?? null,
-      })),
+      enrollments: enrollments.map(e => {
+        const cert = certByUser.get(e.userId)
+        return {
+          ...e,
+          enrolledAt:  e.enrolledAt.toISOString(),
+          completedAt: e.completedAt?.toISOString() ?? null,
+          certificate: cert
+            ? { id: cert.id, verifyCode: cert.verifyCode, issuedAt: cert.issuedAt.toISOString() }
+            : null,
+        }
+      }),
     })
   } catch (error) {
     console.error("[GET /api/programs/[id]/enrollments]", error)

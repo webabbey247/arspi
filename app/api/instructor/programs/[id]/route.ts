@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { getProgramById, updateProgram, deleteProgram, slugify } from "@/services/program.service"
+import { getProgramById, getProgramBySlug, updateProgram, deleteProgram, slugify } from "@/services/program.service"
 import { z } from "zod"
 
 const updateSchema = z.object({
@@ -29,10 +29,17 @@ const updateSchema = z.object({
   targetAudience:       z.array(z.string()).nullable().optional(),
   learningObjectives:   z.array(z.string()).nullable().optional(),
   curriculum:           z.array(z.object({
-    week:   z.string(),
-    title:  z.string(),
-    desc:   z.string(),
-    topics: z.array(z.string()),
+    week:           z.string().optional(),
+    title:          z.string(),
+    desc:           z.string().nullable().optional(),
+    isAssessment:   z.boolean().optional(),
+    assessmentLink: z.string().nullable().optional(),
+    lessons: z.array(z.object({
+      title:         z.string(),
+      description:   z.string().nullable().optional(),
+      embedUrls:     z.array(z.string()).optional(),
+      referenceUrls: z.array(z.string()).optional(),
+    })).optional(),
   })).nullable().optional(),
   whatIsIncluded:       z.array(z.string()).nullable().optional(),
   faqs:                 z.array(z.object({ q: z.string(), a: z.string() })).nullable().optional(),
@@ -46,7 +53,7 @@ const updateSchema = z.object({
 type Context = { params: Promise<{ id: string }> }
 
 async function assertOwnership(id: string, instructorId: string) {
-  const program = await getProgramById(id)
+  const program = await getProgramBySlug(id) ?? await getProgramById(id)
   if (!program) return { ok: false as const, status: 404, error: "Program not found." }
   if (program.instructorId !== instructorId) return { ok: false as const, status: 403, error: "Forbidden" }
   return { ok: true as const, program }

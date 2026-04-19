@@ -37,7 +37,7 @@ type Program = {
   enrolledCount:        number | null
   countriesCount:       number | null
   learningObjectives:   string[] | null
-  curriculum:           Array<{ week: string; title: string; desc: string; topics: string[] }> | null
+  curriculum:           Array<{ week?: string; title: string; desc?: string; lessons?: { title: string }[] }> | null
   whatIsIncluded:       string[] | null
   faqs:                 Array<{ q: string; a: string }> | null
   instructorName:       string | null
@@ -47,6 +47,8 @@ type Program = {
   instructorCredentials: string[] | null
 }
 
+type CertInfo = { id: string; verifyCode: string; issuedAt: string }
+
 type Enrollment = {
   id:          string
   userId:      string
@@ -54,6 +56,7 @@ type Enrollment = {
   status:      EnrollStatus
   enrolledAt:  string
   completedAt: string | null
+  certificate: CertInfo | null
   user: {
     id:      string
     email:   string
@@ -143,19 +146,72 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ProgramDetailPage() {
-  const { id }  = useParams<{ id: string }>()
-  const router  = useRouter()
+  const { slug } = useParams<{ slug: string }>()
+  const router   = useRouter()
 
   const [program,     setProgram]     = useState<Program | null>(null)
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
   const [loading,     setLoading]     = useState(true)
   const [enrollLoading, setEnrollLoading] = useState(true)
   const [error,       setError]       = useState<string | null>(null)
+  const [actionId,    setActionId]    = useState<string | null>(null)
+
+  async function markComplete(enrollmentId: string) {
+    setActionId(enrollmentId)
+    try {
+      const res = await fetch(`/api/programs/${slug}/enrollments/${enrollmentId}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ status: "COMPLETED" }),
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      setEnrollments(prev => prev.map(e =>
+        e.id === enrollmentId
+          ? { ...e, status: "COMPLETED", completedAt: data.enrollment.completedAt, certificate: data.certificate }
+          : e
+      ))
+    } finally {
+      setActionId(null)
+    }
+  }
+
+  async function issueCert(enrollmentId: string, userId: string, courseId: string) {
+    setActionId(enrollmentId)
+    try {
+      const res = await fetch("/api/certificates", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ userId, courseId }),
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      setEnrollments(prev => prev.map(e =>
+        e.id === enrollmentId ? { ...e, certificate: data.certificate } : e
+      ))
+    } finally {
+      setActionId(null)
+    }
+  }
+
+  async function revokeCert(certId: string, enrollmentId: string) {
+    setActionId(enrollmentId)
+    try {
+      const res = await fetch(`/api/certificates/${certId}`, { method: "DELETE" })
+      if (res.ok) {
+        setEnrollments(prev => prev.map(e =>
+          e.id === enrollmentId ? { ...e, certificate: null } : e
+        ))
+      }
+    } finally {
+      setActionId(null)
+    }
+  }
 
   useEffect(() => {
     async function loadProgram() {
       try {
-        const res  = await fetch(`/api/programs/${id}`)
+        const res  = await fetch(`/api/programs/${slug}`)
         if (!res.ok) {
           const err = await res.json().catch(() => ({}))
           setError(err.error ?? `Error ${res.status}`)
@@ -172,7 +228,7 @@ export default function ProgramDetailPage() {
 
     async function loadEnrollments() {
       try {
-        const res  = await fetch(`/api/programs/${id}/enrollments`)
+        const res  = await fetch(`/api/programs/${slug}/enrollments`)
         if (!res.ok) return
         const data = await res.json()
         setEnrollments(data.enrollments ?? [])
@@ -185,7 +241,7 @@ export default function ProgramDetailPage() {
 
     loadProgram()
     loadEnrollments()
-  }, [id])
+  }, [slug])
 
   // ── Analytics ─────────────────────────────────────────────────────────────
 
@@ -257,13 +313,9 @@ export default function ProgramDetailPage() {
         <StatCard label="Completed" value={completed} sub={dropped > 0 ? `${dropped} dropped` : "0 dropped"} accent="text-emerald-700" />
       </div>
 
-      {/* Content grid */}
+      {/* Top info grid — Program Details (left) + Status/Description (right) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-        {/* Left — program details */}
-        <div className="col-span-1 lg:col-span-2 space-y-5">
-
-          {/* Core details */}
+        <div className="col-span-1 lg:col-span-2">
           <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
             <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
               <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Program Details</p>
@@ -282,34 +334,77 @@ export default function ProgramDetailPage() {
               <InfoRow label="Instructor" value={instructorName(program)} />
             </div>
           </div>
+        </div>
 
-          {/* Programme details */}
+        <div className="space-y-5">
           <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
             <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Programme Details</p>
+              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Status</p>
             </div>
-            <div className="px-5">
-              <InfoRow label="Duration"    value={program.duration} />
-              <InfoRow label="Format"      value={program.format} />
-              <InfoRow label="Next Intake" value={program.nextIntake} />
-              <InfoRow label="Cohort Size" value={program.cohortSize != null ? `${program.cohortSize} participants` : null} />
+            <div className="p-5 space-y-4">
+              {[
+                { label: "Published", value: (
+                  <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold",
+                    program.published ? "bg-emerald-50 text-emerald-700" : "bg-[#F5F4F1] text-[#6B6560]"
+                  )}>{program.published ? "Published" : "Draft"}</span>
+                )},
+                { label: "Featured", value: (
+                  <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold",
+                    program.featured ? "bg-amber-50 text-amber-700" : "bg-[#F5F4F1] text-[#6B6560]"
+                  )}>{program.featured ? "Yes" : "No"}</span>
+                )},
+              ].map(({ label, value }) => (
+                <div key={label} className="flex items-center justify-between">
+                  <span className="text-[13px] text-[#6B6560]">{label}</span>
+                  {value}
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Social proof */}
           <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
             <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Social Proof</p>
+              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Description</p>
             </div>
-            <div className="px-5">
-              <InfoRow label="Rating"        value={program.rating != null ? `${program.rating} / 5.0` : null} />
-              <InfoRow label="Reviews"       value={program.reviewCount != null ? program.reviewCount.toLocaleString() : null} />
-              <InfoRow label="Enrolled"      value={program.enrolledCount != null ? `${program.enrolledCount.toLocaleString()}+` : null} />
-              <InfoRow label="Countries"     value={program.countriesCount != null ? `${program.countriesCount}+` : null} />
+            <div className="px-5 py-4">
+              <p className="text-[13px] text-[#1A1916] leading-relaxed whitespace-pre-wrap">{program.description}</p>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Facilitator */}
+      {/* Programme Details + Social Proof — full width, side by side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+        <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
+            <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Programme Details</p>
+          </div>
+          <div className="px-5">
+            <InfoRow label="Duration"    value={program.duration} />
+            <InfoRow label="Format"      value={program.format} />
+            <InfoRow label="Next Intake" value={program.nextIntake} />
+            <InfoRow label="Cohort Size" value={program.cohortSize != null ? `${program.cohortSize} participants` : null} />
+          </div>
+        </div>
+
+        <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
+            <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Social Proof</p>
+          </div>
+          <div className="px-5">
+            <InfoRow label="Rating"    value={program.rating        != null ? `${program.rating} / 5.0`                  : null} />
+            <InfoRow label="Reviews"   value={program.reviewCount   != null ? program.reviewCount.toLocaleString()        : null} />
+            <InfoRow label="Enrolled"  value={program.enrolledCount != null ? `${program.enrolledCount.toLocaleString()}+` : null} />
+            <InfoRow label="Countries" value={program.countriesCount != null ? `${program.countriesCount}+`               : null} />
+          </div>
+        </div>
+      </div>
+
+      {/* Facilitator (left) + Learning Objectives + What's Included stacked (right) */}
+      {(program.instructorName || program.instructorTitle || program.instructorBio ||
+        (program.learningObjectives && program.learningObjectives.length > 0) ||
+        (program.whatIsIncluded && program.whatIsIncluded.length > 0)) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
           {(program.instructorName || program.instructorTitle || program.instructorBio) && (
             <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
               <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
@@ -337,41 +432,45 @@ export default function ProgramDetailPage() {
             </div>
           )}
 
-          {/* Learning objectives */}
-          {program.learningObjectives && program.learningObjectives.length > 0 && (
-            <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-              <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-                <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Learning Objectives</p>
+          <div className="space-y-5">
+            {program.learningObjectives && program.learningObjectives.length > 0 && (
+              <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
+                <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
+                  <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Learning Objectives</p>
+                </div>
+                <ul className="px-5 py-4 space-y-2">
+                  {program.learningObjectives.map((obj, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[13px] text-[#1A1916]">
+                      <span className="mt-1 w-1.5 h-1.5 rounded-full bg-[#0474C4] shrink-0" />
+                      {obj}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="px-5 py-4 space-y-2">
-                {program.learningObjectives.map((obj, i) => (
-                  <li key={i} className="flex items-start gap-2 text-[13px] text-[#1A1916]">
-                    <span className="mt-1 w-1.5 h-1.5 rounded-full bg-[#0474C4] shrink-0" />
-                    {obj}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+            )}
 
-          {/* What's included */}
-          {program.whatIsIncluded && program.whatIsIncluded.length > 0 && (
-            <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-              <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-                <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">What&apos;s Included</p>
+            {program.whatIsIncluded && program.whatIsIncluded.length > 0 && (
+              <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
+                <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
+                  <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">What&apos;s Included</p>
+                </div>
+                <ul className="px-5 py-4 space-y-2">
+                  {program.whatIsIncluded.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[13px] text-[#1A1916]">
+                      <span className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="px-5 py-4 space-y-2">
-                {program.whatIsIncluded.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-[13px] text-[#1A1916]">
-                    <span className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+            )}
+          </div>
+        </div>
+      )}
 
-          {/* Curriculum */}
+      {/* Curriculum (left) + FAQs (right) — side by side */}
+      {((program.curriculum && program.curriculum.length > 0) || (program.faqs && program.faqs.length > 0)) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
           {program.curriculum && program.curriculum.length > 0 && (
             <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
               <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
@@ -381,22 +480,25 @@ export default function ProgramDetailPage() {
                 {program.curriculum.map((mod, i) => (
                   <div key={i} className="px-5 py-4">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[10px] font-bold tracking-widest uppercase text-[#0474C4] bg-[#EEF6FF] px-2 py-0.5 rounded-full">{mod.week}</span>
+                      {mod.week && (
+                        <span className="text-[10px] font-bold tracking-widest uppercase text-[#0474C4] bg-[#EEF6FF] px-2 py-0.5 rounded-full">{mod.week}</span>
+                      )}
                       <span className="text-[13px] font-semibold text-[#1A1916]">{mod.title}</span>
                     </div>
-                    <p className="text-[12px] text-[#6B6560] leading-relaxed mb-2">{mod.desc}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {mod.topics.map((t, j) => (
-                        <span key={j} className="text-[11px] px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560]">{t}</span>
-                      ))}
-                    </div>
+                    {mod.desc && <p className="text-[12px] text-[#6B6560] leading-relaxed mb-2">{mod.desc}</p>}
+                    {mod.lessons && mod.lessons.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {mod.lessons.map((l, j) => (
+                          <span key={j} className="text-[11px] px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560]">{l.title}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* FAQs */}
           {program.faqs && program.faqs.length > 0 && (
             <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
               <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
@@ -413,57 +515,7 @@ export default function ProgramDetailPage() {
             </div>
           )}
         </div>
-
-        {/* Right — status + description */}
-        <div className="space-y-5">
-
-          {/* Status card */}
-          <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Status</p>
-            </div>
-            <div className="p-5 space-y-4">
-              {[
-                {
-                  label: "Published",
-                  value: (
-                    <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold",
-                      program.published ? "bg-emerald-50 text-emerald-700" : "bg-[#F5F4F1] text-[#6B6560]"
-                    )}>
-                      {program.published ? "Published" : "Draft"}
-                    </span>
-                  ),
-                },
-                {
-                  label: "Featured",
-                  value: (
-                    <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold",
-                      program.featured ? "bg-amber-50 text-amber-700" : "bg-[#F5F4F1] text-[#6B6560]"
-                    )}>
-                      {program.featured ? "Yes" : "No"}
-                    </span>
-                  ),
-                },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <span className="text-[13px] text-[#6B6560]">{label}</span>
-                  {value}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Description card */}
-          <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Description</p>
-            </div>
-            <div className="px-5 py-4">
-              <p className="text-[13px] text-[#1A1916] leading-relaxed whitespace-pre-wrap">{program.description}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Enrollments table */}
       <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
@@ -491,7 +543,7 @@ export default function ProgramDetailPage() {
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="border-b border-[#F0EEE9]">
-                  {["Name", "Email", "Status", "Enrolled", "Completed"].map(h => (
+                  {["Name", "Email", "Status", "Enrolled", "Completed", "Certificate", ""].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -508,6 +560,57 @@ export default function ProgramDetailPage() {
                     </td>
                     <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(e.enrolledAt)}</td>
                     <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(e.completedAt)}</td>
+
+                    {/* Certificate column */}
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {e.certificate ? (
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700">Issued</span>
+                          <a
+                            href={`/verify/${e.certificate.verifyCode}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[11px] text-[#0474C4] hover:underline"
+                          >
+                            Verify
+                          </a>
+                        </div>
+                      ) : e.status === "COMPLETED" ? (
+                        <button
+                          onClick={() => issueCert(e.id, e.userId, e.courseId)}
+                          disabled={actionId === e.id}
+                          className="text-[11px] font-semibold text-[#0474C4] hover:text-[#06457F] disabled:opacity-50 transition-colors cursor-pointer"
+                        >
+                          {actionId === e.id ? "Issuing…" : "Issue Certificate"}
+                        </button>
+                      ) : (
+                        <span className="text-[#A8A39C]">—</span>
+                      )}
+                    </td>
+
+                    {/* Actions column */}
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        {e.status === "ACTIVE" && (
+                          <button
+                            onClick={() => markComplete(e.id)}
+                            disabled={actionId === e.id}
+                            className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-800 disabled:opacity-50 transition-colors cursor-pointer"
+                          >
+                            {actionId === e.id ? "Saving…" : "Mark Complete"}
+                          </button>
+                        )}
+                        {e.certificate && (
+                          <button
+                            onClick={() => revokeCert(e.certificate!.id, e.id)}
+                            disabled={actionId === e.id}
+                            className="text-[11px] font-semibold text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors cursor-pointer"
+                          >
+                            Revoke
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

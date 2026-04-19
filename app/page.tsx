@@ -2,11 +2,50 @@
 
 import * as React from "react";
 import withLayout from "@/hooks/useLayout";
-import { ChevronRight } from "lucide-react";
+import { CalendarHeart, ChevronRight, TargetIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { getInsights, type PublicInsight } from "@/services/public-insight.service";
 import { getWorkshops, type PublicWorkshop } from "@/services/public-workshop.service";
+import { getPrograms, type PublicProgram } from "@/services/public-program.service";
+
+function InsightCard({ insight }: { insight: PublicInsight }) {
+  return (
+    <Link
+      href={`/insights/${insight.slug}`}
+      className="group bg-transparent border border-transparent rounded-sm overflow-hidden cursor-pointer transition-[border-color,background] duration-300"
+    >
+      <Image
+        className="w-full aspect-video object-cover block opacity-75 transition-opacity duration-300 group-hover:opacity-90"
+        src={insight.coverImage || "/images/dummy/article-1.jpg"}
+        alt={insight.title}
+        width={500}
+        height={300}
+      />
+      <div className="pt-[1.3rem] px-6 pb-[1.6rem] bg-white h-48.75">
+        <span className="inline-block font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4]/10 text-[#0474C4] border border-[#0474C4]/10 py-0.75 px-2.5 rounded-full mb-4">
+          {insight.category}
+        </span>
+        <h3 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.4] font-medium text-[#071639] mb-3 transition-colors duration-200 group-hover:text-[#0474C4]">
+          {insight.title}
+        </h3>
+        <div className="flex justify-between items-center pt-4 border-t border-t-[rgba(200,169,110,0.1)]">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-[#0474C4] border border-[#0474C4] font-body text-[0.8125rem] font-medium text-white flex items-center justify-center">
+              {insight.authorInitials}
+            </div>
+            <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
+              {insight.author}
+            </span>
+          </div>
+          <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
+            {insight.date}
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
+}
 
 const HomePage = () => {
   const [insights, setInsights] = React.useState<PublicInsight[]>([]);
@@ -16,6 +55,9 @@ const HomePage = () => {
   const [workshops, setWorkshops] = React.useState<PublicWorkshop[]>([]);
   const [workshopsLoading, setWorkshopsLoading] = React.useState(true);
   const [workshopsError, setWorkshopsError] = React.useState<string | null>(null);
+
+  const [programs, setPrograms] = React.useState<PublicProgram[]>([]);
+  const [programsLoading, setProgramsLoading] = React.useState(true);
 
   const loadInsights = React.useCallback(() => {
     setInsightsLoading(true);
@@ -56,6 +98,14 @@ const HomePage = () => {
   React.useEffect(() => {
     loadWorkshops();
   }, [loadWorkshops]);
+
+  React.useEffect(() => {
+    setProgramsLoading(true);
+    getPrograms({ limit: 6 })
+      .then(setPrograms)
+      .catch(() => setPrograms([]))
+      .finally(() => setProgramsLoading(false));
+  }, []);
   return (
     <>
       <section className="bg-[#060D14] min-h-[88vh] grid grid-cols-1 md:grid-cols-2 relative overflow-hidden w-full">
@@ -82,13 +132,13 @@ const HomePage = () => {
           </div>
           <div className="flex gap-4 items-center flex-wrap">
             <Link
-              href="/"
+              href="/programs"
               className="font-body text-[0.8125rem] h-full rounded-[32px] min-w-40 tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white border-0 py-3.5 px-8 cursor-pointer transition-all duration-250 no-underline inline-block hover:bg-[#06457F] hover:border-[#06457F]"
             >
               Explore Programs
             </Link>
             <Link
-              href="/"
+              href="/research"
               className="font-body text-[0.8125rem] h-full rounded-[32px] min-w-40 text-center tracking-[0.07em] uppercase font-medium bg-transparent text-[#0474C4] border border-[#0474C4] py-3.25 px-7 cursor-pointer transition-all duration-250 no-underline inline-block hover:bg-[#0474C4] hover:text-white hover:border-[#0474C4]"
             >
               Research Training
@@ -189,7 +239,7 @@ const HomePage = () => {
 
         <div className="relative p-4">
           <Image
-            src="/images/about-arsp.webp"
+            src="/images/about-arps.webp"
             alt="Professionals in a research training session"
             width={700}
             height={530}
@@ -592,7 +642,7 @@ const HomePage = () => {
             ))}
           </div>
           <Link
-            href="//research"
+            href="/research"
             className="font-body min-w-40 border border-[#0474C4] rounded-[32px] mt-2 text-[0.8125rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white border-none py-3.5 px-8 cursor-pointer transition-all duration-250 inline-block hover:bg-[#060d14] hover:border-[#060d14]"
           >
             Explore Research
@@ -600,7 +650,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ============ COURSES SECTION ============ */}
+      {/* ============ PROGRAMS SECTION ============ */}
       <section className="py-28 px-20 bg-white" id="products">
         <div className="flex justify-between items-end mb-14 gap-8">
           <div>
@@ -611,160 +661,98 @@ const HomePage = () => {
               Explore Our Courses
             </h2>
           </div>
-          <a
-            href="#"
+          <Link
+            href="/programs"
             className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] no-underline border-b border-b-border pb-0.5 whitespace-nowrap transition-[color,border-color] duration-200 hover:text-[#0B1625] hover:border-b-[#0B1625]"
           >
             View All Programs →
-          </a>
+          </Link>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
-          {[
-            {
-              initials: "DR",
-              author: "Dr. Rachel Osei",
-              title: "Advanced Data Analysis & Research Methods",
-              hours: "12 hours",
-              level: "Intermediate",
-              price: "$99 / mo",
-              badge: "Bestseller",
-            },
-            {
-              initials: "PK",
-              author: "Prof. Kenneth Addo",
-              title: "Academic Writing & Journal Publication Mastery",
-              hours: "10 hours",
-              level: "Beginners",
-              price: "$19 / mo",
-            },
-            {
-              initials: "SM",
-              author: "Dr. Sarah Mensah",
-              title: "Strategic Leadership & Institutional Management",
-              hours: "16 hours",
-              level: "Expert",
-              price: "$1,000 / yr",
-              badge: "New",
-            },
-            {
-              initials: "JB",
-              author: "James Boateng, MSc",
-              title: "Monitoring, Evaluation & Learning (MEL) Fundamentals",
-              hours: "8 hours",
-              level: "Beginners",
-              price: "$18 / mo",
-            },
-            {
-              initials: "AA",
-              author: "Dr. Ama Asante",
-              title: "Artificial Intelligence Tools for Researchers",
-              hours: "12 hours",
-              level: "Intermediate",
-              price: "$99 / yr",
-              badge: "Trending",
-            },
-            {
-              initials: "EK",
-              author: "Emmanuel Kwarteng, PhD",
-              title: "Policy Research & Evidence-Based Advocacy",
-              hours: "14 hours",
-              level: "Expert",
-              price: "$180 / yr",
-            },
-          ].map(({ initials, author, title, hours, level, price, badge }) => (
-            <Link
-              href="/courses/advanced-data-analysis"
-              key={title}
-              className="group bg-white rounded-sm overflow-hidden border border-[#0474C4]/15 transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(13,27,42,0.1)]"
-            >
-              <div className="relative aspect-16/10 overflow-hidden">
-                <Image
-                  src="/images/dummy/course-1.jpg"
-                  alt={title}
-                  width={600}
-                  height={400}
-                  className="object-cover transition-transform duration-400 group-hover:scale-[1.04]"
-                />
-                {badge && (
-                  <span className="absolute top-3 left-3 font-body text-[0.625rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white px-4 py-1.5 rounded-full">
-                    {badge}
-                  </span>
-                )}
-                <span className="absolute bottom-3 right-3 font-body text-[0.75rem] tracking-[0.05em] font-medium bg-[#0B1625] text-[#D4BA85] py-1.5 px-3.5 rounded-xs">
-                  {price}
-                </span>
+        {programsLoading ? (
+          <div className="grid grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-sm overflow-hidden border border-[#0474C4]/10 animate-pulse">
+                <div className="aspect-16/10 bg-slate-100" />
+                <div className="p-6 space-y-3">
+                  <div className="h-3 bg-slate-100 rounded w-1/2" />
+                  <div className="h-4 bg-slate-100 rounded w-3/4" />
+                  <div className="h-3 bg-slate-100 rounded w-1/3" />
+                </div>
               </div>
+            ))}
+          </div>
+        ) : programs.length > 0 ? (
+          <div className="grid grid-cols-3 gap-6">
+            {programs.map((prog) => {
+              const initials = prog.instructor.name
+                .split(" ")
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((w) => w[0]?.toUpperCase() ?? "")
+                .join("")
+              const price = prog.price > 0 ? `$${prog.price.toLocaleString()}` : "Free"
+              const level = prog.level.charAt(0) + prog.level.slice(1).toLowerCase()
 
-              <div className="pt-[1.4rem] px-6 pb-[1.6rem]">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-[#0474C4] text-white font-body text-[0.8125rem] font-medium flex items-center justify-center shrink-0">
-                    {initials}
+              return (
+                <Link
+                  href={`/programs/${prog.slug}`}
+                  key={prog.id}
+                  className="group bg-white rounded-sm overflow-hidden border border-[#0474C4]/15 transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(13,27,42,0.1)]"
+                >
+                  <div className="relative aspect-16/10 overflow-hidden bg-slate-100">
+                    <Image
+                      src={prog.thumbnail || "/images/dummy/course-1.jpg"}
+                      alt={prog.title}
+                      width={600}
+                      height={400}
+                      className="w-full h-full object-cover transition-transform duration-400 group-hover:scale-[1.04]"
+                    />
+                    {prog.featured && (
+                      <span className="absolute top-3 left-3 font-body text-[0.625rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white px-4 py-1.5 rounded-full">
+                        Featured
+                      </span>
+                    )}
+                    <span className="absolute bottom-3 right-3 font-body text-[0.75rem] tracking-[0.05em] font-medium bg-[#0B1625] text-[#D4BA85] py-1.5 px-3.5 rounded-xs">
+                      {price}
+                    </span>
                   </div>
-                  <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-600">
-                    {author}
-                  </span>
-                </div>
 
-                <h3 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.35] font-medium text-[#071639] mb-4">
-                  {title}
-                </h3>
+                  <div className="pt-[1.4rem] px-6 pb-[1.6rem]">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 rounded-full bg-[#0474C4] text-white font-body text-[0.8125rem] font-medium flex items-center justify-center shrink-0">
+                        {initials}
+                      </div>
+                      <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-600 truncate">
+                        {prog.instructor.name}
+                      </span>
+                    </div>
 
-                <div className="flex gap-[1.2rem] items-center">
-                  <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
-                    <svg
-                      className="w-3.5 h-3.5 opacity-50"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <circle
-                        cx="8"
-                        cy="8"
-                        r="6.5"
-                        stroke="currentColor"
-                        strokeWidth="1.2"
-                      />
-                      <path
-                        d="M8 5v3.5l2 1.5"
-                        stroke="currentColor"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    {hours}
-                  </span>
-                  <span className="w-0.75 h-0.75 rounded-full bg-slate-400/30"></span>
-                  <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
-                    <svg
-                      className="w-3.5 h-3.5 opacity-50"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <rect
-                        x="2"
-                        y="3"
-                        width="12"
-                        height="10"
-                        rx="1.5"
-                        stroke="currentColor"
-                        strokeWidth="1.2"
-                      />
-                      <path
-                        d="M5 7h6M5 10h4"
-                        stroke="currentColor"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    {level}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+                    <h3 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.35] font-medium text-[#071639] mb-4 line-clamp-2">
+                      {prog.title}
+                    </h3>
+
+                    <div className="flex gap-[1.2rem] items-center">
+                      {prog.duration && (
+                        <span className="flex items-center capitalize gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
+                          <CalendarHeart className="w-3.5 h-3.5 opacity-50" />
+                          {`${prog.duration} ${prog.duration > "1" ? "weeks" : "week"}`}
+                        </span>
+                      )}
+                      {prog.duration && <span className="w-0.75 h-0.75 rounded-full bg-slate-400/30" />}
+                      <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
+                        <TargetIcon className="w-3.5 h-3.5 opacity-50" />
+                        {level}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="text-slate-400 py-12 text-center">No programs available yet.</div>
+        )}
       </section>
 
       {/* ============ INSIGHTS SECTION ============ */}
@@ -786,98 +774,76 @@ const HomePage = () => {
           </Link>
         </div>
 
-        {!insightsLoading && !insightsError && insights.length > 0 ? (
+        {insightsLoading ? (
+          <div className="text-slate-300 py-12">Loading insights...</div>
+        ) : insightsError ? (
+          <div className="text-red-300 py-12">{insightsError}</div>
+        ) : insights.length === 0 ? (
+          <div className="text-slate-300 py-12">No insights available yet.</div>
+        ) : insights.length <= 2 ? (
+          /* 1–2 items: two equal columns */
+          <div className="grid grid-cols-2 gap-6">
+            {insights.map((insight) => (
+              <InsightCard key={insight.slug} insight={insight} />
+            ))}
+          </div>
+        ) : insights.length === 3 ? (
+          /* Exactly 3: three equal columns */
+          <div className="grid grid-cols-3 gap-6">
+            {insights.map((insight) => (
+              <InsightCard key={insight.slug} insight={insight} />
+            ))}
+          </div>
+        ) : (
+          /* 4+: featured wide card + two stacked columns */
           <div className="grid grid-cols-[1.6fr_1fr_1fr] gap-6 items-start">
-            {/* Featured article */}
-            {insights[0] && (
-              <Link
-                href={`/insights/${insights[0].slug}`}
-                className="group bg-transparent rounded-sm border border-[rgba(200,169,110,0.15)] overflow-hidden cursor-pointer transition-[border-color,background] duration-300 hover:border-[rgba(200,169,110,0.4)] hover:bg-[rgba(247,243,237,0.07)]"
-              >
-                <Image
-                  className="w-full aspect-video object-cover block opacity-75 transition-opacity duration-300 group-hover:opacity-90"
-                  src={insights[0].coverImage || "/images/dummy/article-1.jpg"}
-                  alt={insights[0].title}
-                  width={700}
-                  height={400}
-                />
-                <div className="pt-[1.6rem] px-[1.8rem] pb-8 bg-white">
-                  <span className="inline-block font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4]/10 text-[#0474C4] border border-[#0474C4]/10 py-0.75 px-2.5 rounded-full mb-4">
-                    {insights[0].category}
-                  </span>
-                  <h3 className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.35] font-medium text-[#071639] mb-3 transition-colors duration-200 group-hover:text-[#0474C4]">
-                    {insights[0].title}
-                  </h3>
-                  <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.7] font-normal text-slate-600 mb-5">
-                    {insights[0].excerpt}
-                  </p>
-                  <div className="flex justify-between items-center pt-4 border-t border-t-[rgba(200,169,110,0.1)]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-[#0474C4] border border-[#0474C4] font-body text-[0.8125rem] font-medium text-white flex items-center justify-center">
-                        {insights[0].authorInitials}
-                      </div>
-                      <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
-                        {insights[0].author}
-                      </span>
+            {/* Featured */}
+            <Link
+              href={`/insights/${insights[0].slug}`}
+              className="group bg-transparent rounded-sm border border-[rgba(200,169,110,0.15)] overflow-hidden cursor-pointer transition-[border-color,background] duration-300 hover:border-[rgba(200,169,110,0.4)] hover:bg-[rgba(247,243,237,0.07)]"
+            >
+              <Image
+                className="w-full aspect-video object-cover block opacity-75 transition-opacity duration-300 group-hover:opacity-90"
+                src={insights[0].coverImage || "/images/dummy/article-1.jpg"}
+                alt={insights[0].title}
+                width={700}
+                height={400}
+              />
+              <div className="pt-[1.6rem] px-[1.8rem] pb-8 bg-white">
+                <span className="inline-block font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4]/10 text-[#0474C4] border border-[#0474C4]/10 py-0.75 px-2.5 rounded-full mb-4">
+                  {insights[0].category}
+                </span>
+                <h3 className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.35] font-medium text-[#071639] mb-3 transition-colors duration-200 group-hover:text-[#0474C4]">
+                  {insights[0].title}
+                </h3>
+                <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.7] font-normal text-slate-600 mb-5">
+                  {insights[0].excerpt}
+                </p>
+                <div className="flex justify-between items-center pt-4 border-t border-t-[rgba(200,169,110,0.1)]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-[#0474C4] border border-[#0474C4] font-body text-[0.8125rem] font-medium text-white flex items-center justify-center">
+                      {insights[0].authorInitials}
                     </div>
                     <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
-                      {insights[0].date}
+                      {insights[0].author}
                     </span>
                   </div>
+                  <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
+                    {insights[0].date}
+                  </span>
                 </div>
-              </Link>
-            )}
+              </div>
+            </Link>
 
-            {/* Small article columns */}
+            {/* Two stacked columns */}
             {[insights.slice(1, 3), insights.slice(3, 5)].map((col, ci) => (
               <div key={ci} className="flex flex-col gap-6">
                 {col.map((insight) => (
-                  <Link
-                    key={insight.slug}
-                    href={`/insights/${insight.slug}`}
-                    className="group bg-transparent border border-transparent rounded-sm overflow-hidden cursor-pointer transition-[border-color,background] duration-300 hover:border-[rgba(200,169,110,0.4)] hover:bg-[rgba(247,243,237,0.07)]"
-                  >
-                    <Image
-                      className="w-full aspect-video object-cover block opacity-75 transition-opacity duration-300 group-hover:opacity-90"
-                      src={insight.coverImage || "/images/dummy/article-1.jpg"}
-                      alt={insight.title}
-                      width={500}
-                      height={300}
-                    />
-                    <div className="pt-[1.3rem] px-6 pb-[1.6rem] bg-white">
-                      <span className="inline-block font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4]/10 text-[#0474C4] border border-[#0474C4]/10 py-0.75 px-2.5 rounded-full mb-4">
-                        {insight.category}
-                      </span>
-                      <h3 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.4] font-medium text-[#071639] mb-3 transition-colors duration-200 group-hover:text-[#0474C4]">
-                        {insight.title}
-                      </h3>
-                      <div className="flex justify-between items-center pt-4 border-t border-t-[rgba(200,169,110,0.1)]">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-[#0474C4] border border-[#0474C4] font-body text-[0.8125rem] font-medium text-white flex items-center justify-center">
-                            {insight.authorInitials}
-                          </div>
-                          <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
-                            {insight.author}
-                          </span>
-                        </div>
-                        <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
-                          {insight.date}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
+                  <InsightCard key={insight.slug} insight={insight} />
                 ))}
               </div>
             ))}
           </div>
-        ) : insightsLoading ? (
-          <div className="text-slate-300 py-12">Loading insights...</div>
-        ) : insightsError ? (
-          <div className="text-red-300 py-12">
-            {insightsError}
-          </div>
-        ) : (
-          <div className="text-slate-300 py-12">No insights available yet.</div>
         )}
       </section>
 
@@ -1024,11 +990,13 @@ const HomePage = () => {
                               : workshop.startTime
                             : "Time TBA"}
                         </span>
+                        {!!workshop.duration && (
+                          <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
+                            {workshop.duration}h
+                          </span>
+                        )}
                         <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
-                          {workshop.duration}
-                        </span>
-                        <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
-                          {workshop.fee}
+                          {Number(workshop.fee) === 0 ? "Free" : `$${Number(workshop.fee).toLocaleString()}`}
                         </span>
                       </div>
                     </div>

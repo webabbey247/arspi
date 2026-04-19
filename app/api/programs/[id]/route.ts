@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { getProgramById, updateProgram, deleteProgram, slugify } from "@/services/program.service"
+import { getProgramById, getProgramBySlug, updateProgram, deleteProgram, slugify } from "@/services/program.service"
 import { z } from "zod"
 
 const updateSchema = z.object({
@@ -34,10 +34,17 @@ const updateSchema = z.object({
   targetAudience:       z.array(z.string()).nullable().optional(),
   learningObjectives:   z.array(z.string()).nullable().optional(),
   curriculum:           z.array(z.object({
-    week:   z.string(),
-    title:  z.string(),
-    desc:   z.string(),
-    topics: z.array(z.string()),
+    week:           z.string().optional(),
+    title:          z.string(),
+    desc:           z.string().nullable().optional(),
+    isAssessment:   z.boolean().optional(),
+    assessmentLink: z.string().nullable().optional(),
+    lessons: z.array(z.object({
+      title:         z.string(),
+      description:   z.string().nullable().optional(),
+      embedUrls:     z.array(z.string()).optional(),
+      referenceUrls: z.array(z.string()).optional(),
+    })).optional(),
   })).nullable().optional(),
   whatIsIncluded:       z.array(z.string()).nullable().optional(),
   faqs:                 z.array(z.object({ q: z.string(), a: z.string() })).nullable().optional(),
@@ -61,7 +68,7 @@ export async function GET(_req: NextRequest, { params }: Context) {
     }
 
     const { id } = await params
-    const program = await getProgramById(id)
+    const program = await getProgramBySlug(id) ?? await getProgramById(id)
     if (!program) {
       return NextResponse.json({ error: "Program not found." }, { status: 404 })
     }

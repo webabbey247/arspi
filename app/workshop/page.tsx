@@ -126,7 +126,7 @@ function WorkshopDetailModal({
                 </Badge>
               )}
             </div>
-            <h2 className="font-heading text-[1.5rem] tracking-[-0.01em] leading-[1.25] font-semibold text-white">
+            <h2 className="font-heading text-[1.5rem] tracking-[-0.01em] leading-tight font-semibold text-white">
               {workshop.title}
             </h2>
             <p className="font-body text-[0.8125rem] text-white/70">
@@ -233,8 +233,9 @@ const WorkshopPage = () => {
 
   React.useEffect(() => {
     fetch("/api/workshops/public")
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(d => setWorkshops(d.workshops ?? []))
+      .catch(() => setWorkshops([]))
       .finally(() => setLoading(false))
   }, [])
 

@@ -3,7 +3,7 @@ export default function Loading() {
     <div className="min-h-screen bg-sky-pale">
       {/* Hero skeleton */}
       <div className="bg-ink-deep px-8 md:px-16 py-24 animate-pulse">
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-350 mx-auto">
           <div className="h-3 w-32 bg-sapphire/20 rounded mb-6" />
           <div className="h-12 w-3/4 bg-white/8 rounded mb-4" />
           <div className="h-12 w-1/2 bg-white/8 rounded mb-8" />
@@ -17,7 +17,7 @@ export default function Loading() {
       </div>
 
       {/* Content skeleton */}
-      <div className="px-8 md:px-16 py-16 max-w-[1400px] mx-auto">
+      <div className="px-8 md:px-16 py-16 max-w-350 mx-auto">
         <div className="grid md:grid-cols-3 gap-5 animate-pulse">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="bg-sky-light border border-sapphire/15 rounded-sm p-6">

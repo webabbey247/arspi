@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
 
   // nodemailer uses Node.js built-ins that Turbopack must not bundle
-  serverExternalPackages: ["nodemailer", "uploadthing", "@uploadthing/shared", "@prisma/adapter-pg", "pg"],
+  serverExternalPackages: ["nodemailer", "uploadthing", "@uploadthing/shared", "@prisma/adapter-pg", "pg", "@react-pdf/renderer", "canvas"],
   images: {
     remotePatterns: [
       // UploadThing CDN
