@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { workshopSchema } from "@/lib/validators/workshop"
-import { registerForWorkshop } from "@/services/workshop.service"
+import { registerForWorkshop, getWorkshopById, computeDurationHours, normalizeFacilitators } from "@/services/workshop.service"
 import type { WorkshopRegistrationPayload } from "@/lib/validators/workshop"
+import { sendWorkshopConfirmationEmail } from "@/lib/email"
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,6 +47,27 @@ export async function POST(req: NextRequest) {
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 500 })
     }
+
+    // Send confirmation email (non-blocking — don't fail the request if email fails)
+    const workshop = workshopId ? await getWorkshopById(String(workshopId)).catch(() => null) : null
+    sendWorkshopConfirmationEmail(validated.email, {
+      firstName:      validated.firstName,
+      workshopTitle:  String(workshopTitle),
+      workshopDate:   String(workshopDate),
+      workshopTime:   String(workshopTime),
+      fee:            Number(fee),
+      isConfirmed:    !requirePayment,
+      category:       workshop?.category,
+      level:          workshop?.level,
+      duration:       computeDurationHours(workshop?.startTime, workshop?.endTime) ?? undefined,
+      facilitators:   normalizeFacilitators(workshop?.facilitators).map(f => f.fullName),
+      medium:         workshop?.medium,
+      onlinePlatform: workshop?.onlinePlatform,
+      onlineLink:     workshop?.onlineLink,
+      venueAddress:   workshop?.venueAddress,
+      venueCity:      workshop?.venueCity,
+      venueCountry:   workshop?.venueCountry,
+    }).catch(err => console.error("[workshop-confirmation-email]", err))
 
     return NextResponse.json(
       { message: requirePayment ? "Registration submitted! Proceed to payment." : "You're registered! Check your email for confirmation." },

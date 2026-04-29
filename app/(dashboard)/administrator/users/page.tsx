@@ -210,6 +210,8 @@ export default function UsersPage() {
   const [statusOpen,   setStatusOpen]   = useState(false)
   const [pwdUser,      setPwdUser]      = useState<UserRow | null>(null)
   const [toast,        setToast]        = useState<{ msg: string; ok: boolean } | null>(null)
+  const PAGE_SIZE                       = 20
+  const [page,         setPage]         = useState(1)
 
   const roleRef   = useRef<HTMLDivElement>(null)
   const statusRef = useRef<HTMLDivElement>(null)
@@ -252,6 +254,11 @@ export default function UsersPage() {
   }, [search, roleFilter, statusFilter])
 
   useEffect(() => { fetchUsers() }, [fetchUsers])
+
+  useEffect(() => { setPage(1) }, [search, roleFilter, statusFilter])
+
+  const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE))
+  const paginated  = users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
@@ -464,7 +471,7 @@ export default function UsersPage() {
                     No users found.
                   </td>
                 </tr>
-              ) : users.map(user => (
+              ) : paginated.map(user => (
                 <tr key={user.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
 
                   {/* User */}
@@ -573,16 +580,30 @@ export default function UsersPage() {
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
           <p className="text-[11px] text-[#A8A39C]">
-            Showing <span className="font-semibold text-[#6B6560]">{users.length}</span>{" "}
-            {users.length === 1 ? "user" : "users"}
+            {users.length === 0 ? (
+              <>Showing <span className="font-semibold text-[#6B6560]">0</span> users</>
+            ) : (
+              <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, users.length)}</span> of <span className="font-semibold text-[#6B6560]">{users.length}</span> {users.length === 1 ? "user" : "users"}</>
+            )}
           </p>
-          {(roleFilter !== "ALL" || statusFilter !== "ALL" || search) && (
-            <button
-              onClick={() => { setSearch(""); setRoleFilter("ALL"); setStatusFilter("ALL") }}
-              className="text-[11px] text-[#0474C4] font-semibold hover:underline cursor-pointer"
-            >
-              Clear filters
-            </button>
+          {users.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              >
+                Prev
+              </button>
+              <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              >
+                Next
+              </button>
+            </div>
           )}
         </div>
       </div>

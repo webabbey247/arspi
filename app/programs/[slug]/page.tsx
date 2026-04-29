@@ -325,9 +325,19 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
   </section>
 
   {/* ── Quick facts strip ── */}
-  <div className="bg-[#06457F] border-y border-[#C8A96E]/10">
-    <div className="max-w-7xl mx-auto px-8 md:px-20 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-white/10">
-      {[
+  {/* <div className="bg-[#06457F] border-y border-[#C8A96E]/10">
+   
+  </div> */}
+
+ {/* ── TWO-COLUMN PAGE ── */}
+  <div className="bg-white w-full grid lg:grid-cols-[1fr_340px] gap-0 max-w-350 justify-start mx-auto my-0">
+      {/* ── Main body ── */}
+  
+      <div className="py-16 pr-16 pl-20 border-r border-[#c8a96e]/25">
+        {/* ──  Program Header ── */}
+       <div className="mb-12 pb-12 border-b border-[#c8a96e]/25">
+       <div className="flex gap-0 flex-wrap rounded-xs overflow-hidden border border-[#c8a96e]/25 w-full justify-between bg-[#0474c4]/10">
+   {[
         { label: "Duration",    value: prog.duration },
         { label: "Level",       value: prog.level },
         { label: "Format",      value: prog.format ?? "Online" },
@@ -337,35 +347,29 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
       ]
         .filter((x): x is { label: string; value: string } => x !== null)
         .map(({ label, value }) => (
-          <div key={label} className="px-4 py-4">
-            {/* Label — DM Sans, 11px, +0.07em, uppercase */}
-            <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-white/45 mb-1">
+          <div key={label} className="flex flex-col min-w-30 py-4 px-[1.2rem] border-r border-[#c8a96e]/25 last:border-0">
+            <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-600 mb-1">
               {label}
             </p>
-            {/* Value — DM Sans, 14px, 0em, font-medium */}
             <p className="font-body text-[0.875rem] tracking-[0em] font-medium text-white">
               {value}
             </p>
           </div>
         ))}
+       </div>
+   
     </div>
-  </div>
+      </div>
 
-  {/* ── Main body ── */}
-  <div className="bg-white w-full">
-    <div className="max-w-7xl mx-auto px-8 md:px-20 grid lg:grid-cols-[1fr_340px] gap-0 py-12">
+    {/* <div className="max-w-7xl mx-auto px-8 md:px-20 grid lg:grid-cols-[1fr_340px] gap-0 py-12"> */}
 
-      {/* Left column */}
-      <div className="lg:pr-12 lg:border-r border-slate-100 flex flex-col gap-10">
+      {/* <div className="lg:pr-12 lg:border-r border-slate-100 flex flex-col gap-10">
 
-        {/* Overview */}
         {(prog.overview || prog.objectives.length > 0) && (
           <section className="pb-10 border-b border-slate-100">
-            {/* Section label — DM Sans, 11px, +0.07em, font-medium, uppercase */}
             <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium mb-1" style={{ color: cat.color }}>
               Overview
             </p>
-            {/* H2 — Playfair Display, 28px, -0.01em, lh 1.25 */}
             <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-slate-900 mb-4">
               What You Will Learn
             </h2>
@@ -381,7 +385,6 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
                     <div className="w-5 h-5 rounded-full flex items-center justify-center mt-0.5 shrink-0" style={{ background: `${cat.color}18` }}>
                       <CheckCircle className="h-3 w-3" style={{ color: cat.color }} />
                     </div>
-                    {/* Small — DM Sans, 14px, 0em, lh 1.6 */}
                     <span className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-slate-600">
                       {obj}
                     </span>
@@ -392,7 +395,6 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
           </section>
         )}
 
-        {/* Curriculum */}
         {prog.modules.length > 0 && (
           <section className="pb-10 border-b border-slate-100">
             <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium mb-1" style={{ color: cat.color }}>
@@ -401,7 +403,6 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
             <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-slate-900 mb-1">
               Programme Outline
             </h2>
-            {/* Module count — DM Sans, 13px, 0em */}
             <p className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400 mb-6">
               {prog.modules.length} modules
             </p>
@@ -442,7 +443,6 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
           </section>
         )}
 
-        {/* Instructor */}
         {prog.instructor.name && (
           <section className="pb-10 border-b border-slate-100">
             <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium mb-1" style={{ color: cat.color }}>
@@ -452,12 +452,10 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
               Meet Your Instructor
             </h2>
             <div className="bg-slate-50 border border-slate-100 rounded-xl p-6 flex gap-5">
-              {/* Avatar — Playfair Display initials */}
               <div className="w-20 h-20 rounded-full flex items-center justify-center font-heading text-[1.375rem] tracking-[-0.005em] font-semibold text-white shrink-0" style={{ background: cat.color }}>
                 {prog.instructor.initials ?? prog.instructor.name.slice(0, 2).toUpperCase()}
               </div>
               <div>
-                {/* Instructor name — Playfair Display, 22px, -0.005em */}
                 <p className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-900 mb-0.5">
                   {prog.instructor.name}
                 </p>
@@ -485,7 +483,6 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
           </section>
         )}
 
-        {/* FAQs */}
         {prog.faqs.length > 0 && (
           <section>
             <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium mb-1" style={{ color: cat.color }}>
@@ -497,11 +494,9 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
             <Accordion type="single" collapsible>
               {prog.faqs.map((faq, i) => (
                 <AccordionItem key={i} value={`faq-${i}`} className="border-slate-100">
-                  {/* FAQ question — Playfair Display, 16px, -0.005em, font-medium */}
                   <AccordionTrigger className="hover:no-underline py-4 text-left font-heading text-[1rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-800">
                     {faq.q}
                   </AccordionTrigger>
-                  {/* FAQ answer — DM Sans, 15px, 0em, lh 1.7 */}
                   <AccordionContent className="pb-4 font-body text-[0.9375rem] tracking-[0em] leading-[1.7] font-normal text-slate-500">
                     {faq.a}
                   </AccordionContent>
@@ -510,19 +505,17 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
             </Accordion>
           </section>
         )}
-      </div>
+      </div> */}
 
       {/* Sidebar */}
-      <div className="lg:pl-10 flex flex-col gap-5 mt-10 lg:mt-0">
+      {/* <div className="lg:pl-10 flex flex-col gap-5 mt-10 lg:mt-0"> */}
 
         {/* Enrol card */}
-        <div className="rounded-xl w-full border border-slate-100 overflow-hidden shadow-sm">
+        {/* <div className="rounded-xl w-full border border-slate-100 overflow-hidden shadow-sm">
           <div className="px-6 py-5 border-b border-slate-100 bg-slate-50">
-            {/* Price — Playfair Display, 32px, -0.015em, lh 1.1 */}
             <p className="font-heading text-[2rem] tracking-[-0.015em] leading-[1.1] font-bold text-slate-900 mb-1">
               {prog.price > 0 ? `$${prog.price.toLocaleString()}` : "Free"}
             </p>
-            {/* Price sub — DM Sans, 12px, 0em */}
             <p className="font-body text-[0.75rem] tracking-[0em] font-normal text-slate-400">
               {prog.price > 0 ? "Full programme fee · One-time payment" : "No payment required"}
             </p>
@@ -540,7 +533,6 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
                 .map(({ icon: Icon, value }) => (
                   <div key={value} className="flex items-center gap-2.5">
                     <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: cat.color }} />
-                    {/* Meta — DM Sans, 13px, 0em, font-normal */}
                     <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-600">
                       {value}
                     </span>
@@ -559,14 +551,13 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
               </p>
             )}
           </div>
-        </div>
+        </div> */}
 
         {/* What's included */}
-        {prog.included.length > 0 && (
+        {/* {prog.included.length > 0 && (
           <div className="rounded-xl w-full border border-slate-100 p-5 bg-slate-50">
             <div className="flex items-center gap-2 mb-4">
               <BookOpen className="h-4 w-4" style={{ color: cat.color }} />
-              {/* H4 — Playfair Display, 15px, -0.005em */}
               <p className="font-heading text-[0.9375rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-800">
                 What&apos;s Included
               </p>
@@ -575,7 +566,6 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
               {prog.included.map((item) => (
                 <div key={item} className="flex items-center gap-2">
                   <CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                  {/* Small — DM Sans, 13px, 0em */}
                   <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-600">
                     {item}
                   </span>
@@ -583,12 +573,11 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Related programs */}
-        {prog.related.length > 0 && (
+        {/* {prog.related.length > 0 && (
           <div className="rounded-xl border border-slate-100 p-5">
-            {/* H4 — Playfair Display, 15px, -0.005em */}
             <p className="font-heading text-[0.9375rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-800 mb-3">
               You Might Also Like
             </p>
@@ -596,11 +585,9 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
               {prog.related.map((r) => (
                 <Link key={r.slug} href={`/programs/${r.slug}`} className="py-3 border-b border-slate-100 last:border-b-0 flex items-center gap-2.5 group no-underline">
                   <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: cat.color }} />
-                  {/* Title — DM Sans, 13px, 0em, font-normal */}
                   <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-700 group-hover:text-teal-600 transition-colors leading-snug flex-1">
                     {r.title}
                   </span>
-                  {/* Duration — DM Sans, 11px, 0em */}
                   <span className="font-body text-[0.6875rem] tracking-[0em] font-normal text-slate-400 whitespace-nowrap">
                     {r.duration}
                   </span>
@@ -608,58 +595,13 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
               ))}
             </div>
           </div>
-        )}
-      </div>
-    </div>
+        )} */}
+      {/* </div> */}
+    {/* </div> */}
   </div>
 
   {/* ── Related programs grid ── */}
-  {prog.related.length > 0 && (
-    <section className="bg-[#060D14] px-8 md:px-20 py-16">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
-          <div>
-            {/* Label — DM Sans, 11px, +0.07em, font-medium, uppercase */}
-            <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#C8A96E] mb-2">
-              Continue Learning
-            </p>
-            {/* H2 — Playfair Display, 28px, -0.01em, lh 1.25 */}
-            <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-white">
-              You May Also Like
-            </h2>
-          </div>
-          {/* Link — DM Sans, 12px, +0.07em, uppercase */}
-          <Link href="/programs" className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white/45 border-b border-white/15 hover:text-white hover:border-white/40 transition-colors pb-px">
-            Browse All Programs →
-          </Link>
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {prog.related.map((r) => (
-            <Link key={r.slug} href={`/programs/${r.slug}`} className="bg-white/4 border border-white/8 rounded-xl p-5 hover:bg-white/6 hover:-translate-y-1 transition-all no-underline group block" style={{ borderTopWidth: "2px", borderTopColor: cat.color }}>
-              {/* Category badge — DM Sans, 10px, +0.07em, font-medium, uppercase */}
-              <span className="font-body text-[0.625rem] tracking-[0.07em] uppercase font-medium px-2.5 py-1 rounded-full mb-3 inline-block" style={{ background: `${cat.color}18`, color: cat.color }}>
-                {cat.label.split(" ")[0]}
-              </span>
-              {/* H3 — Playfair Display, 15px, -0.005em, lh 1.3 */}
-              <h3 className="font-heading text-[0.9375rem] tracking-[-0.005em] leading-[1.3] font-medium text-white mb-3 group-hover:text-[#C8A96E] transition-colors">
-                {r.title}
-              </h3>
-              <div className="flex items-center justify-between pt-3 border-t border-white/8">
-                {/* Meta — DM Sans, 11px, 0em */}
-                <span className="font-body text-[0.6875rem] tracking-[0em] font-normal text-white/35">
-                  {r.duration} · Online
-                </span>
-                <span className="font-body text-[0.6875rem] tracking-[0em] font-normal text-white/35 group-hover:text-white/60 transition-colors">
-                  Enrol →
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </section>
-  )}
-</>
+ /</>
     </>
   )
 }

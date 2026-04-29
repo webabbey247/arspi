@@ -410,6 +410,9 @@ export default function AdminInsightsPage() {
   const [togglingIds, setTogglingIds]           = useState<Set<string>>(new Set())
   const [filterOpen, setFilterOpen]             = useState(false)
   const filterRef                               = useRef<HTMLDivElement>(null)
+  const PAGE_SIZE                               = 20
+  const [page, setPage]                         = useState(1)
+  const [categoriesPage, setCategoriesPage]     = useState(1)
 
   // Categories
   const [categories, setCategories]                   = useState<Category[]>([])
@@ -450,6 +453,9 @@ export default function AdminInsightsPage() {
     document.addEventListener("mousedown", h)
     return () => document.removeEventListener("mousedown", h)
   }, [])
+
+  useEffect(() => { setPage(1) }, [insightSearch, insightFilter])
+  useEffect(() => { setCategoriesPage(1) }, [categorySearch])
 
   // ── CSV export ───────────────────────────────────────────────────────────────
 
@@ -579,6 +585,11 @@ export default function AdminInsightsPage() {
 
   const filterOptions = ["All", "Published", "Drafts", "Featured", ...categories.map(c => c.name)]
 
+  const totalPages           = Math.max(1, Math.ceil(filteredInsights.length / PAGE_SIZE))
+  const paginatedInsights    = filteredInsights.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalCategoryPages   = Math.max(1, Math.ceil(filteredCategories.length / PAGE_SIZE))
+  const paginatedCategories  = filteredCategories.slice((categoriesPage - 1) * PAGE_SIZE, categoriesPage * PAGE_SIZE)
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -628,8 +639,11 @@ export default function AdminInsightsPage() {
                   onClick={() => setFilterOpen(o => !o)}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${insightFilter !== "All" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"}`}
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                  Filter
+ <svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round'>
+                  <line x1='4' y1='6' x2='20' y2='6' />
+                  <line x1='8' y1='12' x2='16' y2='12' />
+                  <line x1='11' y1='18' x2='13' y2='18' />
+                </svg>                  Filter
                   {insightFilter !== "All" && <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{insightFilter}</span>}
                 </button>
                 {filterOpen && (
@@ -669,7 +683,7 @@ export default function AdminInsightsPage() {
                   <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
                 ) : filteredInsights.length === 0 ? (
                   <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">No insights found.</td></tr>
-                ) : filteredInsights.map(ins => (
+                ) : paginatedInsights.map(ins => (
                   <tr key={ins.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
                     <td className="px-4 py-3 max-w-xs">
                       <p className="font-semibold text-[#1A1916] truncate">{ins.title}</p>
@@ -713,8 +727,20 @@ export default function AdminInsightsPage() {
           </div>
 
           <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]">Showing <span className="font-semibold text-[#6B6560]">{filteredInsights.length}</span> of <span className="font-semibold text-[#6B6560]">{insights.length}</span> insights</p>
-            {filteredInsights.length < insights.length && <p className="text-[11px] text-[#0474C4] font-semibold">{insights.length - filteredInsights.length} filtered out</p>}
+            <p className="text-[11px] text-[#A8A39C]">
+              {filteredInsights.length === 0 ? (
+                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{insights.length}</span> insights</>
+              ) : (
+                <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, filteredInsights.length)}</span> of <span className="font-semibold text-[#6B6560]">{filteredInsights.length}</span> {filteredInsights.length === 1 ? "insight" : "insights"}</>
+              )}
+            </p>
+            {filteredInsights.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -743,7 +769,7 @@ export default function AdminInsightsPage() {
                   <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
                 ) : filteredCategories.length === 0 ? (
                   <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No categories yet.</td></tr>
-                ) : filteredCategories.map(cat => (
+                ) : paginatedCategories.map(cat => (
                   <tr key={cat.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
                     <td className="px-4 py-3 font-semibold text-[#1A1916] whitespace-nowrap">{cat.name}</td>
                     <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{cat.slug}</td>
@@ -765,8 +791,21 @@ export default function AdminInsightsPage() {
             </table>
           </div>
 
-          <div className="px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]"><span className="font-semibold text-[#6B6560]">{categories.length}</span> {categories.length === 1 ? "category" : "categories"} total</p>
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+            <p className="text-[11px] text-[#A8A39C]">
+              {filteredCategories.length === 0 ? (
+                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{categories.length}</span> categories</>
+              ) : (
+                <>Showing <span className="font-semibold text-[#6B6560]">{(categoriesPage - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(categoriesPage * PAGE_SIZE, filteredCategories.length)}</span> of <span className="font-semibold text-[#6B6560]">{filteredCategories.length}</span> {filteredCategories.length === 1 ? "category" : "categories"}</>
+              )}
+            </p>
+            {filteredCategories.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setCategoriesPage(p => Math.max(1, p - 1))} disabled={categoriesPage === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{categoriesPage} / {totalCategoryPages}</span>
+                <button onClick={() => setCategoriesPage(p => Math.min(totalCategoryPages, p + 1))} disabled={categoriesPage >= totalCategoryPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+              </div>
+            )}
           </div>
         </div>
       )}

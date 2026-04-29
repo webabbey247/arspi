@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getWorkshops } from "@/services/workshop.service"
+import { getWorkshops, computeDurationHours, normalizeFacilitators } from "@/services/workshop.service"
 
 /** GET /api/workshops/public — publicly accessible list of published workshops */
 export async function GET() {
@@ -20,9 +20,10 @@ export async function GET() {
       startTime:      w.startTime,
       endTime:        w.endTime,
       timezone:       w.timezone,
-      duration:       w.duration,
+      duration:       computeDurationHours(w.startTime, w.endTime),
       level:          w.level,
       facilitator:    w.facilitator,
+      facilitators:   normalizeFacilitators(w.facilitators),
       medium:         w.medium,
       onlinePlatform: w.onlinePlatform,
       onlineLink:     w.onlineLink,

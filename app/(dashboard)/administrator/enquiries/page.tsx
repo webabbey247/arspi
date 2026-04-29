@@ -121,6 +121,8 @@ export default function AdminEnquiriesPage() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<ContactStatus | "ALL">("ALL")
   const [subjectFilter, setSubjectFilter] = useState<ContactSubject | "ALL">("ALL")
+  const PAGE_SIZE = 20
+  const [page, setPage] = useState(1)
 
   const fetchEnquiries = useCallback(async () => {
     setLoading(true)
@@ -142,6 +144,11 @@ export default function AdminEnquiriesPage() {
   useEffect(() => {
     fetchEnquiries()
   }, [fetchEnquiries])
+
+  useEffect(() => { setPage(1) }, [search, statusFilter, subjectFilter])
+
+  const totalPages = Math.max(1, Math.ceil(enquiries.length / PAGE_SIZE))
+  const paginated  = enquiries.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="px-8 py-8 max-w-350 mx-auto">
@@ -205,7 +212,7 @@ export default function AdminEnquiriesPage() {
                 <tr><td colSpan={6} className="px-4 py-10 text-center text-[#A8A39C]">Loading...</td></tr>
               ) : enquiries.length === 0 ? (
                 <tr><td colSpan={6} className="px-4 py-10 text-center text-[#A8A39C]">No enquiries found.</td></tr>
-              ) : enquiries.map((enquiry) => (
+              ) : paginated.map((enquiry) => (
                 <tr key={enquiry.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors align-top">
                   <td className="px-4 py-3 min-w-56">
                     <div className="font-semibold text-[#1A1916] whitespace-nowrap">{fullName(enquiry)}</div>
@@ -232,8 +239,31 @@ export default function AdminEnquiriesPage() {
 
         <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
           <p className="text-[11px] text-[#A8A39C]">
-            Showing <span className="font-semibold text-[#6B6560]">{enquiries.length}</span> {enquiries.length === 1 ? "enquiry" : "enquiries"}
+            {enquiries.length === 0 ? (
+              <>Showing <span className="font-semibold text-[#6B6560]">0</span> enquiries</>
+            ) : (
+              <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, enquiries.length)}</span> of <span className="font-semibold text-[#6B6560]">{enquiries.length}</span> {enquiries.length === 1 ? "enquiry" : "enquiries"}</>
+            )}
           </p>
+          {enquiries.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              >
+                Prev
+              </button>
+              <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

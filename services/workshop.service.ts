@@ -3,6 +3,8 @@ import { WorkshopPaymentMethod, WorkshopType, WorkshopCategory, WorkshopRegistra
 import type { WorkshopRegistrationPayload } from "@/lib/validators/workshop"
 
 export type { WorkshopType, WorkshopCategory, WorkshopRegistrationStatus }
+export { computeDurationHours, normalizeFacilitators } from "@/lib/workshop-helpers"
+export type { Facilitator } from "@/lib/workshop-helpers"
 
 // ── Registration (existing) ───────────────────────────────────────────────────
 
@@ -52,7 +54,6 @@ export type WorkshopRow = {
   startTime: string
   endTime:   string
   timezone:  string
-  duration: number
   level: string
   facilitator:    string
   facilitators:   unknown | null
@@ -63,7 +64,7 @@ export type WorkshopRow = {
   venueCity:      string | null
   venueState:     string | null
   venueCountry:   string | null
-  capacity: number
+  capacity: number | null
   registered: number
   coverImage: string | null
   instructorId: string | null
@@ -85,7 +86,6 @@ export type WorkshopInput = {
   startTime?: string
   endTime?:   string
   timezone?:  string
-  duration?: number
   level?: string
   facilitator?:    string
   facilitators?:   unknown | null
@@ -96,7 +96,7 @@ export type WorkshopInput = {
   venueCity?:      string | null
   venueState?:     string | null
   venueCountry?:   string | null
-  capacity?: number
+  capacity?: number | null
   coverImage?: string | null
   instructorId?: string | null
 }
@@ -172,7 +172,6 @@ export async function createWorkshop(
       startTime:    input.startTime   ?? "",
       endTime:      input.endTime     ?? "",
       timezone:     input.timezone    ?? "UTC",
-      duration:     input.duration    ?? 2,
       level:        input.level       ?? "BEGINNER",
       facilitator:    input.facilitator  ?? "",
       facilitators:   (input.facilitators  ?? null) as never,
@@ -183,7 +182,7 @@ export async function createWorkshop(
       venueCity:      input.venueCity      ?? null,
       venueState:     input.venueState     ?? null,
       venueCountry:   input.venueCountry   ?? null,
-      capacity:     input.capacity    ?? 100,
+      capacity:     input.capacity    ?? null,
       coverImage:   input.coverImage  ?? null,
       instructorId: input.instructorId ?? null,
     },
@@ -222,7 +221,6 @@ export async function updateWorkshop(
       ...(input.startTime   !== undefined && { startTime: input.startTime }),
       ...(input.endTime     !== undefined && { endTime:   input.endTime }),
       ...(input.timezone    !== undefined && { timezone:  input.timezone }),
-      ...(input.duration    !== undefined && { duration:    input.duration }),
       ...(input.level       !== undefined && { level:       input.level }),
       ...(input.facilitator   !== undefined && { facilitator:    input.facilitator }),
       ...(input.facilitators  !== undefined && { facilitators:   input.facilitators  as never }),

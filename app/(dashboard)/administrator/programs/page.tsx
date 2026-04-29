@@ -1297,6 +1297,9 @@ export default function AdminProgramsPage() {
   const [statusOpen, setStatusOpen]           = useState(false)
   const filterRef                             = useRef<HTMLDivElement>(null)
   const statusRef                             = useRef<HTMLDivElement>(null)
+  const PAGE_SIZE                             = 20
+  const [page, setPage]                       = useState(1)
+  const [categoriesPage, setCategoriesPage]   = useState(1)
 
   // Categories
   const [categories, setCategories]                 = useState<Category[]>([])
@@ -1339,6 +1342,9 @@ export default function AdminProgramsPage() {
     document.addEventListener("mousedown", h)
     return () => document.removeEventListener("mousedown", h)
   }, [])
+
+  useEffect(() => { setPage(1) }, [search, levelFilter, statusFilter])
+  useEffect(() => { setCategoriesPage(1) }, [categorySearch])
 
   // ── CSV export ─────────────────────────────────────────────────────────────
 
@@ -1525,6 +1531,11 @@ export default function AdminProgramsPage() {
     !categorySearch || c.name.toLowerCase().includes(categorySearch.toLowerCase())
   )
 
+  const totalPages       = Math.max(1, Math.ceil(filteredPrograms.length / PAGE_SIZE))
+  const paginatedPrograms = filteredPrograms.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalCategoryPages = Math.max(1, Math.ceil(filteredCategories.length / PAGE_SIZE))
+  const paginatedCategories = filteredCategories.slice((categoriesPage - 1) * PAGE_SIZE, categoriesPage * PAGE_SIZE)
+
   const counts = {
     all:       programs.length,
     published: programs.filter(p => p.published).length,
@@ -1652,7 +1663,7 @@ export default function AdminProgramsPage() {
                   <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
                 ) : filteredPrograms.length === 0 ? (
                   <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">No programs found.</td></tr>
-                ) : filteredPrograms.map(p => (
+                ) : paginatedPrograms.map(p => (
                   <tr key={p.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
 
                     {/* Program info */}
@@ -1738,8 +1749,20 @@ export default function AdminProgramsPage() {
           </div>
 
           <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]">Showing <span className="font-semibold text-[#6B6560]">{filteredPrograms.length}</span> of <span className="font-semibold text-[#6B6560]">{programs.length}</span> programs</p>
-            {filteredPrograms.length < programs.length && <p className="text-[11px] text-[#0474C4] font-semibold">{programs.length - filteredPrograms.length} filtered out</p>}
+            <p className="text-[11px] text-[#A8A39C]">
+              {filteredPrograms.length === 0 ? (
+                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{programs.length}</span> programs</>
+              ) : (
+                <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, filteredPrograms.length)}</span> of <span className="font-semibold text-[#6B6560]">{filteredPrograms.length}</span> {filteredPrograms.length === 1 ? "program" : "programs"}</>
+              )}
+            </p>
+            {filteredPrograms.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1768,7 +1791,7 @@ export default function AdminProgramsPage() {
                   <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
                 ) : filteredCategories.length === 0 ? (
                   <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No categories yet.</td></tr>
-                ) : filteredCategories.map(cat => (
+                ) : paginatedCategories.map(cat => (
                   <tr key={cat.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
                     <td className="px-4 py-3 font-semibold text-[#1A1916] whitespace-nowrap">{cat.name}</td>
                     <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{cat.slug}</td>
@@ -1790,8 +1813,21 @@ export default function AdminProgramsPage() {
             </table>
           </div>
 
-          <div className="px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]"><span className="font-semibold text-[#6B6560]">{categories.length}</span> {categories.length === 1 ? "category" : "categories"} total</p>
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+            <p className="text-[11px] text-[#A8A39C]">
+              {filteredCategories.length === 0 ? (
+                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{categories.length}</span> categories</>
+              ) : (
+                <>Showing <span className="font-semibold text-[#6B6560]">{(categoriesPage - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(categoriesPage * PAGE_SIZE, filteredCategories.length)}</span> of <span className="font-semibold text-[#6B6560]">{filteredCategories.length}</span> {filteredCategories.length === 1 ? "category" : "categories"}</>
+              )}
+            </p>
+            {filteredCategories.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setCategoriesPage(p => Math.max(1, p - 1))} disabled={categoriesPage === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{categoriesPage} / {totalCategoryPages}</span>
+                <button onClick={() => setCategoriesPage(p => Math.min(totalCategoryPages, p + 1))} disabled={categoriesPage >= totalCategoryPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+              </div>
+            )}
           </div>
         </div>
       )}

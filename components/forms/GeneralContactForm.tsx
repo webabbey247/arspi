@@ -140,7 +140,7 @@ const GeneralContactForm = () => {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="h-12 mt-6 rounded-[32px] py-2.5 px-7.5 text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f] text-[0.875rem] tracking-[0.02em] font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+        className="h-12 mt-6 rounded py-2.5 px-7.5 text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f] text-[0.875rem] tracking-[0.02em] font-medium disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isSubmitting ? (
           <Loader2 className="h-4 w-4 animate-spin" />

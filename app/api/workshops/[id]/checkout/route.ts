@@ -49,7 +49,7 @@ export async function POST(req: NextRequest, { params }: Context) {
         { status: 400 }
       )
     }
-    if (workshop.registered >= workshop.capacity) {
+    if (workshop.capacity !== null && workshop.registered >= workshop.capacity) {
       return NextResponse.json({ error: "This workshop is fully booked." }, { status: 400 })
     }
 

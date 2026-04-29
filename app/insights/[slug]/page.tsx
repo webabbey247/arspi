@@ -87,7 +87,7 @@ const InsightDetailPage = () => {
       <section className="bg-[#071639] relative overflow-hidden px-8 md:px-16 lg:py-16 pb-0 w-full">
         <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
         <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
-        <div className="relative z-10 max-w-200 mx-auto space-y-4">
+        <div className="relative z-10 max-w-280 mx-auto space-y-4">
           <div className="flex items-center gap-3 mb-6">
             <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]">
               {ins.category}
@@ -100,7 +100,7 @@ const InsightDetailPage = () => {
           </div>
 
           <div className="flex flex-col gap-6">
-            <h1 className="font-heading text-[2.25rem] md:text-[2.75rem] lg:text-[3rem] tracking-[-0.015em] text-white md:tracking-[-0.02em] leading-[1.2] md:leading-[1.1] font-bold text-sky-light">
+            <h1 className="font-heading text-[2.25rem] md:text-[2.75rem] lg:text-[3rem] tracking-[-0.015em] text-white md:tracking-[-0.02em] leading-[1.2] md:leading-[1.1] font-bold text-sky-light max-w-xl">
               {ins.title}
             </h1>
 
@@ -131,7 +131,7 @@ const InsightDetailPage = () => {
         </div>
       </section>
 
-      <div className="max-w-300 mx-auto px-8 md:px-16 py-16 grid lg:grid-cols-[1fr_280px] gap-14 items-start w-full">
+      <div className="max-w-300 mx-auto px-8 md:px-14 py-16 grid lg:grid-cols-[1fr_340px] gap-14 items-start w-full">
         <article>
           <div
             className="prose flex flex-col gap-2 prose-slate max-w-none prose-headings:text-[#262B40] prose-p:text-slate-600 prose-p:font-normal prose-p:font-body prose-p:text-[1rem] prose-p:tracking-[-0.005em] prose-p:leading-[1.7] prose-a:text-[#0474C4]"
@@ -144,7 +144,7 @@ const InsightDetailPage = () => {
             {["LinkedIn", "Twitter/X", "Copy Link"].map((s) => (
               <button
                 key={s}
-                className="px-4 py-1.5 text-[0.72rem] border border-sapphire/25 rounded-sm text-slate-500 hover:border-sapphire hover:text-sapphire transition-all"
+                className="px-4 py-1.5 text-[0.72rem] border border-sapphire/25 rounded text-slate-500 hover:border-sapphire hover:text-sapphire transition-all"
               >
                 {s}
               </button>
@@ -155,7 +155,7 @@ const InsightDetailPage = () => {
             {prev ? (
               <Link
                 href={`/insights/${prev.slug}`}
-                className="group border border-sapphire/20 rounded-sm p-4 hover:border-sapphire/50 transition-all no-underline"
+                className="group border border-sapphire/20 rounded p-4 hover:border-sapphire/50 transition-all no-underline"
               >
                 <span className="flex items-center gap-2 font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-slate-400 mb-1.5">
                   <ArrowLeft className="h-3 w-3" />
@@ -172,7 +172,7 @@ const InsightDetailPage = () => {
             {next ? (
               <Link
                 href={`/insights/${next.slug}`}
-                className="group border border-sapphire/20 rounded-sm p-4 hover:border-sapphire/50 transition-all no-underline text-right"
+                className="group border border-sapphire/20 rounded p-4 hover:border-sapphire/50 transition-all no-underline text-right"
               >
                 <div className="flex items-center justify-end gap-2 font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-slate-400 mb-1.5">
                   Next
@@ -189,7 +189,7 @@ const InsightDetailPage = () => {
         </article>
 
         <aside className="sticky top-16 flex flex-col gap-6">
-          <div className="bg-white border border-[#0474C4]/25 rounded-sm p-5 flex flex-col gap-4">
+          <div className="bg-white border border-[#0474C4]/25 rounded p-5 flex flex-col gap-4">
             <div className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4]">
               About the Author
             </div>
@@ -218,7 +218,7 @@ const InsightDetailPage = () => {
           </div>
 
           {/* {related.length > 0 && (
-            <div className="bg-white border border-[#0474C4]/25 rounded-sm p-5">
+            <div className="bg-white border border-[#0474C4]/25 rounded p-5">
               <div className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4] mb-4">
                 Related Articles
               </div>
@@ -243,7 +243,7 @@ const InsightDetailPage = () => {
             </div>
           )} */}
 
-          <div className="bg-ink rounded-sm p-5">
+          <div className="bg-ink rounded p-5">
             <div className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4] mb-2">
               Deepen Your Practice
             </div>
@@ -253,10 +253,10 @@ const InsightDetailPage = () => {
             </p>
 
             <Button
-              className="font-body text-[0.75rem] tracking-[0.02em] font-medium w-full bg-[#0474C4] hover:bg-[#0474C4]/80 text-[#EBF3FC] rounded-[32px] py-2 px-5"
+              className="font-body text-[0.75rem] tracking-[0.02em] font-medium w-full bg-[#0474C4] hover:bg-[#0474C4]/80 text-[#EBF3FC] rounded py-2 px-5"
               asChild
             >
-              <Link href="/programs">
+              <Link href="/programs" className="flex items-center justify-center gap-1 h-12 rounded">
                 Browse Programs <ChevronRight className="h-4 w-4" />{" "}
               </Link>
             </Button>
@@ -291,7 +291,7 @@ const InsightDetailPage = () => {
                 <Link
                   key={r.slug}
                   href={`/insights/${r.slug}`}
-                  className="flex flex-col gap-4 group bg-white/90 border border-[#0474C4]/25 rounded-sm p-6 hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all no-underline"
+                  className="flex flex-col gap-4 group bg-white/90 border border-[#0474C4]/25 rounded p-6 hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all no-underline"
                 >
                   <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]/10 text-[#0474C4] border-0 px-2 py-0.5">
                     {r.category}

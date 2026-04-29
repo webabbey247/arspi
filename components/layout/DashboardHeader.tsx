@@ -30,7 +30,7 @@ const DashboardHeader = ({ user }: { user: SessionPayload }) => {
 
   return (
     <>
-      <header className="col-span-full bg-white border-b border-[rgba(200,169,110,0.15)] flex items-center justify-between pr-6 sticky top-0 z-200 h-15">
+      <header className="col-span-full bg-white border-b border-[rgba(200,169,110,0.15)] flex items-center justify-between pr-6 sticky top-0 z-100 h-15">
 
         {/* Brand */}
         <div className="w-70 flex flex-row items-center gap-2.5 px-[1.2rem] shrink-0">

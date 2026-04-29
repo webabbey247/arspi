@@ -79,7 +79,7 @@ const ContactPage = () => {
           </div>
         </div>
         <div className="px-8 md:px-16 py-16 w-full relative">
-          <div className="bg-[#F9F9FB] rounded-sm  flex flex-col justify-start gap-8 items-start p-10 w-full relative z-10">
+          <div className="bg-[#F9F9FB] rounded  flex flex-col justify-start gap-8 items-start p-10 w-full relative z-10">
            <div className="block space-y-4">
              <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
               How Can We Help?
@@ -129,7 +129,7 @@ const ContactPage = () => {
             ].map((o) => (
               <div
   key={o.city}
-  className="border bg-white/90 border-[#0474C4]/25 rounded-sm p-6"
+  className="border bg-white/90 border-[#0474C4]/25 rounded p-6"
 >
   <div className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-2">
     {o.region}

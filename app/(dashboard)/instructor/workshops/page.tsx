@@ -7,11 +7,10 @@ import { useForm, useWatch, Controller, type Resolver } from "react-hook-form"
 import RichTextEditor from "@/components/ui/RichTextEditor"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
-import { format } from "date-fns"
-import { CalendarIcon, Clock, Globe } from "lucide-react"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Clock, Globe } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useUploadThing } from "@/lib/uploadthing-client"
+import { computeDurationHours, normalizeFacilitators, type Facilitator } from "@/lib/workshop-helpers"
 
 // ── Timezone list (built from Intl API — evaluated once at module load) ────────
 const TIMEZONES: string[] = (Intl as unknown as { supportedValuesOf(key: string): string[] })
@@ -36,7 +35,6 @@ type Workshop = {
   startTime:      string
   endTime:        string
   timezone:       string
-  duration:       number
   level:          string
   facilitator:    string
   facilitators:   unknown | null
@@ -47,7 +45,7 @@ type Workshop = {
   venueCity:      string | null
   venueState:     string | null
   venueCountry:   string | null
-  capacity:       number
+  capacity:       number | null
   registered:     number
   coverImage:     string | null
   createdAt:      string
@@ -192,9 +190,10 @@ type WorkshopFormValues = {
   startTime:      string   // HH:mm
   endTime:        string   // HH:mm
   timezone:       string   // IANA timezone
-  duration:       string   // stored as number string
-  level:          "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+  level:          "ALL" | "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+  capped:         boolean
   capacity:       string
+  coverImage:     string
   medium:         "ONLINE" | "IN_PERSON"
   onlinePlatform: string
   onlineLink:     string
@@ -202,6 +201,7 @@ type WorkshopFormValues = {
   venueCity:      string
   venueState:     string
   venueCountry:   string
+  facilitators:   Facilitator[]
 }
 
 const workshopFormSchema = yup.object({
@@ -213,10 +213,7 @@ const workshopFormSchema = yup.object({
   type:        yup.string().oneOf(["FREE", "PAID"] as const).required("Type is required"),
   category:    yup.string().oneOf(["SHORT_COURSE", "WEBINAR", "MASTERCLASS", "CONFERENCE", "WORKSHOP"] as const).required("Category is required"),
   fee:         yup.string().required("Fee is required"),
-  duration:    yup.string()
-                  .required("Duration is required")
-                  .matches(/^[1-9][0-9]*$/, "Must be a positive whole number"),
-  level:       yup.string().oneOf(["BEGINNER", "INTERMEDIATE", "ADVANCED"] as const).required("Level is required"),
+  level:       yup.string().oneOf(["ALL", "BEGINNER", "INTERMEDIATE", "ADVANCED"] as const).required("Level is required"),
   date:        yup.string()
                   .required("Date is required")
                   .test("not-past", "Date cannot be in the past", value => {
@@ -225,9 +222,21 @@ const workshopFormSchema = yup.object({
                     return new Date(value + "T00:00:00") >= today
                   }),
   startTime:   yup.string().required("Start time is required"),
-  endTime:     yup.string().required("End time is required"),
+  endTime:     yup.string()
+                  .required("End time is required")
+                  .test("after-start", "End time must be after start time", function (value) {
+                    const start = this.parent.startTime as string | undefined
+                    if (!start || !value) return true
+                    return computeDurationHours(start, value) !== null
+                  }),
   timezone:    yup.string().required("Timezone is required"),
-  capacity:    yup.string().required("Capacity is required"),
+  capped:      yup.boolean().required().default(false),
+  capacity:    yup.string().default("").when("capped", {
+                  is: true,
+                  then: (s) => s.required("Capacity is required").matches(/^[1-9][0-9]*$/, "Must be a positive whole number"),
+                  otherwise: (s) => s.default(""),
+               }),
+  coverImage:  yup.string().default(""),
   featured:    yup.boolean().required().default(false),
   published:   yup.boolean().required().default(false),
   medium:         yup.string().oneOf(["ONLINE", "IN_PERSON"] as const).required().default("ONLINE"),
@@ -243,6 +252,16 @@ const workshopFormSchema = yup.object({
   venueCountry: yup.string().when("medium", (medium: string[], schema) =>
     medium[0] === "IN_PERSON" ? schema.required("Country is required") : schema.optional()
   ).default(""),
+  facilitators: yup
+    .array(
+      yup.object({
+        fullName: yup.string().trim().min(1, "Name required").max(255).required("Name required"),
+        jobTitle: yup.string().trim().max(255).default(""),
+        company:  yup.string().trim().max(255).default(""),
+        image:    yup.string().nullable().default(null),
+      }),
+    )
+    .default([]),
 })
 
 const EMPTY_FORM: WorkshopFormValues = {
@@ -258,9 +277,10 @@ const EMPTY_FORM: WorkshopFormValues = {
   startTime:      "",
   endTime:        "",
   timezone:       "UTC",
-  duration:       "2",
   level:          "BEGINNER",
-  capacity:       "100",
+  capped:         false,
+  capacity:       "",
+  coverImage:     "",
   medium:         "ONLINE",
   onlinePlatform: "",
   onlineLink:     "",
@@ -268,6 +288,127 @@ const EMPTY_FORM: WorkshopFormValues = {
   venueCity:      "",
   venueState:     "",
   venueCountry:   "",
+  facilitators:   [],
+}
+
+// ── Image upload (UploadThing) ────────────────────────────────────────────────
+
+function ImageUpload({
+  value,
+  onChange,
+  label = "image",
+  height = "h-32",
+}: {
+  value: string | null
+  onChange: (url: string | null) => void
+  label?: string
+  height?: string
+}) {
+  const [uploading, setUploading] = useState(false)
+  const { startUpload } = useUploadThing("imageUploader")
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const res = await startUpload([file])
+      if (res?.[0]?.url) onChange(res[0].url)
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ""
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {value && (
+        <div className={`relative w-full ${height} rounded-[10px] overflow-hidden border border-[#E5E2DC]`}>
+          <Image src={value} alt={label} fill className="object-cover" />
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 cursor-pointer"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="flex items-center justify-center gap-2 w-full py-2 rounded-[10px] text-[12px] font-semibold border border-dashed border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        {uploading ? "Uploading…" : value ? `Replace ${label}` : `Upload ${label}`}
+      </button>
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+    </div>
+  )
+}
+
+// ── Facilitators repeater (full name, role, company, optional image) ─────────
+
+function FacilitatorsInput({ value, onChange }: { value: Facilitator[]; onChange: (v: Facilitator[]) => void }) {
+  function update(index: number, patch: Partial<Facilitator>) {
+    onChange(value.map((f, i) => (i === index ? { ...f, ...patch } : f)))
+  }
+  function add() {
+    onChange([...value, { fullName: "", jobTitle: "", company: "", image: null }])
+  }
+  function remove(index: number) {
+    onChange(value.filter((_, i) => i !== index))
+  }
+
+  return (
+    <div className="space-y-3">
+      {value.map((f, i) => (
+        <div key={i} className="border border-[#E5E2DC] rounded-[10px] p-3 space-y-2 bg-[#FAFAF7]">
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">Facilitator {i + 1}</span>
+            <button type="button" onClick={() => remove(i)} className="text-[#A8A39C] hover:text-red-500 cursor-pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <input
+            value={f.fullName}
+            onChange={e => update(i, { fullName: e.target.value })}
+            placeholder="Full name *"
+            className={inputCls}
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input
+              value={f.jobTitle}
+              onChange={e => update(i, { jobTitle: e.target.value })}
+              placeholder="Job title / role"
+              className={inputCls}
+            />
+            <input
+              value={f.company}
+              onChange={e => update(i, { company: e.target.value })}
+              placeholder="Company"
+              className={inputCls}
+            />
+          </div>
+          <ImageUpload
+            value={f.image ?? null}
+            onChange={url => update(i, { image: url })}
+            label="photo"
+            height="h-24"
+          />
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="w-full py-2 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] cursor-pointer transition-colors"
+      >
+        + Add facilitator
+      </button>
+    </div>
+  )
 }
 
 // ── Timezone searchable select ────────────────────────────────────────────────
@@ -346,8 +487,6 @@ function WorkshopModal({
   onSave: (values: WorkshopFormValues) => Promise<void>
   onClose: () => void
 }) {
-  const [dateOpen, setDateOpen] = useState(false)
-
   const {
     register,
     handleSubmit,
@@ -370,9 +509,10 @@ function WorkshopModal({
           startTime:      workshop.startTime ?? "",
           endTime:        workshop.endTime   ?? "",
           timezone:       workshop.timezone  ?? "UTC",
-          duration:       String(workshop.duration ?? 2),
-          level:          (workshop.level as "BEGINNER" | "INTERMEDIATE" | "ADVANCED") ?? "BEGINNER",
-          capacity:       String(workshop.capacity),
+          level:          (workshop.level as "ALL" | "BEGINNER" | "INTERMEDIATE" | "ADVANCED") ?? "BEGINNER",
+          capped:         workshop.capacity !== null,
+          capacity:       workshop.capacity !== null ? String(workshop.capacity) : "",
+          coverImage:     workshop.coverImage ?? "",
           medium:         (workshop.medium as "ONLINE" | "IN_PERSON") ?? "ONLINE",
           onlinePlatform: workshop.onlinePlatform ?? "",
           onlineLink:     workshop.onlineLink     ?? "",
@@ -380,6 +520,7 @@ function WorkshopModal({
           venueCity:      workshop.venueCity       ?? "",
           venueState:     workshop.venueState      ?? "",
           venueCountry:   workshop.venueCountry    ?? "",
+          facilitators:   normalizeFacilitators(workshop.facilitators),
         }
       : EMPTY_FORM,
   })
@@ -387,8 +528,22 @@ function WorkshopModal({
   // Auto-generate slug from title for new workshops only
   const titleValue = useWatch({ control, name: "title" })
 
-  // Watch medium for conditional delivery-mode fields
-  const watchedMedium = useWatch({ control, name: "medium" })
+  // Watch fields driving conditional UI
+  const watchedMedium    = useWatch({ control, name: "medium" })
+  const watchedType      = useWatch({ control, name: "type" })
+  const watchedCapped    = useWatch({ control, name: "capped" })
+  const watchedStartTime = useWatch({ control, name: "startTime" })
+  const watchedEndTime   = useWatch({ control, name: "endTime" })
+
+  useEffect(() => {
+    if (watchedType === "FREE") setValue("fee", "0", { shouldValidate: false })
+  }, [watchedType, setValue])
+
+  useEffect(() => {
+    if (!watchedCapped) setValue("capacity", "", { shouldValidate: false })
+  }, [watchedCapped, setValue])
+
+  const derivedDuration = computeDurationHours(watchedStartTime, watchedEndTime)
 
   useEffect(() => {
     if (!workshop) {
@@ -426,6 +581,22 @@ function WorkshopModal({
 
         {/* Body */}
         <form id="workshop-form" onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+
+          {/* Cover image — first on the form */}
+          <Field label="Cover Image" hint="Optional">
+            <Controller
+              name="coverImage"
+              control={control}
+              render={({ field }) => (
+                <ImageUpload
+                  value={field.value || null}
+                  onChange={(url) => field.onChange(url ?? "")}
+                  label="cover image"
+                  height="h-40"
+                />
+              )}
+            />
+          </Field>
 
           {/* Title */}
           <Field label="Title" required>
@@ -477,77 +648,36 @@ function WorkshopModal({
             {errors.description && <p className="text-[11px] text-red-500 mt-0.5">{errors.description.message}</p>}
           </Field>
 
-          {/* Level + Duration */}
+          {/* Fee + Level */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="Fee" hint={watchedType === "FREE" ? "Free workshops are 0" : "Amount in the workshop currency"} required>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                {...register("fee")}
+                readOnly={watchedType === "FREE"}
+                className={cn(inputCls, watchedType === "FREE" && "bg-[#F5F4F1] text-[#6B6560] cursor-not-allowed")}
+                placeholder="0"
+              />
+              {errors.fee && <p className="text-[11px] text-red-500 mt-0.5">{errors.fee.message}</p>}
+            </Field>
             <Field label="Level" required>
               <select {...register("level")} className={inputCls}>
+                <option value="ALL">All Levels</option>
                 <option value="BEGINNER">Beginner</option>
                 <option value="INTERMEDIATE">Intermediate</option>
                 <option value="ADVANCED">Advanced</option>
               </select>
               {errors.level && <p className="text-[11px] text-red-500 mt-0.5">{errors.level.message}</p>}
             </Field>
-            <Field label="Duration (hours)" required>
-              <input type="number" min="1" step="1" {...register("duration")} className={inputCls} placeholder="e.g. 3" />
-              {errors.duration && <p className="text-[11px] text-red-500 mt-0.5">{errors.duration.message}</p>}
-            </Field>
           </div>
 
-          {/* Date + Start Time */}
+          {/* Date + Timezone */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Date" required>
-              <Controller
-                name="date"
-                control={control}
-                render={({ field }) => {
-                  const selected = field.value ? new Date(field.value + "T00:00:00") : undefined
-                  return (
-                    <>
-                      <Popover open={dateOpen} onOpenChange={setDateOpen}>
-                        <PopoverTrigger asChild>
-                          <button
-                            type="button"
-                            className={cn(inputCls, "flex items-center gap-2 text-left w-full", !field.value && "text-[#A8A39C]")}
-                          >
-                            <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-[#A8A39C]" />
-                            {selected ? format(selected, "dd MMM yyyy") : "Pick a date"}
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={selected}
-                            disabled={{ before: new Date(new Date().setHours(0, 0, 0, 0)) }}
-                            onSelect={(date) => {
-                              field.onChange(date ? format(date, "yyyy-MM-dd") : "")
-                              setDateOpen(false)
-                            }}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      {errors.date && <p className="text-[11px] text-red-500 mt-0.5">{errors.date.message}</p>}
-                    </>
-                  )
-                }}
-              />
-            </Field>
-            <Field label="Start Time" required>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#A8A39C] pointer-events-none" />
-                <input type="time" {...register("startTime")} className={cn(inputCls, "pl-8")} />
-              </div>
-              {errors.startTime && <p className="text-[11px] text-red-500 mt-0.5">{errors.startTime.message}</p>}
-            </Field>
-          </div>
-
-          {/* End Time + Timezone */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="End Time" required>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#A8A39C] pointer-events-none" />
-                <input type="time" {...register("endTime")} className={cn(inputCls, "pl-8")} />
-              </div>
-              {errors.endTime && <p className="text-[11px] text-red-500 mt-0.5">{errors.endTime.message}</p>}
+              <input type="date" {...register("date")} className={inputCls} />
+              {errors.date && <p className="text-[11px] text-red-500 mt-0.5">{errors.date.message}</p>}
             </Field>
             <Field label="Timezone" required>
               <Controller
@@ -564,17 +694,60 @@ function WorkshopModal({
             </Field>
           </div>
 
-          {/* Fee + Capacity */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="Fee" hint="0 = Free" required>
-              <input type="number" min="0" step="0.01" {...register("fee")} className={inputCls} placeholder="0" />
-              {errors.fee && <p className="text-[11px] text-red-500 mt-0.5">{errors.fee.message}</p>}
+          {/* Start Time + End Time + Duration (derived) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Field label="Start Time" required>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#A8A39C] pointer-events-none" />
+                <input type="time" {...register("startTime")} className={cn(inputCls, "pl-8")} />
+              </div>
+              {errors.startTime && <p className="text-[11px] text-red-500 mt-0.5">{errors.startTime.message}</p>}
             </Field>
-            <Field label="Capacity" required>
-              <input type="number" min="1" {...register("capacity")} className={inputCls} placeholder="100" />
-              {errors.capacity && <p className="text-[11px] text-red-500 mt-0.5">{errors.capacity.message}</p>}
+            <Field label="End Time" required>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#A8A39C] pointer-events-none" />
+                <input type="time" {...register("endTime")} className={cn(inputCls, "pl-8")} />
+              </div>
+              {errors.endTime && <p className="text-[11px] text-red-500 mt-0.5">{errors.endTime.message}</p>}
+            </Field>
+            <Field label="Duration" hint="Auto from start/end">
+              <div className={cn(inputCls, "flex items-center text-[#1A1916]")}>
+                {derivedDuration !== null ? `${derivedDuration} hour${derivedDuration === 1 ? "" : "s"}` : "—"}
+              </div>
             </Field>
           </div>
+
+          {/* Capped toggle + Capacity (capacity shown only when capped) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="Capped event">
+              <div className="flex items-center h-9">
+                <Controller
+                  name="capped"
+                  control={control}
+                  render={({ field }) => (
+                    <Toggle label={field.value ? "Limited seats" : "Uncapped"} checked={field.value ?? false} onChange={field.onChange} />
+                  )}
+                />
+              </div>
+            </Field>
+            {watchedCapped && (
+              <Field label="Capacity" required>
+                <input type="number" min="1" {...register("capacity")} className={inputCls} placeholder="100" />
+                {errors.capacity && <p className="text-[11px] text-red-500 mt-0.5">{errors.capacity.message}</p>}
+              </Field>
+            )}
+          </div>
+
+          {/* Facilitators (before delivery mode) */}
+          <Field label="Facilitators" hint="Add one or more facilitators">
+            <Controller
+              name="facilitators"
+              control={control}
+              render={({ field }) => (
+                <FacilitatorsInput value={field.value ?? []} onChange={field.onChange} />
+              )}
+            />
+          </Field>
 
           {/* Delivery Mode */}
           <Field label="Delivery Mode" required>
@@ -691,13 +864,15 @@ export default function InstructorWorkshopsPage() {
   const [workshops, setWorkshops]           = useState<Workshop[]>([])
   const [loading, setLoading]               = useState(true)
   const [search, setSearch]                 = useState("")
-  const [typeFilter, setTypeFilter]         = useState<WorkshopType | "ALL">("ALL")
+  const [catTabFilter, setCatTabFilter]     = useState<WorkshopCategory | "ALL">("ALL")
+  const [typeDropFilter, setTypeDropFilter] = useState<string>("All")
   const [modal, setModal]                   = useState<"create" | Workshop | null>(null)
   const [deleteTarget, setDeleteTarget]     = useState<Workshop | null>(null)
   const [togglingIds, setTogglingIds]       = useState<Set<string>>(new Set())
   const [filterOpen, setFilterOpen]         = useState(false)
-  const [categoryFilter, setCategoryFilter] = useState<string>("All")
   const filterRef                           = useRef<HTMLDivElement>(null)
+  const PAGE_SIZE                           = 20
+  const [page, setPage]                     = useState(1)
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
 
@@ -722,14 +897,21 @@ export default function InstructorWorkshopsPage() {
     return () => document.removeEventListener("mousedown", h)
   }, [])
 
+  // ── Reset pagination when filters change ───────────────────────────────────
+
+  useEffect(() => { setPage(1) }, [search, catTabFilter, typeDropFilter])
+
   // ── Filtered list ──────────────────────────────────────────────────────────
 
   const filtered = workshops.filter(w => {
     const matchSearch   = !search || w.title.toLowerCase().includes(search.toLowerCase()) || w.facilitator.toLowerCase().includes(search.toLowerCase())
-    const matchType     = typeFilter === "ALL" || w.type === typeFilter
-    const matchCategory = categoryFilter === "All" || CATEGORY_LABELS[w.category] === categoryFilter
-    return matchSearch && matchType && matchCategory
+    const matchCategory = catTabFilter === "ALL" || w.category === catTabFilter
+    const matchType     = typeDropFilter === "All" || TYPE_LABELS[w.type] === typeDropFilter
+    return matchSearch && matchCategory && matchType
   })
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   // ── Inline toggle ──────────────────────────────────────────────────────────
 
@@ -758,16 +940,16 @@ export default function InstructorWorkshopsPage() {
       description:    values.description,
       type:           values.type,
       category:       values.category,
-      fee:            parseFloat(values.fee) || 0,
+      fee:            values.type === "FREE" ? 0 : (parseFloat(values.fee) || 0),
       featured:       values.featured,
       published:      values.published,
       date:           values.date || null,
       startTime:      values.startTime,
       endTime:        values.endTime,
       timezone:       values.timezone,
-      duration:       parseInt(values.duration, 10) || 2,
       level:          values.level,
-      capacity:       parseInt(values.capacity, 10) || 100,
+      capacity:       values.capped ? (parseInt(values.capacity, 10) || null) : null,
+      coverImage:     values.coverImage || null,
       medium:         values.medium,
       onlinePlatform: values.medium === "ONLINE"    ? (values.onlinePlatform || null) : null,
       onlineLink:     values.medium === "ONLINE"    ? (values.onlineLink     || null) : null,
@@ -775,6 +957,8 @@ export default function InstructorWorkshopsPage() {
       venueCity:      values.medium === "IN_PERSON" ? (values.venueCity      || null) : null,
       venueState:     values.medium === "IN_PERSON" ? (values.venueState     || null) : null,
       venueCountry:   values.medium === "IN_PERSON" ? (values.venueCountry   || null) : null,
+      facilitator:    values.facilitators[0]?.fullName ?? "",
+      facilitators:   values.facilitators.length > 0 ? values.facilitators : null,
     }
 
     const isEdit    = modal !== "create" && modal !== null
@@ -809,10 +993,13 @@ export default function InstructorWorkshopsPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  const counts = {
-    all:  workshops.length,
-    free: workshops.filter(w => w.type === "FREE").length,
-    paid: workshops.filter(w => w.type === "PAID").length,
+  const catCounts: Record<WorkshopCategory | "ALL", number> = {
+    ALL:          workshops.length,
+    SHORT_COURSE: workshops.filter(w => w.category === "SHORT_COURSE").length,
+    WEBINAR:      workshops.filter(w => w.category === "WEBINAR").length,
+    MASTERCLASS:  workshops.filter(w => w.category === "MASTERCLASS").length,
+    CONFERENCE:   workshops.filter(w => w.category === "CONFERENCE").length,
+    WORKSHOP:     workshops.filter(w => w.category === "WORKSHOP").length,
   }
 
   return (
@@ -832,16 +1019,23 @@ export default function InstructorWorkshopsPage() {
         </button>
       </div>
 
-      {/* Type filter tabs */}
-      <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 w-fit">
-        {([["ALL", "All", counts.all], ["FREE", "Free", counts.free], ["PAID", "Paid", counts.paid]] as const).map(([val, label, count]) => (
+      {/* Category filter tabs */}
+      <div className="flex flex-wrap gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 w-fit">
+        {([
+          ["ALL",          "All"],
+          ["SHORT_COURSE", "Short Course"],
+          ["WEBINAR",      "Webinar"],
+          ["MASTERCLASS",  "Masterclass"],
+          ["CONFERENCE",   "Conference"],
+          ["WORKSHOP",     "Workshop"],
+        ] as const).map(([val, label]) => (
           <button
             key={val}
-            onClick={() => setTypeFilter(val as WorkshopType | "ALL")}
-            className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold transition-colors cursor-pointer ${typeFilter === val ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}
+            onClick={() => setCatTabFilter(val as WorkshopCategory | "ALL")}
+            className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold transition-colors cursor-pointer ${catTabFilter === val ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}
           >
             {label}
-            <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${typeFilter === val ? "bg-[#F5F4F1] text-[#6B6560]" : "bg-[#E5E2DC] text-[#A8A39C]"}`}>{count}</span>
+            <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${catTabFilter === val ? "bg-[#F5F4F1] text-[#6B6560]" : "bg-[#E5E2DC] text-[#A8A39C]"}`}>{catCounts[val]}</span>
           </button>
         ))}
       </div>
@@ -859,20 +1053,20 @@ export default function InstructorWorkshopsPage() {
             <div ref={filterRef} className="relative">
               <button
                 onClick={() => setFilterOpen(o => !o)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${categoryFilter !== "All" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"}`}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${typeDropFilter !== "All" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"}`}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                Filter
-                {categoryFilter !== "All" && <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{categoryFilter}</span>}
+                Type
+                {typeDropFilter !== "All" && <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{typeDropFilter}</span>}
               </button>
               {filterOpen && (
                 <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#E5E2DC] rounded-xl shadow-lg py-1.5 min-w-36">
-                  {["All", "Short Course", "Webinar", "Masterclass", "Conference", "Workshop"].map(f => (
-                    <button key={f} onClick={() => { setCategoryFilter(f); setFilterOpen(false) }}
-                      className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${categoryFilter === f ? "bg-[#FEF3C7] text-[#0474C4]" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
+                  {["All", "Free", "Paid"].map(f => (
+                    <button key={f} onClick={() => { setTypeDropFilter(f); setFilterOpen(false) }}
+                      className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${typeDropFilter === f ? "bg-[#FEF3C7] text-[#0474C4]" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
                     >
                       {f}
-                      {categoryFilter === f && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
+                      {typeDropFilter === f && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
                     </button>
                   ))}
                 </div>
@@ -896,7 +1090,7 @@ export default function InstructorWorkshopsPage() {
                   <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</td></tr>
                 ) : filtered.length === 0 ? (
                   <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No workshops found.</td></tr>
-                ) : filtered.map(workshop => (
+                ) : paginated.map(workshop => (
                   <tr key={workshop.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
                     {/* Workshop info */}
                     <td className="px-4 py-3">
@@ -998,12 +1192,30 @@ export default function InstructorWorkshopsPage() {
           {/* Footer */}
           <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
             <p className="text-[11px] text-[#A8A39C]">
-              Showing <span className="font-semibold text-[#6B6560]">{filtered.length}</span> of{" "}
-              <span className="font-semibold text-[#6B6560]">{workshops.length}</span>{" "}
-              {workshops.length === 1 ? "entry" : "entries"}
+              {filtered.length === 0 ? (
+                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{workshops.length}</span> {workshops.length === 1 ? "entry" : "entries"}</>
+              ) : (
+                <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-semibold text-[#6B6560]">{filtered.length}</span> {filtered.length === 1 ? "entry" : "entries"}</>
+              )}
             </p>
-            {filtered.length < workshops.length && (
-              <p className="text-[11px] text-[#0474C4] font-semibold">{workshops.length - filtered.length} filtered out</p>
+            {filtered.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                >
+                  Prev
+                </button>
+                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                >
+                  Next
+                </button>
+              </div>
             )}
           </div>
         </div>

@@ -1,3 +1,5 @@
+import type { Facilitator } from "@/lib/workshop-helpers"
+
 export type PublicWorkshop = {
   id:             string
   title:          string
@@ -8,9 +10,10 @@ export type PublicWorkshop = {
   startTime:      string
   endTime:        string
   timezone:       string
-  duration:       number
+  duration:       number | null
   level:          string
   facilitator:    string
+  facilitators:   Facilitator[]
   category:       string
   fee:            string | number
   medium:         string
@@ -20,7 +23,7 @@ export type PublicWorkshop = {
   venueCity:      string | null
   venueState:     string | null
   venueCountry:   string | null
-  capacity:       number
+  capacity:       number | null
   registered:     number
   featured:       boolean
   coverImage:     string | null

@@ -2,14 +2,16 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Calendar, ChevronRight, Clock, DollarSign, GraduationCap, MapPin, Monitor, User, Users, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { Calendar, ChevronRight, Clock, GraduationCap, MapPin, Monitor, Users } from "lucide-react";
+import { initialsOf } from "@/lib/workshop-helpers";
 import { Badge } from "@/components/ui/badge";
 import withLayout from "@/hooks/useLayout";
-import WorkshopRegistrationForm from "@/components/forms/WorkshopRegistrationForm";
+import type { Facilitator } from "@/lib/workshop-helpers";
 
 type PublicWorkshop = {
   id:             string
+  slug:           string
   title:          string
   description:    string
   type:           "FREE" | "PAID"
@@ -19,9 +21,10 @@ type PublicWorkshop = {
   startTime:      string
   endTime:        string
   timezone:       string
-  duration:       number
+  duration:       number | null
   level:          string
   facilitator:    string
+  facilitators:   Facilitator[]
   medium:         string
   onlinePlatform: string | null
   onlineLink:     string | null
@@ -29,7 +32,7 @@ type PublicWorkshop = {
   venueCity:      string | null
   venueState:     string | null
   venueCountry:   string | null
-  capacity:       number
+  capacity:       number | null
   registered:     number
   coverImage:     string | null
   featured:       boolean
@@ -57,6 +60,7 @@ function fmtDelivery(medium: string, platform: string | null, city: string | nul
 }
 
 const LEVEL_LABEL: Record<string, string> = {
+  ALL:          "General",
   BEGINNER:     "Beginner",
   INTERMEDIATE: "Intermediate",
   ADVANCED:     "Advanced",
@@ -68,17 +72,6 @@ const LEVEL_COLOR: Record<string, string> = {
   ADVANCED:     "bg-red-600/10 text-red-700",
 }
 
-const cats = [
-  { id: "all",          label: "All Events"   },
-  { id: "free",         label: "Free"         },
-  { id: "paid",         label: "Paid"         },
-  { id: "SHORT_COURSE", label: "Short Course" },
-  { id: "WEBINAR",      label: "Webinar"      },
-  { id: "MASTERCLASS",  label: "Masterclass"  },
-  { id: "CONFERENCE",   label: "Conference"   },
-  { id: "WORKSHOP",     label: "Workshop"     },
-]
-
 const CATEGORY_LABEL: Record<string, string> = {
   SHORT_COURSE: "Short Course",
   WEBINAR:      "Webinar",
@@ -87,147 +80,75 @@ const CATEGORY_LABEL: Record<string, string> = {
   WORKSHOP:     "Workshop",
 }
 
-// ── Workshop Detail Modal ────────────────────────────────────────────────────
+// ── Filter checkbox group (sidebar) ──────────────────────────────────────────
 
-function WorkshopDetailModal({
-  workshop,
-  onClose,
-  onRegister,
+function FilterCheckboxGroup({
+  label,
+  options,
+  selected,
+  onAll,
+  onToggle,
 }: {
-  workshop: PublicWorkshop
-  onClose:    () => void
-  onRegister: (w: PublicWorkshop) => void
+  label:    string
+  options:  { id: string; label: string }[]
+  selected: string[]
+  onAll:    () => void
+  onToggle: (id: string) => void
 }) {
-  const isPaid = workshop.fee > 0
-
+  const isAll = selected.length === 0
   return (
-    <div
-      className="fixed inset-0 bg-[#181C2C]/70 z-50 flex items-center justify-center p-4 overflow-y-auto"
-      onClick={onClose}
-    >
-      <div
-        className="bg-[#EBF3FC] rounded-lg w-full max-w-2xl shadow-2xl overflow-hidden my-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="bg-[#0474C4] p-7 flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2 flex-wrap">
-              <Badge className={`font-body text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-2 ${isPaid ? "bg-white/20 text-white" : "bg-emerald-400/20 text-emerald-100"}`}>
-                {isPaid ? "Paid" : "Free"}
-              </Badge>
-              <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-white/15 text-white/80 border-0 p-2">
-                {CATEGORY_LABEL[workshop.category] ?? workshop.category}
-              </Badge>
-              {workshop.level && (
-                <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-white/15 text-white/80 border-0 p-2">
-                  <GraduationCap className="h-3 w-3 mr-1 inline-block" />
-                  {LEVEL_LABEL[workshop.level] ?? workshop.level}
-                </Badge>
-              )}
-            </div>
-            <h2 className="font-heading text-[1.5rem] tracking-[-0.01em] leading-tight font-semibold text-white">
-              {workshop.title}
-            </h2>
-            <p className="font-body text-[0.8125rem] text-white/70">
-              {fmtDate(workshop.date)} · {fmtTime(workshop.startTime, workshop.endTime, workshop.timezone)}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-white/40 hover:text-white bg-white/10 hover:bg-white/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors shrink-0"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="p-7 flex flex-col gap-6">
-          {/* Description */}
-          <p className="font-body text-[0.9375rem] leading-[1.7] text-slate-600">
-            {workshop.description}
-          </p>
-
-          {/* Key details grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[
-              { icon: Calendar, label: "Date",       value: fmtDate(workshop.date) },
-              { icon: Clock,    label: "Time",       value: fmtTime(workshop.startTime, workshop.endTime, workshop.timezone) },
-              { icon: workshop.medium === "IN_PERSON" ? MapPin : Monitor,
-                                label: "Delivery",   value: fmtDelivery(workshop.medium, workshop.onlinePlatform, workshop.venueCity) },
-              { icon: GraduationCap, label: "Level", value: LEVEL_LABEL[workshop.level] ?? workshop.level },
-              { icon: User,     label: "Facilitator",value: workshop.facilitator || "TBA" },
-              { icon: Clock,    label: "Duration",   value: `${workshop.duration} hrs` },
-            ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="bg-white rounded-md px-4 py-3 flex flex-col gap-0.5 border border-[#0474C4]/12">
-                <span className="font-body text-[0.6875rem] tracking-[0.06em] uppercase font-medium text-slate-400 flex items-center gap-1.5">
-                  <Icon className="h-3 w-3 text-[#0474C4]" />
-                  {label}
-                </span>
-                <span className="font-body text-[0.875rem] font-medium text-ink leading-snug">
-                  {value}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Capacity bar */}
-          <div className="bg-white rounded-md px-4 py-3 border border-[#0474C4]/12">
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-body text-[0.75rem] tracking-[0.06em] uppercase font-medium text-slate-400 flex items-center gap-1.5">
-                <Users className="h-3 w-3 text-[#0474C4]" /> Availability
-              </span>
-              <span className="font-body text-[0.75rem] font-medium text-slate-500">
-                {workshop.registered} / {workshop.capacity} registered
-              </span>
-            </div>
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#0474C4] rounded-full transition-all"
-                style={{ width: `${workshop.capacity > 0 ? Math.min(100, Math.round((workshop.registered / workshop.capacity) * 100)) : 0}%` }}
-              />
-            </div>
-            <p className="font-body text-[0.75rem] text-slate-400 mt-1.5">
-              {Math.max(0, workshop.capacity - workshop.registered)} seats remaining
-            </p>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="px-7 pb-7 pt-4 border-t border-[#0474C4]/15 flex items-center justify-between gap-4">
-          <div className="flex flex-col">
-            <span className="font-body text-[0.75rem] text-slate-400">Registration fee</span>
-            <span className={`font-heading text-[1.375rem] font-semibold tracking-[-0.01em] ${isPaid ? "text-[#0474C4]" : "text-emerald-600"}`}>
-              {isPaid ? `$${workshop.fee}` : "Free"}
+    <div>
+      <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-500 mb-2">{label}</p>
+      <ul className="flex flex-col gap-1.5">
+        <li>
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={isAll}
+              onChange={onAll}
+              className="h-3.5 w-3.5 accent-[#0474C4] cursor-pointer"
+            />
+            <span className={`font-body text-[0.8125rem] ${isAll ? "text-ink font-medium" : "text-slate-500 group-hover:text-ink"}`}>
+              All
             </span>
-          </div>
-          <Button
-            className={`h-12 rounded-[32px] py-2.5 px-6 font-body text-[0.875rem] tracking-[0.02em] font-medium text-white ${
-              isPaid ? "bg-[#0474C4] hover:bg-[#06457f]" : "bg-emerald-600 hover:bg-emerald-700"
-            }`}
-            onClick={() => {
-              onClose()
-              onRegister(workshop)
-            }}
-          >
-            {isPaid ? "Enrol Now" : "Register Free"}
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+          </label>
+        </li>
+        {options.map(opt => {
+          const checked = selected.includes(opt.id)
+          return (
+            <li key={opt.id}>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => onToggle(opt.id)}
+                  className="h-3.5 w-3.5 accent-[#0474C4] cursor-pointer"
+                />
+                <span className={`font-body text-[0.8125rem] ${checked ? "text-ink font-medium text-lg" : "text-slate-500 group-hover:text-ink"}`}>
+                  {opt.label}
+                </span>
+              </label>
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
+type DurationBucket = "LT1" | "1to3" | "3to5" | "GT5"
+type DateBucket     = "PAST_60_PLUS" | "PAST_60" | "30_TO_60" | "60_PLUS"
+
 const WorkshopPage = () => {
-  const [active, setActive]       = React.useState("all")
-  const [modalOpen, setModalOpen] = React.useState(false)
-  const [modalEvent, setModalEvent] = React.useState<PublicWorkshop | null>(null)
-  const [detailOpen, setDetailOpen]       = React.useState(false)
-  const [detailWorkshop, setDetailWorkshop] = React.useState<PublicWorkshop | null>(null)
+  // Sidebar filter state — multi-select; empty array = no filter (All)
+  const [categoryFilter, setCategoryFilter] = React.useState<string[]>([])
+  const [typeFilter,     setTypeFilter]     = React.useState<("FREE" | "PAID")[]>([])
+  const [mediumFilter,   setMediumFilter]   = React.useState<("ONLINE" | "IN_PERSON")[]>([])
+  const [durationFilter, setDurationFilter] = React.useState<DurationBucket[]>([])
+  const [dateFilter,     setDateFilter]     = React.useState<DateBucket[]>([])
+
   const [workshops, setWorkshops] = React.useState<PublicWorkshop[]>([])
   const [loading, setLoading]     = React.useState(true)
 
@@ -250,29 +171,67 @@ const WorkshopPage = () => {
       if (!b.date) return -1
       return new Date(a.date).getTime() - new Date(b.date).getTime()
     })
-  const past = workshops
-    .filter(w => !!w.date && new Date(w.date) < now)
-    .sort((a, b) => new Date(b.date!).getTime() - new Date(a.date!).getTime())
 
   // The nearest upcoming event is always the spotlight — no "featured" flag needed
   const nearest = upcoming[0] ?? null
 
-  const visible = active === "all"
-    ? upcoming
-    : upcoming.filter(w => {
-        if (active === "free") return w.type === "FREE"
-        if (active === "paid") return w.type === "PAID"
-        return w.category === active
-      })
-
-  function openDetail(w: PublicWorkshop) {
-    setDetailWorkshop(w)
-    setDetailOpen(true)
+  // Toggle helpers: add/remove a value from a string-array filter
+  function toggleIn<T extends string>(arr: T[], value: T): T[] {
+    return arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value]
   }
 
-  function openRegistration(w: PublicWorkshop) {
-    setModalEvent(w)
-    setModalOpen(true)
+  function durationMatches(w: PublicWorkshop): boolean {
+    if (durationFilter.length === 0) return true
+    if (w.duration === null) return false
+    return durationFilter.some(bucket => {
+      if (bucket === "LT1")  return w.duration! < 1
+      if (bucket === "1to3") return w.duration! >= 1 && w.duration! < 3
+      if (bucket === "3to5") return w.duration! >= 3 && w.duration! < 5
+      if (bucket === "GT5")  return w.duration! >= 5
+      return false
+    })
+  }
+
+  function dateMatches(w: PublicWorkshop): boolean {
+    if (dateFilter.length === 0) return true
+    if (!w.date) return false
+    const wd = new Date(w.date)
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const diffDays = Math.floor((wd.getTime() - today.getTime()) / (24 * 60 * 60 * 1000))
+    return dateFilter.some(b => {
+      if (b === "PAST_60_PLUS") return diffDays < -60
+      if (b === "PAST_60")      return diffDays >= -60 && diffDays <= 0
+      if (b === "30_TO_60")     return diffDays >= 30 && diffDays <= 60
+      if (b === "60_PLUS")      return diffDays > 60
+      return false
+    })
+  }
+
+  function passesFilters(w: PublicWorkshop): boolean {
+    return (categoryFilter.length === 0 || categoryFilter.includes(w.category))
+      && (typeFilter.length === 0 || typeFilter.includes(w.type as "FREE" | "PAID"))
+      && (mediumFilter.length === 0 || mediumFilter.includes(w.medium as "ONLINE" | "IN_PERSON"))
+      && durationMatches(w)
+      && dateMatches(w)
+  }
+
+  // When a date bucket is selected, draw from all workshops (so past buckets surface past events).
+  // Otherwise default to the upcoming list.
+  const baseList = dateFilter.length > 0 ? workshops : upcoming
+  const filteredCards     = baseList.filter(passesFilters)
+  const spotlightVisible  = !!nearest && dateFilter.length === 0 && passesFilters(nearest)
+  const cardWorkshops     = filteredCards.filter(w => !(spotlightVisible && nearest && w.id === nearest.id))
+
+  const hasActiveFilter =
+    categoryFilter.length > 0 || typeFilter.length > 0 || mediumFilter.length > 0 ||
+    durationFilter.length > 0 || dateFilter.length > 0
+
+  function clearFilters() {
+    setCategoryFilter([])
+    setTypeFilter([])
+    setMediumFilter([])
+    setDurationFilter([])
+    setDateFilter([])
   }
 
   return (
@@ -289,8 +248,8 @@ const WorkshopPage = () => {
       <h1 className="font-heading text-[2.25rem] md:text-[3rem] tracking-[-0.015em] md:tracking-[-0.02em] leading-[1.2] md:leading-[1.1] font-bold text-white">
             Workshops &amp;
             <em className="italic text-[#0474C4]">Expert Sessions</em>
-            <br />
-            Open to All
+            {/* <br />
+            Open to All */}
           </h1>
 
           <p className="font-body text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-[#EBF3FC] max-w-lg">
@@ -301,7 +260,8 @@ const WorkshopPage = () => {
         </div>
       </section>
 
-      {/* Filter bar */}
+      {/* Filter bar — hidden in favour of the sidebar checkboxes */}
+      {/*
       <div className="sticky top-17 z-30 bg-sky-light/97 backdrop-blur border-b border-[#0474C4]/25 px-8 md:px-16 py-3 flex items-center gap-2.5 overflow-x-auto w-full">
         <span className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mr-2 shrink-0">
           Filter:
@@ -309,7 +269,7 @@ const WorkshopPage = () => {
         {cats.map((cat) => (
           <button
             key={cat.id}
-            onClick={() => setActive(cat.id)}
+            onClick={() => setPill(cat.id)}
             className={`font-body text-[0.75rem] tracking-[0.05em] leading-normal font-medium px-4 py-1.5 rounded-full border transition-all whitespace-nowrap shrink-0 ${active === cat.id
                 ? "bg-[#0474C4] text-[#EBF3FC] border-[#0474C4]"
                 : "bg-sky-pale text-slate-500 border-[#0474C4]/25 hover:border-[#0474C4] hover:text-ink"
@@ -319,6 +279,7 @@ const WorkshopPage = () => {
           </button>
         ))}
       </div>
+      */}
 
       {/* Events */}
       <section className="bg-white px-8 md:px-16 py-16 w-full">
@@ -340,12 +301,7 @@ const WorkshopPage = () => {
 
 
           {/* Nearest upcoming event — spotlight */}
-          {nearest && (
-            active === "all" ||
-            (active === "free" && nearest.type === "FREE") ||
-            (active === "paid" && nearest.type === "PAID") ||
-            active === nearest.category
-          ) && (
+          {spotlightVisible && nearest && (
             <div className="grid lg:grid-cols-[1fr_340px] border border-[#0474C4]/25 rounded-sm overflow-hidden mb-6 bg-sky-pale hover:border-[#0474C4]/50 transition-colors">
               <div className="p-8 md:p-10">
 
@@ -375,12 +331,49 @@ const WorkshopPage = () => {
                   {nearest.description}
                 </p>
 
+                {(nearest.facilitators.length > 0 || nearest.facilitator) && (
+                  <div className="mb-6">
+                    <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400 mb-2 block">
+                      {nearest.facilitators.length > 1 ? "Facilitators" : "Facilitator"}
+                    </span>
+                    {nearest.facilitators.length > 0 ? (
+                      <ul className="flex flex-wrap gap-x-5 gap-y-3">
+                        {nearest.facilitators.map((f, i) => (
+                          <li key={i} className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-full overflow-hidden bg-[#EBF3FC] border border-[#0474C4]/20 flex items-center justify-center shrink-0">
+                              {f.image ? (
+                                <Image src={f.image} alt={f.fullName} width={36} height={36} className="object-cover w-full h-full" />
+                              ) : (
+                                <span className="font-body text-[0.75rem] font-semibold text-[#0474C4]">
+                                  {initialsOf(f.fullName)}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-col leading-tight">
+                              <span className="font-body text-[0.875rem] font-medium text-ink">{f.fullName}</span>
+                              {(f.jobTitle || f.company) && (
+                                <span className="font-body text-[0.75rem] text-slate-500">
+                                  {[f.jobTitle, f.company].filter(Boolean).join(" · ")}
+                                </span>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span className="font-body text-[0.875rem] font-medium text-ink">{nearest.facilitator}</span>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex gap-6 flex-wrap mb-6">
                   {[
                     { icon: Calendar, val: fmtDate(nearest.date) },
                     { icon: Clock,    val: fmtTime(nearest.startTime, nearest.endTime, nearest.timezone) },
                     { icon: nearest.medium === "IN_PERSON" ? MapPin : Monitor, val: fmtDelivery(nearest.medium, nearest.onlinePlatform, nearest.venueCity) },
-                    { icon: Users,    val: `${nearest.capacity} Seats Available` },
+                    ...(nearest.capacity !== null
+                      ? [{ icon: Users, val: `${Math.max(0, nearest.capacity - nearest.registered)} of ${nearest.capacity} seats available` }]
+                      : []),
                   ].map(({ icon: Icon, val }) => (
                     <div key={val} className="flex items-center gap-2">
                       <Icon className="h-3.5 w-3.5 text-[#0474C4] shrink-0" />
@@ -392,88 +385,138 @@ const WorkshopPage = () => {
                 </div>
 
                 <div className="flex gap-3 flex-wrap">
-                  <Button
-                    className="h-12 rounded-[32px] py-2.5 px-5 font-body text-[0.875rem] tracking-[0.02em] font-medium text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f]"
-                    onClick={() => openRegistration(nearest)}
+                  <Link
+                    href={`/workshop/${nearest.slug}`}
+                    className="inline-flex items-center h-12 rounded py-2.5 px-5 font-body text-[0.875rem] tracking-[0.02em] font-medium text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f]"
                   >
-                    {nearest.type === "FREE" ? "Register Free" : "Enrol Now"} <ChevronRight className="h-4 w-4" />
-                  </Button>
+                    Learn More <ChevronRight className="h-4 w-4" />
+                  </Link>
                 </div>
 
               </div>
-              {/* Right panel */}
-              <div className="bg-[#0474C4] p-8 flex flex-col">
-                <div className="font-heading text-[3rem] tracking-[-0.02em] leading-[1.1] font-bold text-[#A8C4EC]">
-                  {nearest.date ? new Date(nearest.date).getDate().toString().padStart(2, "0") : "—"}
-                </div>
-
-                <div className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white/35 mb-6">
-                  {nearest.date
-                    ? new Date(nearest.date).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
-                    : "Date TBA"}
-                </div>
-
-                <div className="flex flex-col gap-3 mb-6 flex-1">
-                  {[
-                    { icon: Clock,      label: "Duration", value: nearest.duration    },
-                    { icon: User,       label: "Level",    value: nearest.level },
-                    { icon: DollarSign, label: "Fee",      value: nearest.type === "FREE" ? "Free" : `$${nearest.fee}` },
-                  ].map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-md bg-white/10 border border-[#0474C4]/15 flex items-center justify-center shrink-0 mt-0.5">
-                        <Icon className="h-3 w-3 text-white" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-body text-[0.6875rem] capitalize tracking-[0.05em] font-medium text-white/60">
-                          {label}
-                        </span>
-                        <span className="font-body text-[0.875rem] capitalize tracking-[0em] leading-[1.6] font-normal text-white/80">
-                          {label === "Duration" ? `${value} hrs` : value}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mb-4">
-                  <div className="flex justify-between mb-1.5">
-                    <span className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white/80">
-                      Registered
-                    </span>
-                    <span className="font-body text-[0.75rem] tracking-[0.07em] font-medium text-white/80">
-                      {nearest.capacity > 0 ? Math.round((nearest.registered / nearest.capacity) * 100) : 0}%
-                    </span>
+              {/* Right panel — cover image */}
+              <div className="relative bg-[#EBF3FC] min-h-60 lg:min-h-full">
+                {nearest.coverImage ? (
+                  <Image
+                    src={nearest.coverImage}
+                    alt={nearest.title}
+                    fill
+                    sizes="(min-width: 1024px) 340px, 100vw"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-[#0474C4]/40">
+                    <Calendar className="h-12 w-12" />
                   </div>
-                  <div className="h-1 bg-white/8 rounded-full">
-                    <div
-                      className="h-full bg-[#EBF3FC]/40 rounded-full"
-                      style={{ width: `${nearest.capacity > 0 ? Math.round((nearest.registered / nearest.capacity) * 100) : 0}%` }}
-                    />
-                  </div>
-                  <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-white/80 mt-1">
-                    {nearest.registered} of {nearest.capacity} seats registered
-                  </div>
-                </div>
-
+                )}
               </div>
             </div>
           )}
 
-          {/* Events grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-white/90 border border-[#0474C4]/10 rounded-sm h-64 animate-pulse" />
-              ))
-            ) : (
-              visible
-                .filter(w => !(nearest && w.id === nearest.id && (
-                  active === "all" ||
-                  (active === "free" && nearest.type === "FREE") ||
-                  (active === "paid" && nearest.type === "PAID") ||
-                  active === nearest.category
-                )))
-                .map((w) => (
+          {/* Filters (left) + cards (right) — 2-col split for the rest of upcoming */}
+          <div className="flex flex-col lg:flex-row gap-6 mt-2">
+
+            {/* Left sidebar — w-1/4 on lg, full width on smaller */}
+            <aside className="lg:w-1/4 shrink-0">
+              <div className="bg-white border border-[#0474C4]/15 rounded-sm p-5 space-y-5 lg:sticky lg:top-32">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-heading text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">Filters</h3>
+                  {hasActiveFilter && (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="font-body text-[0.6875rem] uppercase tracking-[0.07em] font-medium text-slate-500 hover:text-[#0474C4] cursor-pointer"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+
+                {/* Category */}
+                <FilterCheckboxGroup
+                  label="Category"
+                  options={[
+                    { id: "SHORT_COURSE", label: "Short Course" },
+                    { id: "WEBINAR",      label: "Webinar" },
+                    { id: "MASTERCLASS",  label: "Masterclass" },
+                    { id: "CONFERENCE",   label: "Conference" },
+                    { id: "WORKSHOP",     label: "Workshop" },
+                  ]}
+                  selected={categoryFilter}
+                  onAll={() => setCategoryFilter([])}
+                  onToggle={(id) => setCategoryFilter(toggleIn(categoryFilter, id))}
+                />
+
+                {/* Type */}
+                <FilterCheckboxGroup
+                  label="Type"
+                  options={[
+                    { id: "FREE", label: "Free" },
+                    { id: "PAID", label: "Paid" },
+                  ]}
+                  selected={typeFilter}
+                  onAll={() => setTypeFilter([])}
+                  onToggle={(id) => setTypeFilter(toggleIn(typeFilter, id as "FREE" | "PAID"))}
+                />
+
+                {/* Medium */}
+                <FilterCheckboxGroup
+                  label="Medium"
+                  options={[
+                    { id: "ONLINE",    label: "Online" },
+                    { id: "IN_PERSON", label: "In-Person" },
+                  ]}
+                  selected={mediumFilter}
+                  onAll={() => setMediumFilter([])}
+                  onToggle={(id) => setMediumFilter(toggleIn(mediumFilter, id as "ONLINE" | "IN_PERSON"))}
+                />
+
+                {/* Duration */}
+                <FilterCheckboxGroup
+                  label="Duration"
+                  options={[
+                    { id: "LT1",  label: "< 1 hr" },
+                    { id: "1to3", label: "1–3 hrs" },
+                    { id: "3to5", label: "3–5 hrs" },
+                    { id: "GT5",  label: "5+ hrs" },
+                  ]}
+                  selected={durationFilter}
+                  onAll={() => setDurationFilter([])}
+                  onToggle={(id) => setDurationFilter(toggleIn(durationFilter, id as DurationBucket))}
+                />
+
+                {/* Date range */}
+                <FilterCheckboxGroup
+                  label="Date range"
+                  options={[
+                    { id: "PAST_60_PLUS", label: "Past 60+ days" },
+                    { id: "PAST_60",      label: "Past 60 days" },
+                    { id: "30_TO_60",     label: "30–60 days away" },
+                    { id: "60_PLUS",      label: "60+ days away" },
+                  ]}
+                  selected={dateFilter}
+                  onAll={() => setDateFilter([])}
+                  onToggle={(id) => setDateFilter(toggleIn(dateFilter, id as DateBucket))}
+                />
+              </div>
+            </aside>
+
+            {/* Right — w-3/4 cards grid */}
+            <div className="lg:w-3/4 grow">
+              <div className="grid md:grid-cols-2 gap-5">
+                {loading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="bg-white/90 border border-[#0474C4]/10 rounded-sm h-64 animate-pulse" />
+                  ))
+                ) : cardWorkshops.length === 0 ? (
+                  <div className="md:col-span-2 bg-white border border-[#0474C4]/15 rounded-sm p-10 text-center">
+                    <p className="font-heading text-[1rem] font-semibold text-ink mb-1.5">No workshops match your filters</p>
+                    <p className="font-body text-[0.8125rem] text-slate-500">
+                      {hasActiveFilter ? "Try clearing some filters to see more events." : "Check back soon — new events are added regularly."}
+                    </p>
+                  </div>
+                ) : (
+                  cardWorkshops.map((w) => (
                   <div
                     key={w.id}
                     className="bg-white/90 border border-[#0474C4]/25 rounded-sm overflow-hidden hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all flex flex-col"
@@ -502,7 +545,9 @@ const WorkshopPage = () => {
                           { icon: Calendar, val: fmtDate(w.date) },
                           { icon: Clock,    val: fmtTime(w.startTime, w.endTime, w.timezone) },
                           { icon: w.medium === "IN_PERSON" ? MapPin : Monitor, val: fmtDelivery(w.medium, w.onlinePlatform, w.venueCity) },
-                          { icon: Users,    val: `${w.capacity} seats · ${w.capacity - w.registered} remaining` },
+                          ...(w.capacity !== null
+                            ? [{ icon: Users, val: `${w.capacity} seats · ${Math.max(0, w.capacity - w.registered)} remaining` }]
+                            : []),
                         ].map(({ icon: Icon, val }) => (
                           <div key={val} className="flex items-center gap-2">
                             <Icon className="h-3 w-3 text-[#0474C4] shrink-0" />
@@ -518,21 +563,24 @@ const WorkshopPage = () => {
                       <span className={`font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium ${w.type === "FREE" ? "text-emerald-600" : "text-[#0474C4]"}`}>
                         {w.type === "FREE" ? "Free" : `$${w.fee}`}
                       </span>
-                      <Button
-                        className="font-body text-[0.8125rem] tracking-[0.02em] font-medium px-5 py-2.5 rounded-sm bg-[#0474C4] hover:bg-[#06457f] text-white"
-                        onClick={() => openDetail(w)}
+                      <Link
+                        href={`/workshop/${w.slug}`}
+                        className="inline-flex items-center font-body text-[0.8125rem] tracking-[0.02em] font-medium px-5 py-2.5 rounded-sm bg-[#0474C4] hover:bg-[#06457f] text-white"
                       >
                         Learn More <ChevronRight className="h-4 w-4" />
-                      </Button>
+                      </Link>
                     </div>
                   </div>
                 ))
-            )}
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Past events */}
+      {/* Past events — hidden */}
+      {/*
       {past.length > 0 && (
         <section className="bg-[#EDF2FB] px-8 md:px-16 py-16 w-full">
           <div className="max-w-350 mx-auto flex flex-col gap-12 w-full">
@@ -565,7 +613,7 @@ const WorkshopPage = () => {
                     {p.title}
                   </div>
                   <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400">
-                    {p.type === "FREE" ? "Free" : "Paid"} · {CATEGORY_LABEL[p.category] ?? p.category} · {p.duration}
+                    {p.type === "FREE" ? "Free" : "Paid"} · {CATEGORY_LABEL[p.category] ?? p.category}{p.duration !== null ? ` · ${p.duration} hrs` : ""}
                   </div>
                 </div>
               ))}
@@ -574,32 +622,8 @@ const WorkshopPage = () => {
           </div>
         </section>
       )}
+      */}
 
-{/* Workshop Detail Modal */}
-{detailOpen && detailWorkshop && (
-  <WorkshopDetailModal
-    workshop={detailWorkshop}
-    onClose={() => setDetailOpen(false)}
-    onRegister={(w) => {
-      setDetailOpen(false)
-      openRegistration(w)
-    }}
-  />
-)}
-
-{/* Registration Modal */}
-{modalOpen && modalEvent && (
-  <WorkshopRegistrationForm
-    modalEvent={{
-      id:    modalEvent.id,
-      title: modalEvent.title,
-      date:  fmtDate(modalEvent.date),
-      time:  fmtTime(modalEvent.startTime, modalEvent.endTime, modalEvent.timezone),
-      fee:   modalEvent.fee,
-    }}
-    setModalOpen={setModalOpen}
-  />
-)}
     </>
   );
 };

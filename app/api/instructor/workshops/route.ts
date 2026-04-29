@@ -18,9 +18,14 @@ const createSchema = z.object({
   startTime:      z.string().max(20).optional(),
   endTime:        z.string().max(20).optional(),
   timezone:       z.string().max(100).optional(),
-  duration:       z.number().int().positive().optional(),
-  level:          z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
+  level:          z.enum(["ALL", "BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
   facilitator:    z.string().max(255).optional(),
+  facilitators:   z.array(z.object({
+    fullName: z.string().min(1).max(255),
+    jobTitle: z.string().max(255).default(""),
+    company:  z.string().max(255).default(""),
+    image:    z.string().nullable().optional(),
+  })).nullable().optional(),
   medium:         z.enum(["ONLINE", "IN_PERSON"]).optional(),
   onlinePlatform: z.string().nullable().optional(),
   onlineLink:     z.string().nullable().optional(),
@@ -28,7 +33,7 @@ const createSchema = z.object({
   venueCity:      z.string().nullable().optional(),
   venueState:     z.string().nullable().optional(),
   venueCountry:   z.string().nullable().optional(),
-  capacity:       z.number().int().positive().optional(),
+  capacity:       z.number().int().positive().nullable().optional(),
   coverImage:     z.string().nullable().optional(),
 })
 

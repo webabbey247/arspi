@@ -100,6 +100,8 @@ export default function AdminSubscribersPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<SubscriptionStatus | "ALL">("ALL")
+  const PAGE_SIZE = 20
+  const [page, setPage] = useState(1)
 
   const fetchSubscribers = useCallback(async () => {
     setLoading(true)
@@ -120,6 +122,11 @@ export default function AdminSubscribersPage() {
   useEffect(() => {
     fetchSubscribers()
   }, [fetchSubscribers])
+
+  useEffect(() => { setPage(1) }, [search, statusFilter])
+
+  const totalPages = Math.max(1, Math.ceil(subscribers.length / PAGE_SIZE))
+  const paginated  = subscribers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="px-8 py-8 max-w-350 mx-auto">
@@ -160,7 +167,7 @@ export default function AdminSubscribersPage() {
                 <tr><td colSpan={4} className="px-4 py-10 text-center text-[#A8A39C]">Loading...</td></tr>
               ) : subscribers.length === 0 ? (
                 <tr><td colSpan={4} className="px-4 py-10 text-center text-[#A8A39C]">No subscribers found.</td></tr>
-              ) : subscribers.map((subscriber) => (
+              ) : paginated.map((subscriber) => (
                 <tr key={subscriber.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
                   <td className="px-4 py-3 font-semibold text-[#1A1916] whitespace-nowrap">{subscriber.email}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -178,8 +185,31 @@ export default function AdminSubscribersPage() {
 
         <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
           <p className="text-[11px] text-[#A8A39C]">
-            Showing <span className="font-semibold text-[#6B6560]">{subscribers.length}</span> {subscribers.length === 1 ? "subscriber" : "subscribers"}
+            {subscribers.length === 0 ? (
+              <>Showing <span className="font-semibold text-[#6B6560]">0</span> subscribers</>
+            ) : (
+              <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, subscribers.length)}</span> of <span className="font-semibold text-[#6B6560]">{subscribers.length}</span> {subscribers.length === 1 ? "subscriber" : "subscribers"}</>
+            )}
           </p>
+          {subscribers.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              >
+                Prev
+              </button>
+              <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

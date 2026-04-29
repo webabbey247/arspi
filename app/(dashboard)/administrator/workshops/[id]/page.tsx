@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { computeDurationHours } from "@/lib/workshop-helpers"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -23,10 +24,10 @@ type Workshop = {
   featured:    boolean
   published:   boolean
   date:        string | null
-  time:        string
-  duration:    string
+  startTime:   string
+  endTime:     string
   facilitator: string
-  capacity:    number
+  capacity:    number | null
   registered:  number
   coverImage:  string | null
   createdAt:   string
@@ -223,7 +224,7 @@ export default function WorkshopDetailPage() {
   }
 
   const registrationCount = workshop._count?.registrations ?? totalRegistered
-  const fillPct = workshop.capacity > 0
+  const fillPct = workshop.capacity !== null && workshop.capacity > 0
     ? Math.min(100, Math.round((registrationCount / workshop.capacity) * 100))
     : 0
 
@@ -330,10 +331,13 @@ export default function WorkshopDetailPage() {
               } />
               <InfoRow label="Fee"         value={workshop.fee > 0 ? `$${workshop.fee}` : "Free"} />
               <InfoRow label="Date"        value={fmtDate(workshop.date)} />
-              <InfoRow label="Time"        value={workshop.time || "—"} />
-              <InfoRow label="Duration"    value={workshop.duration} />
+              <InfoRow label="Time"        value={workshop.startTime && workshop.endTime ? `${workshop.startTime} – ${workshop.endTime}` : "—"} />
+              <InfoRow label="Duration"    value={(() => {
+                const d = computeDurationHours(workshop.startTime, workshop.endTime)
+                return d !== null ? `${d} hour${d === 1 ? "" : "s"}` : "—"
+              })()} />
               <InfoRow label="Facilitator" value={workshop.facilitator || "—"} />
-              <InfoRow label="Capacity"    value={`${workshop.capacity} seats`} />
+              <InfoRow label="Capacity"    value={workshop.capacity !== null ? `${workshop.capacity} seats` : "Uncapped"} />
             </div>
           </div>
 
@@ -406,7 +410,11 @@ export default function WorkshopDetailPage() {
                   style={{ width: `${fillPct}%` }}
                 />
               </div>
-              <p className="text-[12px] text-[#A8A39C]">{fillPct}% full · {Math.max(0, workshop.capacity - registrationCount)} seats remaining</p>
+              <p className="text-[12px] text-[#A8A39C]">
+                {workshop.capacity !== null
+                  ? `${fillPct}% full · ${Math.max(0, workshop.capacity - registrationCount)} seats remaining`
+                  : `${registrationCount} registered · uncapped`}
+              </p>
             </div>
           </div>
 

@@ -1233,6 +1233,8 @@ export default function InstructorProgramsPage() {
   const [statusOpen, setStatusOpen]           = useState(false)
   const filterRef                             = useRef<HTMLDivElement>(null)
   const statusRef                             = useRef<HTMLDivElement>(null)
+  const PAGE_SIZE                             = 20
+  const [page, setPage]                       = useState(1)
 
   // Categories (read-only — used only in the form dropdown)
   const [categories, setCategories] = useState<Category[]>([])
@@ -1403,6 +1405,8 @@ export default function InstructorProgramsPage() {
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
+  useEffect(() => { setPage(1) }, [search, levelFilter, statusFilter])
+
   const filteredPrograms = programs.filter(p => {
     const matchStatus =
       statusFilter === "All"       ? true :
@@ -1426,6 +1430,9 @@ export default function InstructorProgramsPage() {
     draft:     programs.filter(p => !p.published).length,
     featured:  programs.filter(p => p.featured).length,
   }
+
+  const totalPages        = Math.max(1, Math.ceil(filteredPrograms.length / PAGE_SIZE))
+  const paginatedPrograms = filteredPrograms.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -1534,7 +1541,7 @@ export default function InstructorProgramsPage() {
                 <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
               ) : filteredPrograms.length === 0 ? (
                 <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">No programs found.</td></tr>
-              ) : filteredPrograms.map(p => (
+              ) : paginatedPrograms.map(p => (
                 <tr key={p.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
 
                   {/* Program info */}
@@ -1619,8 +1626,20 @@ export default function InstructorProgramsPage() {
         </div>
 
         <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-          <p className="text-[11px] text-[#A8A39C]">Showing <span className="font-semibold text-[#6B6560]">{filteredPrograms.length}</span> of <span className="font-semibold text-[#6B6560]">{programs.length}</span> programs</p>
-          {filteredPrograms.length < programs.length && <p className="text-[11px] text-[#0474C4] font-semibold">{programs.length - filteredPrograms.length} filtered out</p>}
+          <p className="text-[11px] text-[#A8A39C]">
+            {filteredPrograms.length === 0 ? (
+              <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{programs.length}</span> programs</>
+            ) : (
+              <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, filteredPrograms.length)}</span> of <span className="font-semibold text-[#6B6560]">{filteredPrograms.length}</span> {filteredPrograms.length === 1 ? "program" : "programs"}</>
+            )}
+          </p>
+          {filteredPrograms.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+              <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -54,9 +54,9 @@ const ResearchPage = () => {
 
         {/* <div className="relative z-2">
     <div className="relative h-100">
-      <div className="absolute bottom-0 right-0 w-70 h-50 rotate-[4deg] bg-[rgba(200,169,110,0.04)] border border-[rgba(200,169,110,0.18)] rounded-sm p-[1.8rem]" />
-      <div className="absolute bottom-7.5 right-5 w-75 h-55 -rotate-2 bg-[rgba(200,169,110,0.07)] border border-[rgba(200,169,110,0.18)] rounded-sm p-[1.8rem]" />
-      <div className="absolute bottom-15 right-10 w-[320px] h-60 bg-[rgba(200,169,110,0.11)] border border-[rgba(200,169,110,0.3)] rounded-sm p-[1.8rem]">
+      <div className="absolute bottom-0 right-0 w-70 h-50 rotate-[4deg] bg-[rgba(200,169,110,0.04)] border border-[rgba(200,169,110,0.18)] rounded p-[1.8rem]" />
+      <div className="absolute bottom-7.5 right-5 w-75 h-55 -rotate-2 bg-[rgba(200,169,110,0.07)] border border-[rgba(200,169,110,0.18)] rounded p-[1.8rem]" />
+      <div className="absolute bottom-15 right-10 w-[320px] h-60 bg-[rgba(200,169,110,0.11)] border border-[rgba(200,169,110,0.3)] rounded p-[1.8rem]">
 
         <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-2.5">
           Featured Programme
@@ -81,8 +81,8 @@ const ResearchPage = () => {
           <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-[rgba(247,243,237,0.4)] mb-1.5">
             Enrolment — 78% filled
           </div>
-          <div className="h-0.75 bg-[rgba(200,169,110,0.15)] rounded-sm">
-            <div className="h-full bg-[#0474C4] rounded-sm w-[78%]" />
+          <div className="h-0.75 bg-[rgba(200,169,110,0.15)] rounded">
+            <div className="h-full bg-[#0474C4] rounded w-[78%]" />
           </div>
         </div>
 
@@ -282,7 +282,7 @@ const ResearchPage = () => {
           ].map((card) => (
             <div
               key={card.title}
-              className="bg-white border border-slate-200 rounded-sm p-8 transition-[border-color,transform] duration-250 hover:border-[#0474C4] hover:-translate-y-0.5"
+              className="bg-white border border-slate-200 rounded p-8 transition-[border-color,transform] duration-250 hover:border-[#0474C4] hover:-translate-y-0.5"
             >
               <div className="flex items-center gap-3.5 mb-4">
                 <div
@@ -563,14 +563,14 @@ const ResearchPage = () => {
           <div className="flex gap-4 justify-center flex-wrap">
             <Link
               href="/programs"
-              className="font-body text-[0.875rem] tracking-[0.02em] font-medium bg-[#0474C4] text-[#EBF3FC] border-[#0474C4] py-3.5 px-5 h-12 rounded-[32px] min-w-40  transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
+              className="font-body text-[0.875rem] tracking-[0.02em] font-medium bg-[#0474C4] text-[#EBF3FC] border-[#0474C4] py-3.5 px-5 h-12 rounded min-w-40  transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
             >
               Browse Programs{" "}
             </Link>
 
             <Link
               href="/contact"
-              className="font-body text-[0.875rem] tracking-[0.02em] font-medium bg-transparent text-[#EBF3FC] border border-[#EBF3FC] py-3.5 px-5 h-12 rounded-[32px] min-w-40  transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
+              className="font-body text-[0.875rem] tracking-[0.02em] font-medium bg-transparent text-[#EBF3FC] border border-[#EBF3FC] py-3.5 px-5 h-12 rounded min-w-40  transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
             >
               Contact Us
             </Link>

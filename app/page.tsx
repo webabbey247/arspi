@@ -179,6 +179,7 @@ const HomePage = () => {
               alt="Professionals collaborating"
               height={900}
               width={700}
+              loading="eager"
               className="w-full h-full object-cover opacity-[0.65] filter-[grayscale(15%)] block"
             />
             <div
@@ -954,7 +955,9 @@ const HomePage = () => {
           <div className="flex flex-col gap-px bg-transparent border border-transparent rounded-sm overflow-hidden">
             {!workshopsLoading && !workshopsError && workshops.length > 0 ? (
               workshops.map((workshop) => {
-                const availableSpots = Math.max(0, workshop.capacity - workshop.registered);
+                const availableSpots = workshop.capacity !== null
+                  ? Math.max(0, workshop.capacity - workshop.registered)
+                  : Infinity;
                 const isFull = availableSpots === 0;
                 const isUrgent = availableSpots <= 3 && availableSpots > 0;
                 const workshopDate = new Date(workshop.date ?? "");

@@ -51,7 +51,7 @@ const SubscriptionForm = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="absolute right-0 font-body text-[0.75rem] h-full tracking-[0.07em] capitalize text-[#EBF3FC] font-medium px-5 rounded-[32px] transition-colors whitespace-nowrap bg-[#0474C4] hover:bg-[#06457f] disabled:opacity-60 disabled:cursor-not-allowed"
+          className="absolute right-0 font-body text-[0.75rem] h-full tracking-[0.07em] capitalize text-[#EBF3FC] font-medium px-5 rounded transition-colors whitespace-nowrap bg-[#0474C4] hover:bg-[#06457f] disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <span className="inline-flex gap-2 items-center">
             {isSubmitting ? (

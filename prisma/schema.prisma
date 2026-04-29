@@ -380,7 +380,6 @@ model Workshop {
   startTime   String           @default("")
   endTime     String           @default("")
   timezone    String           @default("UTC")
-  duration    Int              @default(2)
   level       String           @default("BEGINNER")
   facilitator    String           @default("")
   facilitators   Json?
@@ -391,7 +390,7 @@ model Workshop {
   venueCity      String?
   venueState     String?
   venueCountry   String?
-  capacity       Int              @default(100)
+  capacity       Int?
   registered  Int              @default(0)
   coverImage  String?
   createdAt   DateTime         @default(now())
@@ -545,5 +544,58 @@ model PasswordResetToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("password_reset_tokens")
+}
+
+// ============================================================
+// CAREERS
+// ============================================================
+
+enum CareerType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  TEMPORARY
+}
+
+enum ExperienceLevel {
+  ENTRY
+  JUNIOR
+  MID
+  SENIOR
+  LEAD
+  EXECUTIVE
+}
+
+enum CareerStatus {
+  PUBLISHED
+  ARCHIVED
+}
+
+model Career {
+  id              String          @id @default(cuid())
+  title           String
+  slug            String          @unique
+  department      String
+  type            CareerType      @default(FULL_TIME)
+  experienceLevel ExperienceLevel @default(MID)
+  location        String
+  remote          Boolean         @default(false)
+  salaryMin       Float?
+  salaryMax       Float?
+  currency        String          @default("USD")
+  description     String          @db.Text
+  responsibilities Json?          // String[]
+  requirements    Json?           // String[]
+  benefits        Json?           // String[]
+  applyEmail      String?
+  status          CareerStatus    @default(PUBLISHED)
+  views           Int             @default(0)
+  applications    Int             @default(0)
+  closingDate     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("careers")
 }
 

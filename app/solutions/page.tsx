@@ -86,12 +86,16 @@ const SolutionsPage = () => {
     </p>
 
         <div className="flex gap-3.5 flex-wrap mt-10">
-  <Button className="rounded-[32px] font-body h-full text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 cursor-pointer transition-all duration-250 no-underline inline-block bg-[#2563EB] text-white hover:bg-[#1D4ED8]">
+  <Button className="rounded font-body h-12 text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 cursor-pointer transition-all duration-250 no-underline inline-block bg-[#2563EB] text-white hover:bg-[#1D4ED8]">
        Request a Demo
       </Button>
-      <Link href="/solutions/resolverite" className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded-[32px] cursor-pointer transition-all duration-250 no-underline inline-block bg-transparent border border-[#2563EB] text-[#2563EB] hover:bg-[#F0FDFA]">
+        <Button 
+        className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all h-12 duration-250 no-underline inline-block bg-transparent border border-[#2563EB] text-[#2563EB] hover:bg-[#F0FDFA]">
+      Learn More
+      </Button>
+      {/* <Link href="/solutions/resolverite" className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all h-12 duration-250 no-underline inline-block bg-transparent border border-[#2563EB] text-[#2563EB] hover:bg-[#F0FDFA]">
         Learn More
-      </Link>
+      </Link> */}
     </div>
 
      
@@ -295,12 +299,15 @@ const SolutionsPage = () => {
     </p>
 
     <div className="flex gap-3.5 flex-wrap mt-10">
-      <Button className="font-body h-full text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded-[32px] cursor-pointer transition-all duration-250 no-underline inline-block bg-[#0D9488] text-white hover:bg-[#0F766E]">
+      <Button className="font-body h-12 text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all duration-250 no-underline inline-block bg-[#0D9488] text-white hover:bg-[#0F766E]">
         Request a Demo
       </Button>
-      <Link href="/solutions/mentortrack" className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded-[32px] cursor-pointer transition-all duration-250 no-underline inline-block bg-transparent border border-[rgba(13,148,136,0.35)] text-[#0D9488] hover:bg-[#F0FDFA]">
+          <Button className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all duration-250 no-underline inline-block bg-transparent border border-[rgba(13,148,136,0.35)] text-[#0D9488] hover:bg-[#F0FDFA]">
+       Learn More
+      </Button>
+      {/* <Link href="/solutions/mentortrack" className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all duration-250 no-underline inline-block bg-transparent border border-[rgba(13,148,136,0.35)] text-[#0D9488] hover:bg-[#F0FDFA]">
         Learn More
-      </Link>
+      </Link> */}
     </div>
   </div>
 

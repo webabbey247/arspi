@@ -61,7 +61,7 @@ export default function RichTextEditor({
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
-      StarterKit,
+      StarterKit.configure({ link: false }),
       Placeholder.configure({ placeholder }),
       Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-[#0474C4] underline" } }),
     ],

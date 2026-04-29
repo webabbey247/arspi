@@ -75,7 +75,7 @@ import { getInsights, type PublicInsight } from "@/services/public-insight.servi
     <button
       key={cat}
       onClick={() => setActiveCategory(cat)}
-      className={`font-body text-[0.75rem] tracking-[0.05em] leading-normal font-medium px-4 py-1.5 rounded-full border transition-all whitespace-nowrap shrink-0 ${
+      className={`font-body text-[0.75rem] tracking-[0.05em] leading-normal font-medium px-4 py-1.5 rounded border transition-all whitespace-nowrap shrink-0 ${
         activeCategory === cat
           ? "bg-[#0474C4] text-[#EBF3FC] border-[#0474C4]"
           : "bg-sky-pale text-slate-500 border-[#0474C4]/25 hover:border-[#0474C4] hover:text-ink"
@@ -105,7 +105,7 @@ import { getInsights, type PublicInsight } from "@/services/public-insight.servi
           <Link
             key={ins.slug}
             href={`/insights/${ins.slug}`}
-            className="group bg-white/90 border border-[#0474C4]/50 rounded-sm overflow-hidden hover:border-[#0474C4]/60 hover:-translate-y-0.5 transition-all no-underline flex flex-col"
+            className="group bg-white/90 border border-[#0474C4]/50 rounded overflow-hidden hover:border-[#0474C4]/60 hover:-translate-y-0.5 transition-all no-underline flex flex-col"
           >
             <div className="h-1 bg-[#0474C4]" />
 
@@ -115,7 +115,7 @@ import { getInsights, type PublicInsight } from "@/services/public-insight.servi
                 <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]/10 text-[#0474C4] border-0 px-2 py-0.5">
                   {ins.category}
                 </Badge>
-                <span className="bg-[#0474C4] text-white font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium px-2 py-0.5 rounded-sm">
+                <span className="bg-[#0474C4] text-white font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium px-2 py-0.5 rounded">
                   Featured
                 </span>
               </div>
@@ -196,7 +196,7 @@ import { getInsights, type PublicInsight } from "@/services/public-insight.servi
                 <Link
                   key={ins.slug}
                   href={`/insights/${ins.slug}`}
-                  className="group border border-[#0474C4]/25 rounded-sm overflow-hidden hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all no-underline flex flex-col"
+                  className="group border border-[#0474C4]/25 rounded overflow-hidden hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all no-underline flex flex-col"
                 >
                   <div className="p-6 flex flex-col flex-1">
                     <div className="flex items-center justify-between mb-4">
