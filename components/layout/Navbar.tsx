@@ -3,9 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronRight } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { navLinks } from "@/lib/data";
+import { navLinks, type NavItem } from "@/lib/data";
 
 type SessionInfo = {
   role:      "ADMIN" | "INSTRUCTOR" | "USER"
@@ -103,6 +103,59 @@ function NavAvatarDropdown({ session }: { session: SessionInfo }) {
   )
 }
 
+// ── Desktop dropdown for nav items with children ─────────────────────────────
+
+function NavDropdown({ item, pathname }: { item: NavItem; pathname: string }) {
+  const [open, setOpen] = React.useState(false)
+  const ref             = React.useRef<HTMLDivElement>(null)
+  const children        = item.children ?? []
+
+  React.useEffect(() => {
+    function h(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", h)
+    return () => document.removeEventListener("mousedown", h)
+  }, [])
+
+  const isActive = children.some(c => pathname === c.href || pathname.startsWith(c.href + "/"))
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-1 font-body text-[1rem] tracking-[0.01em] leading-normal font-normal capitalize transition-colors cursor-pointer ${
+          isActive ? "text-[#0474c4]" : "text-[#262b40] hover:text-[#0474c4]"
+        }`}
+      >
+        {item.label}
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full mt-2 min-w-44 bg-white border border-[#E5E2DC] rounded shadow-lg py-1 z-50 overflow-hidden">
+          {children.map(child => {
+            const childActive = pathname === child.href || pathname.startsWith(child.href + "/")
+            return (
+              <Link
+                key={child.href}
+                href={child.href}
+                onClick={() => setOpen(false)}
+                className={`block px-3.5 py-2 font-body text-[0.875rem] tracking-[0em] leading-normal font-normal transition-colors no-underline ${
+                  childActive ? "text-[#0474C4] bg-[#EBF3FC]" : "text-[#262b40] hover:bg-[#FAFAF9] hover:text-[#0474C4]"
+                }`}
+              >
+                {child.label}
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Navbar ─────────────────────────────────────────────────────────────────────
 
 export function Navbar() {
@@ -134,19 +187,25 @@ export function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden lg:flex items-center gap-7">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className={`${
-                pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href))
-                  ? "text-[#0474c4]"
-                  : "text-[#262b40] hover:text-[#0474c4]"
-              } font-body text-[1rem] tracking-[0.01em] leading-normal font-normal capitalize transition-colors`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            if (link.children && link.children.length > 0) {
+              return <NavDropdown key={link.label} item={link} pathname={pathname ?? ""} />
+            }
+            const href = link.href ?? "/"
+            return (
+              <Link
+                key={link.label}
+                href={href}
+                className={`${
+                  pathname === href || (href !== "/" && pathname?.startsWith(href))
+                    ? "text-[#0474c4]"
+                    : "text-[#262b40] hover:text-[#0474c4]"
+                } font-body text-[1rem] tracking-[0.01em] leading-normal font-normal capitalize transition-colors`}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
         </nav>
 
         {/* Auth section */}
@@ -193,17 +252,42 @@ export function Navbar() {
           style={{ background: "rgba(38,43,64,0.98)", borderColor: "rgba(83,121,174,0.18)" }}
         >
           <div className="flex flex-col py-4 px-6 gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="py-2.5 text-[0.82rem] tracking-widest uppercase transition-colors"
-                style={{ color: pathname === link.href ? "#0474C4" : "rgba(255,255,255,0.65)" }}
-                onClick={() => setMobileOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              if (link.children && link.children.length > 0) {
+                return (
+                  <div key={link.label} className="py-1">
+                    <p className="py-2.5 text-[0.82rem] tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.85)" }}>
+                      {link.label}
+                    </p>
+                    <div className="flex flex-col pl-3 gap-1">
+                      {link.children.map(child => (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          className="py-2 text-[0.78rem] tracking-wider transition-colors"
+                          style={{ color: pathname === child.href ? "#0474C4" : "rgba(255,255,255,0.55)" }}
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )
+              }
+              const href = link.href ?? "/"
+              return (
+                <Link
+                  key={link.label}
+                  href={href}
+                  className="py-2.5 text-[0.82rem] tracking-widest uppercase transition-colors"
+                  style={{ color: pathname === href ? "#0474C4" : "rgba(255,255,255,0.65)" }}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
             <div className="flex gap-2 pt-4 mt-2" style={{ borderTop: "1px solid rgba(83,121,174,0.18)" }}>
               {session ? (
                 <Link

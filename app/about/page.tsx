@@ -1,15 +1,25 @@
 import type { Metadata } from "next";
 import withLayout from "@/hooks/useLayout";
 import Link from "next/link";
+import Image from "next/image";
+import { ChevronRight } from "lucide-react";
+import PageHeroBanner from "@/components/layout/PageHeroBanner";
 export const metadata: Metadata = { title: "About Us" };
 
 const AboutPage = () => {
   return (
     <>
+    {/* grid grid-cols-1 md:grid-cols-2 */}
 {/* ============ HERO SECTION ============ */}
-<section className="bg-[#060D14] px-8 md:px-16 lg:px-20 pt-16 md:pt-24 pb-12 md:pb-20 relative overflow-hidden w-full">
+
+ {/* <PageHeroBanner
+        title="About us"
+        imageUrl="/images/hero-banner.webp"
+        description="Although we have experienced many changes over the years, our reputation as a friendly, respected, and forward-thinking firm has remained consistent. Our values are embraced not only by the organization but also by every individual who works here, all of whom have been selected with our culture in mind."
+      /> */}
+<section className="bg-[#060D14] grid grid-cols-1 md:grid-cols-2 px-8 md:px-16 lg:px-20 pb-12 md:pb-20  relative overflow-hidden w-full">
         <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
-        <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
+        <div className="absolute -top-30 -right-30 w-150 h-150 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
 
         <div className="relative z-2 flex flex-col gap-6 max-w-175">
   <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-blue-300 flex items-center gap-3 before:content-[''] before:block before:w-8 before:h-px before:bg-blue-300 before:shrink-0">
@@ -28,6 +38,26 @@ const AboutPage = () => {
     </p>
 
   </div>
+
+   <div className="relative hidden md:flex items-stretch min-h-full w-full">
+            <div className="flex-1 relative overflow-hidden min-h-125">
+              <Image
+                src="/images/hero-banner.webp"
+                alt="Professionals collaborating"
+                height={900}
+                width={400}
+                loading="eager"
+                className="w-full object-cover opacity-[0.65] filter-[grayscale(15%)] block"
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to right, #060D14 0%, transparent 40%), linear-gradient(to top, #060D14 0%, transparent 40%)",
+                }}
+              ></div>
+            </div>
+          </div>
 </section>
 
 {/* ============ ABOUT SECTION ============ */}
@@ -136,7 +166,75 @@ Promotes excellence in professional education and research capacity development 
 
 </section>
 
-<section className="py-16 md:py-24 px-8 md:px-16 lg:px-20 bg-white w-full">
+ <section className="font-body bg-[#F9F9FB] py-16 px-6 md:px-12 lg:px-20 w-full">
+        <div className="mb-14">
+    <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-4">
+    Leadership
+    </p>
+    <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639] mb-5">
+    Life at ARPS Institute
+    </h2>
+    <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 max-w-145">
+      ARPS Institute focuses on professional, research, and leadership development fields — providing accessible and high-quality training across key disciplines worldwide. We do not provide clinical or medical training.
+    </p>
+  </div>
+      <div className="max-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        {/* Left: CEO Photo + Name */}
+        <div className="flex flex-col">
+          <div className="relative w-full aspect-3/4 max-w-2xl h-100 overflow-hidden">
+            <Image
+              src="/images/about-arps.webp"
+              alt="Joaquin Duato"
+              width={672}
+              height={400}
+              className="object-cover object-top grayscale-10 rounded"
+              priority
+            />
+          </div>
+          <div className="mt-5">
+            <h2 className="font-heading text-2xl font-semibold text-[#1a1a1a] tracking-tight leading-snug">
+              Joaquin Duato
+            </h2>
+            <p className="text-base text-[#444] mt-1 font-light tracking-wide">
+              Chairman and Chief Executive Officer
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Executive Committee + Board of Directors */}
+        <div className="flex flex-col gap-4 self-start lg:pl-8">
+          {/* Executive Committee */}
+          <div className="bg-white p-12">
+            <h3 className="font-heading text-3xl font-light text-[#1a1a1a] tracking-tight leading-tight mb-5">
+              Executive <br /> Committee
+            </h3>
+            <a
+              href="#"
+              className="inline-flex items-center gap-2 text-[#0474C4] text-sm font-semibold uppercase tracking-widest hover:gap-4 transition-all duration-200 group"
+            >
+              Read more
+              <ChevronRight className="text-lg leading-none group-hover:translate-x-1 transition-transform duration-200" />
+            </a>
+          </div>
+
+          {/* Board of Directors */}
+          <div className="bg-white p-12">
+            <h3 className="font-heading text-3xl font-light text-[#1a1a1a] tracking-tight leading-tight mb-5">
+              Board of Directors
+            </h3>
+            <a
+              href="#"
+              className="inline-flex items-center gap-2 text-[#0474C4] text-sm font-semibold uppercase tracking-widest hover:gap-4 transition-all duration-200 group"
+            >
+              Read more
+              <ChevronRight className="text-lg leading-none group-hover:translate-x-1 transition-transform duration-200" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+{/* <section className="py-16 md:py-24 px-8 md:px-16 lg:px-20 bg-white w-full">
   <div className="mb-14">
     <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-4">
       Our Focus Areas
@@ -230,9 +328,9 @@ Promotes excellence in professional education and research capacity development 
       </div>
     </div>
   ))}
-</section>
+</section> */}
 
-      <section className="py-16 md:py-28 w-full px-8 md:px-16 lg:px-20 text-center bg-[#181C2C] relative overflow-hidden">
+      <section className="py-16 md:py-28 w-full px-8 md:px-16 lg:px-0 text-center bg-[#181C2C] relative overflow-hidden">
         <div className="relative max-w-140 mx-auto">
           <div className=" flex flex-col gap-5 mb-12">
             <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4]">

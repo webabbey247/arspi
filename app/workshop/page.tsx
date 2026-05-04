@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Calendar, ChevronRight, Clock, GraduationCap, MapPin, Monitor, Users } from "lucide-react";
+import { Calendar, ChevronDown, ChevronRight, Clock, GraduationCap, MapPin, Monitor, Users } from "lucide-react";
 import { initialsOf } from "@/lib/workshop-helpers";
 import { Badge } from "@/components/ui/badge";
 import withLayout from "@/hooks/useLayout";
@@ -82,61 +82,86 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 // ── Filter checkbox group (sidebar) ──────────────────────────────────────────
 
-function FilterCheckboxGroup({
-  label,
+function FilterAccordion({
+  title,
   options,
   selected,
-  onAll,
   onToggle,
+  defaultOpen = false,
 }: {
-  label:    string
-  options:  { id: string; label: string }[]
-  selected: string[]
-  onAll:    () => void
-  onToggle: (id: string) => void
+  title:        string
+  options:      { id: string; label: string }[]
+  selected:     string[]
+  onToggle:     (id: string) => void
+  defaultOpen?: boolean
 }) {
-  const isAll = selected.length === 0
+  const [open, setOpen] = React.useState(defaultOpen)
+
   return (
-    <div>
-      <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-500 mb-2">{label}</p>
-      <ul className="flex flex-col gap-1.5">
-        <li>
-          <label className="flex items-center gap-2 cursor-pointer group">
-            <input
-              type="checkbox"
-              checked={isAll}
-              onChange={onAll}
-              className="h-3.5 w-3.5 accent-[#0474C4] cursor-pointer"
-            />
-            <span className={`font-body text-[0.8125rem] ${isAll ? "text-ink font-medium" : "text-slate-500 group-hover:text-ink"}`}>
-              All
+    <div className="border-b border-[#0474C4]/12 last:border-b-0">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between py-3.5 cursor-pointer group"
+      >
+        <span className="font-body text-[0.875rem] font-semibold text-ink group-hover:text-[#0474C4] transition-colors">
+          {title}
+          {selected.length > 0 && (
+            <span className="ml-2 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-[#0474C4]/10 text-[0.6875rem] font-semibold text-[#0474C4]">
+              {selected.length}
             </span>
-          </label>
-        </li>
-        {options.map(opt => {
-          const checked = selected.includes(opt.id)
-          return (
-            <li key={opt.id}>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => onToggle(opt.id)}
-                  className="h-3.5 w-3.5 accent-[#0474C4] cursor-pointer"
-                />
-                <span className={`font-body text-[0.8125rem] ${checked ? "text-ink font-medium text-lg" : "text-slate-500 group-hover:text-ink"}`}>
-                  {opt.label}
-                </span>
-              </label>
-            </li>
-          )
-        })}
-      </ul>
+          )}
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <ul className="flex flex-col gap-1.5 pb-4">
+          {options.length === 0 ? (
+            <li className="font-body text-[0.75rem] text-slate-400">No options available</li>
+          ) : options.map(opt => {
+            const checked = selected.includes(opt.id)
+            return (
+              <li key={opt.id}>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => onToggle(opt.id)}
+                    className="h-3.5 w-3.5 accent-[#0474C4] cursor-pointer"
+                  />
+                  <span className={`font-body text-[0.8125rem] ${checked ? "text-ink font-medium" : "text-slate-500 group-hover:text-ink"}`}>
+                    {opt.label}
+                  </span>
+                </label>
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </div>
   )
 }
 
+// ── Pagination helper ───────────────────────────────────────────────────────
+
+/** Build a windowed page list with ellipses around the current page */
+function pageWindow(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages: (number | "…")[] = [1]
+  if (current > 3) pages.push("…")
+  const start = Math.max(2, current - 1)
+  const end   = Math.min(total - 1, current + 1)
+  for (let i = start; i <= end; i++) pages.push(i)
+  if (current < total - 2) pages.push("…")
+  pages.push(total)
+  return pages
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
+
+const PAGE_SIZE = 20
 
 type DurationBucket = "LT1" | "1to3" | "3to5" | "GT5"
 type DateBucket     = "PAST_60_PLUS" | "PAST_60" | "30_TO_60" | "60_PLUS"
@@ -222,6 +247,19 @@ const WorkshopPage = () => {
   const spotlightVisible  = !!nearest && dateFilter.length === 0 && passesFilters(nearest)
   const cardWorkshops     = filteredCards.filter(w => !(spotlightVisible && nearest && w.id === nearest.id))
 
+  const [page, setPage] = React.useState(1)
+  const total            = cardWorkshops.length
+  const totalPages       = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const paginated        = cardWorkshops.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const startIdx         = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const endIdx           = Math.min(page * PAGE_SIZE, total)
+  const pages            = pageWindow(page, totalPages)
+
+  // Reset to page 1 when any filter changes
+  React.useEffect(() => { setPage(1) }, [
+    categoryFilter, typeFilter, mediumFilter, durationFilter, dateFilter,
+  ])
+
   const hasActiveFilter =
     categoryFilter.length > 0 || typeFilter.length > 0 || mediumFilter.length > 0 ||
     durationFilter.length > 0 || dateFilter.length > 0
@@ -302,7 +340,7 @@ const WorkshopPage = () => {
 
           {/* Nearest upcoming event — spotlight */}
           {spotlightVisible && nearest && (
-            <div className="grid lg:grid-cols-[1fr_340px] border border-[#0474C4]/25 rounded-sm overflow-hidden mb-6 bg-sky-pale hover:border-[#0474C4]/50 transition-colors">
+            <div className="grid lg:grid-cols-[1fr_340px] border border-[#0474C4]/25 rounded overflow-hidden mb-6 bg-sky-pale hover:border-[#0474C4]/50 transition-colors">
               <div className="p-8 md:p-10">
 
                 <div className="flex gap-2 mb-5 flex-wrap">
@@ -327,9 +365,7 @@ const WorkshopPage = () => {
                   {nearest.title}
                 </h3>
 
-                <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 mb-6 max-w-lg">
-                  {nearest.description}
-                </p>
+                <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 mb-6 max-w-lg line-clamp-3"  dangerouslySetInnerHTML={{ __html: nearest.description }} />
 
                 {(nearest.facilitators.length > 0 || nearest.facilitator) && (
                   <div className="mb-6">
@@ -418,7 +454,7 @@ const WorkshopPage = () => {
 
             {/* Left sidebar — w-1/4 on lg, full width on smaller */}
             <aside className="lg:w-1/4 shrink-0">
-              <div className="bg-white border border-[#0474C4]/15 rounded-sm p-5 space-y-5 lg:sticky lg:top-32">
+              <div className="bg-white  p-5 space-y-5 lg:sticky lg:top-32">
                 <div className="flex items-center justify-between">
                   <h3 className="font-heading text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">Filters</h3>
                   {hasActiveFilter && (
@@ -432,72 +468,64 @@ const WorkshopPage = () => {
                   )}
                 </div>
 
-                {/* Category */}
-                <FilterCheckboxGroup
-                  label="Category"
-                  options={[
-                    { id: "SHORT_COURSE", label: "Short Course" },
-                    { id: "WEBINAR",      label: "Webinar" },
-                    { id: "MASTERCLASS",  label: "Masterclass" },
-                    { id: "CONFERENCE",   label: "Conference" },
-                    { id: "WORKSHOP",     label: "Workshop" },
-                  ]}
-                  selected={categoryFilter}
-                  onAll={() => setCategoryFilter([])}
-                  onToggle={(id) => setCategoryFilter(toggleIn(categoryFilter, id))}
-                />
+                <div className="flex flex-col">
+                  <FilterAccordion
+                    title="Category"
+                    options={[
+                      { id: "SHORT_COURSE", label: "Short Course" },
+                      { id: "WEBINAR",      label: "Webinar" },
+                      { id: "MASTERCLASS",  label: "Masterclass" },
+                      { id: "CONFERENCE",   label: "Conference" },
+                      { id: "WORKSHOP",     label: "Workshop" },
+                    ]}
+                    selected={categoryFilter}
+                    onToggle={(id) => setCategoryFilter(toggleIn(categoryFilter, id))}
+                  />
 
-                {/* Type */}
-                <FilterCheckboxGroup
-                  label="Type"
-                  options={[
-                    { id: "FREE", label: "Free" },
-                    { id: "PAID", label: "Paid" },
-                  ]}
-                  selected={typeFilter}
-                  onAll={() => setTypeFilter([])}
-                  onToggle={(id) => setTypeFilter(toggleIn(typeFilter, id as "FREE" | "PAID"))}
-                />
+                  <FilterAccordion
+                    title="Type"
+                    options={[
+                      { id: "FREE", label: "Free" },
+                      { id: "PAID", label: "Paid" },
+                    ]}
+                    selected={typeFilter}
+                    onToggle={(id) => setTypeFilter(toggleIn(typeFilter, id as "FREE" | "PAID"))}
+                  />
 
-                {/* Medium */}
-                <FilterCheckboxGroup
-                  label="Medium"
-                  options={[
-                    { id: "ONLINE",    label: "Online" },
-                    { id: "IN_PERSON", label: "In-Person" },
-                  ]}
-                  selected={mediumFilter}
-                  onAll={() => setMediumFilter([])}
-                  onToggle={(id) => setMediumFilter(toggleIn(mediumFilter, id as "ONLINE" | "IN_PERSON"))}
-                />
+                  <FilterAccordion
+                    title="Medium"
+                    options={[
+                      { id: "ONLINE",    label: "Online" },
+                      { id: "IN_PERSON", label: "In-Person" },
+                    ]}
+                    selected={mediumFilter}
+                    onToggle={(id) => setMediumFilter(toggleIn(mediumFilter, id as "ONLINE" | "IN_PERSON"))}
+                  />
 
-                {/* Duration */}
-                <FilterCheckboxGroup
-                  label="Duration"
-                  options={[
-                    { id: "LT1",  label: "< 1 hr" },
-                    { id: "1to3", label: "1–3 hrs" },
-                    { id: "3to5", label: "3–5 hrs" },
-                    { id: "GT5",  label: "5+ hrs" },
-                  ]}
-                  selected={durationFilter}
-                  onAll={() => setDurationFilter([])}
-                  onToggle={(id) => setDurationFilter(toggleIn(durationFilter, id as DurationBucket))}
-                />
+                  <FilterAccordion
+                    title="Duration"
+                    options={[
+                      { id: "LT1",  label: "< 1 hr" },
+                      { id: "1to3", label: "1–3 hrs" },
+                      { id: "3to5", label: "3–5 hrs" },
+                      { id: "GT5",  label: "5+ hrs" },
+                    ]}
+                    selected={durationFilter}
+                    onToggle={(id) => setDurationFilter(toggleIn(durationFilter, id as DurationBucket))}
+                  />
 
-                {/* Date range */}
-                <FilterCheckboxGroup
-                  label="Date range"
-                  options={[
-                    { id: "PAST_60_PLUS", label: "Past 60+ days" },
-                    { id: "PAST_60",      label: "Past 60 days" },
-                    { id: "30_TO_60",     label: "30–60 days away" },
-                    { id: "60_PLUS",      label: "60+ days away" },
-                  ]}
-                  selected={dateFilter}
-                  onAll={() => setDateFilter([])}
-                  onToggle={(id) => setDateFilter(toggleIn(dateFilter, id as DateBucket))}
-                />
+                  <FilterAccordion
+                    title="Date range"
+                    options={[
+                      { id: "PAST_60_PLUS", label: "Past 60+ days" },
+                      { id: "PAST_60",      label: "Past 60 days" },
+                      { id: "30_TO_60",     label: "30–60 days away" },
+                      { id: "60_PLUS",      label: "60+ days away" },
+                    ]}
+                    selected={dateFilter}
+                    onToggle={(id) => setDateFilter(toggleIn(dateFilter, id as DateBucket))}
+                  />
+                </div>
               </div>
             </aside>
 
@@ -506,20 +534,20 @@ const WorkshopPage = () => {
               <div className="grid md:grid-cols-2 gap-5">
                 {loading ? (
                   Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="bg-white/90 border border-[#0474C4]/10 rounded-sm h-64 animate-pulse" />
+                    <div key={i} className="bg-white/90 border border-[#0474C4]/10 rounded h-64 animate-pulse" />
                   ))
-                ) : cardWorkshops.length === 0 ? (
-                  <div className="md:col-span-2 bg-white border border-[#0474C4]/15 rounded-sm p-10 text-center">
+                ) : paginated.length === 0 ? (
+                  <div className="md:col-span-2 bg-white border border-[#0474C4]/15 rounded p-10 text-center">
                     <p className="font-heading text-[1rem] font-semibold text-ink mb-1.5">No workshops match your filters</p>
                     <p className="font-body text-[0.8125rem] text-slate-500">
                       {hasActiveFilter ? "Try clearing some filters to see more events." : "Check back soon — new events are added regularly."}
                     </p>
                   </div>
                 ) : (
-                  cardWorkshops.map((w) => (
+                  paginated.map((w) => (
                   <div
                     key={w.id}
-                    className="bg-white/90 border border-[#0474C4]/25 rounded-sm overflow-hidden hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all flex flex-col"
+                    className="bg-white/90 border border-[#0474C4]/25 rounded overflow-hidden hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all flex flex-col"
                   >
                     <div className="p-5 flex flex-col flex-1">
                       <div className="flex gap-2 mb-3 flex-wrap">
@@ -565,7 +593,7 @@ const WorkshopPage = () => {
                       </span>
                       <Link
                         href={`/workshop/${w.slug}`}
-                        className="inline-flex items-center font-body text-[0.8125rem] tracking-[0.02em] font-medium px-5 py-2.5 rounded-sm bg-[#0474C4] hover:bg-[#06457f] text-white"
+                        className="inline-flex items-center font-body text-[0.8125rem] tracking-[0.02em] font-medium px-5 py-2.5 rounded bg-[#0474C4] hover:bg-[#06457f] text-white"
                       >
                         Learn More <ChevronRight className="h-4 w-4" />
                       </Link>
@@ -574,6 +602,55 @@ const WorkshopPage = () => {
                 ))
                 )}
               </div>
+
+              {/* Pagination footer — Showing X-Y of N workshops + windowed pagination */}
+              {!loading && paginated.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-6">
+                  <p className="font-body text-[0.8125rem] text-slate-500">
+                    Showing <span className="font-medium text-ink">{startIdx}-{endIdx}</span>{" "}
+                    of <span className="font-medium text-ink">{total}</span> {total === 1 ? "workshop" : "workshops"}
+                  </p>
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={page === 1}
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        Prev
+                      </button>
+                      {pages.map((p, i) =>
+                        p === "…" ? (
+                          <span key={`ellipsis-${i}`} className="font-body text-[0.8125rem] text-slate-400 px-2">…</span>
+                        ) : (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => setPage(p)}
+                            className={`min-w-8 h-8 rounded font-body text-[0.8125rem] font-medium cursor-pointer transition-colors ${
+                              p === page
+                                ? "bg-[#0474C4] text-white"
+                                : "border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4]"
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        )
+                      )}
+                      <button
+                        type="button"
+                        disabled={page === totalPages}
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -604,7 +681,7 @@ const WorkshopPage = () => {
               {past.map((p) => (
                 <div
                   key={p.id}
-                  className="bg-white border border-[#0474C4]/22 rounded-sm p-4 opacity-70 hover:opacity-100 transition-opacity"
+                  className="bg-white border border-[#0474C4]/22 rounded p-4 opacity-70 hover:opacity-100 transition-opacity"
                 >
                   <div className="font-body text-[0.75rem] tracking-[0.05em] font-medium text-slate-400 mb-1.5">
                     {fmtDate(p.date)}

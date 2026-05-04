@@ -1,15 +1,22 @@
 // ── Navigation ──────────────────────────────────────────────
-export const navLinks = [
-  { label: "About", href: "/about" },
+export type NavChild = { label: string; href: string }
+export type NavItem  = { label: string; href?: string; children?: NavChild[] }
+
+export const navLinks: NavItem[] = [
   {
-    label: "Solutions",
-    href: "/solutions",
+    label: "About",
+    children: [
+      { label: "Who we are", href: "/about" },
+      { label: "Our Team",   href: "/team" },
+      { label: "Join Us",    href: "/careers" },
+    ],
   },
-  { label: "Research", href: "/research" },
-  { label: "Programs", href: "/programs" },
-  { label: "Workshop", href: "/workshop" },
-  { label: "Insights", href: "/insights" },
-  { label: "Contact", href: "/contact" },
+  { label: "Solutions", href: "/solutions" },
+  { label: "Research",  href: "/research" },
+  { label: "Programs",  href: "/programs" },
+  { label: "Workshop",  href: "/workshop" },
+  { label: "Insights",  href: "/insights" },
+  { label: "Contact",   href: "/contact" },
 ];
 
 // ── Programs ─────────────────────────────────────────────────

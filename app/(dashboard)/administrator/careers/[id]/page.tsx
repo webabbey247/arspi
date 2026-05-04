@@ -4,6 +4,19 @@ import { useEffect, useState, useCallback } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 
+type Applicant = {
+  id:             string
+  fullName:       string
+  email:          string
+  mobile:         string
+  country:        string
+  resumeUrl:      string
+  coverLetterUrl: string | null
+  linkedinUrl:    string | null
+  source:         string | null
+  createdAt:      string
+}
+
 type CareerType      = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY"
 type ExperienceLevel = "ENTRY" | "JUNIOR" | "MID" | "SENIOR" | "LEAD" | "EXECUTIVE"
 type CareerStatus    = "PUBLISHED" | "ARCHIVED"
@@ -74,6 +87,13 @@ export default function AdminCareerDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
 
+  const [applicants, setApplicants]         = useState<Applicant[]>([])
+  const [applicantsLoading, setAppLoading]  = useState(false)
+  const [applicantsTotal, setAppTotal]      = useState(0)
+  const [applicantsPage, setAppPage]        = useState(1)
+  const APPLICANTS_LIMIT                    = 20
+  const totalApplicantPages                 = Math.max(1, Math.ceil(applicantsTotal / APPLICANTS_LIMIT))
+
   const fetchCareer = useCallback(async () => {
     if (!id) return
     setLoading(true)
@@ -91,6 +111,23 @@ export default function AdminCareerDetailPage() {
   }, [id])
 
   useEffect(() => { fetchCareer() }, [fetchCareer])
+
+  const fetchApplicants = useCallback(async () => {
+    if (!id) return
+    setAppLoading(true)
+    try {
+      const r = await fetch(`/api/admin/careers/${id}/applications?page=${applicantsPage}&limit=${APPLICANTS_LIMIT}`)
+      const d = await r.json()
+      if (r.ok) {
+        setApplicants(d.applications ?? [])
+        setAppTotal(d.pagination?.total ?? 0)
+      }
+    } finally {
+      setAppLoading(false)
+    }
+  }, [id, applicantsPage])
+
+  useEffect(() => { fetchApplicants() }, [fetchApplicants])
 
   if (loading) {
     return <div className="px-8 py-8 max-w-350 mx-auto text-[#A8A39C] text-[13px]">Loading…</div>
@@ -225,6 +262,94 @@ export default function AdminCareerDetailPage() {
               <p>Email: <a href={`mailto:${career.applyEmail}`} className="text-[#0474C4] hover:underline">{career.applyEmail}</a></p>
             </div>
           </section>
+        )}
+      </div>
+
+      {/* Applicants table — last section on the page */}
+      <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden mt-6">
+        <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9] flex items-center justify-between">
+          <div>
+            <h3 className="text-[13px] font-bold text-[#1A1916]">Applicants</h3>
+            <p className="text-[11px] text-[#A8A39C] mt-0.5">{applicantsTotal} total submission{applicantsTotal === 1 ? "" : "s"}</p>
+          </div>
+        </div>
+
+        {applicantsLoading ? (
+          <div className="px-5 py-10 text-center text-[12px] text-[#A8A39C]">Loading applicants…</div>
+        ) : applicants.length === 0 ? (
+          <div className="px-5 py-10 text-center text-[12px] text-[#A8A39C]">No applications yet.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-[12px]">
+              <thead className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                <tr className="text-left text-[10px] font-bold text-[#A8A39C] uppercase tracking-[0.5px]">
+                  <th className="px-5 py-2.5">Name</th>
+                  <th className="px-3 py-2.5">Email</th>
+                  <th className="px-3 py-2.5">Country</th>
+                  <th className="px-3 py-2.5">Mobile</th>
+                  <th className="px-3 py-2.5">Resume</th>
+                  <th className="px-3 py-2.5">Cover letter</th>
+                  <th className="px-3 py-2.5">LinkedIn</th>
+                  <th className="px-3 py-2.5">Source</th>
+                  <th className="px-5 py-2.5">Submitted</th>
+                </tr>
+              </thead>
+              <tbody>
+                {applicants.map((a) => (
+                  <tr key={a.id} className="border-b border-[#F5F4F1] last:border-b-0 text-[#1A1916]">
+                    <td className="px-5 py-3 font-semibold">{a.fullName}</td>
+                    <td className="px-3 py-3 text-[#3F3B36]">
+                      <a href={`mailto:${a.email}`} className="hover:text-[#0474C4]">{a.email}</a>
+                    </td>
+                    <td className="px-3 py-3 text-[#3F3B36]">{a.country}</td>
+                    <td className="px-3 py-3 text-[#3F3B36]">{a.mobile}</td>
+                    <td className="px-3 py-3">
+                      <a href={a.resumeUrl} target="_blank" rel="noreferrer" className="text-[#0474C4] hover:underline">View</a>
+                    </td>
+                    <td className="px-3 py-3">
+                      {a.coverLetterUrl
+                        ? <a href={a.coverLetterUrl} target="_blank" rel="noreferrer" className="text-[#0474C4] hover:underline">View</a>
+                        : <span className="text-[#A8A39C]">—</span>}
+                    </td>
+                    <td className="px-3 py-3">
+                      {a.linkedinUrl
+                        ? <a href={a.linkedinUrl} target="_blank" rel="noreferrer" className="text-[#0474C4] hover:underline">Profile</a>
+                        : <span className="text-[#A8A39C]">—</span>}
+                    </td>
+                    <td className="px-3 py-3 text-[#3F3B36]">{a.source ?? "—"}</td>
+                    <td className="px-5 py-3 text-[#A8A39C] whitespace-nowrap">{fmtDate(a.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Pager — hidden when no rows */}
+        {applicants.length > 0 && (
+          <div className="px-5 py-3 border-t border-[#E5E2DC] flex items-center justify-between">
+            <span className="text-[11px] text-[#A8A39C]">
+              Page {applicantsPage} of {totalApplicantPages}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={applicantsPage === 1}
+                onClick={() => setAppPage(p => Math.max(1, p - 1))}
+                className="px-3 py-1.5 rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-[11px] font-semibold uppercase tracking-[0.05em]"
+              >
+                Prev
+              </button>
+              <button
+                type="button"
+                disabled={applicantsPage === totalApplicantPages}
+                onClick={() => setAppPage(p => Math.min(totalApplicantPages, p + 1))}
+                className="px-3 py-1.5 rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-[11px] font-semibold uppercase tracking-[0.05em]"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
