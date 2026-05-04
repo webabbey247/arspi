@@ -3,6 +3,67 @@ import { CareerType, ExperienceLevel, CareerStatus } from "@prisma/client"
 
 export type { CareerType, ExperienceLevel, CareerStatus }
 
+// ── Department types ──────────────────────────────────────────────────────────
+
+export type DepartmentRow = {
+  id:        string
+  name:      string
+  createdAt: Date
+  updatedAt: Date
+  _count:    { careers: number }
+}
+
+type ServiceResult<T> = { success: true; data: T } | { success: false; error: string }
+
+// ── Department CRUD ───────────────────────────────────────────────────────────
+
+export async function getCareerDepartments(): Promise<DepartmentRow[]> {
+  const rows = await db.careerDepartment.findMany({
+    orderBy: { name: "asc" },
+  })
+  return rows.map(r => ({ ...r, _count: { careers: 0 } }))
+}
+
+export async function createCareerDepartment(
+  name: string
+): Promise<ServiceResult<DepartmentRow>> {
+  const existing = await db.careerDepartment.findFirst({ where: { name } })
+  if (existing) return { success: false, error: "A department with this name already exists." }
+
+  const row = await db.careerDepartment.create({ data: { name } })
+  return { success: true, data: { ...row, _count: { careers: 0 } } }
+}
+
+export async function updateCareerDepartment(
+  id:   string,
+  name: string
+): Promise<ServiceResult<DepartmentRow>> {
+  const existing = await db.careerDepartment.findUnique({ where: { id } })
+  if (!existing) return { success: false, error: "Department not found." }
+
+  const conflict = await db.careerDepartment.findFirst({ where: { name, NOT: { id } } })
+  if (conflict) return { success: false, error: "A department with this name already exists." }
+
+  const row = await db.careerDepartment.update({ where: { id }, data: { name } })
+  const careersCount = await db.career.count({ where: { department: name } })
+  return { success: true, data: { ...row, _count: { careers: careersCount } } }
+}
+
+export async function deleteCareerDepartment(
+  id: string
+): Promise<ServiceResult<null>> {
+  const existing = await db.careerDepartment.findUnique({ where: { id } })
+  if (!existing) return { success: false, error: "Department not found." }
+
+  const inUse = await db.career.count({ where: { department: existing.name } })
+  if (inUse > 0) {
+    return { success: false, error: `Cannot delete — ${inUse} posting(s) use this department.` }
+  }
+
+  await db.careerDepartment.delete({ where: { id } })
+  return { success: true, data: null }
+}
+
 export type CareerRow = {
   id:              string
   title:           string

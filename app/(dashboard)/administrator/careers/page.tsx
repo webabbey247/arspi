@@ -14,6 +14,14 @@ import { cn } from "@/lib/utils"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+type Tab = "jobs" | "departments"
+
+type Department = {
+  id:        string
+  name:      string
+  createdAt: string
+}
+
 type CareerType      = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY"
 type ExperienceLevel = "ENTRY" | "JUNIOR" | "MID" | "SENIOR" | "LEAD" | "EXECUTIVE"
 type CareerStatus    = "PUBLISHED" | "ARCHIVED"
@@ -232,14 +240,89 @@ const EMPTY_CAREER: CareerFormValues = {
   closingDate:     "",
 }
 
+// ── Department modal ──────────────────────────────────────────────────────────
+
+function DepartmentModal({
+  department,
+  onSave,
+  onClose,
+}: {
+  department: Department | null
+  onSave: (name: string) => Promise<void>
+  onClose: () => void
+}) {
+  const [name, setName]     = useState(department?.name ?? "")
+  const [saving, setSaving] = useState(false)
+  const [error, setError]   = useState("")
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!name.trim()) return
+    setError("")
+    setSaving(true)
+    try { await onSave(name.trim()) }
+    catch (err) { setError(err instanceof Error ? err.message : "Something went wrong.") }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+        <div className="flex items-start justify-between px-5 py-4 border-b border-[#E5E2DC]">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-[10px] bg-[#EEF6FF] flex items-center justify-center shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0474C4" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-[15px] font-bold text-[#1A1916] leading-tight">
+                {department ? "Edit Department" : "New Department"}
+              </h2>
+              <p className="text-[12px] text-[#A8A39C] mt-0.5">
+                {department ? "Update the department name." : "Add a new career department."}
+              </p>
+            </div>
+          </div>
+          <button type="button" onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#F5F4F1] text-[#A8A39C] cursor-pointer shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
+          {error && (
+            <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+          )}
+          <input
+            autoFocus
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="e.g. Research & Insights"
+            className={inputCls}
+            required
+          />
+          <div className="flex gap-2 justify-end">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
+            <button type="submit" disabled={saving || !name.trim()} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+              {saving ? "Saving…" : department ? "Save" : "Create"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // ── Career drawer ─────────────────────────────────────────────────────────────
 
 function CareerDrawer({
   career,
+  departments,
   onSave,
   onClose,
 }: {
-  career: Career | null
+  career:      Career | null
+  departments: Department[]
   onSave: (values: CareerFormValues) => Promise<void>
   onClose: () => void
 }) {
@@ -323,7 +406,12 @@ function CareerDrawer({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Department" required>
-              <input {...register("department")} className={inputCls} placeholder="e.g. Research & Insights" />
+              <select {...register("department")} className={inputCls}>
+                <option value="">Select department…</option>
+                {departments.map(d => (
+                  <option key={d.id} value={d.name}>{d.name}</option>
+                ))}
+              </select>
               {errors.department && <p className="text-[11px] text-red-500 mt-0.5">{errors.department.message}</p>}
             </Field>
             <Field label="Location" required>
@@ -535,6 +623,9 @@ function FilterDropdown({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AdminCareersPage() {
+  const [tab, setTab] = useState<Tab>("jobs")
+
+  // Jobs
   const [careers, setCareers]         = useState<Career[]>([])
   const [loading, setLoading]         = useState(true)
   const [search, setSearch]           = useState("")
@@ -547,6 +638,14 @@ export default function AdminCareersPage() {
   const PAGE_SIZE                     = 20
   const [page, setPage]               = useState(1)
 
+  // Departments
+  const [departments, setDepartments]             = useState<Department[]>([])
+  const [deptLoading, setDeptLoading]             = useState(true)
+  const [deptSearch, setDeptSearch]               = useState("")
+  const [deptPage, setDeptPage]                   = useState(1)
+  const [deptModal, setDeptModal]                 = useState<"create" | Department | null>(null)
+  const [deptToDelete, setDeptToDelete]           = useState<Department | null>(null)
+
   const fetchCareers = useCallback(async () => {
     setLoading(true)
     try {
@@ -558,13 +657,23 @@ export default function AdminCareersPage() {
     }
   }, [])
 
-  useEffect(() => { fetchCareers() }, [fetchCareers])
+  const fetchDepartments = useCallback(async () => {
+    setDeptLoading(true)
+    try {
+      const r = await fetch("/api/admin/careers/departments")
+      const d = await r.json()
+      if (r.ok) setDepartments(d.departments ?? [])
+    } finally {
+      setDeptLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchCareers(); fetchDepartments() }, [fetchCareers, fetchDepartments])
 
   useEffect(() => { setPage(1) }, [search, departmentFilter, experienceFilter, locationFilter])
 
-  // Build filter options dynamically from data
-  const departments = Array.from(new Set(careers.map(c => c.department).filter(Boolean))).sort()
-  const locations   = Array.from(new Set(careers.map(c => c.location).filter(Boolean))).sort()
+  // Derive location options from career data; departments come from the API state
+  const locations = Array.from(new Set(careers.map(c => c.location).filter(Boolean))).sort()
 
   const filtered = careers.filter(c => {
     const q = search.toLowerCase()
@@ -646,204 +755,259 @@ export default function AdminCareersPage() {
     setToDelete(null)
   }
 
+  async function handleDeptSave(name: string) {
+    const editing = deptModal !== "create" && deptModal !== null ? deptModal : null
+    const url     = editing ? `/api/admin/careers/departments/${editing.id}` : "/api/admin/careers/departments"
+    const method  = editing ? "PUT" : "POST"
+    const r       = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) })
+    const d       = await r.json()
+    if (!r.ok) throw new Error(d.error ?? "Something went wrong.")
+    await fetchDepartments()
+    setDeptModal(null)
+  }
+
+  async function handleDeptDelete() {
+    if (!deptToDelete) return
+    const r = await fetch(`/api/admin/careers/departments/${deptToDelete.id}`, { method: "DELETE" })
+    if (r.status === 204 || r.ok) {
+      setDepartments(prev => prev.filter(d => d.id !== deptToDelete.id))
+    } else {
+      const d = await r.json()
+      alert(d.error ?? "Failed to delete department.")
+    }
+    setDeptToDelete(null)
+  }
+
+  const filteredDepts   = departments.filter(d => d.name.toLowerCase().includes(deptSearch.toLowerCase()))
+  const deptTotalPages  = Math.max(1, Math.ceil(filteredDepts.length / PAGE_SIZE))
+  const paginatedDepts  = filteredDepts.slice((deptPage - 1) * PAGE_SIZE, deptPage * PAGE_SIZE)
+
   return (
     <div className="px-8 py-8 max-w-350 mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-[18px] font-extrabold text-[#1A1916]">Careers</h1>
-          <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage open roles and career postings</p>
+          <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage open roles and departments</p>
         </div>
         <button
-          onClick={() => setDrawer("create")}
+          onClick={() => tab === "jobs" ? setDrawer("create") : setDeptModal("create")}
           className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New Posting
+          {tab === "jobs" ? "New Posting" : "New Department"}
         </button>
       </div>
 
-      {/* Table card */}
-      <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-
-        {/* Toolbar: search left, filters right */}
-        <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
-          <div className="relative w-full sm:w-64">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search postings…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
-          </div>
-
-          <div className="ml-auto flex items-center gap-2">
-            <FilterDropdown
-              label="Department"
-              icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>}
-              active={departmentFilter !== "All"}
-              value={departmentFilter}
-              onChange={setDeptF}
-              options={[{ value: "All", label: "All" }, ...departments.map(d => ({ value: d, label: d }))]}
-            />
-            <FilterDropdown
-              label="Experience"
-              icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>}
-              active={experienceFilter !== "All"}
-              value={experienceFilter}
-              onChange={setExpF}
-              options={[{ value: "All", label: "All" }, ...Object.entries(LEVEL_LABELS).map(([k, v]) => ({ value: k, label: v }))]}
-            />
-            <FilterDropdown
-              label="Location"
-              icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>}
-              active={locationFilter !== "All"}
-              value={locationFilter}
-              onChange={setLocF}
-              options={[{ value: "All", label: "All" }, ...locations.map(l => ({ value: l, label: l }))]}
-            />
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
-                {["Posting", "Department", "Type", "Level", "Location", "Status", ""].map((col, i) => (
-                  <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</td></tr>
-              ) : filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No career postings found.</td></tr>
-              ) : paginated.map(career => (
-                <tr key={career.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
-                  <td className="px-4 py-3">
-                    <p className="font-semibold text-[#1A1916] leading-tight line-clamp-1">{career.title}</p>
-                    <p className="text-[11px] text-[#A8A39C] mt-0.5">{career.applications} application{career.applications === 1 ? "" : "s"} · {career.views} views</p>
-                  </td>
-                  <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{career.department}</td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700">
-                      {TYPE_LABELS[career.type]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-700">
-                      {LEVEL_LABELS[career.experienceLevel]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">
-                    {career.location}{career.remote && <span className="ml-1 text-[10px] text-[#0474C4] font-semibold">· Remote</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${career.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${career.status === "PUBLISHED" ? "bg-emerald-500" : "bg-amber-400"}`} />
-                      {career.status === "PUBLISHED" ? "Published" : "Archived"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1.5">
-                      {/* Edit */}
-                      <button
-                        onClick={() => setDrawer(career)}
-                        title="Edit"
-                        className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                      </button>
-
-                      {/* Archive / Publish — thumbs */}
-                      <button
-                        onClick={() => handleToggleStatus(career)}
-                        disabled={togglingIds.has(career.id)}
-                        title={career.status === "PUBLISHED" ? "Archive" : "Publish"}
-                        className={`w-7 h-7 flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer disabled:opacity-50 ${career.status === "PUBLISHED" ? "border-amber-200 bg-amber-50 text-amber-600 hover:border-amber-300" : "border-emerald-200 bg-emerald-50 text-emerald-600 hover:border-emerald-300"}`}
-                      >
-                        {career.status === "PUBLISHED" ? (
-                          // thumbs-down
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
-                          </svg>
-                        ) : (
-                          // thumbs-up
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-                          </svg>
-                        )}
-                      </button>
-
-                      {/* View — analytics icon, links to detail */}
-                      <Link
-                        href={`/administrator/careers/${career.id}`}
-                        title="View analytics"
-                        className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="18" y1="20" x2="18" y2="10"/>
-                          <line x1="12" y1="20" x2="12" y2="4"/>
-                          <line x1="6" y1="20" x2="6" y2="14"/>
-                        </svg>
-                      </Link>
-
-                      <button
-                        onClick={() => setToDelete(career)}
-                        title="Delete"
-                        className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer"
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6"/>
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                          <path d="M10 11v6M14 11v6"/>
-                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-          <p className="text-[11px] text-[#A8A39C]">
-            {filtered.length === 0 ? (
-              <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{careers.length}</span> {careers.length === 1 ? "posting" : "postings"}</>
-            ) : (
-              <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-semibold text-[#6B6560]">{filtered.length}</span> {filtered.length === 1 ? "posting" : "postings"}</>
-            )}
-          </p>
-          {filtered.length > 0 && (
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-              >
-                Prev
-              </button>
-              <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 w-fit">
+        {(["jobs", "departments"] as Tab[]).map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}
+          >
+            {t}
+            <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tab === t ? "bg-[#F5F4F1] text-[#6B6560]" : "bg-[#E5E2DC] text-[#A8A39C]"}`}>
+              {t === "jobs" ? careers.length : departments.length}
+            </span>
+          </button>
+        ))}
       </div>
+
+      {/* ── JOBS TAB ──────────────────────────────────────────────────────────── */}
+      {tab === "jobs" && (
+        <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
+          {/* Toolbar */}
+          <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+            <div className="relative w-full sm:w-64">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search postings…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <FilterDropdown
+                label="Department"
+                icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>}
+                active={departmentFilter !== "All"}
+                value={departmentFilter}
+                onChange={setDeptF}
+                options={[{ value: "All", label: "All" }, ...departments.map(d => ({ value: d.name, label: d.name }))]}
+              />
+              <FilterDropdown
+                label="Experience"
+                icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>}
+                active={experienceFilter !== "All"}
+                value={experienceFilter}
+                onChange={setExpF}
+                options={[{ value: "All", label: "All" }, ...Object.entries(LEVEL_LABELS).map(([k, v]) => ({ value: k, label: v }))]}
+              />
+              <FilterDropdown
+                label="Location"
+                icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>}
+                active={locationFilter !== "All"}
+                value={locationFilter}
+                onChange={setLocF}
+                options={[{ value: "All", label: "All" }, ...locations.map(l => ({ value: l, label: l }))]}
+              />
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px]">
+              <thead>
+                <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                  {["Posting", "Department", "Type", "Level", "Location", "Status", ""].map((col, i) => (
+                    <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</td></tr>
+                ) : filtered.length === 0 ? (
+                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No career postings found.</td></tr>
+                ) : paginated.map(career => (
+                  <tr key={career.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                    <td className="px-4 py-3">
+                      <p className="font-semibold text-[#1A1916] leading-tight line-clamp-1">{career.title}</p>
+                      <p className="text-[11px] text-[#A8A39C] mt-0.5">{career.applications} application{career.applications === 1 ? "" : "s"} · {career.views} views</p>
+                    </td>
+                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{career.department}</td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700">
+                        {TYPE_LABELS[career.type]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-700">
+                        {LEVEL_LABELS[career.experienceLevel]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">
+                      {career.location}{career.remote && <span className="ml-1 text-[10px] text-[#0474C4] font-semibold">· Remote</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${career.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${career.status === "PUBLISHED" ? "bg-emerald-500" : "bg-amber-400"}`} />
+                        {career.status === "PUBLISHED" ? "Published" : "Archived"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button onClick={() => setDrawer(career)} title="Edit" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button onClick={() => handleToggleStatus(career)} disabled={togglingIds.has(career.id)} title={career.status === "PUBLISHED" ? "Archive" : "Publish"} className={`w-7 h-7 flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer disabled:opacity-50 ${career.status === "PUBLISHED" ? "border-amber-200 bg-amber-50 text-amber-600 hover:border-amber-300" : "border-emerald-200 bg-emerald-50 text-emerald-600 hover:border-emerald-300"}`}>
+                          {career.status === "PUBLISHED" ? (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
+                          ) : (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                          )}
+                        </button>
+                        <Link href={`/administrator/careers/${career.id}`} title="View analytics" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        </Link>
+                        <button onClick={() => setToDelete(career)} title="Delete" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+            <p className="text-[11px] text-[#A8A39C]">
+              {filtered.length === 0 ? (
+                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{careers.length}</span> {careers.length === 1 ? "posting" : "postings"}</>
+              ) : (
+                <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-semibold text-[#6B6560]">{filtered.length}</span> {filtered.length === 1 ? "posting" : "postings"}</>
+              )}
+            </p>
+            {filtered.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── DEPARTMENTS TAB ───────────────────────────────────────────────────── */}
+      {tab === "departments" && (
+        <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
+          {/* Toolbar */}
+          <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+            <div className="relative w-full sm:w-64">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input value={deptSearch} onChange={e => { setDeptSearch(e.target.value); setDeptPage(1) }} placeholder="Search departments…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px]">
+              <thead>
+                <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                  {["Department", "Created", ""].map((col, i) => (
+                    <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {deptLoading ? (
+                  <tr><td colSpan={3} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</td></tr>
+                ) : filteredDepts.length === 0 ? (
+                  <tr><td colSpan={3} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No departments found. Create one to get started.</td></tr>
+                ) : paginatedDepts.map(dept => (
+                  <tr key={dept.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                    <td className="px-4 py-3 font-semibold text-[#1A1916]">{dept.name}</td>
+                    <td className="px-4 py-3 text-[#A8A39C] text-[12px]">
+                      {new Date(dept.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button onClick={() => setDeptModal(dept)} title="Edit" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button onClick={() => setDeptToDelete(dept)} title="Delete" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+            <p className="text-[11px] text-[#A8A39C]">
+              <span className="font-semibold text-[#6B6560]">{filteredDepts.length}</span> {filteredDepts.length === 1 ? "department" : "departments"}
+            </p>
+            {filteredDepts.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setDeptPage(p => Math.max(1, p - 1))} disabled={deptPage === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{deptPage} / {deptTotalPages}</span>
+                <button onClick={() => setDeptPage(p => Math.min(deptTotalPages, p + 1))} disabled={deptPage >= deptTotalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Drawer & dialogs */}
       {drawer !== null && (
         <CareerDrawer
           career={drawer === "create" ? null : drawer}
+          departments={departments}
           onSave={handleSave}
           onClose={() => setDrawer(null)}
         />
@@ -857,6 +1021,21 @@ export default function AdminCareersPage() {
         />
       )}
 
+      {deptModal !== null && (
+        <DepartmentModal
+          department={deptModal === "create" ? null : deptModal}
+          onSave={handleDeptSave}
+          onClose={() => setDeptModal(null)}
+        />
+      )}
+
+      {deptToDelete && (
+        <ConfirmDialog
+          message={`Delete "${deptToDelete.name}"? This cannot be undone.`}
+          onConfirm={handleDeptDelete}
+          onCancel={() => setDeptToDelete(null)}
+        />
+      )}
     </div>
   )
 }

@@ -117,7 +117,7 @@ const ForgetPasswordForm = ({
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="h-12 rounded-[32px] py-2.5 px-5 font-body text-[0.875rem] tracking-[0.02em] font-medium text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                className="h-12 rounded py-2.5 px-5 font-body text-[0.875rem] tracking-[0.02em] font-medium text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? "Sending…" : <>Send Reset Link <ChevronRight className="w-4 h-4" /></>}
               </Button>

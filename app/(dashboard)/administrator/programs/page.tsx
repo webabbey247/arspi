@@ -923,7 +923,7 @@ function ProgramModal({
   const isLast = step === STEPS.length
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-end bg-black/40">
+    <div className="fixed inset-0 z-100 flex items-start justify-end bg-black/40">
       <div className="bg-white h-full w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}

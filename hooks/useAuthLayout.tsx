@@ -14,7 +14,17 @@ const withAuthLayout = <P extends object>(WrappedComponent: ComponentType<P>) =>
         <div className="absolute -top-24 -left-24 w-112.5 h-112.5 rounded-full bg-[#06457F]/8 blur-[100px] pointer-events-none" />
         <div className="absolute -bottom-20 -right-20 w-90 h-90 rounded-full bg-[#06457F]/6 blur-[100px] pointer-events-none" />
 
-        <Link
+     <Link href="/" className="flex justify-start gap-2.5 shrink-0 no-underline w-50">
+          <div className="flex flex-wrap justify-start items-center gap-2.5 px-[1.2rem] shrink-0">
+            <div className="w-8 h-8 border-[1.5px] border-white rounded-full flex items-center justify-center font-heading text-lg font-medium text-white shrink-0">
+              A
+            </div>
+            <span className="font-heading text-xl tracking-[-0.005em] leading-[1.3] font-medium text-white">
+              ARPS Institute
+            </span>
+          </div>
+        </Link>
+        {/* <Link
           href="/"
           className="relative z-10 flex items-center gap-3 no-underline mb-auto"
         >
@@ -26,7 +36,7 @@ const withAuthLayout = <P extends object>(WrappedComponent: ComponentType<P>) =>
             className="h-9.75 w-49.5"
             priority
           />
-        </Link>
+        </Link> */}
 
         <div className="relative z-10 flex-1 flex flex-col justify-center py-12">
           <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-slate-300 flex items-center gap-3 mb-5">

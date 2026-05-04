@@ -203,7 +203,7 @@ export default function CareerApplicationForm({ career, setModalOpen }: Props) {
             <Button
               type="button"
               onClick={close}
-              className="h-10 rounded-[32px] px-5 font-body text-[0.8125rem] font-medium bg-[#0474C4] text-white hover:bg-[#06457f]"
+              className="h-10 rounded px-5 font-body text-[0.8125rem] font-medium bg-[#0474C4] text-white hover:bg-[#06457f]"
             >
               Close
             </Button>
@@ -304,7 +304,7 @@ export default function CareerApplicationForm({ career, setModalOpen }: Props) {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-12 rounded-[32px] py-2.5 px-6 font-body text-[0.875rem] tracking-[0.02em] font-medium bg-[#0474C4] text-white hover:bg-[#06457f]"
+                className="h-12 rounded py-2.5 px-6 font-body text-[0.875rem] tracking-[0.02em] font-medium bg-[#0474C4] text-white hover:bg-[#06457f]"
               >
                 {isSubmitting ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>

@@ -251,14 +251,24 @@ function InsightModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-end bg-black/40">
+    <div className="fixed inset-0 z-100 flex items-start justify-end bg-black/40">
       <div className="bg-white h-full w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E2DC] shrink-0">
-          <h2 className="text-[15px] font-bold text-[#1A1916]">{insight ? "Edit Insight" : "New Insight"}</h2>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#F5F4F1] text-[#A8A39C] cursor-pointer">
+        <div className="bg-[#0474C4] px-6 py-5 shrink-0 relative">
+          <button type="button" onClick={onClose} className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white uppercase tracking-wider">
+              {insight ? "Edit Insight" : "New Insight"}
+            </span>
+          </div>
+          <h2 className="text-[18px] font-extrabold text-white leading-tight">
+            {insight ? insight.title : "Create Insight"}
+          </h2>
+          <p className="text-[12px] text-white/80 mt-1">
+            {insight ? "Update the insight details and click save." : "Publish a new article, report, or thought piece."}
+          </p>
         </div>
 
         {/* Body */}
@@ -360,21 +370,16 @@ function CategoryModal({ category, onSave, onClose }: { category: Category | nul
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
         {/* Header */}
-        <div className="flex items-start justify-between px-5 py-4 border-b border-[#E5E2DC]">
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-[10px] bg-[#FDF3E0] flex items-center justify-center shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0474C4" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-              </svg>
+        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+          <div>
+            <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-300">
+              {category ? "Edit Category" : "New Category"}
             </div>
-            <div>
-              <h2 className="text-[15px] font-bold text-[#1A1916] leading-tight">{category ? "Edit Category" : "New Category"}</h2>
-              <p className="text-[12px] text-[#A8A39C] mt-0.5">
-                {category ? "Update the category name." : "Create a new insight category."}
-              </p>
+            <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-300 mt-0.5">
+              {category ? "Update the category name." : "Create a new insight category."}
             </div>
           </div>
-          <button type="button" onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#F5F4F1] text-[#A8A39C] cursor-pointer shrink-0">
+          <button type="button" onClick={onClose} className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EDF2FB]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>

@@ -215,7 +215,7 @@ export default function WorkshopRegistrationForm({ modalEvent, setModalOpen }: P
               </div>
               <div className="flex gap-2">
                 <Button
-                  className="h-10 rounded-[32px] px-4 font-body text-[0.8125rem] font-medium bg-[#0474C4] text-white hover:bg-[#06457f]"
+                  className="h-10 rounded px-4 font-body text-[0.8125rem] font-medium bg-[#0474C4] text-white hover:bg-[#06457f]"
                   onClick={async () => {
                     const data = getValues()
                     setPendingInfo(null)
@@ -267,7 +267,7 @@ export default function WorkshopRegistrationForm({ modalEvent, setModalOpen }: P
                 <Button
                   type="submit"
                   disabled={isSubmitting || redirecting}
-                  className={`h-12 rounded-[32px] py-2.5 px-6 font-body text-[0.875rem] tracking-[0.02em] font-medium text-white ${
+                  className={`h-12 rounded py-2.5 px-6 font-body text-[0.875rem] tracking-[0.02em] font-medium text-white ${
                     isPaid ? "bg-[#0474C4] hover:bg-[#06457f]" : "bg-emerald-600 hover:bg-emerald-700"
                   }`}
                 >
