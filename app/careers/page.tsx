@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { ChevronDown, ChevronRight, MapPin, Search } from "lucide-react"
 import withLayout from "@/hooks/useLayout"
+import PageHero from "@/components/sections/PageHero"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -96,7 +97,8 @@ function FilterAccordion({
                     onChange={() => onToggle(opt.id)}
                     className="h-3.5 w-3.5 accent-[#0474C4] cursor-pointer"
                   />
-                  <span className={`font-body text-[0.8125rem] ${checked ? "text-ink font-medium" : "text-slate-500 group-hover:text-ink"}`}>
+                  
+                  <span className={`font-body text-[0.855rem] ${checked ? "text-ink font-medium" : "text-slate-500 group-hover:text-ink"}`}>
                     {opt.label}
                   </span>
                 </label>
@@ -202,7 +204,18 @@ const CareersPage = () => {
   return (
     <>
       {/* Hero */}
-      <section className="bg-[#071639] relative overflow-hidden px-8 md:px-16 py-24 w-full">
+       <PageHero
+                             tagline="Join the team"
+                             captionTextOne="Open "
+                             highlightText="Roles"
+                             captionTextTwo="at ARPS Institute"
+                             description="Help us build the future of research and learning. Browse current openings and apply directly."
+                             pageType="careers"
+                             imageUrl="/images/about-arps.webp"
+                           />
+                 
+      
+      {/* <section className="bg-[#071639] relative overflow-hidden px-8 md:px-16 py-24 w-full">
         <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
         <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
         <div className="relative z-10 max-w-190">
@@ -218,7 +231,7 @@ const CareersPage = () => {
             Help us build the future of research and learning. Browse current openings and apply directly.
           </p>
         </div>
-      </section>
+      </section> */}
 
       {/* Search container */}
       {/* <section className="relative w-full -mt-10">

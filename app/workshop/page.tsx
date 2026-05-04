@@ -8,6 +8,7 @@ import { initialsOf } from "@/lib/workshop-helpers";
 import { Badge } from "@/components/ui/badge";
 import withLayout from "@/hooks/useLayout";
 import type { Facilitator } from "@/lib/workshop-helpers";
+import PageHero from "@/components/sections/PageHero";
 
 type PublicWorkshop = {
   id:             string
@@ -104,7 +105,7 @@ function FilterAccordion({
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between py-3.5 cursor-pointer group"
       >
-        <span className="font-body text-[0.875rem] font-semibold text-ink group-hover:text-[#0474C4] transition-colors">
+        <span className="font-body text-[0.875rem] capitalize font-semibold text-ink group-hover:text-[#0474C4] transition-colors">
           {title}
           {selected.length > 0 && (
             <span className="ml-2 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-[#0474C4]/10 text-[0.6875rem] font-semibold text-[#0474C4]">
@@ -131,7 +132,7 @@ function FilterAccordion({
                     onChange={() => onToggle(opt.id)}
                     className="h-3.5 w-3.5 accent-[#0474C4] cursor-pointer"
                   />
-                  <span className={`font-body text-[0.8125rem] ${checked ? "text-ink font-medium" : "text-slate-500 group-hover:text-ink"}`}>
+                  <span className={`font-body text-[0.855rem] ${checked ? "text-ink font-medium" : "text-slate-500 group-hover:text-ink"}`}>
                     {opt.label}
                   </span>
                 </label>
@@ -275,28 +276,16 @@ const WorkshopPage = () => {
   return (
     <>
       {/* Hero */}
-      <section className="bg-[#071639] relative overflow-hidden px-8 md:px-16 py-24 w-full">
-        <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
-        <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
-        <div className="relative z-10 max-w-190">
-          <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC] inline-flex items-center gap-2">
-            <span className="block w-8 h-px bg-[#EBF3FC]" />
-            Live Learning Events
-          </p>
-      <h1 className="font-heading text-[2.25rem] md:text-[3rem] tracking-[-0.015em] md:tracking-[-0.02em] leading-[1.2] md:leading-[1.1] font-bold text-white">
-            Workshops &amp;
-            <em className="italic text-[#0474C4]">Expert Sessions</em>
-            {/* <br />
-            Open to All */}
-          </h1>
-
-          <p className="font-body text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-[#EBF3FC] max-w-lg">
-            Join ARPS Institute&apos;s live workshops and short learning events
-            — ranging from free introductory sessions to premium in-depth boot
-            camps. Led by expert facilitators, built for immediate application.
-          </p>
-        </div>
-      </section>
+        <PageHero
+                  tagline="Live Learning Events"
+                  captionTextOne="Workshops & "
+                  highlightText="Expert Sessions"
+                  captionTextTwo="Open to All"
+                  description="Join ARPS Institute's live workshops and short learning events — ranging from free introductory sessions to premium in-depth boot camps. Led by expert facilitators, built for immediate application."
+                  pageType="workshops"
+                  imageUrl="/images/about-arps.webp"
+                />
+      
 
       {/* Filter bar — hidden in favour of the sidebar checkboxes */}
       {/*
@@ -450,11 +439,11 @@ const WorkshopPage = () => {
           )}
 
           {/* Filters (left) + cards (right) — 2-col split for the rest of upcoming */}
-          <div className="flex flex-col lg:flex-row gap-6 mt-2">
+          <div className="flex flex-col justify-start items-start w-full lg:flex-row gap-6 mt-2">
 
             {/* Left sidebar — w-1/4 on lg, full width on smaller */}
             <aside className="lg:w-1/4 shrink-0">
-              <div className="bg-white  p-5 space-y-5 lg:sticky lg:top-32">
+              <div className="bg-transparent  p-5 space-y-5 px-0 lg:sticky lg:top-32">
                 <div className="flex items-center justify-between">
                   <h3 className="font-heading text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">Filters</h3>
                   {hasActiveFilter && (
@@ -530,7 +519,7 @@ const WorkshopPage = () => {
             </aside>
 
             {/* Right — w-3/4 cards grid */}
-            <div className="lg:w-3/4 grow">
+            <div className="lg:w-3/4 grow w-full">
               <div className="grid md:grid-cols-2 gap-5">
                 {loading ? (
                   Array.from({ length: 4 }).map((_, i) => (

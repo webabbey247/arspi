@@ -6,6 +6,7 @@ import { Clock, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import withLayout from "@/hooks/useLayout";
 import { getInsights, type PublicInsight } from "@/services/public-insight.service";
+import PageHero from "@/components/sections/PageHero";
 
  const InsightsPage =() => {
   const [activeCategory, setActiveCategory] = React.useState("All");
@@ -45,7 +46,17 @@ import { getInsights, type PublicInsight } from "@/services/public-insight.servi
 
   return (
     <>
-      <section className="bg-[#071639] relative overflow-hidden px-8 md:px-16 py-24 w-full">
+      <PageHero
+            tagline="Research & Knowledge Hub"
+            captionTextOne="Insights, Research & "
+            highlightText="Expert Perspectives"
+            description="Articles, research highlights, practice guides, and news from the ARPS Institute team and our network of scholars and practitioners worldwide."
+            pageType="insights"
+            imageUrl="/images/about-arps.webp"
+          />
+
+          
+      {/* <section className="bg-[#071639] relative overflow-hidden px-8 md:px-16 py-24 w-full">
         <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
         <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
   <div className="relative z-10 gap-4 flex flex-col justify-start items-start">
@@ -62,10 +73,10 @@ import { getInsights, type PublicInsight } from "@/services/public-insight.servi
             team and our network of scholars and practitioners worldwide.
           </p>
         </div>
-      </section>
+      </section> */}
 
       {/* Filter bar */}
-     <div className="sticky top-17 z-30 bg-sky-light/97 backdrop-blur border-b border-[#0474C4]/25 px-8 md:px-16 py-3 flex items-center gap-2.5 overflow-x-auto w-full">
+     {/* <div className="sticky top-17 z-30 bg-sky-light/97 backdrop-blur border-b border-[#0474C4]/25 px-8 md:px-16 py-3 flex items-center gap-2.5 overflow-x-auto w-full">
 
   <span className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mr-2 shrink-0">
     Filter:
@@ -85,7 +96,7 @@ import { getInsights, type PublicInsight } from "@/services/public-insight.servi
     </button>
   ))}
 
-</div>
+</div> */}
 
       {/* Featured articles */}
       {activeCategory === "All" && featured.length >= 1 && (
@@ -159,8 +170,8 @@ import { getInsights, type PublicInsight } from "@/services/public-insight.servi
 )}
 
       {/* All articles grid */}
-      <section className="bg-sky-light px-8 md:px-16 py-16">
-        <div className="max-w-350 mx-auto">
+      <section className="bg-sky-light px-8 md:px-16 py-16 w-full">
+    <div className="max-w-350 mx-auto flex flex-col w-full ">
           {loading ? (
             <div className="text-center py-20">
               <p className="text-slate-500 font-light text-sm">Loading insights...</p>

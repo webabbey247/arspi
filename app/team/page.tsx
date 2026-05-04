@@ -2,7 +2,10 @@
 
 import * as React from "react"
 import Image from "next/image"
+import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 import withLayout from "@/hooks/useLayout"
+import PageHero from "@/components/sections/PageHero"
 
 type TeamCategory = "EXECUTIVE_MANAGEMENT" | "STAFF"
 
@@ -20,38 +23,105 @@ type GroupedTeam = Record<TeamCategory, Member[]>
 
 const EMPTY_TEAM: GroupedTeam = { EXECUTIVE_MANAGEMENT: [], STAFF: [] }
 
-function MemberGrid({ members }: { members: Member[] }) {
+function Initials({ name }: { name: string }) {
+  const text = name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase() || "?"
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {members.map(m => {
-        const initials = m.name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()
-        return (
-          <div key={m.id} className="flex flex-col group cursor-pointer">
-            <div className="relative w-full aspect-3/4 overflow-hidden bg-[#e8e8e8]">
-              {m.coverImage ? (
-                <Image
-                  src={m.coverImage}
-                  alt={m.name}
-                  fill
-                  className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-[#0474C4]/60 font-heading text-[1.75rem] font-medium">
-                  {initials || "?"}
-                </div>
-              )}
-            </div>
-            <div className="pt-5">
-              <h3 className="font-heading text-xl font-normal text-[#111] leading-snug mb-2">
-                {m.name}
-              </h3>
-              <p className="text-sm text-[#555] leading-relaxed font-light">
-                {m.position}
+    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#0474C4]/20 to-[#0474C4]/5">
+      <span className="font-heading text-[2.5rem] font-semibold text-[#0474C4]/70 select-none">
+        {text}
+      </span>
+    </div>
+  )
+}
+
+function ExecutiveGrid({ members }: { members: Member[] }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+      {members.map((m, i) => (
+        <div
+          key={m.id}
+          className={`group relative overflow-hidden bg-[#e8e8e8] cursor-pointer${
+            i === 0 && members.length > 2 ? " sm:col-span-2 lg:col-span-1 lg:row-span-2" : ""
+          }`}
+          style={{ aspectRatio: i === 0 && members.length > 2 ? "unset" : "3/4", minHeight: i === 0 && members.length > 2 ? "28rem" : undefined }}
+        >
+          {m.coverImage ? (
+            <Image
+              src={m.coverImage}
+              alt={m.name}
+              fill
+              className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]"
+            />
+          ) : (
+            <Initials name={m.name} />
+          )}
+
+          {/* Always-visible gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent transition-opacity duration-500" />
+
+          {/* Info */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-0 transition-transform duration-500">
+            <p className="font-body text-[0.7rem] tracking-[0.1em] uppercase text-white/60 mb-1.5">
+              {m.position}
+            </p>
+            <h3 className="font-heading text-xl font-normal text-white leading-snug">
+              {m.name}
+            </h3>
+            {m.description && (
+              <p className="font-body text-[0.8125rem] text-white/70 leading-relaxed mt-3 max-h-0 overflow-hidden opacity-0 group-hover:max-h-24 group-hover:opacity-100 transition-all duration-500 ease-out">
+                {m.description}
               </p>
-            </div>
+            )}
           </div>
-        )
-      })}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function StaffGrid({ members }: { members: Member[] }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-10">
+      {members.map(m => (
+        <div key={m.id} className="group cursor-pointer">
+          <div className="relative w-full aspect-square overflow-hidden bg-[#e8e8e8] mb-4">
+            {m.coverImage ? (
+              <Image
+                src={m.coverImage}
+                alt={m.name}
+                fill
+                className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.05]"
+              />
+            ) : (
+              <Initials name={m.name} />
+            )}
+            {/* Subtle overlay on hover */}
+            <div className="absolute inset-0 bg-[#0474C4]/0 group-hover:bg-[#0474C4]/8 transition-colors duration-400" />
+          </div>
+          {/* Accent line animates in on hover */}
+          <div className="w-0 group-hover:w-8 h-px bg-[#0474C4] transition-all duration-400 mb-3" />
+          <h3 className="font-heading text-[1rem] font-normal text-[#111] leading-snug">
+            {m.name}
+          </h3>
+          <p className="text-[0.75rem] text-[#777] font-light mt-1 leading-relaxed">
+            {m.position}
+          </p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function SectionLabel({ number, label }: { number: string; label: string }) {
+  return (
+    <div className="flex items-center gap-4 mb-10">
+      <span className="font-body text-[0.65rem] tracking-[0.15em] uppercase text-[#0474C4] font-medium">
+        {number}
+      </span>
+      <div className="h-px flex-1 max-w-12 bg-[#0474C4]/30" />
+      <span className="font-body text-[0.65rem] tracking-[0.15em] uppercase text-[#888] font-medium">
+        {label}
+      </span>
     </div>
   )
 }
@@ -74,51 +144,46 @@ const TeamPage = () => {
 
   return (
     <>
-      {/* Hero */}
-      <section className="bg-[#071639] relative overflow-hidden px-8 md:px-16 py-24 w-full">
-        <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
-        <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
-        <div className="relative z-10 max-w-190">
-          <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC] inline-flex items-center gap-2">
-            <span className="block w-8 h-px bg-[#EBF3FC]" />
-            Our Team
-          </p>
-          <h1 className="font-heading text-[2.25rem] md:text-[3rem] tracking-[-0.015em] md:tracking-[-0.02em] leading-[1.2] md:leading-[1.1] font-bold text-white">
-            The people behind <em className="italic text-[#0474C4]">ARPS Institute</em>
-          </h1>
-          <p className="font-body text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-[#EBF3FC] max-w-lg mt-3">
-            Researchers, educators, and operators committed to evidence-based learning and inclusive growth.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        tagline="Our Team"
+        captionTextOne="The people behind "
+        highlightText="ARPS Institute"
+        captionTextTwo=""
+        description="Researchers, educators, and operators committed to evidence-based learning and inclusive growth."
+        pageType="team"
+        imageUrl="/images/about-arps.webp"
+      />
 
-      {/* Banner */}
-      <section className="flex flex-col lg:flex-row min-h-150 w-full py-10">
-        <div className="relative w-full lg:w-1/2 min-h-100 lg:min-h-150">
-          <Image
-            src="/images/about-arps.webp"
-            alt="ARPS Institute leadership"
-            width={800}
-            height={600}
-            className="object-cover object-center w-auto h-auto"
-            priority
-          />
-        </div>
-        <div className="w-full lg:w-1/2 bg-[#fafaf8] flex items-center px-12 md:px-16 lg:px-20 py-16 lg:py-0">
-          <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-normal text-[#111] leading-[1.1] tracking-tight max-w-sm">
-            Our leadership team
-          </h1>
-        </div>
-      </section>
+      {/* Loading skeletons */}
+      {loading && (
+        <section className="bg-white px-6 md:px-12 lg:px-20 py-20">
+          <div className="h-3 w-32 bg-[#f0efec] animate-pulse rounded mb-10" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-20">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="aspect-3/4 bg-[#f5f4f1] animate-pulse" />
+            ))}
+          </div>
+          <div className="h-3 w-32 bg-[#f0efec] animate-pulse rounded mb-10" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-10">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-3">
+                <div className="aspect-square bg-[#f5f4f1] animate-pulse" />
+                <div className="h-3 w-3/4 bg-[#f0efec] animate-pulse rounded" />
+                <div className="h-2.5 w-1/2 bg-[#f0efec] animate-pulse rounded" />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Empty state */}
       {isEmpty && (
-        <section className="bg-white px-6 md:px-12 lg:px-20 py-16">
-          <div className="bg-[#FAFAF9] border border-[#0474C4]/12 rounded p-10 text-center">
-            <p className="font-heading text-[1.125rem] font-semibold text-ink mb-2">
+        <section className="bg-white px-6 md:px-12 lg:px-20 py-24">
+          <div className="border border-dashed border-[#ddd] rounded p-14 text-center max-w-lg mx-auto">
+            <p className="font-heading text-[1.25rem] font-normal text-[#111] mb-2">
               Profiles coming soon
             </p>
-            <p className="font-body text-[0.875rem] text-slate-500 max-w-md mx-auto">
+            <p className="font-body text-[0.875rem] text-[#888] leading-relaxed">
               We&apos;re putting the finishing touches on team profiles. Check back shortly.
             </p>
           </div>
@@ -127,30 +192,48 @@ const TeamPage = () => {
 
       {/* Executive Management */}
       {executives.length > 0 && (
-        <section className="bg-white px-6 md:px-12 lg:px-20 py-16">
-          <h2 className="font-heading text-5xl md:text-6xl font-normal text-[#111] tracking-tight mb-14">
+        <section className="bg-white px-6 md:px-12 lg:px-20 pt-20 pb-6 w-full">
+          <SectionLabel number="01" label="Leadership" />
+          <h2 className="font-heading text-4xl md:text-5xl font-normal text-[#111] tracking-tight mb-10">
             Executive Management
           </h2>
-          <MemberGrid members={executives} />
+          <ExecutiveGrid members={executives} />
         </section>
       )}
 
-      {/* Our Staff */}
+      {/* Staff */}
       {staff.length > 0 && (
-        <section className="bg-white px-6 md:px-12 lg:px-20 py-16">
-          <h2 className="font-heading text-5xl md:text-6xl font-normal text-[#111] tracking-tight mb-14">
+        <section className="bg-white px-6 md:px-12 lg:px-20 py-20">
+          <SectionLabel number="02" label="Our People" />
+          <h2 className="font-heading text-4xl md:text-5xl font-normal text-[#111] tracking-tight mb-10">
             Our Staff
           </h2>
-          <MemberGrid members={staff} />
+          <StaffGrid members={staff} />
         </section>
       )}
 
-      {loading && (
-        <section className="bg-white px-6 md:px-12 lg:px-20 py-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="aspect-3/4 bg-[#f5f4f1] animate-pulse" />
-            ))}
+      {/* Join CTA */}
+      {!loading && (
+        <section className="bg-[#060D14] px-6 md:px-12 lg:px-20 py-20 w-full">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+            <div className="max-w-lg">
+              <p className="font-body text-[0.65rem] tracking-[0.15em] uppercase text-[#0474C4] font-medium mb-4">
+                Join Us
+              </p>
+              <h2 className="font-heading text-4xl md:text-5xl font-normal text-white leading-[1.1] tracking-tight">
+                Want to be part of our team?
+              </h2>
+              <p className="font-body text-[0.9375rem] text-white/50 leading-relaxed mt-4">
+                We&apos;re always looking for curious minds and driven professionals to grow with us.
+              </p>
+            </div>
+            <Link
+              href="/careers"
+              className="group inline-flex items-center gap-3 border border-white/20 hover:border-[#0474C4] text-white hover:text-[#0474C4] font-body text-[0.875rem] tracking-wide px-7 py-4 transition-colors duration-300 whitespace-nowrap self-start md:self-auto"
+            >
+              View open roles
+              <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
           </div>
         </section>
       )}

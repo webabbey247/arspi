@@ -224,7 +224,7 @@ export function Navbar() {
               </Link>
               <Button
                 asChild
-                className="h-12 rounded-[32px] py-2.5 px-5 text-[#EBF3FC] bg-[#0474C4] text-[0.875rem] tracking-[0.02em] font-medium transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
+                className="h-12 rounded py-2.5 px-5 text-[#EBF3FC] bg-[#0474C4] text-[0.875rem] tracking-[0.02em] font-medium transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
               >
                 <Link href="/register">
                   Get Started <ChevronRight className="h-4 w-4" />

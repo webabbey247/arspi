@@ -2,94 +2,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import withLayout from "@/hooks/useLayout";
+import PageHero from "@/components/sections/PageHero";
 
 export const metadata: Metadata = { title: "Research Training" };
 
 const ResearchPage = () => {
   return (
     <>
-      <section className="bg-[#071639] w-full pt-16 md:pt-28 pb-16 md:pb-24 px-8 md:px-16 lg:px-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
-        <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
-
-        <div className="relative z-2 flex flex-col gap-6">
-          <div className="flex flex-col gap-6">
-            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-blue-300 flex items-center gap-3 before:content-[''] before:block before:w-8 before:h-px before:bg-blue-300 before:shrink-0">
-              Advanced Research Training
-            </p>
-
-            <h1 className="font-heading text-[2.25rem] md:text-[3rem] tracking-[-0.015em] md:tracking-[-0.02em] leading-[1.2] md:leading-[1.1] font-bold text-white">
-              Build Capacity.
-              <br />
-              <em className="italic text-[#0474C4]">Produce Impact.</em>
-            </h1>
-
-            <p className="font-body text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-[#EBF3FC] max-w-lg">
-              ARPS Institute's research training programs are designed to equip
-              scholars, practitioners, and institutional teams with the
-              analytical skills, methodological rigour, and scholarly
-              communication tools needed to produce credible, high-impact
-              research.
-            </p>
-          </div>
-
-          <div className="flex gap-10 pt-10 border-t border-[rgba(200,169,110,0.15)] flex-wrap">
-            {[
-              { value: "500+", label: "Researchers Trained" },
-              { value: "30+", label: "Training Modules" },
-              { value: "92%", label: "Completion Rate" },
-              { value: "120+", label: "Countries Reached" },
-            ].map((s) => (
-              <div key={s.label}>
-                <span className="font-heading text-[1.75rem] tracking-[-0.01em] leading-[1.1] font-semibold text-[#0474C4] block mb-1">
-                  {s.value}
-                </span>
-                <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC]">
-                  {s.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* <div className="relative z-2">
-    <div className="relative h-100">
-      <div className="absolute bottom-0 right-0 w-70 h-50 rotate-[4deg] bg-[rgba(200,169,110,0.04)] border border-[rgba(200,169,110,0.18)] rounded p-[1.8rem]" />
-      <div className="absolute bottom-7.5 right-5 w-75 h-55 -rotate-2 bg-[rgba(200,169,110,0.07)] border border-[rgba(200,169,110,0.18)] rounded p-[1.8rem]" />
-      <div className="absolute bottom-15 right-10 w-[320px] h-60 bg-[rgba(200,169,110,0.11)] border border-[rgba(200,169,110,0.3)] rounded p-[1.8rem]">
-
-        <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-2.5">
-          Featured Programme
-        </div>
-
-        <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#f7f3ed] mb-4">
-          Advanced Quantitative Research Methods
-        </div>
-
-        <div className="flex gap-1.5 flex-wrap">
-          {["8 Weeks", "Online", "Certificate"].map((tag) => (
-            <span
-              key={tag}
-              className="font-body text-[0.6875rem] tracking-[0.05em] font-medium text-[rgba(200,169,110,0.7)] border border-[rgba(200,169,110,0.2)] py-0.75 px-2.5 rounded-full"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-4">
-          <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-[rgba(247,243,237,0.4)] mb-1.5">
-            Enrolment — 78% filled
-          </div>
-          <div className="h-0.75 bg-[rgba(200,169,110,0.15)] rounded">
-            <div className="h-full bg-[#0474C4] rounded w-[78%]" />
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div> */}
-      </section>
+      <PageHero
+        tagline="Advanced Research Training"
+        captionTextOne="Build Capacity. "
+        highlightText="Produce Impact."
+        description="ARPS Institute's research training programs are designed to equip
+scholars, practitioners, and institutional teams with the
+analytical skills, methodological rigour, and scholarly
+communication tools needed to produce credible, high-impact
+research."
+        pageType="research"
+        imageUrl="/images/about-arps.webp"
+      />
 
       {/* <section className="py-28 px-20 bg-[#faf8f4] grid grid-cols-[1.3fr_1fr] gap-24 items-center">
   <div className="relative">
@@ -314,7 +245,10 @@ const ResearchPage = () => {
         </div>
       </section>
 
-      <section className="py-16 md:py-28 px-8 md:px-16 lg:px-20 bg-white w-full" id="focus">
+      <section
+        className="py-16 md:py-28 px-8 md:px-16 lg:px-20 bg-white w-full"
+        id="focus"
+      >
         <div className="mb-16">
           <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-4 block">
             Areas of Focus
@@ -540,8 +474,6 @@ const ResearchPage = () => {
         </div>
       </section>
 
-
-
       <section className="py-28 w-full px-20 text-center bg-[#181C2C] relative overflow-hidden">
         <div className="relative max-w-140 mx-auto">
           <div className=" flex flex-col gap-5 mb-12">
@@ -577,7 +509,6 @@ const ResearchPage = () => {
           </div>
         </div>
       </section>
-
     </>
   );
 };

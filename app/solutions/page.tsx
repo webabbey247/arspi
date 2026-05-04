@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import withLayout from "@/hooks/useLayout";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import PageHero from "@/components/sections/PageHero";
 
 export const metadata: Metadata = { title: "Software Solutions" };
 
@@ -9,7 +10,15 @@ export const metadata: Metadata = { title: "Software Solutions" };
 const SolutionsPage = () => {
   return (
     <>
-<section className="bg-[#071639] px-8 md:px-16 lg:px-20 pt-16 md:pt-24 pb-12 md:pb-20 relative overflow-hidden w-full">
+          <PageHero
+            tagline="Our Software Solutions"
+            captionTextOne="Digital Tools Built for "
+            highlightText="Research &amp; Learnin"
+            description="ARPS Institute develops and commercialises specialised software platforms designed to support researchers, institutions, and learning professionals with smarter digital tools — purpose-built for the modern knowledge environment."
+            pageType="solutions"
+            imageUrl="/images/about-arps.webp"
+          />
+{/* <section className="bg-[#071639] px-8 md:px-16 lg:px-20 pt-16 md:pt-24 pb-12 md:pb-20 relative overflow-hidden w-full">
         <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
         <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
 
@@ -43,7 +52,7 @@ const SolutionsPage = () => {
       </a>
     </div>
   </div>
-</section>
+</section> */}
 
 <section className="py-16 md:py-28 px-8 md:px-16 lg:px-20 bg-[#F9F9FB] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-24 items-center">
   <div>
@@ -302,7 +311,7 @@ const SolutionsPage = () => {
       <Button className="font-body h-12 text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all duration-250 no-underline inline-block bg-[#0D9488] text-white hover:bg-[#0F766E]">
         Request a Demo
       </Button>
-          <Button className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all duration-250 no-underline inline-block bg-transparent border border-[rgba(13,148,136,0.35)] text-[#0D9488] hover:bg-[#F0FDFA]">
+          <Button className="font-body h-12 text-[0.8125rem] inline-block tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all duration-250 no-underline bg-transparent border border-[rgba(13,148,136,0.35)] text-[#0D9488] hover:bg-[#F0FDFA]">
        Learn More
       </Button>
       {/* <Link href="/solutions/mentortrack" className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all duration-250 no-underline inline-block bg-transparent border border-[rgba(13,148,136,0.35)] text-[#0D9488] hover:bg-[#F0FDFA]">

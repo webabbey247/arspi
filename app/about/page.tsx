@@ -3,7 +3,8 @@ import withLayout from "@/hooks/useLayout";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
-import PageHeroBanner from "@/components/layout/PageHeroBanner";
+import PageHero from "@/components/sections/PageHero";
+
 export const metadata: Metadata = { title: "About Us" };
 
 const AboutPage = () => {
@@ -12,12 +13,20 @@ const AboutPage = () => {
     {/* grid grid-cols-1 md:grid-cols-2 */}
 {/* ============ HERO SECTION ============ */}
 
- {/* <PageHeroBanner
-        title="About us"
-        imageUrl="/images/hero-banner.webp"
-        description="Although we have experienced many changes over the years, our reputation as a friendly, respected, and forward-thinking firm has remained consistent. Our values are embraced not only by the organization but also by every individual who works here, all of whom have been selected with our culture in mind."
-      /> */}
-<section className="bg-[#060D14] grid grid-cols-1 md:grid-cols-2 px-8 md:px-16 lg:px-20 pb-12 md:pb-20  relative overflow-hidden w-full">
+      <PageHero
+        tagline="Who We Are"
+        captionTextOne="A Global Hub for "
+        highlightText="Professional Learning"
+        captionTextTwo="&amp; Research Innovation"
+        description="The Institute for Advanced Research and Professional Studies (ARPS
+      Institute) is a global online institute dedicated to advancing
+      professional education, research capacity, leadership development,
+      and digital innovation across multiple disciplines."
+        pageType="about"
+        imageUrl="/images/about-arps.webp"
+      />
+
+{/* <section className="bg-[#060D14] grid grid-cols-1 md:grid-cols-2 px-8 md:px-16 lg:px-20 pb-12 md:pb-20  relative overflow-hidden w-full">
         <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
         <div className="absolute -top-30 -right-30 w-150 h-150 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
 
@@ -58,7 +67,7 @@ const AboutPage = () => {
               ></div>
             </div>
           </div>
-</section>
+</section> */}
 
 {/* ============ ABOUT SECTION ============ */}
 <section className="px-8 md:px-16 lg:px-20 py-16 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-start bg-white">
@@ -193,7 +202,7 @@ Promotes excellence in professional education and research capacity development 
           </div>
           <div className="mt-5">
             <h2 className="font-heading text-2xl font-semibold text-[#1a1a1a] tracking-tight leading-snug">
-              Joaquin Duato
+             Professor Bunmi Omodan
             </h2>
             <p className="text-base text-[#444] mt-1 font-light tracking-wide">
               Chairman and Chief Executive Officer
@@ -234,101 +243,6 @@ Promotes excellence in professional education and research capacity development 
       </div>
     </section>
 
-{/* <section className="py-16 md:py-24 px-8 md:px-16 lg:px-20 bg-white w-full">
-  <div className="mb-14">
-    <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-4">
-      Our Focus Areas
-    </p>
-    <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639] mb-5">
-    Disciplines We Cover
-    </h2>
-    <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 max-w-145">
-      ARPS Institute focuses on professional, research, and leadership development fields — providing accessible and high-quality training across key disciplines worldwide. We do not provide clinical or medical training.
-    </p>
-  </div>
-
-  {[
-    {
-      num: "01",
-      title: "Research Methods & Academic Writing",
-      desc: "Provides advanced research training programs for scholars, researchers, and professionals seeking to strengthen their research design, analytical skills, and scholarly communication. Covers qualitative, quantitative, and mixed methods approaches, as well as academic publishing and grant writing.",
-      tags: ["Qualitative Methods", "Quantitative Methods", "Mixed Methods", "Academic Writing", "Grant Writing", "R Programming", "AI for Research", "Systematic Reviews"],
-    },
-    {
-      num: "02",
-      title: "Professional Certificate Academy",
-      desc: "Short-term professional certification programs (1–4 months) combining theoretical knowledge with applied learning. Programs span Education, Applied Research Methods, Management Sciences, Information Technology, and Social Sciences & Public Policy.",
-      tags: ["Educational Leadership", "M&E Certification", "Data Analytics", "Project Management", "Public Policy", "AI Applications", "Cybersecurity", "Digital Transformation"],
-    },
-    {
-      num: "03",
-      title: "Participatory Action Research (PAR)",
-      desc: "A specialised division focused on Participatory Action Research — emphasising community collaboration, empowerment, and social transformation. Highly relevant for education, governance, development programs, and public policy research. Positions ARPS as a global hub for community-engaged research methodologies.",
-      tags: ["PAR Certification", "PAR for NGOs", "Social Justice", "Community Development", "Policy Transformation", "Health & Rural Dev."],
-    },
-    {
-      num: "04",
-      title: "Academic Consulting & Research Services",
-      desc: "Provides consulting and institutional research services for organisations seeking evidence-based solutions. Serves universities, NGOs, school districts, government institutions, and philanthropic foundations with program evaluation, impact assessment, policy research, and strategic planning.",
-      tags: ["Program Evaluation", "Impact Assessment", "Policy Research", "M&E Services", "Strategic Planning", "Data Analysis"],
-    },
-    {
-      num: "05",
-      title: "Publishing Support Unit",
-      desc: "Supports scholars in producing high-quality research outputs and academic publications. Covers journal establishment and editorial management, research and funding proposal development, and editorial training for peer reviewers and scholars. Serves graduate researchers, academics, independent scholars, and research institutes.",
-      tags: ["Journal Services", "Manuscript Preparation", "Proposal Development", "Thesis Support", "Editorial Training", "Peer Review Training"],
-    },
-    {
-      num: "06",
-      title: "Technology & Management Software Development",
-      desc: "Designs and commercialises specialised management and research software solutions for institutions, researchers, and organisations. Offerings include Research Management Software, Monitoring & Evaluation Systems, Education Management Systems, and Organisational Management Software — delivered via licensing, SaaS, and custom development.",
-      tags: ["Research Management Systems", "M&E Dashboards", "Learning Analytics", "Grant Tracking", "SaaS Solutions", "Custom Development"],
-    },
-     {
-      num: "07",
-      title: "Governance, Policy & Institutional Reform",
-      desc: "Supports scholars in producing high-quality research outputs and academic publications. Covers journal establishment and editorial management, research and funding proposal development, and editorial training for peer reviewers and scholars. Serves graduate researchers, academics, independent scholars, and research institutes.",
-      tags: ["Journal Services", "Manuscript Preparation", "Proposal Development", "Thesis Support", "Editorial Training", "Peer Review Training"],
-    },
-    {
-      num: "08",
-      title: "Artificial Intelligence & Digital Transformation",
-      desc: "Designs and commercialises specialised management and research software solutions for institutions, researchers, and organisations. Offerings include Research Management Software, Monitoring & Evaluation Systems, Education Management Systems, and Organisational Management Software — delivered via licensing, SaaS, and custom development.",
-      tags: ["Research Management Systems", "M&E Dashboards", "Learning Analytics", "Grant Tracking", "SaaS Solutions", "Custom Development"],
-      last: true,
-    },
-  ].map(({ num, title, desc, tags, last }) => (
-    <div
-      key={num}
-      className={`grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8 lg:gap-16 items-start py-12 border-t ${last ? "" : ""} border-[#0474C4]/25`}
-    >
-      <div>
-        <div className="font-heading text-[3rem] tracking-[-0.02em] leading-[1.1] font-bold text-[#0474C4]/50 mb-2">
-          {num}
-        </div>
-        <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#071639]">
-          {title}
-        </div>
-      </div>
-
-      <div>
-        <p className="font-body text-[0.9375rem] tracking-[0em] leading-[1.7] font-normal text-slate-600 mb-6">
-          {desc}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <span
-              key={tag}
-                      className="font-body text-[0.6875rem] tracking-[0.05em] font-medium text-[#0474C4] py-1 px-3 rounded-full bg-[#0474C4]/10 transition-all duration-200"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  ))}
-</section> */}
 
       <section className="py-16 md:py-28 w-full px-8 md:px-16 lg:px-0 text-center bg-[#181C2C] relative overflow-hidden">
         <div className="relative max-w-140 mx-auto">

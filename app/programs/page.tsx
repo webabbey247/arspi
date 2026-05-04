@@ -4,16 +4,111 @@ import * as React from "react";
 import withLayout from "@/hooks/useLayout";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { getPrograms, type PublicProgram } from "@/services/public-program.service";
+import PageHero from "@/components/sections/PageHero";
 
-const PAGE_SIZE = 16;
+const PAGE_SIZE = 20;
+
+const LEVEL_LABEL: Record<string, string> = {
+  ALL:          "All Levels",
+  BEGINNER:     "Beginner",
+  INTERMEDIATE: "Intermediate",
+  ADVANCED:     "Advanced",
+}
+
+// ── Filter accordion (matches careers/workshops pattern) ──────────────────────
+
+function FilterAccordion({
+  title,
+  options,
+  selected,
+  onToggle,
+  defaultOpen = false,
+}: {
+  title:        string
+  options:      { id: string; label: string }[]
+  selected:     string[]
+  onToggle:     (id: string) => void
+  defaultOpen?: boolean
+}) {
+  const [open, setOpen] = React.useState(defaultOpen)
+
+  return (
+    <div className="border-b border-[#0474C4]/12 last:border-b-0">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between py-3.5 cursor-pointer group"
+      >
+        <span className="font-body text-[0.875rem] font-semibold text-ink group-hover:text-[#0474C4] transition-colors">
+          {title}
+          {selected.length > 0 && (
+            <span className="ml-2 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-[#0474C4]/10 text-[0.6875rem] font-semibold text-[#0474C4]">
+              {selected.length}
+            </span>
+          )}
+        </span>
+        <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <ul className="flex flex-col gap-1.5 pb-4">
+          {options.length === 0 ? (
+            <li className="font-body text-[0.75rem] text-slate-400">No options available</li>
+          ) : options.map(opt => {
+            const checked = selected.includes(opt.id)
+            return (
+              <li key={opt.id}>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => onToggle(opt.id)}
+                    className="h-3.5 w-3.5 accent-[#0474C4] cursor-pointer"
+                  />
+                  <span className={`font-body text-[0.855rem] ${checked ? "text-ink font-medium" : "text-slate-500 group-hover:text-ink"}`}>
+                    {opt.label}
+                  </span>
+                </label>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+// ── Pagination helper ─────────────────────────────────────────────────────────
+
+function pageWindow(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages: (number | "…")[] = [1]
+  if (current > 3) pages.push("…")
+  const start = Math.max(2, current - 1)
+  const end   = Math.min(total - 1, current + 1)
+  for (let i = start; i <= end; i++) pages.push(i)
+  if (current < total - 2) pages.push("…")
+  pages.push(total)
+  return pages
+}
+
+function toggleIn<T extends string>(arr: T[], value: T): T[] {
+  return arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value]
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 const ProgramsPage = () => {
-  const [programs, setPrograms]     = React.useState<PublicProgram[]>([]);
-  const [loading, setLoading]       = React.useState(true);
-  const [activeCat, setActiveCat]   = React.useState("all");
-  const [page, setPage]             = React.useState(1);
+  const [programs, setPrograms] = React.useState<PublicProgram[]>([]);
+  const [loading, setLoading]   = React.useState(true);
+  const [page, setPage]         = React.useState(1);
+
+  // Filter state
+  const [categoryFilter, setCategoryFilter] = React.useState<string[]>([])
+  const [priceFilter,    setPriceFilter]    = React.useState<string[]>([])
+  const [levelFilter,    setLevelFilter]    = React.useState<string[]>([])
+  const [formatFilter,   setFormatFilter]   = React.useState<string[]>([])
 
   React.useEffect(() => {
     setLoading(true);
@@ -23,316 +118,380 @@ const ProgramsPage = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Reset to page 1 whenever the category filter changes
-  React.useEffect(() => { setPage(1); }, [activeCat]);
-
-  // Unique categories derived from loaded programs
+  // Derived filter options from loaded data
   const categories = React.useMemo(() => {
     const seen = new Set<string>();
-    const cats: { id: string; name: string }[] = [];
+    const cats: { id: string; label: string }[] = [];
     for (const p of programs) {
       if (p.category && !seen.has(p.category.id)) {
         seen.add(p.category.id);
-        cats.push({ id: p.category.id, name: p.category.name });
+        cats.push({ id: p.category.id, label: p.category.name });
       }
     }
     return cats;
   }, [programs]);
 
-  const filtered = activeCat === "all"
-    ? programs
-    : programs.filter((p) => p.category?.id === activeCat);
+  const formats = React.useMemo(() => {
+    const seen = new Set<string>();
+    const fmts: { id: string; label: string }[] = [];
+    for (const p of programs) {
+      if (p.format && !seen.has(p.format)) {
+        seen.add(p.format);
+        fmts.push({ id: p.format, label: p.format.charAt(0) + p.format.slice(1).toLowerCase().replace(/_/g, " ") });
+      }
+    }
+    return fmts;
+  }, [programs]);
 
-  const totalPages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage    = Math.min(page, totalPages);
-  const paginated   = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const hasActiveFilter =
+    categoryFilter.length > 0 || priceFilter.length > 0 ||
+    levelFilter.length > 0 || formatFilter.length > 0
+
+  function clearFilters() {
+    setCategoryFilter([])
+    setPriceFilter([])
+    setLevelFilter([])
+    setFormatFilter([])
+  }
+
+  function passesFilters(p: PublicProgram): boolean {
+    const priceType = p.price > 0 ? "PAID" : "FREE"
+    return (categoryFilter.length === 0 || (!!p.category && categoryFilter.includes(p.category.id)))
+      && (priceFilter.length === 0    || priceFilter.includes(priceType))
+      && (levelFilter.length === 0    || levelFilter.includes(p.level))
+      && (formatFilter.length === 0   || (!!p.format && formatFilter.includes(p.format)))
+  }
+
+  const filtered   = programs.filter(passesFilters)
+  const total      = filtered.length
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const startIdx   = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const endIdx     = Math.min(page * PAGE_SIZE, total)
+  const pages      = pageWindow(page, totalPages)
+
+  React.useEffect(() => { setPage(1) }, [
+    categoryFilter, priceFilter, levelFilter, formatFilter,
+  ])
 
   return (
     <>
       {/* Hero */}
-      <section className="bg-[#071639] relative overflow-hidden px-8 md:px-16 py-24 w-full">
-        <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
-        <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
-        <div className="relative z-10 max-w-200 w-full">
-          <div className="flex flex-col gap-4 items-start w-full">
-            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC] inline-flex items-center gap-2">
-              <span className="block w-8 h-px bg-[#EBF3FC]" />
-              Professional Certificate Academy
-            </p>
-            <h1 className="font-heading text-[2.25rem] md:text-[3rem] tracking-[-0.015em] md:tracking-[-0.02em] leading-[1.2] md:leading-[1.1] font-bold text-white max-w-lg">
-              Build <em className="italic text-[#0474C4]">Expert Sessions</em>
-              <br />
-              Earn a Global Certificate
-            </h1>
-            <p className="font-body text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-[#EBF3FC] max-w-lg">
-              Short-term professional certification programs — typically 1 to 4
-              months — combining theoretical knowledge with applied learning
-              across six key discipline areas.
-            </p>
-          </div>
+      <PageHero
+        tagline="Professional Certificate Academy"
+        captionTextOne="Build "
+        highlightText="Expert Sessions"
+        captionTextTwo="Earn a Global Certificate"
+        description="Short-term professional certification programs — typically 1 to 4 months — combining theoretical knowledge with applied learning across six key discipline areas."
+        pageType="programs"
+        imageUrl="/images/about-arps.webp"
+      />
 
-          {/* Stats */}
-          <div className="flex gap-8 flex-wrap pt-8 mt-8 border-t border-[#0474C4]/15">
-            {[
-              { value: "40+",  label: "Certificate Programs" },
-              { value: "1–4",  label: "Months Duration" },
-              { value: "100%", label: "Online & Flexible" },
-              { value: "120+", label: "Countries Served" },
-            ].map((s) => (
-              <div key={s.label}>
-                <span className="block font-heading text-[1.75rem] tracking-[-0.01em] leading-[1.1] font-semibold text-[#EBF3FC]">
-                  {s.value}
-                </span>
-                <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC]">
-                  {s.label}
-                </span>
-              </div>
-            ))}
+      {/* How it works — process flow */}
+      {/* <section className="bg-white px-8 md:px-16 py-16 md:py-20 border-t border-[#e8e8e8]">
+       <div className="max-w-350 mx-auto flex flex-col lg:flex-col items-center gap-12">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-14">
+          <div>
+            <p className="font-body text-[0.65rem] tracking-[0.15em] uppercase text-[#0474C4] font-medium mb-3">
+              How It Works
+            </p>
+            <h2 className="font-heading text-3xl md:text-4xl font-normal text-[#111] leading-tight">
+              Your learning journey
+            </h2>
           </div>
+          <p className="font-body text-[0.8125rem] text-[#777] max-w-xs leading-relaxed">
+            From expert instruction to a globally recognised certificate — four clear steps.
+          </p>
         </div>
-      </section>
 
-      {/* Features strip */}
-      <section className="bg-[#06457F] py-12 px-8 md:px-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-b border-[#C8A96E]/10">
-        {[
-          {
-            icon: (
-              <>
-                <rect x="2" y="3" width="20" height="14" rx="2" />
-                <path d="M8 21h8M12 17v4" />
-              </>
-            ),
-            title: "Live Virtual Sessions",
-            desc: "Real-time instruction with cohort interaction via Zoom",
-          },
-          {
-            icon: (
-              <>
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </>
-            ),
-            title: "Self-Paced Access",
-            desc: "Recorded lectures available 24/7 for flexible learning",
-          },
-          {
-            icon: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
-            title: "Verified Certificate",
-            desc: "Digitally signed certificate with QR verification",
-          },
-          {
-            icon: (
-              <>
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-              </>
-            ),
-            title: "Expert Facilitators",
-            desc: "Led by practising researchers and academic professionals",
-          },
-        ].map(({ icon, title, desc }) => (
-          <div key={title} className="py-[1.8rem] px-6 flex items-start gap-4">
-            <div className="w-10 h-10 rounded-[8px] bg-[#C8A96E]/8 border border-[#C8A96E]/15 flex items-center justify-center shrink-0">
-              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-[#F7F3ED]" strokeWidth="1.6" strokeLinecap="round">
-                {icon}
-              </svg>
-            </div>
-            <div>
-              <div className="font-heading text-[0.9rem] font-normal text-[#F7F3ED] mb-0.75">{title}</div>
-              <div className="text-[0.78rem] text-[#F7F3ED]/35 font-light leading-normal">{desc}</div>
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {/* Programs grid */}
-      <section className="bg-white px-8 md:px-16 py-16 w-full">
-        <div className="max-w-350 mx-auto flex flex-col gap-10">
-
-          {/* Filter bar */}
-          <div className="bg-white/97 sticky top-17 z-30 backdrop-blur py-3 flex items-center gap-2.5 overflow-x-auto w-full">
-            <span className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mr-2 shrink-0">
-              Filter:
-            </span>
-            <button
-              onClick={() => setActiveCat("all")}
-              className={`font-body text-[0.75rem] tracking-[0.05em] leading-normal font-medium px-4 py-1.5 rounded-full border transition-all whitespace-nowrap shrink-0 ${
-                activeCat === "all"
-                  ? "bg-[#0474C4] text-[#EBF3FC] border-[#0474C4]"
-                  : "bg-transparent text-slate-500 border-[#0474C4]/25 hover:border-[#0474C4] hover:text-[#0474C4]"
-              }`}
-            >
-              All Programs
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCat(cat.id)}
-                className={`font-body text-[0.75rem] tracking-[0.05em] leading-normal font-medium px-4 py-1.5 rounded-full border transition-all whitespace-nowrap shrink-0 ${
-                  activeCat === cat.id
-                    ? "bg-[#0474C4] text-[#EBF3FC] border-[#0474C4]"
-                    : "bg-transparent text-slate-500 border-[#0474C4]/25 hover:border-[#0474C4] hover:text-[#0474C4]"
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Count + loading */}
-          {!loading && (
-            <p className="text-[0.78rem] text-[#637AA3]">
-              {filtered.length === 0
-                ? "No programs found."
-                : `Showing ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filtered.length)} of ${filtered.length} program${filtered.length !== 1 ? "s" : ""}`}
-            </p>
-          )}
-
-          {/* Grid */}
-          {loading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="rounded-sm overflow-hidden border border-[#0474C4]/10 animate-pulse">
-                  <div className="aspect-16/10 bg-slate-100" />
-                  <div className="p-5 space-y-3">
-                    <div className="h-3 bg-slate-100 rounded w-1/2" />
-                    <div className="h-4 bg-slate-100 rounded w-full" />
-                    <div className="h-3 bg-slate-100 rounded w-1/3" />
-                  </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
+          {[
+            {
+              step: "01",
+              icon: (
+                <>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                </>
+              ),
+              title: "Expert Facilitators",
+              desc: "Learn from practising researchers and academic professionals",
+            },
+            {
+              step: "02",
+              icon: (
+                <>
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <path d="M8 21h8M12 17v4" />
+                </>
+              ),
+              title: "Live Virtual Sessions",
+              desc: "Real-time cohort instruction and interactive discussions via Zoom",
+            },
+            {
+              step: "03",
+              icon: (
+                <>
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </>
+              ),
+              title: "Self-Paced Access",
+              desc: "Recorded lectures available 24/7 — learn around your schedule",
+            },
+            {
+              step: "04",
+              icon: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
+              title: "Verified Certificate",
+              desc: "Earn a digitally signed certificate with QR code verification",
+            },
+          ].map(({ step, icon, title, desc }, i, arr) => (
+            <div key={step} className="relative flex flex-col lg:flex-row items-start lg:items-stretch">
+              <div className="flex-1 px-0 lg:pr-8 pb-10 lg:pb-0 pt-0 flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <span className="font-body text-[0.65rem] tracking-[0.15em] font-semibold text-[#0474C4]">
+                    {step}
+                  </span>
+                  {i < arr.length - 1 && (
+                    <div className="hidden lg:block flex-1 border-t border-dashed border-[#0474C4]/20" />
+                  )}
                 </div>
-              ))}
+                <div className="w-11 h-11 rounded-full border border-[#0474C4]/20 bg-[#0474C4]/5 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-[#0474C4]" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    {icon}
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-heading text-[1rem] font-normal text-[#111] mb-1.5 leading-snug">{title}</h3>
+                  <p className="font-body text-[0.78rem] text-[#777] font-light leading-relaxed">{desc}</p>
+                </div>
+              </div>
+              {i < arr.length - 1 && (
+                <div className="lg:hidden absolute left-[0.4rem] top-[2.2rem] bottom-0 w-px border-l border-dashed border-[#0474C4]/20" />
+              )}
             </div>
-          ) : paginated.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {paginated.map((prog) => {
-                const initials = prog.instructor.name
-                  .split(" ")
-                  .filter(Boolean)
-                  .slice(0, 2)
-                  .map((w) => w[0]?.toUpperCase() ?? "")
-                  .join("");
-                const price = prog.price > 0 ? `$${prog.price.toLocaleString()}` : "Free";
-                const level = prog.level.charAt(0) + prog.level.slice(1).toLowerCase();
+          ))}
+        </div>
+        </div>
+      </section> */}
 
-                return (
-                  <Link
-                    href={`/programs/${prog.slug}`}
-                    key={prog.id}
-                    className="group bg-white rounded-sm overflow-hidden border border-[#0474C4]/15 transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(13,27,42,0.1)]"
-                  >
-                    <div className="relative aspect-16/10 overflow-hidden bg-slate-100">
-                      <Image
-                        src={prog.thumbnail || "/images/dummy/course-1.jpg"}
-                        alt={prog.title}
-                        fill
-                        className="object-cover transition-transform duration-400 group-hover:scale-[1.04]"
-                      />
-                      {prog.featured && (
-                        <span className="absolute top-3 left-3 bg-[#C8A96E] text-[#0D1B2A] text-[0.65rem] font-medium tracking-widest uppercase px-2.5 py-1 rounded-sm">
-                          Featured
-                        </span>
-                      )}
-                      <span className="absolute bottom-3 right-3 bg-[#071639] text-[#F7F3ED] font-body text-[0.78rem] font-medium tracking-[0.06em] px-3.5 py-1.5 rounded-sm">
-                        {price}
-                      </span>
-                    </div>
+      {/* Programs — sidebar + grid */}
+      <section className="bg-white px-8 md:px-16 pb-20 pt-10 w-full border-t border-[#e8e8e8]">
+        <div className="max-w-350 mx-auto flex flex-col lg:flex-row gap-8 w-full">
 
-                    <div className="px-5 pt-[1.3rem] pb-[1.5rem]">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 rounded-full bg-[#0474C4] text-white font-body text-[0.8125rem] font-medium flex items-center justify-center shrink-0">
-                          {initials}
-                        </div>
-                        <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-600 truncate">
-                          {prog.instructor.name}
-                        </span>
-                      </div>
-
-                      <h3 className="font-heading text-[1.02rem] font-normal text-[#071639] leading-[1.35] mb-4 line-clamp-2">
-                        {prog.title}
-                      </h3>
-
-                      <div className="flex gap-[1.2rem] items-center">
-                        {prog.duration && (
-                          <>
-                            <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
-                              <svg className="w-3.5 h-3.5 opacity-50" viewBox="0 0 16 16" fill="none">
-                                <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2" />
-                                <path d="M8 5v3.5l2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                              </svg>
-                              {prog.duration}
-                            </span>
-                            <span className="w-0.75 h-0.75 rounded-full bg-slate-400/30" />
-                          </>
-                        )}
-                        <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
-                          <svg className="w-3.5 h-3.5 opacity-50" viewBox="0 0 16 16" fill="none">
-                            <rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-                            <path d="M5 7h6M5 10h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                          </svg>
-                          {level}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="py-16 text-center text-slate-400 text-sm">
-              No programs found in this category.
-            </div>
-          )}
-
-          {/* Pagination */}
-          {!loading && totalPages > 1 && (
-            <div className="flex items-center justify-center gap-1.5 pt-4">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={safePage === 1}
-                className="w-9 h-9 flex items-center justify-center rounded border border-[#0474C4]/20 text-[#637AA3] transition-all hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => {
-                const isActive = n === safePage;
-                const show = n === 1 || n === totalPages || Math.abs(n - safePage) <= 1;
-                const showEllipsisBefore = n === safePage - 2 && safePage > 3;
-                const showEllipsisAfter  = n === safePage + 2 && safePage < totalPages - 2;
-
-                if (showEllipsisBefore || showEllipsisAfter) {
-                  return (
-                    <span key={n} className="w-9 h-9 flex items-center justify-center text-[#637AA3] text-sm">
-                      …
-                    </span>
-                  );
-                }
-                if (!show) return null;
-                return (
+          {/* Left sidebar */}
+          <aside className="lg:w-72 shrink-0">
+            <div className="lg:sticky lg:top-32 px-0">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-heading text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">
+                  Filters
+                </h3>
+                {hasActiveFilter && (
                   <button
-                    key={n}
-                    onClick={() => setPage(n)}
-                    className={`w-9 h-9 flex items-center justify-center rounded border font-body text-[0.82rem] transition-all ${
-                      isActive
-                        ? "bg-[#0474C4] border-[#0474C4] text-white font-semibold"
-                        : "border-[#0474C4]/20 text-[#637AA3] hover:border-[#0474C4] hover:text-[#0474C4]"
-                    }`}
+                    type="button"
+                    onClick={clearFilters}
+                    className="font-body text-[0.6875rem] uppercase tracking-[0.07em] font-medium text-slate-500 hover:text-[#0474C4] cursor-pointer"
                   >
-                    {n}
+                    Clear all
                   </button>
-                );
-              })}
+                )}
+              </div>
 
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={safePage === totalPages}
-                className="w-9 h-9 flex items-center justify-center rounded border border-[#0474C4]/20 text-[#637AA3] transition-all hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              <div className="flex flex-col">
+                <FilterAccordion
+                  title="Category"
+                  options={categories}
+                  selected={categoryFilter}
+                  onToggle={id => setCategoryFilter(toggleIn(categoryFilter, id))}
+                  defaultOpen
+                />
+                <FilterAccordion
+                  title="Price"
+                  options={[
+                    { id: "FREE", label: "Free" },
+                    { id: "PAID", label: "Paid" },
+                  ]}
+                  selected={priceFilter}
+                  onToggle={id => setPriceFilter(toggleIn(priceFilter, id))}
+                  defaultOpen
+                />
+                <FilterAccordion
+                  title="Level"
+                  options={Object.entries(LEVEL_LABEL).map(([id, label]) => ({ id, label }))}
+                  selected={levelFilter}
+                  onToggle={id => setLevelFilter(toggleIn(levelFilter, id))}
+                />
+                {formats.length > 0 && (
+                  <FilterAccordion
+                    title="Format"
+                    options={formats}
+                    selected={formatFilter}
+                    onToggle={id => setFormatFilter(toggleIn(formatFilter, id))}
+                  />
+                )}
+              </div>
             </div>
-          )}
+          </aside>
+
+          {/* Right — grid + pagination */}
+          <div className="flex-1 min-w-0 flex flex-col gap-6">
+
+            {/* Count */}
+            {!loading && (
+              <p className="font-body text-[0.8125rem] text-slate-500">
+                {total !== 0 && (
+                  <>Showing <span className="font-medium text-ink">{startIdx}–{endIdx}</span> of <span className="font-medium text-ink">{total}</span> {total === 1 ? "program" : "programs"}</>
+                )}
+              </p>
+            )}
+
+            {/* Grid */}
+            {loading ? (
+              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="rounded-sm overflow-hidden border border-[#0474C4]/10 animate-pulse">
+                    <div className="aspect-16/10 bg-slate-100" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-3 bg-slate-100 rounded w-1/2" />
+                      <div className="h-4 bg-slate-100 rounded w-full" />
+                      <div className="h-3 bg-slate-100 rounded w-1/3" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : paginated.length > 0 ? (
+              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {paginated.map((prog) => {
+                  const initials = prog.instructor.name
+                    .split(" ").filter(Boolean).slice(0, 2)
+                    .map(w => w[0]?.toUpperCase() ?? "").join("");
+                  const price = prog.price > 0 ? `$${prog.price.toLocaleString()}` : "Free";
+                  const level = prog.level.charAt(0) + prog.level.slice(1).toLowerCase();
+
+                  return (
+                    <Link
+                      href={`/programs/${prog.slug}`}
+                      key={prog.id}
+                      className="group bg-white rounded-sm overflow-hidden transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(13,27,42,0.1)]"
+                    >
+                      <div className="relative aspect-16/10 overflow-hidden bg-slate-100">
+                        <Image
+                          src={prog.thumbnail || "/images/dummy/course-1.jpg"}
+                          alt={prog.title}
+                          fill
+                          className="object-cover transition-transform duration-400 group-hover:scale-[1.04]"
+                        />
+                        {prog.featured && (
+                          <span className="absolute top-3 left-3 bg-[#C8A96E] text-[#0D1B2A] text-[0.65rem] font-medium tracking-widest uppercase px-2.5 py-1 rounded-sm">
+                            Featured
+                          </span>
+                        )}
+                        <span className="absolute bottom-3 right-3 bg-[#071639] text-[#F7F3ED] font-body text-[0.78rem] font-medium tracking-[0.06em] px-3.5 py-1.5 rounded-sm">
+                          {price}
+                        </span>
+                      </div>
+
+                      <div className="px-5 pt-[1.3rem] pb-[1.5rem]">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-[#0474C4] text-white font-body text-[0.8125rem] font-medium flex items-center justify-center shrink-0">
+                            {initials}
+                          </div>
+                          <span className="font-body text-[0.8125rem] font-normal text-slate-600 truncate">
+                            {prog.instructor.name}
+                          </span>
+                        </div>
+
+                        <h3 className="font-heading text-[1.02rem] font-normal text-[#071639] leading-[1.35] mb-4 line-clamp-2">
+                          {prog.title}
+                        </h3>
+
+                        <div className="flex gap-[1.2rem] items-center">
+                          {prog.duration && (
+                            <>
+                              <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
+                                <svg className="w-3.5 h-3.5 opacity-50" viewBox="0 0 16 16" fill="none">
+                                  <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2" />
+                                  <path d="M8 5v3.5l2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                                </svg>
+                                {prog.duration}
+                              </span>
+                              <span className="w-0.75 h-0.75 rounded-full bg-slate-400/30" />
+                            </>
+                          )}
+                          <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
+                            <svg className="w-3.5 h-3.5 opacity-50" viewBox="0 0 16 16" fill="none">
+                              <rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                              <path d="M5 7h6M5 10h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                            </svg>
+                            {level}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-white rounded p-10 text-center">
+                <p className="font-heading text-[1rem] font-semibold text-ink mb-1.5">
+                  {programs.length === 0 ? "No programs available" : "No programs match your filters"}
+                </p>
+                <p className="font-body text-[0.8125rem] text-slate-500">
+                  {hasActiveFilter ? "Try clearing some filters to see more results." : "Check back soon — new programs are added regularly."}
+                </p>
+              </div>
+            )}
+
+            {/* Pagination footer */}
+            {!loading && paginated.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-2">
+                <p className="font-body text-[0.8125rem] text-slate-500">
+                  Showing <span className="font-medium text-ink">{startIdx}–{endIdx}</span>{" "}
+                  of <span className="font-medium text-ink">{total}</span> {total === 1 ? "program" : "programs"}
+                </p>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={page === 1}
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Prev
+                    </button>
+                    {pages.map((p, i) =>
+                      p === "…" ? (
+                        <span key={`ellipsis-${i}`} className="font-body text-[0.8125rem] text-slate-400 px-2">…</span>
+                      ) : (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setPage(p)}
+                          className={`min-w-8 h-8 rounded font-body text-[0.8125rem] font-medium cursor-pointer transition-colors ${
+                            p === page
+                              ? "bg-[#0474C4] text-white"
+                              : "border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4]"
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      )
+                    )}
+                    <button
+                      type="button"
+                      disabled={page === totalPages}
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </section>
     </>
