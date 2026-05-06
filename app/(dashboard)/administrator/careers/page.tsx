@@ -267,25 +267,17 @@ function DepartmentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
-        <div className="flex items-start justify-between px-5 py-4 border-b border-[#E5E2DC]">
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-[10px] bg-[#EEF6FF] flex items-center justify-center shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0474C4" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="7" width="20" height="14" rx="2"/>
-                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-              </svg>
+      <div className="bg-[#EBF3FC] rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+          <div>
+            <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-300">
+              {department ? "Edit Department" : "New Department"}
             </div>
-            <div>
-              <h2 className="text-[15px] font-bold text-[#1A1916] leading-tight">
-                {department ? "Edit Department" : "New Department"}
-              </h2>
-              <p className="text-[12px] text-[#A8A39C] mt-0.5">
-                {department ? "Update the department name." : "Add a new career department."}
-              </p>
+            <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-300 mt-0.5">
+              {department ? "Update the department name." : "Add a new career department."}
             </div>
           </div>
-          <button type="button" onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#F5F4F1] text-[#A8A39C] cursor-pointer shrink-0">
+          <button type="button" onClick={onClose} className="text-white/35 hover:text-white shrink-0 bg-[#EDF2FB]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>

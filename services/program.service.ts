@@ -17,14 +17,14 @@ export type ProgramRow = {
   id:          string
   title:       string
   slug:        string
-  description: string
+  excerpt:     string
   thumbnail:   string | null
   price:       number
+  pricing:     string
+  paymentType: string | null
   level:       CourseLevel
   featured:    boolean
-  published:   boolean
 
-  // Extended programme details
   tagline:              string | null
   duration:             string | null
   format:               string | null
@@ -36,7 +36,6 @@ export type ProgramRow = {
   enrolledCount:        number | null
   countriesCount:       number | null
 
-  // Rich content
   overview:             string | null
   targetAudience:       unknown | null
   learningObjectives:   unknown | null
@@ -44,12 +43,7 @@ export type ProgramRow = {
   whatIsIncluded:       unknown | null
   faqs:                 unknown | null
 
-  // Standalone instructor profile
-  instructorName:        string | null
-  instructorTitle:       string | null
-  instructorBio:         string | null
-  instructorInitials:    string | null
-  instructorCredentials: unknown | null
+  facilitators:         unknown | null
 
   instructorId: string
   instructor:  {
@@ -67,16 +61,16 @@ export type ProgramRow = {
 export type ProgramInput = {
   title:        string
   slug?:        string
-  description:  string
+  excerpt:      string
   thumbnail?:   string | null
   price?:       number
+  pricing?:     string
+  paymentType?: string | null
   level?:       CourseLevel
   featured?:    boolean
-  published?:   boolean
   categoryId?:  string | null
   instructorId?: string
 
-  // Extended programme details
   tagline?:              string | null
   duration?:             string | null
   format?:               string | null
@@ -88,7 +82,6 @@ export type ProgramInput = {
   enrolledCount?:        number | null
   countriesCount?:       number | null
 
-  // Rich content (JSON)
   overview?:             string | null
   targetAudience?:       unknown | null
   learningObjectives?:   unknown | null
@@ -96,12 +89,7 @@ export type ProgramInput = {
   whatIsIncluded?:       unknown | null
   faqs?:                 unknown | null
 
-  // Standalone instructor
-  instructorName?:        string | null
-  instructorTitle?:       string | null
-  instructorBio?:         string | null
-  instructorInitials?:    string | null
-  instructorCredentials?: unknown | null
+  facilitators?:         unknown | null
 }
 
 export type ProgramServiceResult<T> =
@@ -214,7 +202,6 @@ export async function deleteProgramCategory(
 export async function getPrograms(filters?: {
   categoryId?:   string
   level?:        CourseLevel
-  published?:    boolean
   featured?:     boolean
   instructorId?: string
 }): Promise<ProgramRow[]> {
@@ -222,7 +209,6 @@ export async function getPrograms(filters?: {
     where: {
       ...(filters?.categoryId   !== undefined && { categoryId:   filters.categoryId }),
       ...(filters?.level        !== undefined && { level:        filters.level }),
-      ...(filters?.published    !== undefined && { published:    filters.published }),
       ...(filters?.featured     !== undefined && { featured:     filters.featured }),
       ...(filters?.instructorId !== undefined && { instructorId: filters.instructorId }),
     },
@@ -254,13 +240,14 @@ export async function createProgram(
     data: {
       title:        input.title,
       slug,
-      description:  input.description,
-      thumbnail:    input.thumbnail   ?? null,
-      price:        input.price       ?? 0,
-      level:        input.level       ?? "BEGINNER",
-      featured:     input.featured    ?? false,
-      published:    input.published   ?? false,
-      categoryId:   input.categoryId  ?? null,
+      excerpt:      input.excerpt,
+      thumbnail:    input.thumbnail    ?? null,
+      price:        input.price        ?? 0,
+      pricing:      input.pricing      ?? "free",
+      paymentType:  input.paymentType  ?? null,
+      level:        input.level        ?? "BEGINNER",
+      featured:     input.featured     ?? false,
+      categoryId:   input.categoryId   ?? null,
       instructorId: input.instructorId ?? instructorId,
 
       tagline:              input.tagline              ?? null,
@@ -279,11 +266,7 @@ export async function createProgram(
       curriculum:           (input.curriculum           ?? null) as never,
       whatIsIncluded:       (input.whatIsIncluded       ?? null) as never,
       faqs:                 (input.faqs                 ?? null) as never,
-      instructorName:       input.instructorName        ?? null,
-      instructorTitle:      input.instructorTitle       ?? null,
-      instructorBio:        input.instructorBio         ?? null,
-      instructorInitials:   input.instructorInitials    ?? null,
-      instructorCredentials:(input.instructorCredentials ?? null) as never,
+      facilitators:         (input.facilitators         ?? null) as never,
     },
     include: programInclude,
   })
@@ -307,12 +290,13 @@ export async function updateProgram(
     data: {
       ...(input.title        !== undefined && { title:        input.title }),
       ...(input.slug         !== undefined && { slug:         input.slug }),
-      ...(input.description  !== undefined && { description:  input.description }),
+      ...(input.excerpt      !== undefined && { excerpt:      input.excerpt }),
       ...(input.thumbnail    !== undefined && { thumbnail:    input.thumbnail }),
       ...(input.price        !== undefined && { price:        input.price }),
+      ...(input.pricing      !== undefined && { pricing:      input.pricing }),
+      ...(input.paymentType  !== undefined && { paymentType:  input.paymentType }),
       ...(input.level        !== undefined && { level:        input.level }),
       ...(input.featured     !== undefined && { featured:     input.featured }),
-      ...(input.published    !== undefined && { published:    input.published }),
       ...(input.categoryId   !== undefined && { categoryId:   input.categoryId }),
       ...(input.instructorId !== undefined && { instructorId: input.instructorId }),
 
@@ -332,11 +316,7 @@ export async function updateProgram(
       ...(input.curriculum          !== undefined && { curriculum:          input.curriculum          as never }),
       ...(input.whatIsIncluded      !== undefined && { whatIsIncluded:      input.whatIsIncluded      as never }),
       ...(input.faqs                !== undefined && { faqs:                input.faqs                as never }),
-      ...(input.instructorName      !== undefined && { instructorName:      input.instructorName }),
-      ...(input.instructorTitle     !== undefined && { instructorTitle:     input.instructorTitle }),
-      ...(input.instructorBio       !== undefined && { instructorBio:       input.instructorBio }),
-      ...(input.instructorInitials  !== undefined && { instructorInitials:  input.instructorInitials }),
-      ...(input.instructorCredentials !== undefined && { instructorCredentials: input.instructorCredentials as never }),
+      ...(input.facilitators        !== undefined && { facilitators:        input.facilitators        as never }),
     },
     include: programInclude,
   })

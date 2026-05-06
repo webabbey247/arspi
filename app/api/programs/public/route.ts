@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getPrograms, CourseLevel } from "@/services/program.service"
 
-/** GET /api/programs/public — publicly accessible list of published programs */
+/** GET /api/programs/public — publicly accessible list of programs */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl
@@ -10,7 +10,6 @@ export async function GET(req: NextRequest) {
     const categoryId  = searchParams.get("categoryId") ?? undefined
 
     const programs = await getPrograms({
-      published: true,
       ...(levelRaw    && { level:    levelRaw    as CourseLevel }),
       ...(featuredRaw && { featured: featuredRaw === "true" }),
       ...(categoryId  && { categoryId }),
@@ -20,9 +19,11 @@ export async function GET(req: NextRequest) {
       id:          p.id,
       title:       p.title,
       slug:        p.slug,
-      description: p.description,
+      excerpt:     p.excerpt,
       thumbnail:   p.thumbnail,
       price:       p.price,
+      pricing:     p.pricing,
+      paymentType: p.paymentType,
       level:       p.level,
       featured:    p.featured,
       category:    p.category ? { id: p.category.id, name: p.category.name, slug: p.category.slug } : null,
@@ -33,31 +34,27 @@ export async function GET(req: NextRequest) {
       createdAt:   p.createdAt.toISOString(),
 
       // Extended programme details
-      tagline:              p.tagline,
-      duration:             p.duration,
-      format:               p.format,
-      startDate:            p.startDate,
-      endDate:              p.endDate,
-      cohortSize:           p.cohortSize,
-      rating:               p.rating,
-      reviewCount:          p.reviewCount,
-      enrolledCount:        p.enrolledCount,
-      countriesCount:       p.countriesCount,
+      tagline:        p.tagline,
+      duration:       p.duration,
+      format:         p.format,
+      startDate:      p.startDate,
+      endDate:        p.endDate,
+      cohortSize:     p.cohortSize,
+      rating:         p.rating,
+      reviewCount:    p.reviewCount,
+      enrolledCount:  p.enrolledCount,
+      countriesCount: p.countriesCount,
 
       // Rich content
-      overview:             p.overview,
-      targetAudience:       p.targetAudience,
-      learningObjectives:   p.learningObjectives,
-      curriculum:           p.curriculum,
-      whatIsIncluded:       p.whatIsIncluded,
-      faqs:                 p.faqs,
+      overview:           p.overview,
+      targetAudience:     p.targetAudience,
+      learningObjectives: p.learningObjectives,
+      curriculum:         p.curriculum,
+      whatIsIncluded:     p.whatIsIncluded,
+      faqs:               p.faqs,
 
-      // Standalone instructor
-      instructorName:        p.instructorName,
-      instructorTitle:       p.instructorTitle,
-      instructorBio:         p.instructorBio,
-      instructorInitials:    p.instructorInitials,
-      instructorCredentials: p.instructorCredentials,
+      // Facilitators
+      facilitators:       p.facilitators,
     }))
 
     return NextResponse.json({ programs: payload })

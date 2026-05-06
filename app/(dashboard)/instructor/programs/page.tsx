@@ -4,20 +4,15 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useUploadThing } from "@/lib/uploadthing-client"
-import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form"
+import { useForm, useFieldArray, Controller } from "react-hook-form"
 import type { Control, UseFormRegister, FieldErrors } from "react-hook-form"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import ContentBlockEditor from "@/components/forms/ContentBlockEditor"
+import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -32,44 +27,49 @@ type Category = {
 }
 
 type Program = {
-  id:          string
-  title:       string
-  slug:        string
-  description: string
-  thumbnail:   string | null
-  price:       number
-  level:       CourseLevel
-  featured:    boolean
-  published:   boolean
+  id:           string
+  title:        string
+  slug:         string
+  excerpt:      string
+  thumbnail:    string | null
+  price:        number
+  pricing:      string
+  paymentType:  string | null
+  level:        CourseLevel
+  featured:     boolean
   instructorId: string
-  instructor:  { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null }
-  categoryId:  string | null
-  category:    Category | null
-  createdAt:   string
-  updatedAt:   string
-  _count:      { enrollments: number }
+  instructor:   { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null }
+  categoryId:   string | null
+  category:     Category | null
+  createdAt:    string
+  updatedAt:    string
+  _count:       { enrollments: number }
 
-  tagline:              string | null
-  duration:             string | null
-  format:               string | null
-  startDate:            string | null
-  endDate:              string | null
-  cohortSize:           number | null
-  rating:               number | null
-  reviewCount:          number | null
-  enrolledCount:        number | null
-  countriesCount:       number | null
-  overview:             string | null
-  targetAudience:       unknown | null
-  learningObjectives:   unknown | null
-  curriculum:           unknown | null
-  whatIsIncluded:       unknown | null
-  faqs:                 unknown | null
-  instructorName:       string | null
-  instructorTitle:      string | null
-  instructorBio:        string | null
-  instructorInitials:   string | null
-  instructorCredentials: unknown | null
+  tagline:            string | null
+  duration:           string | null
+  format:             string | null
+  startDate:          string | null
+  endDate:            string | null
+  cohortSize:         number | null
+  rating:             number | null
+  reviewCount:        number | null
+  enrolledCount:      number | null
+  countriesCount:     number | null
+  overview:           string | null
+  targetAudience:     unknown | null
+  learningObjectives: unknown | null
+  curriculum:         unknown | null
+  whatIsIncluded:     unknown | null
+  faqs:               unknown | null
+  facilitators:       unknown | null
+}
+
+type FacilitatorItem = {
+  name:        string
+  imageUrl:    string
+  title:       string
+  bio:         string
+  credentials: string
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -101,8 +101,16 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
 }
 
-function fmtPrice(price: number) {
-  return price === 0 ? "Free" : `$${price.toLocaleString()}`
+function fmtPrice(price: number, pricing: string) {
+  return pricing === "free" || price === 0 ? "Free" : `$${price.toLocaleString()}`
+}
+
+function facilitatorSummary(p: Program): string {
+  if (!Array.isArray(p.facilitators) || p.facilitators.length === 0) return ""
+  const arr = p.facilitators as Record<string, unknown>[]
+  const first = String(arr[0]?.name ?? "")
+  if (arr.length === 1) return first
+  return `${first} +${arr.length - 1}`
 }
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
@@ -129,34 +137,6 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
       </span>
       <span className="text-[13px] font-medium text-[#1A1916]">{label}</span>
     </button>
-  )
-}
-
-function StatusBadge({ published, onClick, loading }: { published: boolean; onClick?: () => void; loading?: boolean }) {
-  const base  = "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold transition-opacity"
-  const color = published ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
-  const dot   = published ? "bg-emerald-500" : "bg-amber-400"
-
-  if (onClick) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={loading}
-        title={published ? "Click to set as Draft" : "Click to Publish"}
-        className={`${base} ${color} cursor-pointer hover:opacity-70 disabled:opacity-40`}
-      >
-        <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
-        {loading ? "Saving…" : published ? "Published" : "Draft"}
-      </button>
-    )
-  }
-
-  return (
-    <span className={`${base} ${color}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
-      {published ? "Published" : "Draft"}
-    </span>
   )
 }
 
@@ -225,155 +205,208 @@ function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: s
 // ── Program modal (multi-step) ────────────────────────────────────────────────
 
 type Lesson = {
-  title:         string
-  description:   string
-  embedUrls:     string[]
-  referenceUrls: string[]
+  title:       string
+  description: string
+  blocks:      ContentBlock[]
 }
 type CurriculumItem = {
-  week:           string
-  title:          string
-  desc:           string
-  isAssessment:   boolean
-  assessmentLink: string
-  lessons:        Lesson[]
+  title:   string
+  desc:    string
+  lessons: Lesson[]
 }
 type FaqItem = { q: string; a: string }
 
 type ProgramFormValues = {
-  // Step 1 — Basic Info
-  title:      string
-  slug:       string
-  thumbnail:  string
-  price:      string
-  level:      CourseLevel
-  categoryId: string
-  tagline:    string
-  featured:   boolean
-  published:  boolean
+  // Step 1 — Basic Info + Programme Info (merged)
+  title:       string
+  slug:        string
+  excerpt:     string
+  thumbnail:   string
+  pricing:     string
+  paymentType: string
+  price:       string
+  level:       CourseLevel
+  categoryId:  string
+  tagline:     string
+  featured:    boolean
 
-  // Step 2 — Programme Info
-  description:    string
-  duration:       string
-  format:         string
-  startDate:      string
-  endDate:        string
-  cohortSize:     string
-  rating:         string
-  reviewCount:    string
-  enrolledCount:  string
-  countriesCount: string
+  format:    string
+  duration:  string
+  startDate: string
+  endDate:   string
+  cohortSize: string
 
-  // Step 3 — Objectives
+  // Step 2 — Objectives
   overview:           string
   targetAudience:     string[]
   learningObjectives: string[]
   whatIsIncluded:     string[]
 
-  // Step 4 — Curriculum
+  // Step 3 — Curriculum
   curriculum: CurriculumItem[]
 
-  // Step 5 — Facilitator
-  instructorName:        string
-  instructorTitle:       string
-  instructorBio:         string
-  instructorCredentials: string[]
+  // Step 4 — Facilitators
+  facilitators: FacilitatorItem[]
 
-  // Step 6 — FAQs
+  // Step 5 — FAQs
   faqs: FaqItem[]
 }
 
 const EMPTY_FORM: ProgramFormValues = {
-  title: "", slug: "", thumbnail: "", price: "0", level: "BEGINNER",
-  categoryId: "", tagline: "", featured: false, published: false,
-  description: "", duration: "", format: "", startDate: "", endDate: "", cohortSize: "",
-  rating: "", reviewCount: "", enrolledCount: "", countriesCount: "",
+  title: "", slug: "", excerpt: "", thumbnail: "",
+  pricing: "free", paymentType: "", price: "0",
+  level: "BEGINNER", categoryId: "", tagline: "", featured: false,
+  format: "", duration: "", startDate: "", endDate: "", cohortSize: "",
   overview: "", targetAudience: [], learningObjectives: [], whatIsIncluded: [],
-  instructorName: "", instructorTitle: "",
-  instructorBio: "", instructorCredentials: [],
-  curriculum: [], faqs: [],
+  curriculum: [], facilitators: [], faqs: [],
+}
+
+// ── Format config ─────────────────────────────────────────────────────────────
+
+type FormatCfg = {
+  durationLabel: string
+  durationHint:  string
+  showDates:     boolean
+  showCohortSize: boolean
+  endEditable:   boolean
+  endHint:       string
+  facilitatorRequired: boolean
+}
+
+const FORMAT_CONFIGS: Record<string, FormatCfg> = {
+  "Self-Paced": {
+    durationLabel: "Est. Completion",
+    durationHint:  "hours or weeks",
+    showDates:      false,
+    showCohortSize: false,
+    endEditable:    false,
+    endHint:        "",
+    facilitatorRequired: false,
+  },
+  "Cohort Based": {
+    durationLabel: "Duration",
+    durationHint:  "Weeks",
+    showDates:      true,
+    showCohortSize: true,
+    endEditable:    false,
+    endHint:        "Auto-calculated from start date + duration",
+    facilitatorRequired: true,
+  },
+  "Live Online": {
+    durationLabel: "Session Duration",
+    durationHint:  "hrs / session",
+    showDates:      true,
+    showCohortSize: false,
+    endEditable:    true,
+    endHint:        "Date of last session",
+    facilitatorRequired: true,
+  },
+  "Blended": {
+    durationLabel: "Programme Length",
+    durationHint:  "Weeks",
+    showDates:      true,
+    showCohortSize: false,
+    endEditable:    false,
+    endHint:        "Auto-calculated from start date + duration",
+    facilitatorRequired: true,
+  },
+}
+
+const DEFAULT_FORMAT_CFG: FormatCfg = {
+  durationLabel: "Duration",
+  durationHint:  "Weeks",
+  showDates:      false,
+  showCohortSize: false,
+  endEditable:    false,
+  endHint:        "",
+  facilitatorRequired: false,
 }
 
 // ── Step definitions ──────────────────────────────────────────────────────────
 
 const STEPS = [
-  { label: "Basic Info",  desc: "Title, category & pricing"    },
-  { label: "Programme",   desc: "Description & schedule"       },
-  { label: "Objectives",  desc: "Outcomes & target audience"   },
-  { label: "Curriculum",  desc: "Weekly programme outline"     },
-  { label: "Facilitator", desc: "Instructor details"           },
-  { label: "FAQs",        desc: "Frequently asked questions"   },
+  { label: "Basic Info",   desc: "Title, pricing & schedule"    },
+  { label: "Objectives",   desc: "Outcomes & target audience"   },
+  { label: "Curriculum",   desc: "Programme outline"            },
+  { label: "Facilitators", desc: "Programme facilitators"       },
+  { label: "FAQs",         desc: "Frequently asked questions"   },
 ]
 
 // ── Validation schema ─────────────────────────────────────────────────────────
 
 const programSchema = yup.object({
-  // Step 1
-  title:      yup.string().min(3, "Title must be at least 3 characters").max(255, "Title is too long").required("Title is required"),
-  slug:       yup.string()
-    .test("slug-format", "Slug must be lowercase with hyphens only", v => !v || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v))
-    .max(255, "Slug is too long"),
-  thumbnail:  yup.string(),
-  price:      yup.string(),
-  level:      yup.string().oneOf(["BEGINNER", "INTERMEDIATE", "ADVANCED"], "Invalid level").required("Level is required"),
-  categoryId: yup.string(),
-  tagline:    yup.string().max(500, "Tagline is too long"),
-  featured:   yup.boolean().required(),
-  published:  yup.boolean().required(),
+  title:       yup.string().min(3, "Title must be at least 3 characters").max(255, "Title is too long").required("Title is required"),
+  slug:        yup.string().test("slug-format", "Slug must be lowercase with hyphens only", v => !v || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v)).max(255, "Slug is too long"),
+  excerpt:     yup.string().min(10, "Excerpt must be at least 10 characters").required("Excerpt / Summary is required"),
+  thumbnail:   yup.string(),
+  pricing:     yup.string().oneOf(["free", "paid"], "Invalid pricing").required("Pricing is required"),
+  paymentType: yup.string().when("pricing", {
+    is:   "paid",
+    then: s => s.required("Payment type is required for paid programmes"),
+  }),
+  price:       yup.string(),
+  level:       yup.string().oneOf(["BEGINNER", "INTERMEDIATE", "ADVANCED"], "Invalid level").required("Level is required"),
+  categoryId:  yup.string(),
+  tagline:     yup.string().max(500, "Tagline is too long"),
+  featured:    yup.boolean().required(),
+
+  format:    yup.string(),
+  duration:  yup.string(),
+  startDate: yup.string().when("format", {
+    is:   (f: string) => ["Cohort Based", "Live Online", "Blended"].includes(f),
+    then: s => s.required("Start date is required for this format"),
+  }),
+  endDate:   yup.string().when("format", {
+    is:   (f: string) => ["Cohort Based", "Live Online", "Blended"].includes(f),
+    then: s => s.required("End date is required for this format"),
+  }),
+  cohortSize: yup.string().when("format", {
+    is:   "Cohort Based",
+    then: s => s.required("Cohort size is required"),
+  }),
 
   // Step 2
-  description:    yup.string().min(10, "Description must be at least 10 characters").required("Description is required"),
-  duration:       yup.string(),
-  format:         yup.string(),
-  startDate:      yup.string(),
-  endDate:        yup.string(),
-  cohortSize:     yup.string(),
-  rating:         yup.string().test("rating-range", "Rating must be between 0 and 5", v => !v || (parseFloat(v) >= 0 && parseFloat(v) <= 5)),
-  reviewCount:    yup.string(),
-  enrolledCount:  yup.string(),
-  countriesCount: yup.string(),
+  overview:           yup.string(),
+  targetAudience:     yup.array(yup.string().default("")).min(1, "Add at least one target audience entry"),
+  learningObjectives: yup.array(yup.string().default("")).min(1, "Add at least one learning objective"),
+  whatIsIncluded:     yup.array(yup.string().default("")).min(1, "Add at least one item"),
 
   // Step 3
-  overview:           yup.string(),
-  targetAudience:     yup.array(yup.string().default("")),
-  learningObjectives: yup.array(yup.string().default("")),
-  whatIsIncluded:     yup.array(yup.string().default("")),
-
-  // Step 4 — Curriculum
   curriculum: yup.array(yup.object({
-    week:           yup.string(),
-    title:          yup.string().required("Module title is required"),
-    desc:           yup.string(),
-    isAssessment:   yup.boolean(),
-    assessmentLink: yup.string(),
+    title: yup.string().required("Chapter title is required"),
+    desc:  yup.string(),
     lessons: yup.array(yup.object({
-      title:         yup.string().required("Lesson title is required"),
-      description:   yup.string(),
-      embedUrls:     yup.array(yup.string().default("")),
-      referenceUrls: yup.array(yup.string().default("")),
+      title:       yup.string().required("Lesson title is required"),
+      description: yup.string(),
+      blocks:      yup.array(yup.mixed()).default([]),
     })),
   })),
 
-  // Step 5 — Facilitator
-  instructorName:        yup.string(),
-  instructorTitle:       yup.string(),
-  instructorBio:         yup.string(),
-  instructorCredentials: yup.array(yup.string().default("")),
+  // Step 4
+  facilitators: yup.array(yup.object({
+    name:        yup.string().required("Full name is required"),
+    imageUrl:    yup.string(),
+    title:       yup.string().required("Title / Role is required"),
+    bio:         yup.string().required("Biography is required").max(2000, "Biography is too long"),
+    credentials: yup.string(),
+  })).when("format", {
+    is:   (f: string) => ["Cohort Based", "Live Online", "Blended"].includes(f),
+    then: s => s.min(1, "At least one facilitator is required for this format"),
+  }),
 
-  // Step 6
+  // Step 5
   faqs: yup.array(yup.object({
     q: yup.string().required("Question is required"),
     a: yup.string(),
-  })),
+  })).min(1, "At least one FAQ is required"),
 })
 
 const STEP_FIELDS: Record<number, (keyof ProgramFormValues)[]> = {
-  1: ["title", "slug", "thumbnail", "price", "level", "categoryId", "tagline", "featured", "published"],
-  2: ["description", "duration", "format", "startDate", "endDate", "cohortSize", "rating", "reviewCount", "enrolledCount", "countriesCount"],
-  3: ["overview", "targetAudience", "learningObjectives", "whatIsIncluded"],
-  4: ["curriculum"],
-  5: ["instructorName", "instructorTitle", "instructorBio", "instructorCredentials"],
-  6: ["faqs"],
+  1: ["title", "slug", "excerpt", "thumbnail", "pricing", "paymentType", "price", "level", "categoryId", "tagline", "featured", "format", "duration", "startDate", "endDate", "cohortSize"],
+  2: ["overview", "targetAudience", "learningObjectives", "whatIsIncluded"],
+  3: ["curriculum"],
+  4: ["facilitators"],
+  5: ["faqs"],
 }
 
 // ── Inline field error ────────────────────────────────────────────────────────
@@ -526,30 +559,59 @@ function RichTextEditor({ value, onChange, placeholder }: {
   )
 }
 
-// ── Star rating picker ────────────────────────────────────────────────────────
+// ── Facilitator avatar upload ─────────────────────────────────────────────────
 
-function StarRating({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const current = parseFloat(value) || 0
+function FacilitatorAvatarUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false)
+  const { startUpload } = useUploadThing("imageUploader")
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const res = await startUpload([file])
+      if (res?.[0]?.url) onChange(res[0].url)
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ""
+    }
+  }
+
   return (
-    <div className="flex items-center gap-1.5 py-1">
-      {[1, 2, 3, 4, 5].map(n => (
-        <button
-          key={n}
-          type="button"
-          onClick={() => onChange(current === n ? "" : String(n))}
-          className={`cursor-pointer transition-colors ${n <= current ? "text-amber-400" : "text-[#D9D6CF] hover:text-amber-300"}`}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill={n <= current ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-          </svg>
-        </button>
-      ))}
-      {current > 0 && <span className="text-[12px] text-[#6B6560] ml-0.5">{current} / 5</span>}
+    <div className="flex items-center gap-3">
+      {value ? (
+        <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-[#E5E2DC] shrink-0 group">
+          <Image src={value} alt="Facilitator" fill className="object-cover" />
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      ) : (
+        <div className="w-14 h-14 rounded-full border-2 border-dashed border-[#E5E2DC] flex items-center justify-center shrink-0 text-[#A8A39C]">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border border-[#E5E2DC] rounded-[8px] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        {uploading ? "Uploading…" : value ? "Change photo" : "Upload photo"}
+      </button>
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
     </div>
   )
 }
 
-// ── Lessons editor (nested within a module) ───────────────────────────────────
+// ── Lessons editor (nested within a chapter) ──────────────────────────────────
 
 function LessonsEditor({
   control, register, errors, moduleIndex,
@@ -577,9 +639,10 @@ function LessonsEditor({
             </button>
           </div>
           <div className="px-3 py-3 space-y-3">
-            <Field label="Title">
+            <Field label="Title" required>
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               <input {...register(`curriculum.${moduleIndex}.lessons.${j}.title` as any)} className={inputCls} placeholder="e.g. Introduction to Results Frameworks" />
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               <FieldError msg={(errors.curriculum?.[moduleIndex] as any)?.lessons?.[j]?.title?.message} />
             </Field>
             <Field label="Short Description">
@@ -596,32 +659,15 @@ function LessonsEditor({
                 )}
               />
             </Field>
-            <Field label="Embedded Content" hint="Video / Google Doc / Learning material URLs">
+            <Field label="Embedded Content">
               <Controller
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                name={`curriculum.${moduleIndex}.lessons.${j}.embedUrls` as any}
+                name={`curriculum.${moduleIndex}.lessons.${j}.blocks` as any}
                 control={control}
                 render={({ field }) => (
-                  <StringListEditor
-                    items={(field.value as string[]) ?? []}
+                  <ContentBlockEditor
+                    blocks={(field.value as ContentBlock[]) ?? []}
                     onChange={field.onChange}
-                    placeholder="https://youtu.be/... or https://docs.google.com/..."
-                    addLabel="Add embed"
-                  />
-                )}
-              />
-            </Field>
-            <Field label="Reference Materials" hint="Supporting resource URLs">
-              <Controller
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                name={`curriculum.${moduleIndex}.lessons.${j}.referenceUrls` as any}
-                control={control}
-                render={({ field }) => (
-                  <StringListEditor
-                    items={(field.value as string[]) ?? []}
-                    onChange={field.onChange}
-                    placeholder="https://resource.org/..."
-                    addLabel="Add reference"
                   />
                 )}
               />
@@ -631,7 +677,7 @@ function LessonsEditor({
       ))}
       <button
         type="button"
-        onClick={() => append({ title: "", description: "", embedUrls: [], referenceUrls: [] } as never)}
+        onClick={() => append({ title: "", description: "", blocks: [] } as never)}
         className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
       >
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -641,7 +687,7 @@ function LessonsEditor({
   )
 }
 
-// ── Curriculum module card (watches isAssessment for conditional render) ───────
+// ── Curriculum chapter card ───────────────────────────────────────────────────
 
 function CurriculumModuleCard({
   control, register, errors, index, onRemove,
@@ -652,30 +698,19 @@ function CurriculumModuleCard({
   index:    number
   onRemove: () => void
 }) {
-  const isAssessment = useWatch({
-    control,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    name: `curriculum.${index}.isAssessment` as any,
-  })
-
   return (
     <div className="border border-[#E5E2DC] rounded-[12px] overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-b border-[#E5E2DC]">
-        <span className="text-[11px] font-bold text-[#0474C4] uppercase tracking-wide">Module {index + 1}</span>
+        <span className="text-[11px] font-bold text-[#0474C4] uppercase tracking-wide">Chapter {index + 1}</span>
         <button type="button" onClick={onRemove} className="w-6 h-6 flex items-center justify-center rounded-full text-[#A8A39C] hover:bg-red-50 hover:text-red-500 cursor-pointer">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div className="px-4 py-3 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Week">
-            <input {...register(`curriculum.${index}.week`)} className={inputCls} placeholder="e.g. Week 1" />
-          </Field>
-          <Field label="Title">
-            <input {...register(`curriculum.${index}.title`)} className={inputCls} placeholder="e.g. Foundations of M&E" />
-            <FieldError msg={errors.curriculum?.[index]?.title?.message} />
-          </Field>
-        </div>
+        <Field label="Title" required>
+          <input {...register(`curriculum.${index}.title`)} className={inputCls} placeholder="e.g. Foundations of M&E" />
+          <FieldError msg={errors.curriculum?.[index]?.title?.message} />
+        </Field>
         <Field label="Description">
           <Controller
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -685,30 +720,11 @@ function CurriculumModuleCard({
               <RichTextEditor
                 value={(field.value as string) ?? ""}
                 onChange={field.onChange}
-                placeholder="Brief overview of this module…"
+                placeholder="Brief overview of this chapter…"
               />
             )}
           />
         </Field>
-        <div className="flex items-center gap-3 py-1">
-          <Controller
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            name={`curriculum.${index}.isAssessment` as any}
-            control={control}
-            render={({ field }) => (
-              <Toggle label="Assessment Module" checked={!!field.value} onChange={field.onChange} />
-            )}
-          />
-        </div>
-        {isAssessment && (
-          <Field label="Assessment Link" hint="Google Form, Typeform, etc.">
-            <input
-              {...register(`curriculum.${index}.assessmentLink`)}
-              className={inputCls}
-              placeholder="https://forms.google.com/..."
-            />
-          </Field>
-        )}
         <LessonsEditor control={control} register={register} errors={errors} moduleIndex={index} />
       </div>
     </div>
@@ -739,18 +755,113 @@ function CurriculumEditor({
       ))}
       <button
         type="button"
-        onClick={() => append({
-          week: `Week ${fields.length + 1}`, title: "", desc: "",
-          isAssessment: false, assessmentLink: "", lessons: [],
-        })}
+        onClick={() => append({ title: "", desc: "", lessons: [] })}
         className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Module
+        Add Chapter
       </button>
     </div>
   )
 }
+
+// ── Facilitators editor ───────────────────────────────────────────────────────
+
+function FacilitatorsEditor({
+  control, register, errors,
+}: {
+  control:  Control<ProgramFormValues>
+  register: UseFormRegister<ProgramFormValues>
+  errors:   FieldErrors<ProgramFormValues>
+}) {
+  const { fields, append, remove } = useFieldArray({ control, name: "facilitators" })
+  return (
+    <div className="space-y-4">
+      {fields.length === 0 && (
+        <p className="text-[12px] text-[#A8A39C] italic">No facilitators added yet.</p>
+      )}
+      {fields.map((field, i) => (
+        <div key={field.id} className="border border-[#E5E2DC] rounded-[12px] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-b border-[#E5E2DC]">
+            <span className="text-[11px] font-bold text-[#0474C4] uppercase tracking-wide">Facilitator {i + 1}</span>
+            <button type="button" onClick={() => remove(i)} className="w-6 h-6 flex items-center justify-center rounded-full text-[#A8A39C] hover:bg-red-50 hover:text-red-500 cursor-pointer">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div className="px-4 py-4 space-y-3">
+            <Field label="Photo" hint="optional">
+              <Controller
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                name={`facilitators.${i}.imageUrl` as any}
+                control={control}
+                render={({ field }) => (
+                  <FacilitatorAvatarUpload
+                    value={(field.value as string) ?? ""}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+            </Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Full Name" required>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                <input {...register(`facilitators.${i}.name` as any)} className={inputCls} placeholder="e.g. Dr. Rachel Osei" />
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                <FieldError msg={(errors.facilitators?.[i] as any)?.name?.message} />
+              </Field>
+              <Field label="Title / Role" required>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                <input {...register(`facilitators.${i}.title` as any)} className={inputCls} placeholder="e.g. Senior Researcher & M&E Specialist" />
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                <FieldError msg={(errors.facilitators?.[i] as any)?.title?.message} />
+              </Field>
+            </div>
+            <Field label="Biography" required hint="max 2000 characters">
+              <Controller
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                name={`facilitators.${i}.bio` as any}
+                control={control}
+                render={({ field }) => (
+                  <RichTextEditor
+                    value={(field.value as string) ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Short biography of the programme facilitator…"
+                  />
+                )}
+              />
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <FieldError msg={(errors.facilitators?.[i] as any)?.bio?.message} />
+            </Field>
+            <Field label="Credentials" hint="optional — separate by line">
+              <textarea
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                {...register(`facilitators.${i}.credentials` as any)}
+                rows={2}
+                className={inputCls}
+                placeholder="e.g. PhD Research Methods — University of Ghana"
+              />
+            </Field>
+          </div>
+        </div>
+      ))}
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      {(errors.facilitators as any)?.message && (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        <p className="text-[11px] text-red-600">{(errors.facilitators as any).message}</p>
+      )}
+      <button
+        type="button"
+        onClick={() => append({ name: "", imageUrl: "", title: "", bio: "", credentials: "" })}
+        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Facilitator
+      </button>
+    </div>
+  )
+}
+
+// ── FAQ editor ────────────────────────────────────────────────────────────────
 
 function FaqEditor({
   control, register, errors,
@@ -775,7 +886,7 @@ function FaqEditor({
             </button>
           </div>
           <div className="px-4 py-3 space-y-3">
-            <Field label="Question">
+            <Field label="Question" required>
               <input {...register(`faqs.${i}.q`)} className={inputCls} placeholder="e.g. Do I need prior M&E experience to enrol?" />
               <FieldError msg={errors.faqs?.[i]?.q?.message} />
             </Field>
@@ -785,6 +896,11 @@ function FaqEditor({
           </div>
         </div>
       ))}
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      {(errors.faqs as any)?.message && (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        <p className="text-[11px] text-red-600">{(errors.faqs as any).message}</p>
+      )}
       <button
         type="button"
         onClick={() => append({ q: "", a: "" })}
@@ -810,48 +926,46 @@ function ProgramModal({
   const [serverError, setServerError] = useState("")
 
   const defaultValues: ProgramFormValues = program ? {
-    title:      program.title,
-    slug:       program.slug,
-    thumbnail:  program.thumbnail ?? "",
-    price:      String(program.price),
-    level:      program.level,
-    categoryId: program.categoryId ?? "",
-    tagline:    program.tagline    ?? "",
-    featured:   program.featured,
-    published:  program.published,
-    description:    program.description,
-    duration:       program.duration    ?? "",
-    format:         program.format      ?? "",
-    startDate:      program.startDate    ?? "",
-    endDate:        program.endDate      ?? "",
-    cohortSize:     program.cohortSize  != null ? String(program.cohortSize)    : "",
-    rating:         program.rating      != null ? String(program.rating)         : "",
-    reviewCount:    program.reviewCount != null ? String(program.reviewCount)    : "",
-    enrolledCount:  program.enrolledCount  != null ? String(program.enrolledCount)  : "",
-    countriesCount: program.countriesCount != null ? String(program.countriesCount) : "",
-    overview:       program.overview ?? "",
-    targetAudience: Array.isArray(program.targetAudience) ? (program.targetAudience as string[]) : [],
+    title:       program.title,
+    slug:        program.slug,
+    excerpt:     program.excerpt,
+    thumbnail:   program.thumbnail   ?? "",
+    pricing:     program.pricing     ?? "free",
+    paymentType: program.paymentType ?? "",
+    price:       String(program.price),
+    level:       program.level,
+    categoryId:  program.categoryId  ?? "",
+    tagline:     program.tagline     ?? "",
+    featured:    program.featured,
+    format:      program.format     ?? "",
+    duration:    program.duration   ?? "",
+    startDate:   program.startDate  ?? "",
+    endDate:     program.endDate    ?? "",
+    cohortSize:  program.cohortSize != null ? String(program.cohortSize) : "",
+    overview:           program.overview ?? "",
+    targetAudience:     Array.isArray(program.targetAudience)     ? (program.targetAudience as string[])     : [],
     learningObjectives: Array.isArray(program.learningObjectives) ? (program.learningObjectives as string[]) : [],
-    whatIsIncluded: Array.isArray(program.whatIsIncluded)  ? (program.whatIsIncluded as string[])  : [],
-    instructorName:       program.instructorName      ?? "",
-    instructorTitle:      program.instructorTitle     ?? "",
-    instructorBio:        program.instructorBio       ?? "",
-    instructorCredentials: Array.isArray(program.instructorCredentials) ? (program.instructorCredentials as string[]) : [],
+    whatIsIncluded:     Array.isArray(program.whatIsIncluded)     ? (program.whatIsIncluded as string[])     : [],
     curriculum: Array.isArray(program.curriculum)
       ? (program.curriculum as Record<string, unknown>[]).map(m => ({
-          week:           String(m.week           ?? ""),
-          title:          String(m.title          ?? ""),
-          desc:           String(m.desc           ?? ""),
-          isAssessment:   Boolean(m.isAssessment  ?? false),
-          assessmentLink: String(m.assessmentLink ?? ""),
+          title: String(m.title ?? ""),
+          desc:  String(m.desc  ?? ""),
           lessons: Array.isArray(m.lessons)
             ? (m.lessons as Record<string, unknown>[]).map(l => ({
-                title:         String(l.title       ?? ""),
-                description:   String(l.description ?? ""),
-                embedUrls:     Array.isArray(l.embedUrls)     ? l.embedUrls     as string[] : [],
-                referenceUrls: Array.isArray(l.referenceUrls) ? l.referenceUrls as string[] : [],
+                title:       String(l.title       ?? ""),
+                description: String(l.description ?? ""),
+                blocks:      Array.isArray(l.blocks) ? l.blocks as ContentBlock[] : [],
               }))
             : [],
+        }))
+      : [],
+    facilitators: Array.isArray(program.facilitators)
+      ? (program.facilitators as Record<string, unknown>[]).map(f => ({
+          name:        String(f.name        ?? ""),
+          imageUrl:    String(f.imageUrl    ?? ""),
+          title:       String(f.title       ?? ""),
+          bio:         String(f.bio         ?? ""),
+          credentials: String(f.credentials ?? ""),
         }))
       : [],
     faqs: Array.isArray(program.faqs) ? (program.faqs as FaqItem[]) : [],
@@ -876,17 +990,31 @@ function ProgramModal({
     }
   }, [watchedTitle, program, setValue])
 
-  // Auto-compute end date from start date + duration (weeks)
+  // Format-aware config
+  const watchedFormat = watch("format")
+  const formatCfg     = FORMAT_CONFIGS[watchedFormat] ?? DEFAULT_FORMAT_CFG
+
+  // Pricing watcher — clear price/paymentType when free
+  const watchedPricing = watch("pricing")
+  useEffect(() => {
+    if (watchedPricing === "free") {
+      setValue("price", "0", { shouldValidate: false, shouldDirty: false })
+      setValue("paymentType", "", { shouldValidate: false, shouldDirty: false })
+    }
+  }, [watchedPricing, setValue])
+
+  // Auto-compute end date from start date + duration (not for Live Online)
   const watchedStartDate = watch("startDate")
   const watchedDuration  = watch("duration")
   useEffect(() => {
+    if (formatCfg.endEditable) return
     const weeks = parseInt(watchedDuration ?? "") || 0
     if (watchedStartDate && weeks > 0) {
       const d = new Date(watchedStartDate)
       d.setDate(d.getDate() + weeks * 7)
       setValue("endDate", d.toISOString().split("T")[0], { shouldValidate: false, shouldDirty: false })
     }
-  }, [watchedStartDate, watchedDuration, setValue])
+  }, [watchedStartDate, watchedDuration, formatCfg.endEditable, setValue])
 
   async function handleNext() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -913,28 +1041,28 @@ function ProgramModal({
   const isLast = step === STEPS.length
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-end bg-black/40">
+    <div className="fixed inset-0 z-100 flex items-start justify-end bg-black/40">
       <div className="bg-white h-full w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E2DC] shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-[10px] bg-[#EEF6FF] flex items-center justify-center shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0474C4" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-[15px] font-bold text-[#1A1916] leading-tight">
-                {program ? "Edit Program" : "New Program"}
-              </h2>
-              <p className="text-[12px] text-[#A8A39C] mt-0.5">{STEPS[step - 1].desc}</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#F5F4F1] text-[#A8A39C] cursor-pointer">
+        <div className="bg-[#0474C4] px-6 py-5 shrink-0 relative">
+          <button type="button" onClick={onClose} className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white uppercase tracking-wider">
+              {program ? "Edit Program" : "New Program"}
+            </span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 text-white/70 uppercase tracking-wider">
+              {STEPS[step - 1].label}
+            </span>
+          </div>
+          <h2 className="text-[18px] font-extrabold text-white leading-tight">
+            {program ? program.title : "Create Program"}
+          </h2>
+          <p className="text-[12px] text-white/80 mt-1">
+            {STEPS[step - 1].desc}
+          </p>
         </div>
 
         {/* Step indicator */}
@@ -949,9 +1077,9 @@ function ProgramModal({
             <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{serverError}</p>
           )}
 
-          {/* Step 1 — Basic Info */}
+          {/* Step 1 — Basic Info + Programme Info (merged) */}
           {step === 1 && <>
-            <Field label="Thumbnail">
+            <Field label="Thumbnail" required>
               <Controller
                 name="thumbnail"
                 control={control}
@@ -962,16 +1090,23 @@ function ProgramModal({
               <input autoFocus {...register("title")} className={inputCls} placeholder="e.g. African Policy Leadership Programme" />
               <FieldError msg={errors.title?.message} />
             </Field>
-            <Field label="Slug" hint="Auto-generated from title">
-              <input {...register("slug")} className={inputCls} placeholder="e.g. african-policy-leadership-programme" />
-              <FieldError msg={errors.slug?.message} />
+            <Field label="Slug" hint="auto-generated — read only">
+              <input
+                {...register("slug")}
+                readOnly
+                className={`${inputCls} bg-[#FAFAF9] text-[#6B6560] cursor-default`}
+              />
             </Field>
-            <Field label="Tagline" hint="Short subtitle shown on listing cards">
+            <Field label="Excerpt / Summary" required hint="Short note shown on listing cards">
+              <textarea {...register("excerpt")} rows={3} className={inputCls} placeholder="A concise summary of this programme…" />
+              <FieldError msg={errors.excerpt?.message} />
+            </Field>
+            <Field label="Tagline" hint="Optional subtitle">
               <input {...register("tagline")} className={inputCls} placeholder="e.g. Master results-based frameworks and evaluation methods" />
               <FieldError msg={errors.tagline?.message} />
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Category">
+              <Field label="Category" required>
                 <select {...register("categoryId")} className={inputCls}>
                   <option value="">— None —</option>
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -986,87 +1121,86 @@ function ProgramModal({
                 <FieldError msg={errors.level?.message} />
               </Field>
             </div>
-            <Field label="Price" hint="0 = Free">
-              <input type="number" min="0" step="0.01" {...register("price")} className={inputCls} placeholder="0" />
-              <FieldError msg={errors.price?.message} />
-            </Field>
+
+            {/* Pricing block */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Pricing" required>
+                <select {...register("pricing")} className={inputCls}>
+                  <option value="free">Free</option>
+                  <option value="paid">Paid</option>
+                </select>
+                <FieldError msg={errors.pricing?.message} />
+              </Field>
+              {watchedPricing === "paid" && (
+                <Field label="Payment Type" required>
+                  <select {...register("paymentType")} className={inputCls}>
+                    <option value="">— Select —</option>
+                    <option value="one-time">One-time payment</option>
+                    <option value="subscription">Subscription / Membership</option>
+                    <option value="monthly">Monthly Payment Plan</option>
+                  </select>
+                  <FieldError msg={errors.paymentType?.message} />
+                </Field>
+              )}
+            </div>
+            {watchedPricing === "paid" && (
+              <Field label="Price (USD)" required>
+                <input type="number" min="0" step="0.01" {...register("price")} className={inputCls} placeholder="e.g. 499" />
+                <FieldError msg={errors.price?.message} />
+              </Field>
+            )}
+
             <div className="flex items-center gap-6 pt-1">
               <Controller
                 name="featured"
                 control={control}
                 render={({ field }) => <Toggle label="Featured" checked={!!field.value} onChange={field.onChange} />}
               />
-              <Controller
-                name="published"
-                control={control}
-                render={({ field }) => <Toggle label="Published" checked={!!field.value} onChange={field.onChange} />}
-              />
             </div>
-          </>}
 
-          {/* Step 2 — Programme Info */}
-          {step === 2 && <>
-            <Field label="Description" required>
-              <textarea {...register("description")} rows={5} className={inputCls} placeholder="A detailed overview of this programme…" />
-              <FieldError msg={errors.description?.message} />
-            </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Duration" hint="Weeks">
-                <input type="number" min="1" {...register("duration")} className={inputCls} placeholder="e.g. 8" />
-              </Field>
-              <Field label="Format">
-                <Controller
-                  name="format"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-full h-auto px-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none focus:border-[#0474C4] transition-colors data-placeholder:text-[#A8A39C]">
-                        <SelectValue placeholder="— Select —" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Self-Paced">Self-Paced</SelectItem>
-                        <SelectItem value="Cohort Based">Cohort Based</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </Field>
-              <Field label="Start Date">
-                <input type="date" {...register("startDate")} className={inputCls} />
-              </Field>
-              <Field label="End Date" hint="Auto-calculated from start date + duration">
-                <input type="date" {...register("endDate")} readOnly className={`${inputCls} bg-[#FAFAF9] text-[#6B6560] cursor-default`} />
-              </Field>
-              <Field label="Program Pool Size">
-                <input type="number" min="1" {...register("cohortSize")} className={inputCls} placeholder="e.g. 35" />
-              </Field>
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px] mb-3 border-b border-[#E5E2DC] pb-2">Social Proof</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <Field label="Rating">
-                  <Controller
-                    name="rating"
-                    control={control}
-                    render={({ field }) => <StarRating value={field.value ?? ""} onChange={field.onChange} />}
-                  />
-                  <FieldError msg={errors.rating?.message} />
+            {/* Programme details */}
+            <div className="border-t border-[#E5E2DC] pt-4">
+              <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px] mb-3">Programme Details</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="Format">
+                  <select {...register("format")} className={inputCls}>
+                    <option value="">— Select —</option>
+                    <option value="Self-Paced">Self-Paced</option>
+                    <option value="Cohort Based">Cohort Based</option>
+                    <option value="Live Online">Live Online</option>
+                    <option value="Blended">Blended</option>
+                  </select>
                 </Field>
-                <Field label="Reviews">
-                  <input type="number" min="0" {...register("reviewCount")} className={inputCls} placeholder="312" />
+                <Field label={formatCfg.durationLabel} hint={formatCfg.durationHint}>
+                  <input type="number" min="1" {...register("duration")} className={inputCls} placeholder="e.g. 8" />
                 </Field>
-                <Field label="Enrolled" hint="Display">
-                  <input type="number" min="0" {...register("enrolledCount")} className={inputCls} placeholder="2100" />
-                </Field>
-                <Field label="Countries">
-                  <input type="number" min="0" {...register("countriesCount")} className={inputCls} placeholder="120" />
-                </Field>
+                {formatCfg.showDates && <>
+                  <Field label="Start Date" required>
+                    <input type="date" {...register("startDate")} className={inputCls} />
+                    <FieldError msg={errors.startDate?.message} />
+                  </Field>
+                  <Field label="End Date" hint={formatCfg.endHint} required>
+                    <input
+                      type="date"
+                      {...register("endDate")}
+                      readOnly={!formatCfg.endEditable}
+                      className={`${inputCls} ${!formatCfg.endEditable ? "bg-[#FAFAF9] text-[#6B6560] cursor-default" : ""}`}
+                    />
+                    <FieldError msg={errors.endDate?.message} />
+                  </Field>
+                </>}
+                {formatCfg.showCohortSize && (
+                  <Field label="Cohort Size" required>
+                    <input type="number" min="1" {...register("cohortSize")} className={inputCls} placeholder="e.g. 35" />
+                    <FieldError msg={errors.cohortSize?.message} />
+                  </Field>
+                )}
               </div>
             </div>
           </>}
 
-          {/* Step 3 — Objectives */}
-          {step === 3 && <>
+          {/* Step 2 — Objectives */}
+          {step === 2 && <>
             <Field label="Overview">
               <Controller
                 name="overview"
@@ -1080,7 +1214,7 @@ function ProgramModal({
                 )}
               />
             </Field>
-            <Field label="Learning Objectives">
+            <Field label="Learning Objectives" required>
               <Controller
                 name="learningObjectives"
                 control={control}
@@ -1093,8 +1227,10 @@ function ProgramModal({
                   />
                 )}
               />
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <FieldError msg={(errors.learningObjectives as any)?.message} />
             </Field>
-            <Field label="Target Audience">
+            <Field label="Target Audience" required>
               <Controller
                 name="targetAudience"
                 control={control}
@@ -1107,8 +1243,10 @@ function ProgramModal({
                   />
                 )}
               />
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <FieldError msg={(errors.targetAudience as any)?.message} />
             </Field>
-            <Field label="What's Included">
+            <Field label="What's Included" required>
               <Controller
                 name="whatIsIncluded"
                 control={control}
@@ -1121,58 +1259,33 @@ function ProgramModal({
                   />
                 )}
               />
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <FieldError msg={(errors.whatIsIncluded as any)?.message} />
             </Field>
           </>}
 
-          {/* Step 4 — Curriculum */}
-          {step === 4 && <>
+          {/* Step 3 — Curriculum */}
+          {step === 3 && <>
             <p className="text-[13px] text-[#6B6560] leading-relaxed">
-              Build the weekly programme outline. Each module appears as an accordion on the public page.
+              Build the programme outline. Each chapter appears as an accordion on the public page.
             </p>
             <CurriculumEditor control={control} register={register} errors={errors} />
           </>}
 
-          {/* Step 5 — Facilitator */}
-          {step === 5 && <>
-            <Field label="Full Name">
-              <input {...register("instructorName")} className={inputCls} placeholder="e.g. Dr. Rachel Osei" />
-            </Field>
-            <Field label="Title / Role">
-              <input {...register("instructorTitle")} className={inputCls} placeholder="e.g. Senior Researcher & M&E Specialist · ARPS Institute" />
-            </Field>
-            <Field label="Biography">
-              <Controller
-                name="instructorBio"
-                control={control}
-                render={({ field }) => (
-                  <RichTextEditor
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    placeholder="Short biography of the programme facilitator…"
-                  />
-                )}
-              />
-            </Field>
-            <Field label="Credentials">
-              <Controller
-                name="instructorCredentials"
-                control={control}
-                render={({ field }) => (
-                  <StringListEditor
-                    items={field.value ?? []}
-                    onChange={field.onChange}
-                    placeholder="e.g. PhD Research Methods — University of Ghana"
-                    addLabel="Add credential"
-                  />
-                )}
-              />
-            </Field>
+          {/* Step 4 — Facilitators */}
+          {step === 4 && <>
+            {formatCfg.facilitatorRequired && (
+              <p className="text-[12px] text-[#0474C4] bg-[#EBF3FC] rounded-[10px] px-3 py-2">
+                At least one facilitator is required for <strong>{watchedFormat}</strong> programmes.
+              </p>
+            )}
+            <FacilitatorsEditor control={control} register={register} errors={errors} />
           </>}
 
-          {/* Step 6 — FAQs */}
-          {step === 6 && <>
+          {/* Step 5 — FAQs */}
+          {step === 5 && <>
             <p className="text-[13px] text-[#6B6560] leading-relaxed">
-              Add frequently asked questions shown in an accordion on the programme page.
+              Add frequently asked questions shown in an accordion on the programme page. At least one FAQ is required.
             </p>
             <FaqEditor control={control} register={register} errors={errors} />
           </>}
@@ -1220,15 +1333,13 @@ function ProgramModal({
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function InstructorProgramsPage() {
-  // Programs
   const [programs, setPrograms]               = useState<Program[]>([])
   const [programsLoading, setProgramsLoading] = useState(true)
   const [search, setSearch]                   = useState("")
   const [levelFilter, setLevelFilter]         = useState<CourseLevel | "All">("All")
-  const [statusFilter, setStatusFilter]       = useState<"All" | "Published" | "Drafts" | "Featured">("All")
+  const [pricingFilter, setPricingFilter]     = useState<"All" | "Free" | "Paid" | "Featured">("All")
   const [programModal, setProgramModal]       = useState<"create" | Program | null>(null)
   const [deleteProgram, setDeleteProgram]     = useState<Program | null>(null)
-  const [togglingIds, setTogglingIds]         = useState<Set<string>>(new Set())
   const [filterOpen, setFilterOpen]           = useState(false)
   const [statusOpen, setStatusOpen]           = useState(false)
   const filterRef                             = useRef<HTMLDivElement>(null)
@@ -1236,10 +1347,7 @@ export default function InstructorProgramsPage() {
   const PAGE_SIZE                             = 20
   const [page, setPage]                       = useState(1)
 
-  // Categories (read-only — used only in the form dropdown)
   const [categories, setCategories] = useState<Category[]>([])
-
-  // ── Fetch ──────────────────────────────────────────────────────────────────
 
   const fetchPrograms = useCallback(async () => {
     setProgramsLoading(true)
@@ -1253,13 +1361,9 @@ export default function InstructorProgramsPage() {
   }, [])
 
   const fetchCategories = useCallback(async () => {
-    try {
-      const r = await fetch("/api/programs/categories")
-      const d = await r.json()
-      if (r.ok) setCategories(d.categories ?? [])
-    } catch {
-      // categories are optional; silently ignore failures
-    }
+    const r = await fetch("/api/programs/categories")
+    const d = await r.json()
+    if (r.ok) setCategories(d.categories ?? [])
   }, [])
 
   useEffect(() => { fetchPrograms(); fetchCategories() }, [fetchPrograms, fetchCategories])
@@ -1273,19 +1377,18 @@ export default function InstructorProgramsPage() {
     return () => document.removeEventListener("mousedown", h)
   }, [])
 
-  // ── CSV export ─────────────────────────────────────────────────────────────
-
   function exportCSV() {
-    const headers = ["Title", "Slug", "Category", "Level", "Price", "Enrolled", "Status", "Featured", "Created"]
+    const headers = ["Title", "Slug", "Category", "Level", "Pricing", "Price", "Facilitators", "Enrolled", "Featured", "Created"]
     const rows = filteredPrograms.map(p => [
       `"${p.title.replace(/"/g, '""')}"`,
       p.slug,
       p.category?.name ?? "",
       LEVEL_LABELS[p.level],
-      fmtPrice(p.price),
+      p.pricing,
+      fmtPrice(p.price, p.pricing),
+      `"${facilitatorSummary(p).replace(/"/g, '""')}"`,
       String(p._count.enrollments),
-      p.published ? "Published" : "Draft",
-      p.featured  ? "Yes" : "No",
+      p.featured ? "Yes" : "No",
       fmtDate(p.createdAt),
     ])
     const csv  = [headers.join(","), ...rows.map(r => r.join(","))].join("\n")
@@ -1295,8 +1398,6 @@ export default function InstructorProgramsPage() {
     a.href = url; a.download = `my-programs-${new Date().toISOString().slice(0, 10)}.csv`; a.click()
     URL.revokeObjectURL(url)
   }
-
-  // ── Program CRUD ──────────────────────────────────────────────────────────
 
   function filterArr(arr: string[]): string[] | null {
     const f = arr.filter(s => s.trim())
@@ -1309,21 +1410,25 @@ export default function InstructorProgramsPage() {
     const curriculumPayload = values.curriculum
       .filter(m => m.title.trim())
       .map(m => ({
-        week:           m.week,
-        title:          m.title,
-        desc:           m.desc || null,
-        isAssessment:   m.isAssessment,
-        assessmentLink: m.isAssessment ? (m.assessmentLink || null) : null,
-        lessons: !m.isAssessment
-          ? m.lessons
-              .filter(l => l.title.trim())
-              .map(l => ({
-                title:         l.title,
-                description:   l.description || null,
-                embedUrls:     l.embedUrls.filter(Boolean),
-                referenceUrls: l.referenceUrls.filter(Boolean),
-              }))
-          : [],
+        title: m.title,
+        desc:  m.desc || null,
+        lessons: m.lessons
+          .filter(l => l.title.trim())
+          .map(l => ({
+            title:       l.title,
+            description: l.description || null,
+            blocks:      l.blocks ?? [],
+          })),
+      }))
+
+    const facilitatorsPayload = values.facilitators
+      .filter(f => f.name.trim())
+      .map(f => ({
+        name:        f.name.trim(),
+        imageUrl:    f.imageUrl?.trim() || null,
+        title:       f.title.trim(),
+        bio:         f.bio,
+        credentials: f.credentials?.trim() || null,
       }))
 
     const faqsPayload = values.faqs.filter(f => f.q.trim())
@@ -1331,38 +1436,29 @@ export default function InstructorProgramsPage() {
     const payload = {
       title:       values.title,
       slug:        values.slug || slugify(values.title),
-      description: values.description,
+      excerpt:     values.excerpt,
       thumbnail:   values.thumbnail || null,
-      price:       parseFloat(values.price) || 0,
+      pricing:     values.pricing,
+      paymentType: values.pricing === "paid" ? (values.paymentType || null) : null,
+      price:       values.pricing === "paid" ? (parseFloat(values.price) || 0) : 0,
       level:       values.level,
       categoryId:  values.categoryId || null,
       featured:    values.featured,
-      published:   values.published,
 
-      tagline:        values.tagline        || null,
-      duration:       values.duration       || null,
-      format:         values.format         || null,
-      startDate:      values.startDate       || null,
-      endDate:        values.endDate         || null,
-      cohortSize:     values.cohortSize      ? parseInt(values.cohortSize)    : null,
-      rating:         values.rating         ? parseFloat(values.rating)       : null,
-      reviewCount:    values.reviewCount    ? parseInt(values.reviewCount)    : null,
-      enrolledCount:  values.enrolledCount  ? parseInt(values.enrolledCount)  : null,
-      countriesCount: values.countriesCount ? parseInt(values.countriesCount) : null,
+      tagline:    values.tagline    || null,
+      duration:   values.duration   || null,
+      format:     values.format     || null,
+      startDate:  values.startDate  || null,
+      endDate:    values.endDate    || null,
+      cohortSize: values.cohortSize  ? parseInt(values.cohortSize) : null,
 
-      overview:              values.overview || null,
-      targetAudience:        filterArr(values.targetAudience),
-      learningObjectives:    filterArr(values.learningObjectives),
-      whatIsIncluded:        filterArr(values.whatIsIncluded),
-      instructorName:        values.instructorName      || null,
-      instructorTitle:       values.instructorTitle     || null,
-      instructorInitials:    values.instructorName
-        ? values.instructorName.split(/\s+/).filter(Boolean).map(w => w[0].toUpperCase()).join("").slice(0, 4)
-        : null,
-      instructorBio:         values.instructorBio       || null,
-      instructorCredentials: filterArr(values.instructorCredentials),
-      curriculum:            curriculumPayload.length > 0 ? curriculumPayload : null,
-      faqs:                  faqsPayload.length     > 0 ? faqsPayload     : null,
+      overview:           values.overview || null,
+      targetAudience:     filterArr(values.targetAudience),
+      learningObjectives: filterArr(values.learningObjectives),
+      whatIsIncluded:     filterArr(values.whatIsIncluded),
+      curriculum:         curriculumPayload.length   > 0 ? curriculumPayload   : null,
+      facilitators:       facilitatorsPayload.length > 0 ? facilitatorsPayload : null,
+      faqs:               faqsPayload.length         > 0 ? faqsPayload         : null,
     }
     const res  = await fetch(editing ? `/api/instructor/programs/${editing.id}` : "/api/instructor/programs", {
       method:  editing ? "PUT" : "POST",
@@ -1373,22 +1469,6 @@ export default function InstructorProgramsPage() {
     if (!res.ok) throw new Error(data.error ?? "Failed to save program.")
     setProgramModal(null)
     await fetchPrograms()
-  }
-
-  async function handleTogglePublished(p: Program) {
-    setTogglingIds(prev => new Set(prev).add(p.id))
-    try {
-      const r = await fetch(`/api/instructor/programs/${p.id}`, {
-        method:  "PUT",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ published: !p.published }),
-      })
-      if (r.ok) {
-        setPrograms(prev => prev.map(x => x.id === p.id ? { ...x, published: !x.published } : x))
-      }
-    } finally {
-      setTogglingIds(prev => { const s = new Set(prev); s.delete(p.id); return s })
-    }
   }
 
   async function handleDeleteProgram() {
@@ -1403,38 +1483,35 @@ export default function InstructorProgramsPage() {
     await fetchPrograms()
   }
 
-  // ── Derived ────────────────────────────────────────────────────────────────
-
-  useEffect(() => { setPage(1) }, [search, levelFilter, statusFilter])
+  useEffect(() => { setPage(1) }, [search, levelFilter, pricingFilter])
 
   const filteredPrograms = programs.filter(p => {
-    const matchStatus =
-      statusFilter === "All"       ? true :
-      statusFilter === "Published" ? p.published :
-      statusFilter === "Drafts"    ? !p.published :
-      statusFilter === "Featured"  ? p.featured : true
+    const matchPricing =
+      pricingFilter === "All"      ? true :
+      pricingFilter === "Free"     ? p.pricing === "free" :
+      pricingFilter === "Paid"     ? p.pricing === "paid" :
+      pricingFilter === "Featured" ? p.featured : true
 
     const matchLevel = levelFilter === "All" || p.level === levelFilter
 
     const q = search.toLowerCase()
-    return matchStatus && matchLevel && (
+    return matchPricing && matchLevel && (
       !q ||
       p.title.toLowerCase().includes(q) ||
+      facilitatorSummary(p).toLowerCase().includes(q) ||
       (p.category?.name ?? "").toLowerCase().includes(q)
     )
   })
 
   const counts = {
-    all:       programs.length,
-    published: programs.filter(p => p.published).length,
-    draft:     programs.filter(p => !p.published).length,
-    featured:  programs.filter(p => p.featured).length,
+    all:      programs.length,
+    free:     programs.filter(p => p.pricing === "free").length,
+    paid:     programs.filter(p => p.pricing === "paid").length,
+    featured: programs.filter(p => p.featured).length,
   }
 
   const totalPages        = Math.max(1, Math.ceil(filteredPrograms.length / PAGE_SIZE))
   const paginatedPrograms = filteredPrograms.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-
-  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="px-8 py-8 max-w-350 mx-auto">
@@ -1465,28 +1542,28 @@ export default function InstructorProgramsPage() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            {/* Status filter */}
+            {/* Pricing / featured filter */}
             <div ref={statusRef} className="relative">
               <button
                 onClick={() => setStatusOpen(o => !o)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${statusFilter !== "All" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"}`}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${pricingFilter !== "All" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"}`}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                Status
-                {statusFilter !== "All" && <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{statusFilter}</span>}
+                Pricing
+                {pricingFilter !== "All" && <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{pricingFilter}</span>}
               </button>
               {statusOpen && (
                 <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#E5E2DC] rounded-xl shadow-lg py-1.5 min-w-36">
                   {([
-                    ["All",       counts.all],
-                    ["Published", counts.published],
-                    ["Drafts",    counts.draft],
-                    ["Featured",  counts.featured],
+                    ["All",      counts.all],
+                    ["Free",     counts.free],
+                    ["Paid",     counts.paid],
+                    ["Featured", counts.featured],
                   ] as const).map(([label, count]) => (
-                    <button key={label} onClick={() => { setStatusFilter(label as typeof statusFilter); setStatusOpen(false) }}
-                      className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${statusFilter === label ? "bg-[#EEF6FF] text-[#0474C4]" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
+                    <button key={label} onClick={() => { setPricingFilter(label as typeof pricingFilter); setStatusOpen(false) }}
+                      className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${pricingFilter === label ? "bg-[#EEF6FF] text-[#0474C4]" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
                     >
-                      <span>{label === "All" ? "All Statuses" : label}</span>
+                      <span>{label === "All" ? "All Programs" : label}</span>
                       <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560]">{count}</span>
                     </button>
                   ))}
@@ -1531,7 +1608,7 @@ export default function InstructorProgramsPage() {
           <table className="w-full text-[13px]">
             <thead>
               <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
-                {["Program", "Category", "Level", "Price", "Enrolled", "Status", ""].map((col, i) => (
+                {["Program", "Category", "Level", "Pricing", "Instructors", "Enrolled", ""].map((col, i) => (
                   <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
                 ))}
               </tr>
@@ -1585,21 +1662,26 @@ export default function InstructorProgramsPage() {
                     </span>
                   </td>
 
-                  {/* Price */}
+                  {/* Pricing */}
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`text-[12px] font-semibold ${p.price === 0 ? "text-emerald-600" : "text-[#1A1916]"}`}>
-                      {fmtPrice(p.price)}
+                    <span className={`text-[12px] font-semibold ${p.pricing === "free" ? "text-emerald-600" : "text-[#1A1916]"}`}>
+                      {fmtPrice(p.price, p.pricing)}
                     </span>
+                    {p.pricing === "paid" && p.paymentType && (
+                      <p className="text-[10px] text-[#A8A39C] capitalize mt-0.5">{p.paymentType.replace(/-/g, " ")}</p>
+                    )}
+                  </td>
+
+                  {/* Instructors / Facilitators */}
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {facilitatorSummary(p)
+                      ? <span className="text-[12px] text-[#1A1916]">{facilitatorSummary(p)}</span>
+                      : <span className="text-[#A8A39C]">—</span>}
                   </td>
 
                   {/* Enrolled */}
                   <td className="px-4 py-3 whitespace-nowrap text-[#6B6560]">
                     {p._count.enrollments}
-                  </td>
-
-                  {/* Status */}
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <StatusBadge published={p.published} onClick={() => handleTogglePublished(p)} loading={togglingIds.has(p.id)} />
                   </td>
 
                   {/* Actions */}

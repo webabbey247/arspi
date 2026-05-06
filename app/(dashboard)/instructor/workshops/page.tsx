@@ -560,23 +560,21 @@ function WorkshopModal({
       <div className="bg-white h-full w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E2DC] shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-[10px] bg-[#FDF3E0] flex items-center justify-center shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0474C4" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-[15px] font-bold text-[#1A1916] leading-tight">{workshop ? "Edit Workshop" : "New Workshop"}</h2>
-              <p className="text-[12px] text-[#A8A39C] mt-0.5">{workshop ? "Update workshop details." : "Create a new workshop, webinar, or masterclass."}</p>
-            </div>
-          </div>
-          <button type="button" onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#F5F4F1] text-[#A8A39C] cursor-pointer">
+        <div className="bg-[#0474C4] px-6 py-5 shrink-0 relative">
+          <button type="button" onClick={onClose} className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white uppercase tracking-wider">
+              {workshop ? "Edit Workshop" : "New Workshop"}
+            </span>
+          </div>
+          <h2 className="text-[18px] font-extrabold text-white leading-tight">
+            {workshop ? workshop.title : "Create Workshop"}
+          </h2>
+          <p className="text-[12px] text-white/80 mt-1">
+            {workshop ? "Update the workshop details and click save." : "Create a new workshop, webinar, or masterclass."}
+          </p>
         </div>
 
         {/* Body */}

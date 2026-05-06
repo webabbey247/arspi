@@ -163,39 +163,36 @@ model Course {
   id           String      @id @default(cuid())
   title        String
   slug         String      @unique
-  description  String
-  thumbnail    String?     // URL
+  excerpt      String                       // renamed from description; short summary shown on cards
+  thumbnail    String?
   price        Float       @default(0)
+  pricing      String      @default("free") // "free" | "paid"
+  paymentType  String?                      // "one-time" | "subscription" | "monthly" — only when pricing = "paid"
   level        CourseLevel @default(BEGINNER)
-  published    Boolean     @default(false)
   featured     Boolean     @default(false)
 
   // Programme details
   tagline              String?
-  duration             String?      // e.g. "8 Weeks"
-  format               String?      // e.g. "Live + Self-Paced Online"
+  duration             String?
+  format               String?
   startDate            String?
   endDate              String?
-  cohortSize           Int?         // pool size
-  rating               Float?       // e.g. 4.9
-  reviewCount          Int?         // e.g. 312
-  enrolledCount        Int?         // e.g. 2100 (social proof display)
-  countriesCount       Int?         // e.g. 120
+  cohortSize           Int?
+  rating               Float?
+  reviewCount          Int?
+  enrolledCount        Int?
+  countriesCount       Int?
 
-  // Rich content (JSON arrays)
+  // Rich content (JSON)
   overview             String?
   targetAudience       Json?        // String[]
   learningObjectives   Json?        // String[]
-  curriculum           Json?        // { week, title, desc, topics[] }[]
+  curriculum           Json?        // { title, desc, lessons[] }[]
   whatIsIncluded       Json?        // String[]
   faqs                 Json?        // { q, a }[]
 
-  // Standalone instructor profile (separate from User relation)
-  instructorName        String?
-  instructorTitle       String?
-  instructorBio         String?      @db.Text
-  instructorInitials    String?
-  instructorCredentials Json?        // String[]
+  // Facilitators array (replaces standalone instructor columns)
+  facilitators         Json?        // { name, imageUrl?, title, bio, credentials? }[]
 
   // Instructor (User relation)
   instructorId String

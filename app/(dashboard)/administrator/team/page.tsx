@@ -190,7 +190,7 @@ function MemberDrawer({
             </span>
           </div>
           <h2 className="text-[18px] font-extrabold text-white leading-tight">
-            {member ? member.fullName : "Create Team Member"}
+            {member ? member.name : "Create Team Member"}
           </h2>
           <p className="text-[12px] text-white/80 mt-1">
             {member ? "Update the team member profile and click save." : "Add a new member to the team page."}

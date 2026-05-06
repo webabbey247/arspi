@@ -81,12 +81,40 @@ function toFaqs(v: unknown): PageFaq[] {
 
 // ── Resolve program from DB ───────────────────────────────────────────────────
 
+function pickFirstFacilitator(v: unknown): {
+  name: string | null
+  title: string | null
+  bio: string | null
+  initials: string | null
+  credentials: string[]
+} {
+  if (!Array.isArray(v) || v.length === 0) {
+    return { name: null, title: null, bio: null, initials: null, credentials: [] }
+  }
+  const f = v[0] as Record<string, unknown>
+  const name = (f.name as string) ?? null
+  const initials = name
+    ? name.split(/\s+/).filter(Boolean).map((w) => w[0].toUpperCase()).join("").slice(0, 4)
+    : null
+  const credsRaw = f.credentials
+  const credentials = typeof credsRaw === "string"
+    ? credsRaw.split(/\r?\n/).map(s => s.trim()).filter(Boolean)
+    : Array.isArray(credsRaw) ? (credsRaw as string[]) : []
+  return {
+    name,
+    title:    (f.title as string) ?? null,
+    bio:      (f.bio   as string) ?? null,
+    initials,
+    credentials,
+  }
+}
+
 async function resolveProgram(slug: string): Promise<PageProgram | null> {
   const dbProg = await getProgramBySlug(slug)
-  if (!dbProg || !dbProg.published) return null
+  if (!dbProg) return null
 
   const cat = catMetaFor(dbProg.category?.name)
-  const siblingRows = await getPrograms({ categoryId: dbProg.categoryId ?? undefined, published: true })
+  const siblingRows = await getPrograms({ categoryId: dbProg.categoryId ?? undefined })
   const related = siblingRows
     .filter((p) => p.slug !== slug)
     .slice(0, 4)
@@ -95,7 +123,7 @@ async function resolveProgram(slug: string): Promise<PageProgram | null> {
   return {
     title:          dbProg.title,
     slug:           dbProg.slug,
-    description:    dbProg.description,
+    description:    dbProg.excerpt,
     price:          dbProg.price,
     level:          dbProg.level.charAt(0) + dbProg.level.slice(1).toLowerCase(),
     duration:       dbProg.duration ?? "Self-Paced",
@@ -111,13 +139,7 @@ async function resolveProgram(slug: string): Promise<PageProgram | null> {
     modules:        toModules(dbProg.curriculum),
     faqs:           toFaqs(dbProg.faqs),
     included:       toStrArr(dbProg.whatIsIncluded),
-    instructor: {
-      name:        dbProg.instructorName,
-      title:       dbProg.instructorTitle,
-      bio:         dbProg.instructorBio,
-      initials:    dbProg.instructorInitials,
-      credentials: toStrArr(dbProg.instructorCredentials),
-    },
+    instructor:     pickFirstFacilitator(dbProg.facilitators),
     cat,
     related,
   }
@@ -126,7 +148,7 @@ async function resolveProgram(slug: string): Promise<PageProgram | null> {
 // ── Static params & metadata ──────────────────────────────────────────────────
 
 export async function generateStaticParams() {
-  const programs = await getPrograms({ published: true })
+  const programs = await getPrograms()
   return programs.map((p) => ({ slug: p.slug }))
 }
 

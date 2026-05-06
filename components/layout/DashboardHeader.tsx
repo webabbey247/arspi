@@ -132,45 +132,35 @@ const DashboardHeader = ({ user }: { user: SessionPayload }) => {
       {/* Logout confirm modal */}
       {confirmLogout && (
         <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
-          <div className="bg-white rounded-2xl border border-[#E5E2DC] w-full max-w-sm mx-4 shadow-2xl">
-            <div className="px-6 pt-6 pb-4 border-b border-[#F0EEE9]">
-              <div className="flex items-center gap-3 mb-1">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
-                  <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 stroke-[#0474C4] fill-none stroke-[1.8]" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
+          <div className="bg-[#EBF3FC] rounded-2xl w-full max-w-sm mx-4 shadow-2xl overflow-hidden">
+            <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+              <div>
+                <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-300">
+                  Log Out?
                 </div>
-                <div>
-                  {/* Label — DM Sans, 11px, +0.07em, font-medium, uppercase */}
-                  <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#0474C4]">
-                    Session
-                  </p>
-                  {/* H2 — Playfair Display, 16px, -0.005em, lh 1.3 */}
-                  <h2 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#1A1916]">
-                    Log Out?
-                  </h2>
+                <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-300 mt-0.5">
+                  Are you sure you want to end your session?
                 </div>
               </div>
-              {/* Body — DM Sans, 13px, 0em, lh 1.6 */}
-              <p className="font-body text-[0.8125rem] tracking-[0em] leading-[1.6] font-normal text-[#A8A39C] mt-1">
-                Are you sure you want to log out?
-              </p>
+              <button
+                type="button"
+                onClick={() => setConfirmLogout(false)}
+                className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EDF2FB]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
             </div>
 
-            <div className="px-6 py-4 flex flex-col gap-2">
-              {/* Button — DM Sans, 13px, +0.02em, font-medium */}
+            <div className="px-6 py-5 flex flex-col gap-2">
               <button
                 onClick={logout}
-                className="w-full px-4 py-2.5 rounded-[10px] bg-[#0474C4] text-white font-body text-[0.8125rem] tracking-[0.02em] font-medium hover:bg-[#06457f] transition-colors cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-[32px] bg-[#0474C4] text-white font-body text-[0.875rem] tracking-[0.02em] font-medium hover:bg-[#06457f] transition-colors cursor-pointer"
               >
                 Log Out
               </button>
-              {/* Cancel — DM Sans, 13px, 0em, font-normal */}
               <button
                 onClick={() => setConfirmLogout(false)}
-                className="w-full px-4 py-1.5 font-body text-[0.8125rem] tracking-[0em] font-normal text-[#A8A39C] bg-transparent border-none cursor-pointer hover:text-[#6B6560] transition-colors"
+                className="w-full px-4 py-1.5 font-body text-[0.8125rem] tracking-[0em] font-normal text-[#6B6560] bg-transparent border-none cursor-pointer hover:text-[#1A1916] transition-colors"
               >
                 Cancel
               </button>

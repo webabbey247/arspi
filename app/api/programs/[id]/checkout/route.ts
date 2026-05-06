@@ -42,9 +42,6 @@ export async function POST(req: NextRequest, { params }: Context) {
     if (!program) {
       return NextResponse.json({ error: "Program not found." }, { status: 404 })
     }
-    if (!program.published) {
-      return NextResponse.json({ error: "This program is not available." }, { status: 400 })
-    }
 
     // Check for existing enrollment
     const existing = await db.enrollment.findUnique({
@@ -99,7 +96,7 @@ export async function POST(req: NextRequest, { params }: Context) {
             unit_amount:  Math.round(program.price * 100), // cents
             product_data: {
               name:        program.title,
-              description: program.description.slice(0, 200),
+              description: program.excerpt.slice(0, 200),
               ...(program.thumbnail ? { images: [program.thumbnail] } : {}),
             },
           },

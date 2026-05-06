@@ -104,36 +104,34 @@ function WorkshopViewModal({ registration, onClose }: { registration: Registrati
       <div className="bg-white h-full w-full max-w-xl shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="bg-[#0474C4] px-6 py-5 flex items-start justify-between gap-4 shrink-0">
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-1.5 flex-wrap">
-              {w && (
-                <>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${w.type === "FREE" ? "bg-emerald-400/20 text-emerald-100" : "bg-white/20 text-white"}`}>
-                    {w.type === "FREE" ? "Free" : "Paid"}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/15 text-white/80">
-                    {CATEGORY_LABELS[w.category]}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/15 text-white/80">
-                    {w.level.charAt(0) + w.level.slice(1).toLowerCase()}
-                  </span>
-                </>
-              )}
-            </div>
-            <h2 className="font-heading text-[1.25rem] tracking-[-0.01em] leading-tight font-semibold text-white">
-              {w?.title ?? registration.workshopTitle}
-            </h2>
-            <p className="text-[13px] text-white/60">
-              {w ? fmtDate(w.date) : registration.workshopDate}
-              {(w?.startTime || registration.workshopTime) && (
-                <> &middot; {w ? `${w.startTime}${w.endTime ? ` – ${w.endTime}` : ""} ${w.timezone}` : registration.workshopTime}</>
-              )}
-            </p>
-          </div>
-          <button type="button" onClick={onClose} className="text-white/40 hover:text-white bg-white/10 hover:bg-white/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors shrink-0 cursor-pointer">
+        <div className="bg-[#0474C4] px-6 py-5 shrink-0 relative">
+          <button type="button" onClick={onClose} className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
+          <div className="flex items-center gap-1.5 flex-wrap mb-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white uppercase tracking-wider">
+              Workshop
+            </span>
+            {w && (
+              <>
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${w.type === "FREE" ? "bg-emerald-400/20 text-emerald-100" : "bg-white/10 text-white/70"}`}>
+                  {w.type === "FREE" ? "Free" : "Paid"}
+                </span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 text-white/70 uppercase tracking-wider">
+                  {CATEGORY_LABELS[w.category]}
+                </span>
+              </>
+            )}
+          </div>
+          <h2 className="text-[18px] font-extrabold text-white leading-tight">
+            {w?.title ?? registration.workshopTitle}
+          </h2>
+          <p className="text-[12px] text-white/80 mt-1">
+            {w ? fmtDate(w.date) : registration.workshopDate}
+            {(w?.startTime || registration.workshopTime) && (
+              <> &middot; {w ? `${w.startTime}${w.endTime ? ` – ${w.endTime}` : ""} ${w.timezone}` : registration.workshopTime}</>
+            )}
+          </p>
         </div>
 
         {/* Body */}

@@ -23,6 +23,13 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ file }) => {
       return { url: file.ufsUrl }
     }),
+
+  /** PDF upload for lesson content blocks — up to 32 MB (uploadthing only supports power-of-two sizes) */
+  pdfUploader: f({ pdf: { maxFileSize: "32MB", maxFileCount: 1 } })
+    .middleware(async () => ({}))
+    .onUploadComplete(async ({ file }) => {
+      return { url: file.ufsUrl, name: file.name, size: file.size }
+    }),
 } satisfies FileRouter
 
 export type OurFileRouter = typeof ourFileRouter
