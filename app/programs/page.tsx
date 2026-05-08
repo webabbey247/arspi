@@ -5,17 +5,15 @@ import withLayout from "@/hooks/useLayout";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { getPrograms, type PublicProgram } from "@/services/public-program.service";
+import {
+  getPrograms,
+  getProgramLookups,
+  type PublicProgram,
+  type ProgramLookup,
+} from "@/services/public-program.service";
 import PageHero from "@/components/sections/PageHero";
 
 const PAGE_SIZE = 20;
-
-const LEVEL_LABEL: Record<string, string> = {
-  ALL:          "All Levels",
-  BEGINNER:     "Beginner",
-  INTERMEDIATE: "Intermediate",
-  ADVANCED:     "Advanced",
-}
 
 // ── Filter accordion (matches careers/workshops pattern) ──────────────────────
 
@@ -27,7 +25,7 @@ function FilterAccordion({
   defaultOpen = false,
 }: {
   title:        string
-  options:      { id: string; label: string }[]
+  options:      { id: string; label: string; count?: number }[]
   selected:     string[]
   onToggle:     (id: string) => void
   defaultOpen?: boolean
@@ -68,6 +66,9 @@ function FilterAccordion({
                   />
                   <span className={`font-body text-[0.855rem] ${checked ? "text-ink font-medium" : "text-slate-500 group-hover:text-ink"}`}>
                     {opt.label}
+                    {typeof opt.count === "number" && (
+                      <span className="ml-1 text-slate-400 font-normal">({opt.count})</span>
+                    )}
                   </span>
                 </label>
               </li>
@@ -104,7 +105,12 @@ const ProgramsPage = () => {
   const [loading, setLoading]   = React.useState(true);
   const [page, setPage]         = React.useState(1);
 
-  // Filter state
+  // Lookup-table options (Levels / Formats / Pricing tabs in admin)
+  const [levelOptionsList,   setLevelOptionsList]   = React.useState<ProgramLookup[]>([])
+  const [formatOptionsList,  setFormatOptionsList]  = React.useState<ProgramLookup[]>([])
+  const [pricingOptionsList, setPricingOptionsList] = React.useState<ProgramLookup[]>([])
+
+  // Filter state — store ids for managed lookups
   const [categoryFilter, setCategoryFilter] = React.useState<string[]>([])
   const [priceFilter,    setPriceFilter]    = React.useState<string[]>([])
   const [levelFilter,    setLevelFilter]    = React.useState<string[]>([])
@@ -112,36 +118,53 @@ const ProgramsPage = () => {
 
   React.useEffect(() => {
     setLoading(true);
-    getPrograms()
-      .then(setPrograms)
-      .catch(() => setPrograms([]))
-      .finally(() => setLoading(false));
+    Promise.all([
+      getPrograms().then(setPrograms).catch(() => setPrograms([])),
+      getProgramLookups("levels").then(setLevelOptionsList).catch(() => setLevelOptionsList([])),
+      getProgramLookups("formats").then(setFormatOptionsList).catch(() => setFormatOptionsList([])),
+      getProgramLookups("pricing").then(setPricingOptionsList).catch(() => setPricingOptionsList([])),
+    ]).finally(() => setLoading(false));
   }, []);
 
-  // Derived filter options from loaded data
+  // Derived filter options with counts. Counts are drawn from the loaded
+  // programs against the new managed-lookup relations (programLevel/Format/Pricing).
   const categories = React.useMemo(() => {
-    const seen = new Set<string>();
-    const cats: { id: string; label: string }[] = [];
+    const counts = new Map<string, { label: string; count: number }>();
     for (const p of programs) {
-      if (p.category && !seen.has(p.category.id)) {
-        seen.add(p.category.id);
-        cats.push({ id: p.category.id, label: p.category.name });
-      }
+      if (!p.category) continue;
+      const entry = counts.get(p.category.id);
+      if (entry) entry.count++;
+      else counts.set(p.category.id, { label: p.category.name, count: 1 });
     }
-    return cats;
+    return Array.from(counts.entries()).map(([id, { label, count }]) => ({ id, label, count }));
   }, [programs]);
 
-  const formats = React.useMemo(() => {
-    const seen = new Set<string>();
-    const fmts: { id: string; label: string }[] = [];
-    for (const p of programs) {
-      if (p.format && !seen.has(p.format)) {
-        seen.add(p.format);
-        fmts.push({ id: p.format, label: p.format.charAt(0) + p.format.slice(1).toLowerCase().replace(/_/g, " ") });
-      }
-    }
-    return fmts;
-  }, [programs]);
+  const levelOptions = React.useMemo(
+    () => levelOptionsList.map(o => ({
+      id:    o.id,
+      label: o.name,
+      count: programs.filter(p => p.programLevel?.id === o.id).length,
+    })),
+    [levelOptionsList, programs],
+  );
+
+  const formats = React.useMemo(
+    () => formatOptionsList.map(o => ({
+      id:    o.id,
+      label: o.name,
+      count: programs.filter(p => p.programFormat?.id === o.id).length,
+    })),
+    [formatOptionsList, programs],
+  );
+
+  const priceOptions = React.useMemo(
+    () => pricingOptionsList.map(o => ({
+      id:    o.id,
+      label: o.name,
+      count: programs.filter(p => p.programPricing?.id === o.id).length,
+    })),
+    [pricingOptionsList, programs],
+  );
 
   const hasActiveFilter =
     categoryFilter.length > 0 || priceFilter.length > 0 ||
@@ -155,11 +178,10 @@ const ProgramsPage = () => {
   }
 
   function passesFilters(p: PublicProgram): boolean {
-    const priceType = p.price > 0 ? "PAID" : "FREE"
-    return (categoryFilter.length === 0 || (!!p.category && categoryFilter.includes(p.category.id)))
-      && (priceFilter.length === 0    || priceFilter.includes(priceType))
-      && (levelFilter.length === 0    || levelFilter.includes(p.level))
-      && (formatFilter.length === 0   || (!!p.format && formatFilter.includes(p.format)))
+    return (categoryFilter.length === 0 || (!!p.category       && categoryFilter.includes(p.category.id)))
+      && (levelFilter.length    === 0   || (!!p.programLevel   && levelFilter.includes(p.programLevel.id)))
+      && (formatFilter.length   === 0   || (!!p.programFormat  && formatFilter.includes(p.programFormat.id)))
+      && (priceFilter.length    === 0   || (!!p.programPricing && priceFilter.includes(p.programPricing.id)))
   }
 
   const filtered   = programs.filter(passesFilters)
@@ -306,22 +328,23 @@ const ProgramsPage = () => {
                   onToggle={id => setCategoryFilter(toggleIn(categoryFilter, id))}
                   defaultOpen
                 />
-                <FilterAccordion
-                  title="Price"
-                  options={[
-                    { id: "FREE", label: "Free" },
-                    { id: "PAID", label: "Paid" },
-                  ]}
-                  selected={priceFilter}
-                  onToggle={id => setPriceFilter(toggleIn(priceFilter, id))}
-                  defaultOpen
-                />
-                <FilterAccordion
-                  title="Level"
-                  options={Object.entries(LEVEL_LABEL).map(([id, label]) => ({ id, label }))}
-                  selected={levelFilter}
-                  onToggle={id => setLevelFilter(toggleIn(levelFilter, id))}
-                />
+                {priceOptions.length > 0 && (
+                  <FilterAccordion
+                    title="Price"
+                    options={priceOptions}
+                    selected={priceFilter}
+                    onToggle={id => setPriceFilter(toggleIn(priceFilter, id))}
+                    defaultOpen
+                  />
+                )}
+                {levelOptions.length > 0 && (
+                  <FilterAccordion
+                    title="Level"
+                    options={levelOptions}
+                    selected={levelFilter}
+                    onToggle={id => setLevelFilter(toggleIn(levelFilter, id))}
+                  />
+                )}
                 {formats.length > 0 && (
                   <FilterAccordion
                     title="Format"

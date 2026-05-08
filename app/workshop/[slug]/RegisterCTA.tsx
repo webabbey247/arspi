@@ -33,7 +33,7 @@ export default function RegisterCTA({ workshop }: Props) {
         <Button
           className={`w-full h-12 rounded font-body text-[0.875rem] tracking-[0.02em] font-medium ${
             !isPaid
-              ? "bg-[#0474C4] text-white hover:bg-white/90"
+              ? "bg-[#0474C4] text-white hover:bg-[#071639]/90"
               : "bg-emerald-500 text-white hover:bg-emerald-600"
           }`}
           onClick={() => setOpen(true)}

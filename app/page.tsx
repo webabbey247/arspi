@@ -138,7 +138,7 @@ const HomePage = () => {
               Explore Programs
             </Link>
             <Link
-              href="/research"
+              href="/our-research/research-training"
               className="font-body text-[0.8125rem] h-full rounded-[32px] min-w-40 text-center tracking-[0.07em] uppercase font-medium bg-transparent text-[#0474C4] border border-[#0474C4] py-3.25 px-7 cursor-pointer transition-all duration-250 no-underline inline-block hover:bg-[#0474C4] hover:text-white hover:border-[#0474C4]"
             >
               Research Training
@@ -643,7 +643,7 @@ const HomePage = () => {
             ))}
           </div>
           <Link
-            href="/research"
+            href="/our-research/research-training"
             className="font-body min-w-40 border border-[#0474C4] rounded-[32px] mt-2 text-[0.8125rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white border-none py-3.5 px-8 cursor-pointer transition-all duration-250 inline-block hover:bg-[#060d14] hover:border-[#060d14]"
           >
             Explore Research

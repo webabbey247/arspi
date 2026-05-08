@@ -53,6 +53,14 @@ export type ProgramRow = {
   }
   categoryId: string | null
   category:   ProgramCategoryRow | null
+
+  programLevelId:   string | null
+  programLevel:     { id: string; name: string; slug: string } | null
+  programFormatId:  string | null
+  programFormat:    { id: string; name: string; slug: string } | null
+  programPricingId: string | null
+  programPricing:   { id: string; name: string; slug: string } | null
+
   createdAt:  Date
   updatedAt:  Date
   _count:     { enrollments: number }
@@ -70,6 +78,10 @@ export type ProgramInput = {
   featured?:    boolean
   categoryId?:  string | null
   instructorId?: string
+
+  programLevelId?:   string | null
+  programFormatId?:  string | null
+  programPricingId?: string | null
 
   tagline?:              string | null
   duration?:             string | null
@@ -129,8 +141,11 @@ const programInclude = {
       profile: { select: { firstName: true, lastName: true } },
     },
   },
-  category: { include: { _count: { select: { courses: true } } } },
-  _count:   { select: { enrollments: true } },
+  category:       { include: { _count: { select: { courses: true } } } },
+  programLevel:   { select: { id: true, name: true, slug: true } },
+  programFormat:  { select: { id: true, name: true, slug: true } },
+  programPricing: { select: { id: true, name: true, slug: true } },
+  _count:         { select: { enrollments: true } },
 } as const
 
 // ── Category CRUD ────────────────────────────────────────────────────────────
@@ -250,6 +265,10 @@ export async function createProgram(
       categoryId:   input.categoryId   ?? null,
       instructorId: input.instructorId ?? instructorId,
 
+      programLevelId:   input.programLevelId   ?? null,
+      programFormatId:  input.programFormatId  ?? null,
+      programPricingId: input.programPricingId ?? null,
+
       tagline:              input.tagline              ?? null,
       duration:             input.duration             ?? null,
       format:               input.format               ?? null,
@@ -299,6 +318,10 @@ export async function updateProgram(
       ...(input.featured     !== undefined && { featured:     input.featured }),
       ...(input.categoryId   !== undefined && { categoryId:   input.categoryId }),
       ...(input.instructorId !== undefined && { instructorId: input.instructorId }),
+
+      ...(input.programLevelId   !== undefined && { programLevelId:   input.programLevelId }),
+      ...(input.programFormatId  !== undefined && { programFormatId:  input.programFormatId }),
+      ...(input.programPricingId !== undefined && { programPricingId: input.programPricingId }),
 
       ...(input.tagline             !== undefined && { tagline:             input.tagline }),
       ...(input.duration            !== undefined && { duration:            input.duration }),

@@ -22,7 +22,10 @@ type Author = {
   id: string
   name: string
   jobTitle: string | null
+  bio: string | null
   avatar: string | null
+  createdAt: string
+  _count: { insights: number }
 }
 
 type Insight = {
@@ -43,7 +46,7 @@ type Insight = {
   category: Category | null
 }
 
-type Tab = "insights" | "categories"
+type Tab = "insights" | "authors" | "categories"
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -149,6 +152,48 @@ function CoverImageUpload({ value, onChange }: { value: string; onChange: (url: 
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         {uploading ? "Uploading…" : value ? "Replace image" : "Upload cover image"}
       </button>
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+    </div>
+  )
+}
+
+// ── Avatar upload field ───────────────────────────────────────────────────────
+
+function AvatarUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false)
+  const { startUpload } = useUploadThing("imageUploader")
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const res = await startUpload([file])
+      if (res?.[0]?.url) onChange(res[0].url)
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ""
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      {value ? (
+        <Image src={value} alt="Avatar" width={48} height={48} className="rounded-full object-cover border border-[#E5E2DC]" />
+      ) : (
+        <div className="w-12 h-12 rounded-full bg-[#F5F4F1] border border-[#E5E2DC] flex items-center justify-center text-[#A8A39C]">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+      )}
+      <div className="flex flex-col gap-1">
+        <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="px-3 py-1.5 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer">
+          {uploading ? "Uploading…" : "Upload photo"}
+        </button>
+        {value && (
+          <button type="button" onClick={() => onChange("")} className="text-[11px] text-red-500 hover:underline cursor-pointer text-left">Remove</button>
+        )}
+      </div>
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
     </div>
   )
@@ -285,22 +330,22 @@ function InsightModal({
             <input ref={titleRef} value={form.title} onChange={e => set("title", e.target.value)} required className={inputCls} placeholder="e.g. The Future of Policy Research" />
           </Field>
 
-          {/* Slug */}
+          {/* Slug — readonly, auto-generated from title */}
           <Field label="Slug" hint="Auto-generated from title">
-            <input value={form.slug} onChange={e => set("slug", e.target.value)} className={inputCls} placeholder="e.g. future-of-policy-research" />
+            <input value={form.slug} readOnly tabIndex={-1} className={`${inputCls} bg-[#F5F4F1] text-[#6B6560] cursor-not-allowed`} placeholder="generated-from-title" />
           </Field>
 
           {/* Category + Author row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="Category">
-              <select value={form.categoryId} onChange={e => set("categoryId", e.target.value)} className={inputCls}>
-                <option value="">— None —</option>
+            <Field label="Category" required>
+              <select value={form.categoryId} onChange={e => set("categoryId", e.target.value)} required className={inputCls}>
+                <option value="" disabled>— Select category —</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </Field>
-            <Field label="Author">
-              <select value={form.authorId} onChange={e => set("authorId", e.target.value)} className={inputCls}>
-                <option value="">— None —</option>
+            <Field label="Author" required>
+              <select value={form.authorId} onChange={e => set("authorId", e.target.value)} required className={inputCls}>
+                <option value="" disabled>— Select author —</option>
                 {authors.map(a => (
                   <option key={a.id} value={a.id}>
                     {a.name}{a.jobTitle ? ` · ${a.jobTitle}` : ""}
@@ -400,6 +445,88 @@ function CategoryModal({ category, onSave, onClose }: { category: Category | nul
   )
 }
 
+// ── Author modal ──────────────────────────────────────────────────────────────
+
+type AuthorFormValues = { name: string; jobTitle: string; bio: string; avatar: string }
+const EMPTY_AUTHOR: AuthorFormValues = { name: "", jobTitle: "", bio: "", avatar: "" }
+
+function AuthorModal({
+  author, onSave, onClose,
+}: {
+  author: Author | null
+  onSave: (v: AuthorFormValues) => Promise<void>
+  onClose: () => void
+}) {
+  const [form, setForm]     = useState<AuthorFormValues>(
+    author ? { name: author.name, jobTitle: author.jobTitle ?? "", bio: author.bio ?? "", avatar: author.avatar ?? "" } : EMPTY_AUTHOR
+  )
+  const [saving, setSaving] = useState(false)
+  const [error, setError]   = useState("")
+
+  function set(key: keyof AuthorFormValues, val: string) {
+    setForm(f => ({ ...f, [key]: val }))
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+    setSaving(true)
+    try { await onSave(form) }
+    catch (err) { setError(err instanceof Error ? err.message : "Something went wrong.") }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-100 flex items-start justify-end bg-black/40">
+      <div className="bg-white h-full w-full max-w-md shadow-2xl flex flex-col overflow-hidden">
+        <div className="bg-[#0474C4] px-6 py-5 shrink-0 relative">
+          <button type="button" onClick={onClose} className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white uppercase tracking-wider">
+              {author ? "Edit Author" : "New Author"}
+            </span>
+          </div>
+          <h2 className="text-[18px] font-extrabold text-white leading-tight">
+            {author ? author.name : "Create Author"}
+          </h2>
+          <p className="text-[12px] text-white/80 mt-1">
+            {author ? "Update the author profile and click save." : "Add a new contributor to the insights library."}
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          {error && <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+
+          <Field label="Avatar photo">
+            <AvatarUpload value={form.avatar} onChange={url => set("avatar", url)} />
+          </Field>
+
+          <Field label="Full Name" required>
+            <input autoFocus value={form.name} onChange={e => set("name", e.target.value)} required className={inputCls} placeholder="e.g. Dr. Rachel Osei" />
+          </Field>
+
+          <Field label="Job Title / Role">
+            <input value={form.jobTitle} onChange={e => set("jobTitle", e.target.value)} className={inputCls} placeholder="e.g. M&E Specialist" />
+          </Field>
+
+          <Field label="Bio">
+            <textarea value={form.bio} onChange={e => set("bio", e.target.value)} rows={4} className={inputCls} placeholder="Short author biography…" />
+          </Field>
+        </form>
+
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#E5E2DC] shrink-0">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
+          <button onClick={handleSubmit} disabled={saving} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+            {saving ? "Saving…" : author ? "Save Changes" : "Create Author"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function AdminInsightsPage() {
@@ -426,8 +553,13 @@ export default function AdminInsightsPage() {
   const [categoryModal, setCategoryModal]             = useState<"create" | Category | null>(null)
   const [deleteCategory, setDeleteCategory]           = useState<Category | null>(null)
 
-  // Authors (for dropdown)
-  const [authors, setAuthors] = useState<Author[]>([])
+  // Authors
+  const [authors, setAuthors]                 = useState<Author[]>([])
+  const [authorsLoading, setAuthorsLoading]   = useState(true)
+  const [authorSearch, setAuthorSearch]       = useState("")
+  const [authorModal, setAuthorModal]         = useState<"create" | Author | null>(null)
+  const [deleteAuthor, setDeleteAuthor]       = useState<Author | null>(null)
+  const [authorsPage, setAuthorsPage]         = useState(1)
 
   // ── Fetch ────────────────────────────────────────────────────────────────────
 
@@ -444,9 +576,12 @@ export default function AdminInsightsPage() {
   }, [])
 
   const fetchAuthors = useCallback(async () => {
-    const r = await fetch("/api/authors")
-    const d = await r.json()
-    if (r.ok) setAuthors(d.authors ?? [])
+    setAuthorsLoading(true)
+    try {
+      const r = await fetch("/api/authors")
+      const d = await r.json()
+      if (r.ok) setAuthors(d.authors ?? [])
+    } finally { setAuthorsLoading(false) }
   }, [])
 
   useEffect(() => { fetchInsights(); fetchCategories(); fetchAuthors() }, [fetchInsights, fetchCategories, fetchAuthors])
@@ -461,6 +596,7 @@ export default function AdminInsightsPage() {
 
   useEffect(() => { setPage(1) }, [insightSearch, insightFilter])
   useEffect(() => { setCategoriesPage(1) }, [categorySearch])
+  useEffect(() => { setAuthorsPage(1) }, [authorSearch])
 
   // ── CSV export ───────────────────────────────────────────────────────────────
 
@@ -565,6 +701,39 @@ export default function AdminInsightsPage() {
     await fetchCategories()
   }
 
+  // ── Author CRUD ──────────────────────────────────────────────────────────────
+
+  async function handleSaveAuthor(values: AuthorFormValues) {
+    const editing = authorModal !== "create" ? authorModal : null
+    const payload = {
+      name:     values.name,
+      jobTitle: values.jobTitle || null,
+      bio:      values.bio      || null,
+      avatar:   values.avatar   || null,
+    }
+    const res  = await fetch(editing ? `/api/authors/${editing.id}` : "/api/authors", {
+      method: editing ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error ?? "Failed to save author.")
+    setAuthorModal(null)
+    await fetchAuthors()
+  }
+
+  async function handleDeleteAuthor() {
+    if (!deleteAuthor) return
+    const res = await fetch(`/api/authors/${deleteAuthor.id}`, { method: "DELETE" })
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      alert(d.error ?? "Failed to delete author.")
+      return
+    }
+    setDeleteAuthor(null)
+    await fetchAuthors()
+  }
+
   // ── Derived ───────────────────────────────────────────────────────────────────
 
   const filteredInsights = insights.filter(ins => {
@@ -590,10 +759,18 @@ export default function AdminInsightsPage() {
 
   const filterOptions = ["All", "Published", "Drafts", "Featured", ...categories.map(c => c.name)]
 
+  const filteredAuthors = authors.filter(a =>
+    !authorSearch
+    || a.name.toLowerCase().includes(authorSearch.toLowerCase())
+    || (a.jobTitle ?? "").toLowerCase().includes(authorSearch.toLowerCase())
+  )
+
   const totalPages           = Math.max(1, Math.ceil(filteredInsights.length / PAGE_SIZE))
   const paginatedInsights    = filteredInsights.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const totalCategoryPages   = Math.max(1, Math.ceil(filteredCategories.length / PAGE_SIZE))
   const paginatedCategories  = filteredCategories.slice((categoriesPage - 1) * PAGE_SIZE, categoriesPage * PAGE_SIZE)
+  const totalAuthorPages     = Math.max(1, Math.ceil(filteredAuthors.length / PAGE_SIZE))
+  const paginatedAuthors     = filteredAuthors.slice((authorsPage - 1) * PAGE_SIZE, authorsPage * PAGE_SIZE)
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -607,24 +784,29 @@ export default function AdminInsightsPage() {
           <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage articles, categories, and visibility</p>
         </div>
         <button
-          onClick={() => tab === "insights" ? setInsightModal("create") : setCategoryModal("create")}
+          onClick={() => {
+            if (tab === "insights") setInsightModal("create")
+            else if (tab === "authors") setAuthorModal("create")
+            else setCategoryModal("create")
+          }}
           className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          {tab === "insights" ? "New Insight" : "New Category"}
+          {tab === "insights" ? "New Insight" : tab === "authors" ? "New Author" : "New Category"}
         </button>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 w-fit">
-        {(["insights", "categories"] as Tab[]).map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}>
-            {t}
-            <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tab === t ? "bg-[#F5F4F1] text-[#6B6560]" : "bg-[#E5E2DC] text-[#A8A39C]"}`}>
-              {t === "insights" ? insights.length : categories.length}
-            </span>
-          </button>
-        ))}
+        {(["insights", "authors", "categories"] as Tab[]).map(t => {
+          const count = t === "insights" ? insights.length : t === "authors" ? authors.length : categories.length
+          return (
+            <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}>
+              {t}
+              <span className={`ml-1 font-normal ${tab === t ? "text-[#A8A39C]" : "text-[#A8A39C]"}`}>({count})</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* ── INSIGHTS TAB ──────────────────────────────────────────────────────── */}
@@ -750,6 +932,84 @@ export default function AdminInsightsPage() {
         </div>
       )}
 
+      {/* ── AUTHORS TAB ───────────────────────────────────────────────────────── */}
+      {tab === "authors" && (
+        <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
+          <div className="flex gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+            <div className="relative w-full sm:w-64">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input value={authorSearch} onChange={e => setAuthorSearch(e.target.value)} placeholder="Search authors…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px]">
+              <thead>
+                <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                  {["Author", "Job Title", "Insights", "Joined", ""].map(col => (
+                    <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {authorsLoading ? (
+                  <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+                ) : filteredAuthors.length === 0 ? (
+                  <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No authors found.</td></tr>
+                ) : paginatedAuthors.map(a => (
+                  <tr key={a.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        {a.avatar ? (
+                          <Image src={a.avatar} alt={a.name} width={32} height={32} className="rounded-full w-8 h-8 object-cover border border-[#E5E2DC] shrink-0" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-[#0474C4] flex items-center justify-center text-white text-[11px] font-semibold shrink-0">
+                            {a.name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()}
+                          </div>
+                        )}
+                        <span className="font-semibold text-[#1A1916] whitespace-nowrap">{a.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{a.jobTitle ?? "—"}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">{a._count.insights}</span>
+                    </td>
+                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(a.createdAt)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => setAuthorModal(a)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button onClick={() => setDeleteAuthor(a)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+            <p className="text-[11px] text-[#A8A39C]">
+              {filteredAuthors.length === 0 ? (
+                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{authors.length}</span> {authors.length === 1 ? "author" : "authors"}</>
+              ) : (
+                <>Showing <span className="font-semibold text-[#6B6560]">{(authorsPage - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(authorsPage * PAGE_SIZE, filteredAuthors.length)}</span> of <span className="font-semibold text-[#6B6560]">{filteredAuthors.length}</span> {filteredAuthors.length === 1 ? "author" : "authors"}</>
+              )}
+            </p>
+            {filteredAuthors.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setAuthorsPage(p => Math.max(1, p - 1))} disabled={authorsPage === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{authorsPage} / {totalAuthorPages}</span>
+                <button onClick={() => setAuthorsPage(p => Math.min(totalAuthorPages, p + 1))} disabled={authorsPage >= totalAuthorPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── CATEGORIES TAB ────────────────────────────────────────────────────── */}
       {tab === "categories" && (
         <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
@@ -828,11 +1088,17 @@ export default function AdminInsightsPage() {
       {categoryModal !== null && (
         <CategoryModal category={categoryModal === "create" ? null : categoryModal} onSave={handleSaveCategory} onClose={() => setCategoryModal(null)} />
       )}
+      {authorModal !== null && (
+        <AuthorModal author={authorModal === "create" ? null : authorModal} onSave={handleSaveAuthor} onClose={() => setAuthorModal(null)} />
+      )}
       {deleteInsight && (
         <ConfirmDialog message={`Delete "${deleteInsight.title}"? This cannot be undone.`} onConfirm={handleDeleteInsight} onCancel={() => setDeleteInsight(null)} />
       )}
       {deleteCategory && (
         <ConfirmDialog message={`Delete category "${deleteCategory.name}"? This cannot be undone.`} onConfirm={handleDeleteCategory} onCancel={() => setDeleteCategory(null)} />
+      )}
+      {deleteAuthor && (
+        <ConfirmDialog message={`Delete author "${deleteAuthor.name}"? This cannot be undone.`} onConfirm={handleDeleteAuthor} onCancel={() => setDeleteAuthor(null)} />
       )}
     </div>
   )

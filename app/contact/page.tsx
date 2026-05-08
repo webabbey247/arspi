@@ -1,8 +1,8 @@
 /* eslint-disable react/no-unescaped-entities */
-"use client";
 
 import GeneralContactForm from "@/components/forms/GeneralContactForm";
 import PageHero from "@/components/sections/PageHero";
+import GlobalOfficesSection from "@/components/sections/GlobalOfficesSection";
 import withLayout from "@/hooks/useLayout";
 
 const ContactPage = () => {
@@ -14,7 +14,7 @@ const ContactPage = () => {
         highlightText="Hear from You"
         description="Whether you're exploring our programmes, looking to partner with us, need support with a product, or want to discuss institutional consulting — our team is here and ready to help."
         pageType="contact"
-        imageUrl="/images/about-arps.webp"
+        imageUrl="/images/customer-care-support.jpg"
       />
 
       <section className="grid-cols-1 lg:grid-cols-[1fr_2fr] max-w-360 mx-auto w-full flex justify-between">
@@ -83,61 +83,8 @@ const ContactPage = () => {
         </div>
       </section>
 
-      {/* Offices */}
-      <section className="px-8 md:px-16 py-16 bg-[#EDF2FB] w-full">
-        <div className="max-w-350 flex flex-col gap-5 mx-auto">
-         <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3]">
-  Our Presence
-</p>
-          <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
-  Global Offices &amp; Operations
-</h2>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[
-              {
-                region: "Africa · Headquarters",
-                city: "Accra, Ghana",
-                addr: "West Airport Residential Area\nAccra, Greater Accra Region, Ghana",
-                phone: "+233 (0) 30 000 0000",
-              },
-              {
-                region: "Europe · Regional",
-                city: "London, United Kingdom",
-                addr: "Canary Wharf, Level 18\nLondon E14 5AB, United Kingdom",
-                phone: "+44 (0) 20 0000 0000",
-              },
-              {
-                region: "North America · Regional",
-                city: "Washington D.C., USA",
-                addr: "1200 18th Street NW, Suite 700\nWashington, D.C. 20036, USA",
-                phone: "+1 (202) 000 0000",
-              },
-            ].map((o) => (
-              <div
-  key={o.city}
-  className="border bg-white/90 border-[#0474C4]/25 rounded p-6"
->
-  <div className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-2">
-    {o.region}
-  </div>
-
-  <div className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4] mb-3">
-    {o.city}
-  </div>
-
-  <div className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-black whitespace-pre-line mb-2">
-    {o.addr}
-  </div>
-
-  <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-white/30">
-    {o.phone}
-  </div>
-</div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Global Offices — sourced from getGlobalOffices() */}
+      <GlobalOfficesSection />
     </>
   );
 };

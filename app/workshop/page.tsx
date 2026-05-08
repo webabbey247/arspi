@@ -91,7 +91,7 @@ function FilterAccordion({
   defaultOpen = false,
 }: {
   title:        string
-  options:      { id: string; label: string }[]
+  options:      { id: string; label: string; count?: number }[]
   selected:     string[]
   onToggle:     (id: string) => void
   defaultOpen?: boolean
@@ -134,6 +134,9 @@ function FilterAccordion({
                   />
                   <span className={`font-body text-[0.855rem] ${checked ? "text-ink font-medium" : "text-slate-500 group-hover:text-ink"}`}>
                     {opt.label}
+                    {typeof opt.count === "number" && (
+                      <span className="ml-1 text-slate-400 font-normal">({opt.count})</span>
+                    )}
                   </span>
                 </label>
               </li>
@@ -158,6 +161,72 @@ function pageWindow(current: number, total: number): (number | "…")[] {
   if (current < total - 2) pages.push("…")
   pages.push(total)
   return pages
+}
+
+// ── Skeleton placeholders ───────────────────────────────────────────────────
+
+function SpotlightSkeleton() {
+  return (
+    <div className="grid lg:grid-cols-[1fr_340px] border border-[#0474C4]/25 rounded overflow-hidden mb-6 bg-sky-pale animate-pulse">
+      <div className="p-8 md:p-10">
+        <div className="flex gap-2 mb-5 flex-wrap">
+          <div className="h-6 w-16 bg-slate-200 rounded" />
+          <div className="h-6 w-20 bg-slate-200 rounded" />
+          <div className="h-6 w-24 bg-slate-200 rounded" />
+          <div className="h-6 w-20 bg-slate-200 rounded" />
+        </div>
+        <div className="h-7 bg-slate-200 rounded mb-2" />
+        <div className="h-7 w-3/4 bg-slate-200 rounded mb-5" />
+        <div className="space-y-2 mb-6 max-w-lg">
+          <div className="h-4 bg-slate-200 rounded" />
+          <div className="h-4 w-11/12 bg-slate-200 rounded" />
+          <div className="h-4 w-3/4 bg-slate-200 rounded" />
+        </div>
+        <div className="mb-6">
+          <div className="h-3 w-20 bg-slate-200 rounded mb-2" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-full bg-slate-200" />
+            <div className="space-y-1.5">
+              <div className="h-3 w-32 bg-slate-200 rounded" />
+              <div className="h-3 w-24 bg-slate-200 rounded" />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-6 flex-wrap mb-6">
+          {[80, 120, 100, 110].map((w, i) => (
+            <div key={i} className="h-3 bg-slate-200 rounded" style={{ width: w }} />
+          ))}
+        </div>
+        <div className="h-12 w-32 bg-slate-200 rounded" />
+      </div>
+      <div className="bg-[#EBF3FC] min-h-60 lg:min-h-full" />
+    </div>
+  )
+}
+
+function WorkshopCardSkeleton() {
+  return (
+    <div className="bg-white/90 border border-[#0474C4]/25 rounded overflow-hidden flex flex-col animate-pulse">
+      <div className="p-5 flex flex-col flex-1">
+        <div className="flex gap-2 mb-3 flex-wrap">
+          <div className="h-6 w-14 bg-slate-200 rounded" />
+          <div className="h-6 w-20 bg-slate-200 rounded" />
+          <div className="h-6 w-16 bg-slate-200 rounded" />
+        </div>
+        <div className="h-5 bg-slate-200 rounded mb-2" />
+        <div className="h-5 w-3/4 bg-slate-200 rounded mb-2" />
+        <div className="flex flex-col gap-1.5 mt-auto pt-3">
+          {[140, 180, 160, 130].map((w, i) => (
+            <div key={i} className="h-3 bg-slate-200 rounded" style={{ width: w }} />
+          ))}
+        </div>
+      </div>
+      <div className="px-5 py-3.5 border-t border-[#0474C4]/18 bg-[#EBF3FC] flex items-center justify-between">
+        <div className="h-6 w-16 bg-slate-200 rounded" />
+        <div className="h-9 w-28 bg-slate-200 rounded" />
+      </div>
+    </div>
+  )
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
@@ -197,6 +266,10 @@ const WorkshopPage = () => {
       if (!b.date) return -1
       return new Date(a.date).getTime() - new Date(b.date).getTime()
     })
+
+  const past = workshops
+    .filter(w => !!w.date && new Date(w.date) < now)
+    .sort((a, b) => new Date(b.date!).getTime() - new Date(a.date!).getTime())
 
   // The nearest upcoming event is always the spotlight — no "featured" flag needed
   const nearest = upcoming[0] ?? null
@@ -273,6 +346,72 @@ const WorkshopPage = () => {
     setDateFilter([])
   }
 
+  // Per-option counts — drawn from the same baseList the filter applies to,
+  // so the numbers reflect what would actually surface on selection.
+  const categoryOptions = (
+    [
+      { id: "SHORT_COURSE", label: "Short Course" },
+      { id: "WEBINAR",      label: "Webinar" },
+      { id: "MASTERCLASS",  label: "Masterclass" },
+      { id: "CONFERENCE",   label: "Conference" },
+      { id: "WORKSHOP",     label: "Workshop" },
+    ] as const
+  ).map(o => ({ ...o, count: baseList.filter(w => w.category === o.id).length }))
+
+  const typeOptions = (
+    [
+      { id: "FREE", label: "Free" },
+      { id: "PAID", label: "Paid" },
+    ] as const
+  ).map(o => ({ ...o, count: baseList.filter(w => w.type === o.id).length }))
+
+  const mediumOptions = (
+    [
+      { id: "ONLINE",    label: "Online" },
+      { id: "IN_PERSON", label: "In-Person" },
+    ] as const
+  ).map(o => ({ ...o, count: baseList.filter(w => w.medium === o.id).length }))
+
+  const durationOptions: { id: DurationBucket; label: string; count: number }[] = (
+    [
+      { id: "LT1",  label: "< 1 hr"   },
+      { id: "1to3", label: "1–3 hrs" },
+      { id: "3to5", label: "3–5 hrs" },
+      { id: "GT5",  label: "5+ hrs"  },
+    ] as const
+  ).map(o => {
+    const count = baseList.filter(w => {
+      if (w.duration === null) return false
+      if (o.id === "LT1")  return w.duration < 1
+      if (o.id === "1to3") return w.duration >= 1 && w.duration < 3
+      if (o.id === "3to5") return w.duration >= 3 && w.duration < 5
+      return w.duration >= 5
+    }).length
+    return { ...o, count }
+  })
+
+  // Date buckets always count against the full workshops list, since the past
+  // buckets only make sense relative to all events (not just upcoming).
+  const dateOptions: { id: DateBucket; label: string; count: number }[] = (
+    [
+      { id: "PAST_60_PLUS", label: "Past 60+ days"   },
+      { id: "PAST_60",      label: "Past 60 days"    },
+      { id: "30_TO_60",     label: "30–60 days away" },
+      { id: "60_PLUS",      label: "60+ days away"   },
+    ] as const
+  ).map(o => {
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const count = workshops.filter(w => {
+      if (!w.date) return false
+      const diffDays = Math.floor((new Date(w.date).getTime() - today.getTime()) / (24 * 60 * 60 * 1000))
+      if (o.id === "PAST_60_PLUS") return diffDays < -60
+      if (o.id === "PAST_60")      return diffDays >= -60 && diffDays <= 0
+      if (o.id === "30_TO_60")     return diffDays >= 30 && diffDays <= 60
+      return diffDays > 60
+    }).length
+    return { ...o, count }
+  })
+
   return (
     <>
       {/* Hero */}
@@ -283,7 +422,7 @@ const WorkshopPage = () => {
                   captionTextTwo="Open to All"
                   description="Join ARPS Institute's live workshops and short learning events — ranging from free introductory sessions to premium in-depth boot camps. Led by expert facilitators, built for immediate application."
                   pageType="workshops"
-                  imageUrl="/images/about-arps.webp"
+                  imageUrl="/images/workshop-page-banner.jpg"
                 />
       
 
@@ -327,8 +466,9 @@ const WorkshopPage = () => {
           </div>
 
 
-          {/* Nearest upcoming event — spotlight */}
-          {spotlightVisible && nearest && (
+          {/* Nearest upcoming event — spotlight (skeleton while loading) */}
+          {loading && <SpotlightSkeleton />}
+          {!loading && spotlightVisible && nearest && (
             <div className="grid lg:grid-cols-[1fr_340px] border border-[#0474C4]/25 rounded overflow-hidden mb-6 bg-sky-pale hover:border-[#0474C4]/50 transition-colors">
               <div className="p-8 md:p-10">
 
@@ -460,57 +600,35 @@ const WorkshopPage = () => {
                 <div className="flex flex-col">
                   <FilterAccordion
                     title="Category"
-                    options={[
-                      { id: "SHORT_COURSE", label: "Short Course" },
-                      { id: "WEBINAR",      label: "Webinar" },
-                      { id: "MASTERCLASS",  label: "Masterclass" },
-                      { id: "CONFERENCE",   label: "Conference" },
-                      { id: "WORKSHOP",     label: "Workshop" },
-                    ]}
+                    options={categoryOptions as { id: string; label: string; count: number }[]}
                     selected={categoryFilter}
                     onToggle={(id) => setCategoryFilter(toggleIn(categoryFilter, id))}
                   />
 
                   <FilterAccordion
                     title="Type"
-                    options={[
-                      { id: "FREE", label: "Free" },
-                      { id: "PAID", label: "Paid" },
-                    ]}
+                    options={typeOptions as { id: string; label: string; count: number }[]}
                     selected={typeFilter}
                     onToggle={(id) => setTypeFilter(toggleIn(typeFilter, id as "FREE" | "PAID"))}
                   />
 
                   <FilterAccordion
                     title="Medium"
-                    options={[
-                      { id: "ONLINE",    label: "Online" },
-                      { id: "IN_PERSON", label: "In-Person" },
-                    ]}
+                    options={mediumOptions as { id: string; label: string; count: number }[]}
                     selected={mediumFilter}
                     onToggle={(id) => setMediumFilter(toggleIn(mediumFilter, id as "ONLINE" | "IN_PERSON"))}
                   />
 
                   <FilterAccordion
                     title="Duration"
-                    options={[
-                      { id: "LT1",  label: "< 1 hr" },
-                      { id: "1to3", label: "1–3 hrs" },
-                      { id: "3to5", label: "3–5 hrs" },
-                      { id: "GT5",  label: "5+ hrs" },
-                    ]}
+                    options={durationOptions as { id: string; label: string; count: number }[]}
                     selected={durationFilter}
                     onToggle={(id) => setDurationFilter(toggleIn(durationFilter, id as DurationBucket))}
                   />
 
                   <FilterAccordion
                     title="Date range"
-                    options={[
-                      { id: "PAST_60_PLUS", label: "Past 60+ days" },
-                      { id: "PAST_60",      label: "Past 60 days" },
-                      { id: "30_TO_60",     label: "30–60 days away" },
-                      { id: "60_PLUS",      label: "60+ days away" },
-                    ]}
+                    options={dateOptions as { id: string; label: string; count: number }[]}
                     selected={dateFilter}
                     onToggle={(id) => setDateFilter(toggleIn(dateFilter, id as DateBucket))}
                   />
@@ -522,11 +640,11 @@ const WorkshopPage = () => {
             <div className="lg:w-3/4 grow w-full">
               <div className="grid md:grid-cols-2 gap-5">
                 {loading ? (
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="bg-white/90 border border-[#0474C4]/10 rounded h-64 animate-pulse" />
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <WorkshopCardSkeleton key={i} />
                   ))
                 ) : paginated.length === 0 ? (
-                  <div className="md:col-span-2 bg-white border border-[#0474C4]/15 rounded p-10 text-center">
+                  <div className="md:col-span-2 bg-white  flex flex-col justify-center items-center p-10 text-center">
                     <p className="font-heading text-[1rem] font-semibold text-ink mb-1.5">No workshops match your filters</p>
                     <p className="font-body text-[0.8125rem] text-slate-500">
                       {hasActiveFilter ? "Try clearing some filters to see more events." : "Check back soon — new events are added regularly."}
@@ -645,8 +763,6 @@ const WorkshopPage = () => {
         </div>
       </section>
 
-      {/* Past events — hidden */}
-      {/*
       {past.length > 0 && (
         <section className="bg-[#EDF2FB] px-8 md:px-16 py-16 w-full">
           <div className="max-w-350 mx-auto flex flex-col gap-12 w-full">
@@ -660,7 +776,7 @@ const WorkshopPage = () => {
               </h2>
               <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-[#637AA3]">
                 Recordings are available for most past events.{" "}
-                <Link href="#" className="text-[#0474C4] hover:text-ink transition-colors">
+                <Link href="/workshop/archive" className="text-[#0474C4] hover:text-ink transition-colors">
                   Access the library →
                 </Link>
               </p>
@@ -688,7 +804,7 @@ const WorkshopPage = () => {
           </div>
         </section>
       )}
-      */}
+     
 
     </>
   );

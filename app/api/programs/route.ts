@@ -26,6 +26,11 @@ const createSchema = z.object({
   featured:     z.boolean().optional(),
   categoryId:   z.string().nullable().optional(),
 
+  // Lookup-table relations (Levels / Formats / Pricing tabs)
+  programLevelId:   z.string().nullable().optional(),
+  programFormatId:  z.string().nullable().optional(),
+  programPricingId: z.string().nullable().optional(),
+
   // Extended programme details
   tagline:        z.string().nullable().optional(),
   duration:       z.string().nullable().optional(),

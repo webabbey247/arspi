@@ -9,6 +9,118 @@ import { Button } from "@/components/ui/button";
 import withLayout from "@/hooks/useLayout";
 import { getInsightBySlug, type PublicInsightDetailResponse } from "@/services/public-insight.service";
 
+function InsightDetailSkeleton() {
+  return (
+    <>
+      {/* Hero skeleton — mirrors the dark banner */}
+      <section className="bg-[#071639] relative overflow-hidden px-8 md:px-16 lg:py-16 pb-0 w-full">
+        <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
+        <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
+        <div className="relative z-10 max-w-350 mx-auto space-y-4 animate-pulse">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-5 w-24 bg-white/15 rounded-full" />
+            <div className="h-3 w-16 bg-white/10 rounded" />
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-3 max-w-xl">
+              <div className="h-9 md:h-11 bg-white/15 rounded" />
+              <div className="h-9 md:h-11 w-5/6 bg-white/15 rounded" />
+              <div className="h-9 md:h-11 w-2/3 bg-white/15 rounded" />
+            </div>
+
+            <div className="flex flex-col gap-2 max-w-2xl">
+              <div className="h-4 bg-white/10 rounded" />
+              <div className="h-4 w-4/5 bg-white/10 rounded" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 py-4 border-t border-[#0474C4]/15">
+            <div className="w-10 h-10 rounded-full bg-white/15 shrink-0" />
+            <div className="flex flex-col gap-1.5">
+              <div className="h-3 w-32 bg-white/15 rounded" />
+              <div className="h-3 w-24 bg-white/10 rounded" />
+            </div>
+            <div className="ml-auto h-3 w-16 bg-white/10 rounded" />
+          </div>
+        </div>
+      </section>
+
+      {/* Body skeleton — article + sidebar */}
+      <div className="max-w-350 mx-auto px-8 py-16 grid lg:grid-cols-[1fr_340px] gap-14 justify-between items-start w-full">
+        <article className="animate-pulse">
+          <div className="space-y-3">
+            <div className="h-4 bg-slate-200 rounded" />
+            <div className="h-4 bg-slate-200 rounded" />
+            <div className="h-4 w-11/12 bg-slate-200 rounded" />
+            <div className="h-4 w-3/4 bg-slate-200 rounded" />
+
+            <div className="h-7 w-2/3 bg-slate-200 rounded mt-8 mb-2" />
+
+            <div className="h-4 bg-slate-200 rounded" />
+            <div className="h-4 w-11/12 bg-slate-200 rounded" />
+            <div className="h-4 bg-slate-200 rounded" />
+            <div className="h-4 w-2/3 bg-slate-200 rounded" />
+
+            <div className="h-7 w-1/2 bg-slate-200 rounded mt-8 mb-2" />
+
+            <div className="h-4 bg-slate-200 rounded" />
+            <div className="h-4 w-5/6 bg-slate-200 rounded" />
+            <div className="h-4 w-3/4 bg-slate-200 rounded" />
+          </div>
+
+          {/* Share row */}
+          <div className="mt-10 pt-8 border-t border-sapphire/20 flex items-center gap-4 flex-wrap">
+            <div className="h-3 w-10 bg-slate-200 rounded" />
+            {[80, 90, 80].map((w, i) => (
+              <div key={i} className="h-7 bg-slate-200 rounded" style={{ width: w }} />
+            ))}
+          </div>
+
+          {/* Prev / next */}
+          <div className="mt-10 grid grid-cols-2 gap-4">
+            {[0, 1].map(i => (
+              <div key={i} className="border border-sapphire/20 rounded p-4">
+                <div className={`h-3 w-20 bg-slate-200 rounded mb-2 ${i === 1 ? "ml-auto" : ""}`} />
+                <div className="h-4 bg-slate-200 rounded mb-1.5" />
+                <div className={`h-4 w-3/4 bg-slate-200 rounded ${i === 1 ? "ml-auto" : ""}`} />
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <aside className="sticky top-16 flex flex-col gap-6 animate-pulse">
+          {/* About the author card */}
+          <div className="bg-white border border-[#0474C4]/25 rounded p-5 flex flex-col gap-4">
+            <div className="h-6 w-40 bg-slate-200 rounded" />
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-32 bg-slate-200 rounded" />
+                <div className="h-3 w-24 bg-slate-200 rounded" />
+                <div className="h-3 bg-slate-200 rounded mt-2" />
+                <div className="h-3 w-5/6 bg-slate-200 rounded" />
+                <div className="h-3 w-2/3 bg-slate-200 rounded" />
+              </div>
+            </div>
+          </div>
+
+          {/* Deepen Your Practice card */}
+          <div className="bg-ink rounded p-5">
+            <div className="h-6 w-44 bg-white/15 rounded mb-3" />
+            <div className="space-y-2 mb-4">
+              <div className="h-3 bg-white/10 rounded" />
+              <div className="h-3 w-5/6 bg-white/10 rounded" />
+              <div className="h-3 w-2/3 bg-white/10 rounded" />
+            </div>
+            <div className="h-12 bg-white/15 rounded" />
+          </div>
+        </aside>
+      </div>
+    </>
+  );
+}
+
 const InsightDetailPage = () => {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug;
@@ -48,11 +160,7 @@ const InsightDetailPage = () => {
   }, [loadInsight]);
 
   if (loading) {
-    return (
-      <section className="bg-sky-light px-8 md:px-16 py-24 w-full">
-        <div className="max-w-200 mx-auto text-slate-500">Loading insight...</div>
-      </section>
-    );
+    return <InsightDetailSkeleton />;
   }
 
   if (notFound || !payload) {
@@ -87,7 +195,7 @@ const InsightDetailPage = () => {
       <section className="bg-[#071639] relative overflow-hidden px-8 md:px-16 lg:py-16 pb-0 w-full">
         <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
         <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
-        <div className="relative z-10 max-w-280 mx-auto space-y-4">
+        <div className="relative z-10 max-w-350 mx-auto space-y-4">
           <div className="flex items-center gap-3 mb-6">
             <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]">
               {ins.category}
@@ -131,10 +239,10 @@ const InsightDetailPage = () => {
         </div>
       </section>
 
-      <div className="max-w-300 mx-auto px-8 md:px-14 py-16 grid lg:grid-cols-[1fr_340px] gap-14 items-start w-full">
+      <div className="max-w-350 mx-auto px-8 py-16 grid lg:grid-cols-[1fr_340px] gap-14 justify-between items-start w-full">
         <article>
           <div
-            className="prose flex flex-col gap-2 prose-slate max-w-none prose-headings:text-[#262B40] prose-p:text-slate-600 prose-p:font-normal prose-p:font-body prose-p:text-[1rem] prose-p:tracking-[-0.005em] prose-p:leading-[1.7] prose-a:text-[#0474C4]"
+              className="prose prose-slate max-w-none font-body text-[1rem] leading-[1.8] text-[#1A1916] [&_h2]:tracking-[-0.01em] [&_h2]:leading-tight [&_h2]:font-heading [&_h2]:text-[#071639] [&_h2]:mt-10 [&_h2]:mb-2 [&_h2]:text-[1.75rem] [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6"
             dangerouslySetInnerHTML={{ __html: ins.body }}
           />
           <div className="mt-10 pt-8 border-t border-sapphire/20 flex items-center gap-4 flex-wrap">

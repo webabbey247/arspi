@@ -17,6 +17,20 @@ export type PublicProgram = {
   startDate:   string | null
   rating:      number | null
   reviewCount: number | null
+
+  // Lookup-table relations
+  programLevel:   { id: string; name: string; slug: string } | null
+  programFormat:  { id: string; name: string; slug: string } | null
+  programPricing: { id: string; name: string; slug: string } | null
+}
+
+export type ProgramLookup = { id: string; name: string; slug: string }
+
+export async function getProgramLookups(kind: "levels" | "formats" | "pricing"): Promise<ProgramLookup[]> {
+  const response = await fetch(`/api/programs/public/lookups?kind=${kind}`)
+  if (!response.ok) return []
+  const payload = await response.json()
+  return payload?.items ?? []
 }
 
 type GetProgramsOptions = {

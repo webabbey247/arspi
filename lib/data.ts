@@ -12,7 +12,13 @@ export const navLinks: NavItem[] = [
     ],
   },
   { label: "Solutions", href: "/solutions" },
-  { label: "Research",  href: "/research" },
+  {
+    label: "Our Research",
+    children: [
+      { label: "Research Training", href: "/our-research/research-training" },
+      { label: "Research Projects", href: "/our-research/research-projects" },
+    ],
+  },
   { label: "Programs",  href: "/programs" },
   { label: "Workshop",  href: "/workshop" },
   { label: "Insights",  href: "/insights" },

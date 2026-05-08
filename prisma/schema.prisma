@@ -202,6 +202,16 @@ model Course {
   categoryId   String?
   category     Category?   @relation(fields: [categoryId], references: [id])
 
+  // Lookup-table relations (replacing CourseLevel enum, format string, pricing string)
+  programLevelId   String?
+  programLevel     ProgramLevel?   @relation(fields: [programLevelId],   references: [id])
+
+  programFormatId  String?
+  programFormat    ProgramFormat?  @relation(fields: [programFormatId],  references: [id])
+
+  programPricingId String?
+  programPricing   ProgramPricing? @relation(fields: [programPricingId], references: [id])
+
   // Relations
   sections     Section[]
   enrollments  Enrollment[]
@@ -212,6 +222,39 @@ model Course {
   updatedAt DateTime @updatedAt
 
   @@map("courses")
+}
+
+// ============================================================
+// PROGRAM LOOKUP TABLES (Level / Format / Pricing)
+// ============================================================
+model ProgramLevel {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  courses   Course[]
+  createdAt DateTime @default(now())
+
+  @@map("program_levels")
+}
+
+model ProgramFormat {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  courses   Course[]
+  createdAt DateTime @default(now())
+
+  @@map("program_formats")
+}
+
+model ProgramPricing {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  courses   Course[]
+  createdAt DateTime @default(now())
+
+  @@map("program_pricing_options")
 }
 
 model CourseTag {
@@ -648,5 +691,128 @@ model TeamMember {
 
   @@index([category, displayOrder])
   @@map("team_members")
+}
+
+// ============================================================
+// RESEARCH PROJECTS
+// ============================================================
+
+enum ProjectStatus {
+  COMPLETE
+  ACTIVE
+}
+
+model ProjectDivision {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  projects  Project[]
+  createdAt DateTime  @default(now())
+
+  @@map("project_divisions")
+}
+
+model ProjectDepartment {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  projects  Project[]
+  createdAt DateTime  @default(now())
+
+  @@map("project_departments")
+}
+
+model ProjectService {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  projects  Project[]
+  createdAt DateTime  @default(now())
+
+  @@map("project_services")
+}
+
+model Project {
+  id           String        @id @default(cuid())
+  title        String
+  slug         String        @unique
+  excerpt      String        @db.Text
+  description  String        @db.Text
+  coverImage   String?
+  status       ProjectStatus @default(ACTIVE)
+  client       String
+  clientLogo   String?
+  startDate    DateTime?
+  endDate      DateTime?
+  displayOrder Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  divisionId   String?
+  division     ProjectDivision? @relation(fields: [divisionId], references: [id])
+
+  departmentId String?
+  department   ProjectDepartment? @relation(fields: [departmentId], references: [id])
+
+  services     ProjectService[]
+
+  // People (project-scoped JSON arrays; not reusable across projects)
+  investigators Json?  // Array<{ imageUrl?: string; name: string; role?: string }>
+  members       Json?  // Array<{ imageUrl?: string; name: string; role?: string }>
+
+  @@index([status, displayOrder])
+  @@map("projects")
+}
+
+// ============================================================
+// ORGANIZATIONS
+// ============================================================
+
+model Organization {
+  id           String   @id @default(cuid())
+  name         String
+  logo         String
+  url          String?
+  description  String?  @db.Text
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([displayOrder])
+  @@map("organizations")
+}
+
+// ============================================================
+// GLOBAL OFFICES
+// ============================================================
+
+enum OfficeRegion {
+  AFRICA
+  AMERICAS
+  ASIA
+  EUROPE
+  OCEANIA
+  MIDDLE_EAST
+}
+
+model GlobalOffice {
+  id           String       @id @default(cuid())
+  city         String
+  country      String
+  region       OfficeRegion @default(AFRICA)
+  addressLine1 String
+  addressLine2 String?
+  postalCode   String?
+  phone        String?
+  email        String?
+  mapUrl       String?
+  coverImage   String?
+  displayOrder Int          @default(0)
+  active       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([region, displayOrder])
+  @@map("global_offices")
 }
 

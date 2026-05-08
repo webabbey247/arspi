@@ -55,6 +55,11 @@ export async function GET(req: NextRequest) {
 
       // Facilitators
       facilitators:       p.facilitators,
+
+      // Lookup-table relations
+      programLevel:   p.programLevel,
+      programFormat:  p.programFormat,
+      programPricing: p.programPricing,
     }))
 
     return NextResponse.json({ programs: payload })

@@ -41,6 +41,14 @@ type Program = {
   instructor:   { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null }
   categoryId:   string | null
   category:     Category | null
+
+  programLevelId:   string | null
+  programLevel:     { id: string; name: string; slug: string } | null
+  programFormatId:  string | null
+  programFormat:    { id: string; name: string; slug: string } | null
+  programPricingId: string | null
+  programPricing:   { id: string; name: string; slug: string } | null
+
   createdAt:    string
   updatedAt:    string
   _count:       { enrollments: number }
@@ -64,7 +72,35 @@ type Program = {
   facilitators:       unknown | null
 }
 
-type Tab = "programs" | "categories"
+type Tab = "programs" | "categories" | "levels" | "formats" | "pricing"
+
+type Lookup = {
+  id: string
+  name: string
+  slug: string
+  createdAt: string
+  _count: { courses: number }
+}
+
+type LookupKind = "level" | "format" | "pricing"
+
+const LOOKUP_LABEL: Record<LookupKind, { singular: string; plural: string; placeholder: string; description: string }> = {
+  level:   { singular: "Level",   plural: "Levels",   placeholder: "e.g. Beginner",     description: "Create a new program level." },
+  format:  { singular: "Format",  plural: "Formats",  placeholder: "e.g. Online Live",  description: "Create a new program format." },
+  pricing: { singular: "Pricing option", plural: "Pricing", placeholder: "e.g. Free", description: "Create a new pricing option." },
+}
+
+const LOOKUP_ENDPOINT: Record<LookupKind, string> = {
+  level:   "/api/programs/levels",
+  format:  "/api/programs/formats",
+  pricing: "/api/programs/pricing",
+}
+
+const LOOKUP_RESPONSE_KEY: Record<LookupKind, "levels" | "formats" | "pricing"> = {
+  level:   "levels",
+  format:  "formats",
+  pricing: "pricing",
+}
 
 type FacilitatorItem = {
   name:        string
@@ -250,6 +286,11 @@ type ProgramFormValues = {
   enrolledCount:  string
   countriesCount: string
 
+  // Lookup-table relations (parallel to the legacy fields above)
+  programLevelId:   string
+  programFormatId:  string
+  programPricingId: string
+
   // Step 2 — Objectives
   overview:           string
   targetAudience:     string[]
@@ -272,6 +313,7 @@ const EMPTY_FORM: ProgramFormValues = {
   level: "BEGINNER", categoryId: "", tagline: "", featured: false,
   format: "", duration: "", startDate: "", endDate: "", cohortSize: "",
   rating: "", reviewCount: "", enrolledCount: "", countriesCount: "",
+  programLevelId: "", programFormatId: "", programPricingId: "",
   overview: "", targetAudience: [], learningObjectives: [], whatIsIncluded: [],
   curriculum: [], facilitators: [], faqs: [],
 }
@@ -956,12 +998,15 @@ function FaqEditor({
 }
 
 function ProgramModal({
-  program, categories, onSave, onClose,
+  program, categories, levels, formats, pricingOptions, onSave, onClose,
 }: {
-  program:    Program | null
-  categories: Category[]
-  onSave:     (values: ProgramFormValues) => Promise<void>
-  onClose:    () => void
+  program:        Program | null
+  categories:     Category[]
+  levels:         Lookup[]
+  formats:        Lookup[]
+  pricingOptions: Lookup[]
+  onSave:         (values: ProgramFormValues) => Promise<void>
+  onClose:        () => void
 }) {
   const [step,        setStep]        = useState(1)
   const [saving,      setSaving]      = useState(false)
@@ -988,6 +1033,9 @@ function ProgramModal({
     reviewCount:    program.reviewCount    != null ? String(program.reviewCount)    : "",
     enrolledCount:  program.enrolledCount  != null ? String(program.enrolledCount)  : "",
     countriesCount: program.countriesCount != null ? String(program.countriesCount) : "",
+    programLevelId:   program.programLevelId   ?? "",
+    programFormatId:  program.programFormatId  ?? "",
+    programPricingId: program.programPricingId ?? "",
     overview:           program.overview ?? "",
     targetAudience:     Array.isArray(program.targetAudience)     ? (program.targetAudience as string[])     : [],
     learningObjectives: Array.isArray(program.learningObjectives) ? (program.learningObjectives as string[]) : [],
@@ -1165,6 +1213,28 @@ function ProgramModal({
                   <option value="ADVANCED">Advanced</option>
                 </select>
                 <FieldError msg={errors.level?.message} />
+              </Field>
+            </div>
+
+            {/* Lookup-table relations — managed under Levels / Formats / Pricing tabs */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Field label="Level (managed)" hint="From Levels tab">
+                <select {...register("programLevelId")} className={inputCls}>
+                  <option value="">— None —</option>
+                  {levels.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                </select>
+              </Field>
+              <Field label="Format (managed)" hint="From Formats tab">
+                <select {...register("programFormatId")} className={inputCls}>
+                  <option value="">— None —</option>
+                  {formats.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+              </Field>
+              <Field label="Pricing (managed)" hint="From Pricing tab">
+                <select {...register("programPricingId")} className={inputCls}>
+                  <option value="">— None —</option>
+                  {pricingOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
               </Field>
             </div>
 
@@ -1453,6 +1523,152 @@ function CategoryModal({ category, onSave, onClose }: { category: Category | nul
   )
 }
 
+// ── Lookup modal (Level / Format / Pricing) ───────────────────────────────────
+
+function LookupModal({
+  kind, item, onSave, onClose,
+}: {
+  kind:    LookupKind
+  item:    Lookup | null
+  onSave:  (name: string) => Promise<void>
+  onClose: () => void
+}) {
+  const meta = LOOKUP_LABEL[kind]
+  const [name, setName]     = useState(item?.name ?? "")
+  const [saving, setSaving] = useState(false)
+  const [error, setError]   = useState("")
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!name.trim()) return
+    setError("")
+    setSaving(true)
+    try { await onSave(name.trim()) }
+    catch (err) { setError(err instanceof Error ? err.message : "Something went wrong.") }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+          <div>
+            <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-300">
+              {item ? `Edit ${meta.singular}` : `New ${meta.singular}`}
+            </div>
+            <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-300 mt-0.5">
+              {item ? `Update the ${meta.singular.toLowerCase()} name.` : meta.description}
+            </div>
+          </div>
+          <button type="button" onClick={onClose} className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EDF2FB]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
+          {error && <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+          <input autoFocus value={name} onChange={e => setName(e.target.value)} placeholder={meta.placeholder} className={inputCls} required />
+          <div className="flex gap-2 justify-end">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
+            <button type="submit" disabled={saving || !name.trim()} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+              {saving ? "Saving…" : item ? "Save" : "Create"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// ── Lookup tab panel (Levels / Formats / Pricing) ─────────────────────────────
+
+function LookupTab({
+  kind, items, loading, search, setSearch,
+  page, setPage, totalPages, paginated,
+  onEdit, onDelete,
+}: {
+  kind:        LookupKind
+  items:       Lookup[]
+  loading:     boolean
+  search:      string
+  setSearch:   (v: string) => void
+  page:        number
+  setPage:     React.Dispatch<React.SetStateAction<number>>
+  totalPages:  number
+  paginated:   Lookup[]
+  onEdit:      (item: Lookup) => void
+  onDelete:    (item: Lookup) => void
+}) {
+  const meta = LOOKUP_LABEL[kind]
+  const PAGE_SIZE = 20
+  return (
+    <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
+      <div className="flex gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+        <div className="relative w-full sm:w-64">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${meta.plural.toLowerCase()}…`} className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-[13px]">
+          <thead>
+            <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+              {["Name", "Slug", "Programs", "Created", ""].map(col => (
+                <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+            ) : paginated.length === 0 ? (
+              <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No {meta.plural.toLowerCase()} yet.</td></tr>
+            ) : paginated.map(item => (
+              <tr key={item.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                <td className="px-4 py-3 font-semibold text-[#1A1916] whitespace-nowrap">{item.name}</td>
+                <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{item.slug}</td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">{item._count.courses}</span>
+                </td>
+                <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">
+                  {new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => onEdit(item)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button onClick={() => onDelete(item)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+        <p className="text-[11px] text-[#A8A39C]">
+          {paginated.length === 0 ? (
+            <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{items.length}</span> {meta.plural.toLowerCase()}</>
+          ) : (
+            <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, items.length)}</span> of <span className="font-semibold text-[#6B6560]">{items.length}</span> {meta.plural.toLowerCase()}</>
+          )}
+        </p>
+        {paginated.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+            <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function AdminProgramsPage() {
@@ -1481,6 +1697,28 @@ export default function AdminProgramsPage() {
   const [categoryModal, setCategoryModal]           = useState<"create" | Category | null>(null)
   const [deleteCategory, setDeleteCategory]         = useState<Category | null>(null)
 
+  // Levels / Formats / Pricing — lookup tables
+  const [levels, setLevels]                   = useState<Lookup[]>([])
+  const [levelsLoading, setLevelsLoading]     = useState(true)
+  const [levelSearch, setLevelSearch]         = useState("")
+  const [levelModal, setLevelModal]           = useState<"create" | Lookup | null>(null)
+  const [deleteLevel, setDeleteLevel]         = useState<Lookup | null>(null)
+  const [levelsPage, setLevelsPage]           = useState(1)
+
+  const [formats, setFormats]                 = useState<Lookup[]>([])
+  const [formatsLoading, setFormatsLoading]   = useState(true)
+  const [formatSearch, setFormatSearch]       = useState("")
+  const [formatModal, setFormatModal]         = useState<"create" | Lookup | null>(null)
+  const [deleteFormat, setDeleteFormat]       = useState<Lookup | null>(null)
+  const [formatsPage, setFormatsPage]         = useState(1)
+
+  const [pricingList, setPricingList]         = useState<Lookup[]>([])
+  const [pricingLoading, setPricingLoading]   = useState(true)
+  const [pricingSearch, setPricingSearch]     = useState("")
+  const [pricingModal, setPricingModal]       = useState<"create" | Lookup | null>(null)
+  const [deletePricing, setDeletePricing]     = useState<Lookup | null>(null)
+  const [pricingPage, setPricingPage]         = useState(1)
+
   // ── Fetch ──────────────────────────────────────────────────────────────────
 
   const fetchPrograms = useCallback(async () => {
@@ -1505,7 +1743,30 @@ export default function AdminProgramsPage() {
     }
   }, [])
 
-  useEffect(() => { fetchPrograms(); fetchCategories() }, [fetchPrograms, fetchCategories])
+  const fetchLookup = useCallback(async (kind: LookupKind) => {
+    const setLoading = kind === "level" ? setLevelsLoading : kind === "format" ? setFormatsLoading : setPricingLoading
+    const setData    = kind === "level" ? setLevels       : kind === "format" ? setFormats       : setPricingList
+    setLoading(true)
+    try {
+      const r = await fetch(LOOKUP_ENDPOINT[kind])
+      const d = await r.json()
+      if (r.ok) setData(d[LOOKUP_RESPONSE_KEY[kind]] ?? [])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const fetchLevels   = useCallback(() => fetchLookup("level"),   [fetchLookup])
+  const fetchFormats  = useCallback(() => fetchLookup("format"),  [fetchLookup])
+  const fetchPricing  = useCallback(() => fetchLookup("pricing"), [fetchLookup])
+
+  useEffect(() => {
+    fetchPrograms()
+    fetchCategories()
+    fetchLevels()
+    fetchFormats()
+    fetchPricing()
+  }, [fetchPrograms, fetchCategories, fetchLevels, fetchFormats, fetchPricing])
 
   useEffect(() => {
     function h(e: MouseEvent) {
@@ -1518,6 +1779,9 @@ export default function AdminProgramsPage() {
 
   useEffect(() => { setPage(1) }, [search, levelFilter, pricingFilter])
   useEffect(() => { setCategoriesPage(1) }, [categorySearch])
+  useEffect(() => { setLevelsPage(1) },     [levelSearch])
+  useEffect(() => { setFormatsPage(1) },    [formatSearch])
+  useEffect(() => { setPricingPage(1) },    [pricingSearch])
 
   // ── CSV export ─────────────────────────────────────────────────────────────
 
@@ -1591,6 +1855,10 @@ export default function AdminProgramsPage() {
       level:       values.level,
       categoryId:  values.categoryId || null,
       featured:    values.featured,
+
+      programLevelId:   values.programLevelId   || null,
+      programFormatId:  values.programFormatId  || null,
+      programPricingId: values.programPricingId || null,
 
       tagline:        values.tagline       || null,
       duration:       values.duration      || null,
@@ -1685,6 +1953,42 @@ export default function AdminProgramsPage() {
     )
   })
 
+  // ── Lookup CRUD (Levels / Formats / Pricing) ──────────────────────────────
+
+  function lookupContextFor(kind: LookupKind) {
+    if (kind === "level")   return { modal: levelModal,   setModal: setLevelModal,   refetch: fetchLevels,  toDelete: deleteLevel,   setToDelete: setDeleteLevel,   resKey: "level" as const }
+    if (kind === "format")  return { modal: formatModal,  setModal: setFormatModal,  refetch: fetchFormats, toDelete: deleteFormat,  setToDelete: setDeleteFormat,  resKey: "format" as const }
+    return                       { modal: pricingModal, setModal: setPricingModal, refetch: fetchPricing, toDelete: deletePricing, setToDelete: setDeletePricing, resKey: "pricing" as const }
+  }
+
+  async function handleSaveLookup(kind: LookupKind, name: string) {
+    const ctx     = lookupContextFor(kind)
+    const editing = ctx.modal !== "create" ? ctx.modal : null
+    const url     = editing ? `${LOOKUP_ENDPOINT[kind]}/${editing.id}` : LOOKUP_ENDPOINT[kind]
+    const res = await fetch(url, {
+      method: editing ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error ?? `Failed to save ${LOOKUP_LABEL[kind].singular.toLowerCase()}.`)
+    ctx.setModal(null)
+    await ctx.refetch()
+  }
+
+  async function handleDeleteLookup(kind: LookupKind) {
+    const ctx = lookupContextFor(kind)
+    if (!ctx.toDelete) return
+    const res = await fetch(`${LOOKUP_ENDPOINT[kind]}/${ctx.toDelete.id}`, { method: "DELETE" })
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      alert(d.error ?? "Failed to delete.")
+      return
+    }
+    ctx.setToDelete(null)
+    await ctx.refetch()
+  }
+
   const filteredCategories = categories.filter(c =>
     !categorySearch || c.name.toLowerCase().includes(categorySearch.toLowerCase())
   )
@@ -1693,6 +1997,18 @@ export default function AdminProgramsPage() {
   const paginatedPrograms = filteredPrograms.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const totalCategoryPages = Math.max(1, Math.ceil(filteredCategories.length / PAGE_SIZE))
   const paginatedCategories = filteredCategories.slice((categoriesPage - 1) * PAGE_SIZE, categoriesPage * PAGE_SIZE)
+
+  const filteredLevels  = levels.filter(l => !levelSearch || l.name.toLowerCase().includes(levelSearch.toLowerCase()))
+  const filteredFormats = formats.filter(f => !formatSearch || f.name.toLowerCase().includes(formatSearch.toLowerCase()))
+  const filteredPricing = pricingList.filter(p => !pricingSearch || p.name.toLowerCase().includes(pricingSearch.toLowerCase()))
+
+  const totalLevelPages   = Math.max(1, Math.ceil(filteredLevels.length / PAGE_SIZE))
+  const totalFormatPages  = Math.max(1, Math.ceil(filteredFormats.length / PAGE_SIZE))
+  const totalPricingPages = Math.max(1, Math.ceil(filteredPricing.length / PAGE_SIZE))
+
+  const paginatedLevels   = filteredLevels.slice((levelsPage  - 1) * PAGE_SIZE, levelsPage  * PAGE_SIZE)
+  const paginatedFormats  = filteredFormats.slice((formatsPage - 1) * PAGE_SIZE, formatsPage * PAGE_SIZE)
+  const paginatedPricing  = filteredPricing.slice((pricingPage - 1) * PAGE_SIZE, pricingPage * PAGE_SIZE)
 
   const counts = {
     all:      programs.length,
@@ -1713,24 +2029,40 @@ export default function AdminProgramsPage() {
           <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage learning programs and categories</p>
         </div>
         <button
-          onClick={() => tab === "programs" ? setProgramModal("create") : setCategoryModal("create")}
+          onClick={() => {
+            if (tab === "programs")   setProgramModal("create")
+            else if (tab === "categories") setCategoryModal("create")
+            else if (tab === "levels")     setLevelModal("create")
+            else if (tab === "formats")    setFormatModal("create")
+            else                           setPricingModal("create")
+          }}
           className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          {tab === "programs" ? "New Program" : "New Category"}
+          {tab === "programs"   ? "New Program"
+           : tab === "categories" ? "New Category"
+           : tab === "levels"     ? "New Level"
+           : tab === "formats"    ? "New Format"
+           :                        "New Pricing"}
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 w-fit">
-        {(["programs", "categories"] as Tab[]).map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}>
-            {t}
-            <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tab === t ? "bg-[#F5F4F1] text-[#6B6560]" : "bg-[#E5E2DC] text-[#A8A39C]"}`}>
-              {t === "programs" ? programs.length : categories.length}
-            </span>
-          </button>
-        ))}
+      <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 w-fit flex-wrap">
+        {(["programs", "categories", "levels", "formats", "pricing"] as Tab[]).map(t => {
+          const count =
+            t === "programs"   ? programs.length :
+            t === "categories" ? categories.length :
+            t === "levels"     ? levels.length :
+            t === "formats"    ? formats.length :
+                                 pricingList.length
+          return (
+            <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}>
+              {t}
+              <span className="ml-1 font-normal text-[#A8A39C]">({count})</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* ── PROGRAMS TAB ──────────────────────────────────────────────────────── */}
@@ -1995,11 +2327,56 @@ export default function AdminProgramsPage() {
         </div>
       )}
 
+      {tab === "levels" && (
+        <LookupTab
+          kind="level"
+          items={levels}
+          loading={levelsLoading}
+          search={levelSearch} setSearch={setLevelSearch}
+          page={levelsPage} setPage={setLevelsPage}
+          totalPages={totalLevelPages}
+          paginated={paginatedLevels}
+          onEdit={(item) => setLevelModal(item)}
+          onDelete={(item) => setDeleteLevel(item)}
+        />
+      )}
+
+      {tab === "formats" && (
+        <LookupTab
+          kind="format"
+          items={formats}
+          loading={formatsLoading}
+          search={formatSearch} setSearch={setFormatSearch}
+          page={formatsPage} setPage={setFormatsPage}
+          totalPages={totalFormatPages}
+          paginated={paginatedFormats}
+          onEdit={(item) => setFormatModal(item)}
+          onDelete={(item) => setDeleteFormat(item)}
+        />
+      )}
+
+      {tab === "pricing" && (
+        <LookupTab
+          kind="pricing"
+          items={pricingList}
+          loading={pricingLoading}
+          search={pricingSearch} setSearch={setPricingSearch}
+          page={pricingPage} setPage={setPricingPage}
+          totalPages={totalPricingPages}
+          paginated={paginatedPricing}
+          onEdit={(item) => setPricingModal(item)}
+          onDelete={(item) => setDeletePricing(item)}
+        />
+      )}
+
       {/* Modals */}
       {programModal !== null && (
         <ProgramModal
           program={programModal === "create" ? null : programModal}
           categories={categories}
+          levels={levels}
+          formats={formats}
+          pricingOptions={pricingList}
           onSave={handleSaveProgram}
           onClose={() => setProgramModal(null)}
         />
@@ -2007,11 +2384,29 @@ export default function AdminProgramsPage() {
       {categoryModal !== null && (
         <CategoryModal category={categoryModal === "create" ? null : categoryModal} onSave={handleSaveCategory} onClose={() => setCategoryModal(null)} />
       )}
+      {levelModal !== null && (
+        <LookupModal kind="level" item={levelModal === "create" ? null : levelModal} onSave={(name) => handleSaveLookup("level", name)} onClose={() => setLevelModal(null)} />
+      )}
+      {formatModal !== null && (
+        <LookupModal kind="format" item={formatModal === "create" ? null : formatModal} onSave={(name) => handleSaveLookup("format", name)} onClose={() => setFormatModal(null)} />
+      )}
+      {pricingModal !== null && (
+        <LookupModal kind="pricing" item={pricingModal === "create" ? null : pricingModal} onSave={(name) => handleSaveLookup("pricing", name)} onClose={() => setPricingModal(null)} />
+      )}
       {deleteProgram && (
         <ConfirmDialog message={`Delete "${deleteProgram.title}"? This cannot be undone.`} onConfirm={handleDeleteProgram} onCancel={() => setDeleteProgram(null)} />
       )}
       {deleteCategory && (
         <ConfirmDialog message={`Delete category "${deleteCategory.name}"? This cannot be undone.`} onConfirm={handleDeleteCategory} onCancel={() => setDeleteCategory(null)} />
+      )}
+      {deleteLevel && (
+        <ConfirmDialog message={`Delete level "${deleteLevel.name}"? This cannot be undone.`} onConfirm={() => handleDeleteLookup("level")} onCancel={() => setDeleteLevel(null)} />
+      )}
+      {deleteFormat && (
+        <ConfirmDialog message={`Delete format "${deleteFormat.name}"? This cannot be undone.`} onConfirm={() => handleDeleteLookup("format")} onCancel={() => setDeleteFormat(null)} />
+      )}
+      {deletePricing && (
+        <ConfirmDialog message={`Delete pricing option "${deletePricing.name}"? This cannot be undone.`} onConfirm={() => handleDeleteLookup("pricing")} onCancel={() => setDeletePricing(null)} />
       )}
     </div>
   )
