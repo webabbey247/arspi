@@ -29,7 +29,7 @@ const LABEL_FOR: Record<LookupKind, string> = {
 // ── Generic CRUD ──────────────────────────────────────────────────────────────
 
 async function listLookup(kind: LookupKind): Promise<ProgramLookupRow[]> {
-  const model = db[TABLE_FOR[kind]] as {
+  const model = db[TABLE_FOR[kind]] as unknown as {
     findMany: (args: unknown) => Promise<ProgramLookupRow[]>
   }
   const rows = await model.findMany({
@@ -44,7 +44,7 @@ async function createLookup(
   name: string,
 ): Promise<ProgramServiceResult<ProgramLookupRow>> {
   const slug  = slugify(name)
-  const model = db[TABLE_FOR[kind]] as {
+  const model = db[TABLE_FOR[kind]] as unknown as {
     findFirst: (args: unknown) => Promise<ProgramLookupRow | null>
     create:    (args: unknown) => Promise<ProgramLookupRow>
   }
@@ -66,7 +66,7 @@ async function updateLookup(
   name: string,
 ): Promise<ProgramServiceResult<ProgramLookupRow>> {
   const slug  = slugify(name)
-  const model = db[TABLE_FOR[kind]] as {
+  const model = db[TABLE_FOR[kind]] as unknown as {
     findUnique: (args: unknown) => Promise<ProgramLookupRow | null>
     findFirst:  (args: unknown) => Promise<ProgramLookupRow | null>
     update:     (args: unknown) => Promise<ProgramLookupRow>
@@ -93,7 +93,7 @@ async function deleteLookup(
   kind: LookupKind,
   id:   string,
 ): Promise<ProgramServiceResult<null>> {
-  const model = db[TABLE_FOR[kind]] as {
+  const model = db[TABLE_FOR[kind]] as unknown as {
     findUnique: (args: unknown) => Promise<ProgramLookupRow | null>
     delete:     (args: unknown) => Promise<unknown>
   }
