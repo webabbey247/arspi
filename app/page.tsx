@@ -17,7 +17,7 @@ function InsightCard({ insight }: { insight: PublicInsight }) {
     >
       <Image
         className="w-full aspect-video object-cover block opacity-75 transition-opacity duration-300 group-hover:opacity-90"
-        src={insight.coverImage || "/images/dummy/article-1.jpg"}
+        src={insight.coverImage || "/images/placeholder-img.png"}
         alt={insight.title}
         width={500}
         height={300}
