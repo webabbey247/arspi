@@ -23,6 +23,7 @@ const updateSchema = z.object({
   price:        z.number().min(0).optional(),
   level:        z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
   featured:     z.boolean().optional(),
+  predefinedAnalytics: z.boolean().optional(),
   categoryId:   z.string().nullable().optional(),
   tagline:        z.string().nullable().optional(),
   duration:       z.string().nullable().optional(),

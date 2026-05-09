@@ -5,15 +5,15 @@ import { footerLinks } from "@/lib/data";
 export function Footer() {
   return (
     <footer className="bg-[#06457f] border-t border-[#5379AE]/15 w-full">
-      <div className="px-8 md:px-16 py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.8fr_1fr_1fr_1.6fr] gap-10 lg:gap-16 border-b border-white/5 mx-auto">
-        <div className="flex flex-col justify-start items-start w-full gap-5">
-          <h4 className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-white/90">
+      <div className="px-4 sm:px-6 md:px-10 lg:px-16 py-10 sm:py-12 md:py-14 lg:py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.8fr_1fr_1fr_1.6fr] gap-8 md:gap-10 lg:gap-16 border-b border-white/5 mx-auto">
+        <div className="flex flex-col justify-start items-start w-full gap-5 sm:col-span-2 lg:col-span-1">
+          <h4 className="font-heading text-[1.25rem] sm:text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-white/90">
             Advancing <em className="italic">Professional Expertise,</em>
             <br />
             Research &amp; Leadership.
           </h4>
 
-          <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal max-w-sm text-white/60">
+          <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal max-w-sm text-white/60">
             Global professional certification programs, research training,
             software solutions, and institutional consulting for scholars and
             practitioners worldwide.
@@ -42,8 +42,8 @@ export function Footer() {
         ))}
 
         {/* Newsletter */}
-        <div>
-          <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal mb-4 text-[#D4E4F6]">
+        <div className="sm:col-span-2 lg:col-span-1">
+          <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal mb-4 text-[#D4E4F6]">
             Stay informed — get new programmes &amp; research insights.
           </p>
 
@@ -58,8 +58,8 @@ export function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="px-8 md:px-16 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap">
-        <ul className="flex gap-6 flex-wrap">
+      <div className="px-4 sm:px-6 md:px-10 lg:px-16 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap">
+        <ul className="flex gap-x-5 gap-y-2 flex-wrap">
           {[
             "Privacy Policy",
             "Terms & Conditions",

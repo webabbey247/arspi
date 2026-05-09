@@ -54,9 +54,9 @@ const GeneralContactForm = () => {
     <form
       onSubmit={handleSubmit(onSubmit)}
       noValidate
-      className="flex flex-col justify-start items-start w-full gap-4"
+      className="flex flex-col justify-start items-start w-full gap-4 sm:gap-5"
     >
-      <div className="grid grid-cols-2 gap-4 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 w-full">
         <div className="flex flex-col gap-1.5">
           <label className="text-[0.68rem] uppercase tracking-widest text-[#637AA3]">
             First Name
@@ -77,7 +77,7 @@ const GeneralContactForm = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 w-full">
         <div className="flex flex-col gap-1.5">
           <label className="text-[0.68rem] uppercase tracking-widest text-[#637AA3]">
             Email Address
@@ -107,7 +107,7 @@ const GeneralContactForm = () => {
           control={control}
           render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="h-14 w-full rounded-sm border border-sapphire/25 bg-sky-light px-4 py-2 text-sm font-light text-ink outline-none focus:border-sapphire">
+              <SelectTrigger className="h-12 sm:h-14 w-full rounded border border-sapphire/25 bg-sky-light px-4 py-2 text-sm font-light text-ink outline-none focus:border-sapphire">
                 <SelectValue placeholder="Select Preferred Subject" />
               </SelectTrigger>
               <SelectContent>
@@ -140,7 +140,7 @@ const GeneralContactForm = () => {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="h-12 mt-6 rounded py-2.5 px-7.5 text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f] text-[0.875rem] tracking-[0.02em] font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+        className="h-12 mt-4 sm:mt-6 w-full sm:w-auto rounded py-2.5 px-6 sm:px-7.5 text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f] text-[0.875rem] tracking-[0.02em] font-medium disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isSubmitting ? (
           <Loader2 className="h-4 w-4 animate-spin" />

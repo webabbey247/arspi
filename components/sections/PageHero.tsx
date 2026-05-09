@@ -27,7 +27,7 @@ export default function PageHero({
   imageUrl,
 }: PageHeroProps) {
   return (
-    <section className="bg-[#071639] relative w-full py-24 grid lg:grid-cols-2 gap-16 items-center">
+    <section className="bg-[#071639] px-4 lg:px-0 relative w-full py-24 grid lg:grid-cols-2 gap-16 items-center">
       <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
       <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
 

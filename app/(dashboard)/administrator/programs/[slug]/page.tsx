@@ -452,7 +452,7 @@ export default function ProgramDetailPage() {
             {program.whatIsIncluded && program.whatIsIncluded.length > 0 && (
               <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-                  <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">What&apos;s Included</p>
+                  <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Highlights</p>
                 </div>
                 <ul className="px-5 py-4 space-y-2">
                   {program.whatIsIncluded.map((item, i) => (

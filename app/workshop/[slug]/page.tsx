@@ -97,46 +97,46 @@ const WorkshopDetailPage = async ({
   return (
     <>
       {/* ── Section 1: Title (2/3) + Share (1/3) ───────────────────────── */}
-      <section className="bg-[#071639] relative px-8 md:px-16 py-16 md:py-24 w-full">
+      <section className="bg-[#071639] relative px-4 sm:px-6 md:px-10 lg:px-16 py-10 sm:py-14 md:py-20 lg:py-24 w-full overflow-hidden">
         <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
         <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
 
         <div className="relative max-w-350 mx-auto z-10">
           <Link
             href="/workshop"
-            className="inline-flex items-center gap-1.5 font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#5EEAD4] hover:text-[#67e8d6] no-underline mb-8"
+            className="inline-flex items-center gap-1.5 font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#5EEAD4] hover:text-[#67e8d6] no-underline mb-6 sm:mb-8"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
             All Workshops
           </Link>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-16 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-16 items-start">
             {/* Left — title (2/3) */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center gap-2 mb-4 flex-wrap">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider ${TYPE_COLORS[isPaid ? "PAID" : "FREE"]}`}>
+            <div className="lg:col-span-2 min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4 flex-wrap">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider ${TYPE_COLORS[isPaid ? "PAID" : "FREE"]}`}>
                   {isPaid ? "Paid" : "Free"}
                 </span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/10 text-white/80 text-[11px] font-semibold">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/10 text-white/80 text-[10px] sm:text-[11px] font-semibold">
                   {CATEGORY_LABEL[workshop.category] ?? workshop.category}
                 </span>
                 {workshop.level && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/10 text-white/80 text-[11px] font-semibold">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/10 text-white/80 text-[10px] sm:text-[11px] font-semibold">
                     <GraduationCap className="h-3 w-3" />
                     {LEVEL_LABEL[workshop.level] ?? workshop.level}
                   </span>
                 )}
               </div>
-              <h1 className="font-heading text-[2.25rem] md:text-[3rem] tracking-[-0.015em] md:tracking-[-0.02em] leading-[1.2] md:leading-[1.1] font-bold text-white mb-4">
+              <h1 className="font-heading text-[1.625rem] sm:text-[2rem] md:text-[2.5rem] lg:text-[3rem] tracking-[-0.015em] md:tracking-[-0.02em] leading-[1.2] md:leading-[1.1] font-bold text-white mb-3 sm:mb-4 break-words">
                 {workshop.title}
               </h1>
-              <p className="font-body text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-[#EBF3FC]/75">
+              <p className="font-body text-[0.9375rem] sm:text-[1rem] md:text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-[#EBF3FC]/75">
                 {excerpt}
               </p>
             </div>
 
             {/* Right — share (1/3) */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 w-full">
               <ProjectShareCard
                 title={workshop.title}
                 excerpt={excerpt}
@@ -152,20 +152,20 @@ const WorkshopDetailPage = async ({
       {/* ── Section 2: Full-bleed cover image ──────────────────────────── */}
       {workshop.coverImage && (
         <section
-          className="relative w-full h-[42vh] md:h-[60vh] bg-[#0B1B3A] bg-center bg-cover"
+          className="relative w-full h-[32vh] sm:h-[42vh] md:h-[55vh] lg:h-[60vh] bg-[#0B1B3A] bg-center bg-cover"
           style={{ backgroundImage: `url(${workshop.coverImage})` }}
           aria-label={`${workshop.title} cover image`}
         />
       )}
 
       {/* ── Section 3: Body + sticky 400px sidebar ─────────────────────── */}
-      <section className="bg-white py-16 md:py-20 px-8 md:px-16 w-full">
-        <div className="max-w-350 mx-auto grid lg:grid-cols-[1fr_400px] gap-12">
+      <section className="bg-white py-10 sm:py-12 md:py-16 lg:py-20 px-4 sm:px-6 md:px-10 lg:px-16 w-full">
+        <div className="max-w-350 mx-auto grid lg:grid-cols-[1fr_400px] gap-8 md:gap-10 lg:gap-12">
 
           {/* Main */}
-          <div className="min-w-0">
+          <div className="min-w-0 order-2 lg:order-1">
             <article
-              className="prose prose-slate max-w-none font-body text-[1rem] leading-[1.8] text-[#1A1916] [&_h2]:tracking-[-0.01em] [&_h2]:leading-tight [&_h2]:font-heading [&_h2]:text-[#071639] [&_h2]:mt-10 [&_h2]:mb-2 [&_h2]:text-[1.75rem] [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6"
+              className="prose prose-slate max-w-none font-body text-[0.9375rem] sm:text-[1rem] leading-[1.75] sm:leading-[1.8] text-[#1A1916] [&_h2]:tracking-[-0.01em] [&_h2]:leading-tight [&_h2]:font-heading [&_h2]:text-[#071639] [&_h2]:mt-6 sm:[&_h2]:mt-8 md:[&_h2]:mt-10 [&_h2]:mb-2 [&_h2]:text-[1.25rem] sm:[&_h2]:text-[1.5rem] md:[&_h2]:text-[1.75rem] [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ml-5 sm:[&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-5 sm:[&_ol]:ml-6 [&_img]:max-w-full [&_img]:h-auto"
               dangerouslySetInnerHTML={{ __html: workshop.description }}
             />
 
@@ -183,13 +183,13 @@ const WorkshopDetailPage = async ({
           </div>
 
           {/* Sidebar — max 400px, sticky on scroll */}
-          <aside className="w-full max-w-100 lg:sticky lg:top-24 self-start space-y-6">
+          <aside className="w-full lg:max-w-100 lg:sticky lg:top-24 self-start space-y-5 sm:space-y-6 order-1 lg:order-2">
             {/* Workshop Details — mini-card grid (2 cols) */}
             <div>
-              <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-3">
+              <p className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-2.5 sm:mb-3">
                 Workshop Details
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                 {[
                   { icon: Calendar, label: "Date",     value: fmtDate(workshop.date) },
                   { icon: Clock,    label: "Time",     value: fmtTime(workshop.startTime, workshop.endTime, workshop.timezone) },
@@ -199,12 +199,12 @@ const WorkshopDetailPage = async ({
                   { icon: Clock,    label: "Duration", value: duration !== null ? `${duration} hrs` : "TBA" },
                   { icon: Users,    label: "Fee",      value: isPaid ? `$${workshop.fee.toLocaleString()}` : "Free" },
                 ].map(({ icon: Icon, label, value }) => (
-                  <div key={label} className="bg-white rounded px-4 py-3 flex flex-col gap-0.5 border border-[#0474C4]/12">
-                    <span className="font-body text-[0.6875rem] tracking-[0.06em] uppercase font-medium text-slate-400 flex items-center gap-1.5">
-                      <Icon className="h-3 w-3 text-[#0474C4]" />
-                      {label}
+                  <div key={label} className="bg-white rounded px-3 py-2.5 sm:px-4 sm:py-3 flex flex-col gap-0.5 border border-[#0474C4]/12 min-w-0">
+                    <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.06em] uppercase font-medium text-slate-400 flex items-center gap-1.5">
+                      <Icon className="h-3 w-3 text-[#0474C4] shrink-0" />
+                      <span className="truncate">{label}</span>
                     </span>
-                    <span className="font-body text-[0.875rem] font-medium text-ink leading-snug">
+                    <span className="font-body text-[0.8125rem] sm:text-[0.875rem] font-medium text-ink leading-snug break-words">
                       {value}
                     </span>
                   </div>
@@ -213,12 +213,12 @@ const WorkshopDetailPage = async ({
             </div>
 
             {workshop.capacity !== null && (
-              <div className="bg-white border border-[#0474C4]/12 rounded p-5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-body text-[0.6875rem] tracking-[0.06em] uppercase font-medium text-slate-400 flex items-center gap-1.5">
+              <div className="bg-white border border-[#0474C4]/12 rounded p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.06em] uppercase font-medium text-slate-400 flex items-center gap-1.5">
                     <Users className="h-3 w-3 text-[#0474C4]" /> Availability
                   </span>
-                  <span className="font-body text-[0.75rem] font-medium text-slate-500">
+                  <span className="font-body text-[0.6875rem] sm:text-[0.75rem] font-medium text-slate-500">
                     {registered} / {workshop.capacity}
                   </span>
                 </div>
@@ -228,7 +228,7 @@ const WorkshopDetailPage = async ({
                     style={{ width: `${workshop.capacity > 0 ? Math.min(100, Math.round((registered / workshop.capacity) * 100)) : 0}%` }}
                   />
                 </div>
-                <p className="font-body text-[0.75rem] text-slate-400 mt-1.5">
+                <p className="font-body text-[0.6875rem] sm:text-[0.75rem] text-slate-400 mt-1.5">
                   {Math.max(0, workshop.capacity - registered)} seats remaining
                 </p>
               </div>
@@ -249,27 +249,27 @@ const WorkshopDetailPage = async ({
 
       {/* ── Related Workshops (max 4 cards) ─────────────────────────────── */}
       {related.length > 0 && (
-        <section className="bg-[#FAFAF9] py-16 md:py-20 px-8 md:px-16 w-full border-t border-[#E5E2DC]">
+        <section className="bg-[#FAFAF9] py-10 sm:py-12 md:py-16 lg:py-20 px-4 sm:px-6 md:px-10 lg:px-16 w-full border-t border-[#E5E2DC]">
           <div className="max-w-350 mx-auto">
-            <div className="flex items-end justify-between gap-4 mb-8 md:mb-10">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8 md:mb-10">
               <div>
-                <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-2">
+                <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-1.5 sm:mb-2">
                   Continue Learning
                 </p>
-                <h2 className="font-heading text-[1.75rem] md:text-[2.25rem] tracking-[-0.015em] leading-tight font-semibold text-[#071639]">
+                <h2 className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.875rem] lg:text-[2.25rem] tracking-[-0.015em] leading-tight font-semibold text-[#071639]">
                   Related Workshops
                 </h2>
               </div>
               <Link
                 href="/workshop"
-                className="hidden md:inline-flex items-center gap-1.5 font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] hover:text-[#06457F] no-underline"
+                className="inline-flex items-center gap-1.5 font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] hover:text-[#06457F] no-underline self-start sm:self-auto"
               >
                 View all
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {related.map(r => {
                 const rPaid = r.fee > 0
                 return (
@@ -292,15 +292,15 @@ const WorkshopDetailPage = async ({
                           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                         </div>
                       )}
-                      <span className={`absolute top-3 left-3 text-[0.65rem] font-medium tracking-widest uppercase px-2.5 py-1 rounded-sm ${TYPE_COLORS[rPaid ? "PAID" : "FREE"]}`}>
+                      <span className={`absolute top-2.5 left-2.5 sm:top-3 sm:left-3 text-[0.6rem] sm:text-[0.65rem] font-medium tracking-widest uppercase px-2 sm:px-2.5 py-1 rounded-sm ${TYPE_COLORS[rPaid ? "PAID" : "FREE"]}`}>
                         {rPaid ? "Paid" : "Free"}
                       </span>
                     </div>
-                    <div className="px-5 pt-[1.3rem] pb-[1.5rem]">
-                      <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#A8A39C] mb-1.5">
+                    <div className="px-4 sm:px-5 pt-4 sm:pt-[1.3rem] pb-4 sm:pb-[1.5rem]">
+                      <p className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#A8A39C] mb-1.5">
                         {CATEGORY_LABEL[r.category] ?? r.category}
                       </p>
-                      <h3 className="font-heading text-[1.02rem] font-normal text-[#071639] leading-[1.35] line-clamp-2">
+                      <h3 className="font-heading text-[0.9375rem] sm:text-[1.02rem] font-normal text-[#071639] leading-[1.35] line-clamp-2">
                         {r.title}
                       </h3>
                     </div>
@@ -323,28 +323,28 @@ type Person = { imageUrl?: string | null; name: string; role?: string | null }
 
 function FacilitatorsSection({ facilitators }: { facilitators: Person[] }) {
   return (
-    <section className="mt-12">
-      <p className="font-body text-[0.6875rem] tracking-widest uppercase font-medium text-[#637AA3] mb-3">
+    <section className="mt-8 sm:mt-10 md:mt-12">
+      <p className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-widest uppercase font-medium text-[#637AA3] mb-2.5 sm:mb-3">
         {facilitators.length > 1 ? "Facilitators" : "Facilitator"}
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {facilitators.map((p, i) => (
-          <div key={`${p.name}-${i}`} className="flex items-center gap-3 bg-transparent rounded-none p-3 border-t border-slate-200">
+          <div key={`${p.name}-${i}`} className="flex items-center gap-3 bg-transparent rounded-none p-3 border-t border-slate-200 min-w-0">
             {p.imageUrl ? (
-              <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[#E5E2DC] bg-white shrink-0">
+              <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-[#E5E2DC] bg-white shrink-0">
                 <Image src={p.imageUrl} alt={p.name} fill className="object-cover" sizes="48px" />
               </div>
             ) : (
-              <div className="w-12 h-12 rounded-full bg-[#0474C4] text-white text-[0.8125rem] font-semibold flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#0474C4] text-white text-[0.75rem] sm:text-[0.8125rem] font-semibold flex items-center justify-center shrink-0">
                 {initialsOf(p.name)}
               </div>
             )}
             <div className="min-w-0">
-              <p className="font-heading text-[0.9375rem] tracking-[-0.005em] leading-snug font-semibold text-[#071639] truncate">
+              <p className="font-heading text-[0.875rem] sm:text-[0.9375rem] tracking-[-0.005em] leading-snug font-semibold text-[#071639] truncate">
                 {p.name}
               </p>
               {p.role && (
-                <p className="font-body text-[0.75rem] text-[#637AA3] truncate">
+                <p className="font-body text-[0.6875rem] sm:text-[0.75rem] text-[#637AA3] truncate">
                   {p.role}
                 </p>
               )}

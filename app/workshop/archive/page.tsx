@@ -170,10 +170,10 @@ const PAGE_SIZE = 12
 function ArchiveCardSkeleton() {
   return (
     <div className="bg-white/90 border border-[#0474C4]/22 rounded overflow-hidden flex flex-col animate-pulse">
-      <div className="relative h-40 bg-slate-200">
+      <div className="relative h-36 sm:h-40 bg-slate-200">
         <div className="absolute top-3 left-3 h-5 w-16 bg-white/60 rounded" />
       </div>
-      <div className="p-5 flex flex-col flex-1">
+      <div className="p-4 sm:p-5 flex flex-col flex-1">
         <div className="flex gap-2 mb-3 flex-wrap">
           <div className="h-6 w-14 bg-slate-200 rounded" />
           <div className="h-6 w-20 bg-slate-200 rounded" />
@@ -183,13 +183,13 @@ function ArchiveCardSkeleton() {
         <div className="h-5 w-3/4 bg-slate-200 rounded mb-2" />
         <div className="flex flex-col gap-1.5 mt-auto pt-3">
           {[140, 180, 160].map((w, i) => (
-            <div key={i} className="h-3 bg-slate-200 rounded" style={{ width: w }} />
+            <div key={i} className="h-3 bg-slate-200 rounded max-w-full" style={{ width: w }} />
           ))}
         </div>
       </div>
-      <div className="px-5 py-3.5 border-t border-[#0474C4]/18 bg-[#EBF3FC] flex items-center justify-between">
+      <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-t border-[#0474C4]/18 bg-[#EBF3FC] flex items-center justify-between gap-3">
         <div className="h-3 w-12 bg-slate-200 rounded" />
-        <div className="h-9 w-28 bg-slate-200 rounded" />
+        <div className="h-9 w-24 sm:w-28 bg-slate-200 rounded" />
       </div>
     </div>
   )
@@ -330,17 +330,17 @@ const WorkshopArchivePage = () => {
         imageUrl="/images/about-arps.webp"
       />
 
-      <section className="bg-white px-8 md:px-16 py-16 w-full">
-        <div className="max-w-350 mx-auto flex flex-col gap-8 w-full">
+      <section className="bg-white px-4 sm:px-6 md:px-10 lg:px-16 py-10 sm:py-12 md:py-14 lg:py-16 w-full">
+        <div className="max-w-350 mx-auto flex flex-col gap-6 sm:gap-7 md:gap-8 w-full">
 
-          <div className="flex flex-col gap-2">
-            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3]">
+          <div className="flex flex-col gap-1.5 sm:gap-2">
+            <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3]">
               Archive
             </p>
-            <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
+            <h2 className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.625rem] lg:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
               Workshop Library
             </h2>
-            <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-[#637AA3]">
+            <p className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-[#637AA3]">
               Filter by category, format, or recency to find a recorded session.{" "}
               <Link href="/workshop" className="text-[#0474C4] hover:text-ink transition-colors">
                 ← Back to upcoming workshops
@@ -348,12 +348,12 @@ const WorkshopArchivePage = () => {
             </p>
           </div>
 
-          <div className="flex flex-col justify-start items-start w-full lg:flex-row gap-6 mt-2">
+          <div className="flex flex-col justify-start items-start w-full lg:flex-row gap-5 sm:gap-6 mt-2">
 
-            <aside className="lg:w-1/4 shrink-0 w-full">
-              <div className="bg-transparent p-5 space-y-5 px-0 lg:sticky lg:top-32">
+            <aside className="w-full lg:w-1/4 shrink-0">
+              <div className="bg-transparent space-y-4 sm:space-y-5 px-0 py-2 lg:py-5 lg:sticky lg:top-32">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-heading text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">Filters</h3>
+                  <h3 className="font-heading text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">Filters</h3>
                   {hasActiveFilter && (
                     <button
                       type="button"
@@ -401,16 +401,16 @@ const WorkshopArchivePage = () => {
               </div>
             </aside>
 
-            <div className="lg:w-3/4 grow w-full">
-              <div className="grid md:grid-cols-2 gap-5">
+            <div className="lg:w-3/4 grow w-full min-w-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => (
                     <ArchiveCardSkeleton key={i} />
                   ))
                 ) : paginated.length === 0 ? (
-                  <div className="md:col-span-2 bg-white border border-[#0474C4]/15 rounded p-10 text-center">
-                    <p className="font-heading text-[1rem] font-semibold text-ink mb-1.5">No archived workshops match your filters</p>
-                    <p className="font-body text-[0.8125rem] text-slate-500">
+                  <div className="sm:col-span-2 bg-white border border-[#0474C4]/15 rounded p-6 sm:p-8 md:p-10 text-center">
+                    <p className="font-heading text-[0.9375rem] sm:text-[1rem] font-semibold text-ink mb-1.5">No archived workshops match your filters</p>
+                    <p className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-500">
                       {hasActiveFilter ? "Try clearing some filters to see more sessions." : "Nothing in the archive yet — check back as workshops conclude."}
                     </p>
                   </div>
@@ -420,41 +420,41 @@ const WorkshopArchivePage = () => {
                       key={w.id}
                       className="bg-white/90 border border-[#0474C4]/22 rounded overflow-hidden hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all flex flex-col opacity-95 hover:opacity-100"
                     >
-                      <div className="relative h-40 bg-[#EBF3FC]">
+                      <div className="relative h-36 sm:h-40 bg-[#EBF3FC]">
                         {w.coverImage ? (
                           <Image
                             src={w.coverImage}
                             alt={w.title}
                             fill
-                            sizes="(min-width: 1024px) 35vw, 100vw"
+                            sizes="(min-width: 1024px) 35vw, (min-width: 640px) 50vw, 100vw"
                             className="object-cover"
                           />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center text-[#0474C4]/40">
-                            <Calendar className="h-10 w-10" />
+                            <Calendar className="h-9 w-9 sm:h-10 sm:w-10" />
                           </div>
                         )}
-                        <span className="absolute top-3 left-3 font-body text-[0.6875rem] tracking-[0.05em] uppercase font-medium px-2 py-1 rounded bg-white/90 text-slate-600">
+                        <span className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] uppercase font-medium px-2 py-1 rounded bg-white/90 text-slate-600">
                           Archived
                         </span>
                       </div>
 
-                      <div className="p-5 flex flex-col flex-1">
-                        <div className="flex gap-2 mb-3 flex-wrap">
-                          <Badge className={`font-body text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-2 ${w.type === "FREE" ? "bg-emerald-600/10 text-emerald-600" : "bg-[#0474C4]/10 text-[#0474C4]"}`}>
+                      <div className="p-4 sm:p-5 flex flex-col flex-1">
+                        <div className="flex gap-1.5 sm:gap-2 mb-3 flex-wrap">
+                          <Badge className={`font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-1.5 sm:p-2 ${w.type === "FREE" ? "bg-emerald-600/10 text-emerald-600" : "bg-[#0474C4]/10 text-[#0474C4]"}`}>
                             {w.type === "FREE" ? "Free" : "Paid"}
                           </Badge>
-                          <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#FEF3C7] text-[#B45309] border-0 p-2">
+                          <Badge className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium bg-[#FEF3C7] text-[#B45309] border-0 p-1.5 sm:p-2">
                             {CATEGORY_LABEL[w.category] ?? w.category}
                           </Badge>
                           {w.level && (
-                            <Badge className={`font-body text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-2 ${LEVEL_COLOR[w.level] ?? "bg-slate-100 text-slate-600"}`}>
+                            <Badge className={`font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-1.5 sm:p-2 ${LEVEL_COLOR[w.level] ?? "bg-slate-100 text-slate-600"}`}>
                               {LEVEL_LABEL[w.level] ?? w.level}
                             </Badge>
                           )}
                         </div>
 
-                        <h3 className="font-heading text-[1.25rem] tracking-[-0.005em] leading-[1.3] font-medium text-ink mb-2">
+                        <h3 className="font-heading text-[1.0625rem] sm:text-[1.125rem] md:text-[1.25rem] tracking-[-0.005em] leading-[1.3] font-medium text-ink mb-2 line-clamp-2">
                           {w.title}
                         </h3>
 
@@ -464,9 +464,9 @@ const WorkshopArchivePage = () => {
                             { icon: Clock,    val: fmtTime(w.startTime, w.endTime, w.timezone) },
                             { icon: w.medium === "IN_PERSON" ? MapPin : Monitor, val: fmtDelivery(w.medium, w.onlinePlatform, w.venueCity) },
                           ].map(({ icon: Icon, val }) => (
-                            <div key={val} className="flex items-center gap-2">
+                            <div key={val} className="flex items-center gap-2 min-w-0">
                               <Icon className="h-3 w-3 text-[#0474C4] shrink-0" />
-                              <span className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-400">
+                              <span className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-400 truncate">
                                 {val}
                               </span>
                             </div>
@@ -474,13 +474,13 @@ const WorkshopArchivePage = () => {
                         </div>
                       </div>
 
-                      <div className="px-5 py-3.5 border-t border-[#0474C4]/18 bg-[#EBF3FC] flex items-center justify-between">
-                        <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-500">
+                      <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-t border-[#0474C4]/18 bg-[#EBF3FC] flex items-center justify-between gap-3">
+                        <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-500 shrink-0">
                           {w.duration !== null ? `${w.duration} hrs` : "Recording"}
                         </span>
                         <Link
                           href={`/workshop/${w.slug}`}
-                          className="inline-flex items-center font-body text-[0.8125rem] tracking-[0.02em] font-medium px-5 py-2.5 rounded bg-[#0474C4] hover:bg-[#06457f] text-white"
+                          className="inline-flex items-center gap-1 font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0.02em] font-medium px-3 sm:px-5 py-2 sm:py-2.5 rounded bg-[#0474C4] hover:bg-[#06457f] text-white shrink-0"
                         >
                           View Details <ChevronRight className="h-4 w-4" />
                         </Link>
@@ -491,31 +491,31 @@ const WorkshopArchivePage = () => {
               </div>
 
               {!loading && paginated.length > 0 && (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-6">
-                  <p className="font-body text-[0.8125rem] text-slate-500">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mt-6">
+                  <p className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-500">
                     Showing <span className="font-medium text-ink">{startIdx}-{endIdx}</span>{" "}
                     of <span className="font-medium text-ink">{total}</span> {total === 1 ? "workshop" : "workshops"}
                   </p>
 
                   {totalPages > 1 && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1 w-full sm:w-auto">
                       <button
                         type="button"
                         disabled={page === 1}
                         onClick={() => setPage(p => Math.max(1, p - 1))}
-                        className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
+                        className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.05em] uppercase font-medium px-2.5 sm:px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
                       >
                         Prev
                       </button>
                       {pages.map((p, i) =>
                         p === "…" ? (
-                          <span key={`ellipsis-${i}`} className="font-body text-[0.8125rem] text-slate-400 px-2">…</span>
+                          <span key={`ellipsis-${i}`} className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-400 px-1.5 sm:px-2">…</span>
                         ) : (
                           <button
                             key={p}
                             type="button"
                             onClick={() => setPage(p)}
-                            className={`min-w-8 h-8 rounded font-body text-[0.8125rem] font-medium cursor-pointer transition-colors ${
+                            className={`min-w-7 sm:min-w-8 h-7 sm:h-8 px-1.5 sm:px-2 rounded font-body text-[0.75rem] sm:text-[0.8125rem] font-medium cursor-pointer transition-colors ${
                               p === page
                                 ? "bg-[#0474C4] text-white"
                                 : "border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4]"
@@ -529,7 +529,7 @@ const WorkshopArchivePage = () => {
                         type="button"
                         disabled={page === totalPages}
                         onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
+                        className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.05em] uppercase font-medium px-2.5 sm:px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
                       >
                         Next
                       </button>

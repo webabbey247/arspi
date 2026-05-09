@@ -24,6 +24,7 @@ export type ProgramRow = {
   paymentType: string | null
   level:       CourseLevel
   featured:    boolean
+  predefinedAnalytics: boolean
 
   tagline:              string | null
   duration:             string | null
@@ -76,6 +77,7 @@ export type ProgramInput = {
   paymentType?: string | null
   level?:       CourseLevel
   featured?:    boolean
+  predefinedAnalytics?: boolean
   categoryId?:  string | null
   instructorId?: string
 
@@ -262,6 +264,7 @@ export async function createProgram(
       paymentType:  input.paymentType  ?? null,
       level:        input.level        ?? "BEGINNER",
       featured:     input.featured     ?? false,
+      predefinedAnalytics: input.predefinedAnalytics ?? false,
       categoryId:   input.categoryId   ?? null,
       instructorId: input.instructorId ?? instructorId,
 
@@ -316,6 +319,7 @@ export async function updateProgram(
       ...(input.paymentType  !== undefined && { paymentType:  input.paymentType }),
       ...(input.level        !== undefined && { level:        input.level }),
       ...(input.featured     !== undefined && { featured:     input.featured }),
+      ...(input.predefinedAnalytics !== undefined && { predefinedAnalytics: input.predefinedAnalytics }),
       ...(input.categoryId   !== undefined && { categoryId:   input.categoryId }),
       ...(input.instructorId !== undefined && { instructorId: input.instructorId }),
 

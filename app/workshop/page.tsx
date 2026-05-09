@@ -168,38 +168,38 @@ function pageWindow(current: number, total: number): (number | "…")[] {
 function SpotlightSkeleton() {
   return (
     <div className="grid lg:grid-cols-[1fr_340px] border border-[#0474C4]/25 rounded overflow-hidden mb-6 bg-sky-pale animate-pulse">
-      <div className="p-8 md:p-10">
-        <div className="flex gap-2 mb-5 flex-wrap">
+      <div className="p-5 sm:p-6 md:p-8 lg:p-10 order-2 lg:order-1">
+        <div className="flex gap-2 mb-4 sm:mb-5 flex-wrap">
           <div className="h-6 w-16 bg-slate-200 rounded" />
           <div className="h-6 w-20 bg-slate-200 rounded" />
           <div className="h-6 w-24 bg-slate-200 rounded" />
           <div className="h-6 w-20 bg-slate-200 rounded" />
         </div>
-        <div className="h-7 bg-slate-200 rounded mb-2" />
-        <div className="h-7 w-3/4 bg-slate-200 rounded mb-5" />
-        <div className="space-y-2 mb-6 max-w-lg">
-          <div className="h-4 bg-slate-200 rounded" />
-          <div className="h-4 w-11/12 bg-slate-200 rounded" />
-          <div className="h-4 w-3/4 bg-slate-200 rounded" />
+        <div className="h-6 sm:h-7 bg-slate-200 rounded mb-2" />
+        <div className="h-6 sm:h-7 w-3/4 bg-slate-200 rounded mb-4 sm:mb-5" />
+        <div className="space-y-2 mb-5 sm:mb-6 max-w-lg">
+          <div className="h-3.5 sm:h-4 bg-slate-200 rounded" />
+          <div className="h-3.5 sm:h-4 w-11/12 bg-slate-200 rounded" />
+          <div className="h-3.5 sm:h-4 w-3/4 bg-slate-200 rounded" />
         </div>
-        <div className="mb-6">
+        <div className="mb-5 sm:mb-6">
           <div className="h-3 w-20 bg-slate-200 rounded mb-2" />
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-slate-200" />
-            <div className="space-y-1.5">
+            <div className="w-9 h-9 rounded-full bg-slate-200 shrink-0" />
+            <div className="space-y-1.5 min-w-0">
               <div className="h-3 w-32 bg-slate-200 rounded" />
               <div className="h-3 w-24 bg-slate-200 rounded" />
             </div>
           </div>
         </div>
-        <div className="flex gap-6 flex-wrap mb-6">
+        <div className="flex gap-3 sm:gap-4 md:gap-6 flex-wrap mb-5 sm:mb-6">
           {[80, 120, 100, 110].map((w, i) => (
             <div key={i} className="h-3 bg-slate-200 rounded" style={{ width: w }} />
           ))}
         </div>
-        <div className="h-12 w-32 bg-slate-200 rounded" />
+        <div className="h-11 sm:h-12 w-full sm:w-32 bg-slate-200 rounded" />
       </div>
-      <div className="bg-[#EBF3FC] min-h-60 lg:min-h-full" />
+      <div className="bg-[#EBF3FC] min-h-48 sm:min-h-60 lg:min-h-full order-1 lg:order-2" />
     </div>
   )
 }
@@ -207,7 +207,7 @@ function SpotlightSkeleton() {
 function WorkshopCardSkeleton() {
   return (
     <div className="bg-white/90 border border-[#0474C4]/25 rounded overflow-hidden flex flex-col animate-pulse">
-      <div className="p-5 flex flex-col flex-1">
+      <div className="p-4 sm:p-5 flex flex-col flex-1">
         <div className="flex gap-2 mb-3 flex-wrap">
           <div className="h-6 w-14 bg-slate-200 rounded" />
           <div className="h-6 w-20 bg-slate-200 rounded" />
@@ -217,13 +217,13 @@ function WorkshopCardSkeleton() {
         <div className="h-5 w-3/4 bg-slate-200 rounded mb-2" />
         <div className="flex flex-col gap-1.5 mt-auto pt-3">
           {[140, 180, 160, 130].map((w, i) => (
-            <div key={i} className="h-3 bg-slate-200 rounded" style={{ width: w }} />
+            <div key={i} className="h-3 bg-slate-200 rounded max-w-full" style={{ width: w }} />
           ))}
         </div>
       </div>
-      <div className="px-5 py-3.5 border-t border-[#0474C4]/18 bg-[#EBF3FC] flex items-center justify-between">
+      <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-t border-[#0474C4]/18 bg-[#EBF3FC] flex items-center justify-between gap-3">
         <div className="h-6 w-16 bg-slate-200 rounded" />
-        <div className="h-9 w-28 bg-slate-200 rounded" />
+        <div className="h-9 w-24 sm:w-28 bg-slate-200 rounded" />
       </div>
     </div>
   )
@@ -448,18 +448,18 @@ const WorkshopPage = () => {
       */}
 
       {/* Events */}
-      <section className="bg-white px-8 md:px-16 py-16 w-full">
-        <div className="max-w-350 mx-auto flex flex-col gap-8 w-full">
-          <div className="flex flex-col gap-2">
+      <section className="bg-white px-4 sm:px-6 md:px-10 lg:px-16 py-10 sm:py-12 md:py-14 lg:py-16 w-full">
+        <div className="max-w-350 mx-auto flex flex-col gap-6 sm:gap-7 md:gap-8 w-full">
+          <div className="flex flex-col gap-1.5 sm:gap-2">
 
-            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3]">
+            <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3]">
               Coming Up
             </p>
 
-<h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
-  Upcoming Workshops &amp; Events
-</h2>
-            <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-[#637AA3]">
+            <h2 className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.625rem] lg:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
+              Upcoming Workshops &amp; Events
+            </h2>
+            <p className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-[#637AA3]">
               Register now to secure your seat — free events fill up fast.
             </p>
 
@@ -470,54 +470,54 @@ const WorkshopPage = () => {
           {loading && <SpotlightSkeleton />}
           {!loading && spotlightVisible && nearest && (
             <div className="grid lg:grid-cols-[1fr_340px] border border-[#0474C4]/25 rounded overflow-hidden mb-6 bg-sky-pale hover:border-[#0474C4]/50 transition-colors">
-              <div className="p-8 md:p-10">
+              <div className="p-5 sm:p-6 md:p-8 lg:p-10 order-2 lg:order-1">
 
-                <div className="flex gap-2 mb-5 flex-wrap">
-                  <Badge className={`font-body text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-2 ${nearest.type === "FREE" ? "bg-emerald-600/10 text-emerald-600" : "bg-[#0474C4]/10 text-[#0474C4]"}`}>
+                <div className="flex gap-1.5 sm:gap-2 mb-4 sm:mb-5 flex-wrap">
+                  <Badge className={`font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-1.5 sm:p-2 ${nearest.type === "FREE" ? "bg-emerald-600/10 text-emerald-600" : "bg-[#0474C4]/10 text-[#0474C4]"}`}>
                     {nearest.type === "FREE" ? "Free" : "Paid"}
                   </Badge>
-                  <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-amber-500/10 text-amber-700 border-0 p-2">
+                  <Badge className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium bg-amber-500/10 text-amber-700 border-0 p-1.5 sm:p-2">
                     Next Up
                   </Badge>
-                  <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#FEF3C7] text-[#B45309] border-0 p-2">
+                  <Badge className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium bg-[#FEF3C7] text-[#B45309] border-0 p-1.5 sm:p-2">
                     {CATEGORY_LABEL[nearest.category] ?? nearest.category}
                   </Badge>
                   {nearest.level && (
-                    <Badge className={`font-body text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-2 ${LEVEL_COLOR[nearest.level] ?? "bg-slate-100 text-slate-600"}`}>
+                    <Badge className={`font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-1.5 sm:p-2 ${LEVEL_COLOR[nearest.level] ?? "bg-slate-100 text-slate-600"}`}>
                       <GraduationCap className="h-3 w-3 mr-1 inline-block" />
                       {LEVEL_LABEL[nearest.level] ?? nearest.level}
                     </Badge>
                   )}
                 </div>
 
-                <h3 className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-ink mb-3">
+                <h3 className="font-heading text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-ink mb-2.5 sm:mb-3">
                   {nearest.title}
                 </h3>
 
-                <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 mb-6 max-w-lg line-clamp-3"  dangerouslySetInnerHTML={{ __html: nearest.description }} />
+                <p className="font-body text-[0.875rem] sm:text-[0.9375rem] md:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 mb-5 sm:mb-6 max-w-lg line-clamp-3"  dangerouslySetInnerHTML={{ __html: nearest.description }} />
 
                 {(nearest.facilitators.length > 0 || nearest.facilitator) && (
-                  <div className="mb-6">
-                    <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400 mb-2 block">
+                  <div className="mb-5 sm:mb-6">
+                    <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400 mb-2 block">
                       {nearest.facilitators.length > 1 ? "Facilitators" : "Facilitator"}
                     </span>
                     {nearest.facilitators.length > 0 ? (
-                      <ul className="flex flex-wrap gap-x-5 gap-y-3">
+                      <ul className="flex flex-wrap gap-x-4 sm:gap-x-5 gap-y-3">
                         {nearest.facilitators.map((f, i) => (
-                          <li key={i} className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-full overflow-hidden bg-[#EBF3FC] border border-[#0474C4]/20 flex items-center justify-center shrink-0">
+                          <li key={i} className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden bg-[#EBF3FC] border border-[#0474C4]/20 flex items-center justify-center shrink-0">
                               {f.image ? (
                                 <Image src={f.image} alt={f.fullName} width={36} height={36} className="object-cover w-full h-full" />
                               ) : (
-                                <span className="font-body text-[0.75rem] font-semibold text-[#0474C4]">
+                                <span className="font-body text-[0.6875rem] sm:text-[0.75rem] font-semibold text-[#0474C4]">
                                   {initialsOf(f.fullName)}
                                 </span>
                               )}
                             </div>
-                            <div className="flex flex-col leading-tight">
-                              <span className="font-body text-[0.875rem] font-medium text-ink">{f.fullName}</span>
+                            <div className="flex flex-col leading-tight min-w-0">
+                              <span className="font-body text-[0.8125rem] sm:text-[0.875rem] font-medium text-ink truncate">{f.fullName}</span>
                               {(f.jobTitle || f.company) && (
-                                <span className="font-body text-[0.75rem] text-slate-500">
+                                <span className="font-body text-[0.6875rem] sm:text-[0.75rem] text-slate-500 truncate">
                                   {[f.jobTitle, f.company].filter(Boolean).join(" · ")}
                                 </span>
                               )}
@@ -526,12 +526,12 @@ const WorkshopPage = () => {
                         ))}
                       </ul>
                     ) : (
-                      <span className="font-body text-[0.875rem] font-medium text-ink">{nearest.facilitator}</span>
+                      <span className="font-body text-[0.8125rem] sm:text-[0.875rem] font-medium text-ink">{nearest.facilitator}</span>
                     )}
                   </div>
                 )}
 
-                <div className="flex gap-6 flex-wrap mb-6">
+                <div className="flex gap-x-4 sm:gap-x-5 md:gap-x-6 gap-y-2 sm:gap-y-3 flex-wrap mb-5 sm:mb-6">
                   {[
                     { icon: Calendar, val: fmtDate(nearest.date) },
                     { icon: Clock,    val: fmtTime(nearest.startTime, nearest.endTime, nearest.timezone) },
@@ -540,9 +540,9 @@ const WorkshopPage = () => {
                       ? [{ icon: Users, val: `${Math.max(0, nearest.capacity - nearest.registered)} of ${nearest.capacity} seats available` }]
                       : []),
                   ].map(({ icon: Icon, val }) => (
-                    <div key={val} className="flex items-center gap-2">
+                    <div key={val} className="flex items-center gap-2 min-w-0">
                       <Icon className="h-3.5 w-3.5 text-[#0474C4] shrink-0" />
-                      <span className="font-body text-[0.875rem] tracking-[0em] leading-normal font-normal text-slate-500">
+                      <span className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0em] leading-normal font-normal text-slate-500">
                         {val}
                       </span>
                     </div>
@@ -552,7 +552,7 @@ const WorkshopPage = () => {
                 <div className="flex gap-3 flex-wrap">
                   <Link
                     href={`/workshop/${nearest.slug}`}
-                    className="inline-flex items-center h-12 rounded py-2.5 px-5 font-body text-[0.875rem] tracking-[0.02em] font-medium text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f]"
+                    className="inline-flex items-center justify-center gap-1 h-11 sm:h-12 rounded py-2.5 px-5 w-full sm:w-auto font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0.02em] font-medium text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f]"
                   >
                     Learn More <ChevronRight className="h-4 w-4" />
                   </Link>
@@ -560,7 +560,7 @@ const WorkshopPage = () => {
 
               </div>
               {/* Right panel — cover image */}
-              <div className="relative bg-[#EBF3FC] min-h-60 lg:min-h-full">
+              <div className="relative bg-[#EBF3FC] min-h-48 sm:min-h-60 lg:min-h-full order-1 lg:order-2">
                 {nearest.coverImage ? (
                   <Image
                     src={nearest.coverImage}
@@ -571,7 +571,7 @@ const WorkshopPage = () => {
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-[#0474C4]/40">
-                    <Calendar className="h-12 w-12" />
+                    <Calendar className="h-10 w-10 sm:h-12 sm:w-12" />
                   </div>
                 )}
               </div>
@@ -579,13 +579,13 @@ const WorkshopPage = () => {
           )}
 
           {/* Filters (left) + cards (right) — 2-col split for the rest of upcoming */}
-          <div className="flex flex-col justify-start items-start w-full lg:flex-row gap-6 mt-2">
+          <div className="flex flex-col justify-start items-start w-full lg:flex-row gap-5 sm:gap-6 mt-2">
 
             {/* Left sidebar — w-1/4 on lg, full width on smaller */}
-            <aside className="lg:w-1/4 shrink-0">
-              <div className="bg-transparent  p-5 space-y-5 px-0 lg:sticky lg:top-32">
+            <aside className="w-full lg:w-1/4 shrink-0">
+              <div className="bg-transparent space-y-4 sm:space-y-5 px-0 py-2 lg:py-5 lg:sticky lg:top-32">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-heading text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">Filters</h3>
+                  <h3 className="font-heading text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">Filters</h3>
                   {hasActiveFilter && (
                     <button
                       type="button"
@@ -637,16 +637,16 @@ const WorkshopPage = () => {
             </aside>
 
             {/* Right — w-3/4 cards grid */}
-            <div className="lg:w-3/4 grow w-full">
-              <div className="grid md:grid-cols-2 gap-5">
+            <div className="lg:w-3/4 grow w-full min-w-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => (
                     <WorkshopCardSkeleton key={i} />
                   ))
                 ) : paginated.length === 0 ? (
-                  <div className="md:col-span-2 bg-white  flex flex-col justify-center items-center p-10 text-center">
-                    <p className="font-heading text-[1rem] font-semibold text-ink mb-1.5">No workshops match your filters</p>
-                    <p className="font-body text-[0.8125rem] text-slate-500">
+                  <div className="sm:col-span-2 bg-white flex flex-col justify-center items-center p-6 sm:p-8 md:p-10 text-center">
+                    <p className="font-heading text-[0.9375rem] sm:text-[1rem] font-semibold text-ink mb-1.5">No workshops match your filters</p>
+                    <p className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-500">
                       {hasActiveFilter ? "Try clearing some filters to see more events." : "Check back soon — new events are added regularly."}
                     </p>
                   </div>
@@ -656,22 +656,22 @@ const WorkshopPage = () => {
                     key={w.id}
                     className="bg-white/90 border border-[#0474C4]/25 rounded overflow-hidden hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all flex flex-col"
                   >
-                    <div className="p-5 flex flex-col flex-1">
-                      <div className="flex gap-2 mb-3 flex-wrap">
-                        <Badge className={`font-body text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-2 ${w.type === "FREE" ? "bg-emerald-600/10 text-emerald-600" : "bg-[#0474C4]/10 text-[#0474C4]"}`}>
+                    <div className="p-4 sm:p-5 flex flex-col flex-1">
+                      <div className="flex gap-1.5 sm:gap-2 mb-3 flex-wrap">
+                        <Badge className={`font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-1.5 sm:p-2 ${w.type === "FREE" ? "bg-emerald-600/10 text-emerald-600" : "bg-[#0474C4]/10 text-[#0474C4]"}`}>
                           {w.type === "FREE" ? "Free" : "Paid"}
                         </Badge>
-                        <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#FEF3C7] text-[#B45309] border-0 p-2">
+                        <Badge className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium bg-[#FEF3C7] text-[#B45309] border-0 p-1.5 sm:p-2">
                           {CATEGORY_LABEL[w.category] ?? w.category}
                         </Badge>
                         {w.level && (
-                          <Badge className={`font-body text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-2 ${LEVEL_COLOR[w.level] ?? "bg-slate-100 text-slate-600"}`}>
+                          <Badge className={`font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium border-0 p-1.5 sm:p-2 ${LEVEL_COLOR[w.level] ?? "bg-slate-100 text-slate-600"}`}>
                             {LEVEL_LABEL[w.level] ?? w.level}
                           </Badge>
                         )}
                       </div>
 
-                      <h3 className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-ink mb-2">
+                      <h3 className="font-heading text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-ink mb-2 line-clamp-2">
                         {w.title}
                       </h3>
 
@@ -684,9 +684,9 @@ const WorkshopPage = () => {
                             ? [{ icon: Users, val: `${w.capacity} seats · ${Math.max(0, w.capacity - w.registered)} remaining` }]
                             : []),
                         ].map(({ icon: Icon, val }) => (
-                          <div key={val} className="flex items-center gap-2">
+                          <div key={val} className="flex items-center gap-2 min-w-0">
                             <Icon className="h-3 w-3 text-[#0474C4] shrink-0" />
-                            <span className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-400">
+                            <span className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-400 truncate">
                               {val}
                             </span>
                           </div>
@@ -694,13 +694,13 @@ const WorkshopPage = () => {
                       </div>
                     </div>
 
-                    <div className="px-5 py-3.5 border-t border-[#0474C4]/18 bg-[#EBF3FC] flex items-center justify-between">
-                      <span className={`font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium ${w.type === "FREE" ? "text-emerald-600" : "text-[#0474C4]"}`}>
+                    <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-t border-[#0474C4]/18 bg-[#EBF3FC] flex items-center justify-between gap-3">
+                      <span className={`font-heading text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium ${w.type === "FREE" ? "text-emerald-600" : "text-[#0474C4]"}`}>
                         {w.type === "FREE" ? "Free" : `$${w.fee}`}
                       </span>
                       <Link
                         href={`/workshop/${w.slug}`}
-                        className="inline-flex items-center font-body text-[0.8125rem] tracking-[0.02em] font-medium px-5 py-2.5 rounded bg-[#0474C4] hover:bg-[#06457f] text-white"
+                        className="inline-flex items-center gap-1 font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0.02em] font-medium px-3 sm:px-5 py-2 sm:py-2.5 rounded bg-[#0474C4] hover:bg-[#06457f] text-white shrink-0"
                       >
                         Learn More <ChevronRight className="h-4 w-4" />
                       </Link>
@@ -712,31 +712,31 @@ const WorkshopPage = () => {
 
               {/* Pagination footer — Showing X-Y of N workshops + windowed pagination */}
               {!loading && paginated.length > 0 && (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-6">
-                  <p className="font-body text-[0.8125rem] text-slate-500">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mt-6">
+                  <p className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-500">
                     Showing <span className="font-medium text-ink">{startIdx}-{endIdx}</span>{" "}
                     of <span className="font-medium text-ink">{total}</span> {total === 1 ? "workshop" : "workshops"}
                   </p>
 
                   {totalPages > 1 && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1 w-full sm:w-auto">
                       <button
                         type="button"
                         disabled={page === 1}
                         onClick={() => setPage(p => Math.max(1, p - 1))}
-                        className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
+                        className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.05em] uppercase font-medium px-2.5 sm:px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
                       >
                         Prev
                       </button>
                       {pages.map((p, i) =>
                         p === "…" ? (
-                          <span key={`ellipsis-${i}`} className="font-body text-[0.8125rem] text-slate-400 px-2">…</span>
+                          <span key={`ellipsis-${i}`} className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-400 px-1.5 sm:px-2">…</span>
                         ) : (
                           <button
                             key={p}
                             type="button"
                             onClick={() => setPage(p)}
-                            className={`min-w-8 h-8 rounded font-body text-[0.8125rem] font-medium cursor-pointer transition-colors ${
+                            className={`min-w-7 sm:min-w-8 h-7 sm:h-8 px-1.5 sm:px-2 rounded font-body text-[0.75rem] sm:text-[0.8125rem] font-medium cursor-pointer transition-colors ${
                               p === page
                                 ? "bg-[#0474C4] text-white"
                                 : "border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4]"
@@ -750,7 +750,7 @@ const WorkshopPage = () => {
                         type="button"
                         disabled={page === totalPages}
                         onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
+                        className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.05em] uppercase font-medium px-2.5 sm:px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
                       >
                         Next
                       </button>
@@ -764,17 +764,17 @@ const WorkshopPage = () => {
       </section>
 
       {past.length > 0 && (
-        <section className="bg-[#EDF2FB] px-8 md:px-16 py-16 w-full">
-          <div className="max-w-350 mx-auto flex flex-col gap-12 w-full">
+        <section className="bg-[#EDF2FB] px-4 sm:px-6 md:px-10 lg:px-16 py-10 sm:py-12 md:py-14 lg:py-16 w-full">
+          <div className="max-w-350 mx-auto flex flex-col gap-8 sm:gap-10 md:gap-12 w-full">
 
-            <div className="flex flex-col gap-2">
-              <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3]">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
+              <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3]">
                 Archive
               </p>
-              <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
+              <h2 className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.625rem] lg:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
                 Past Workshops
               </h2>
-              <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-[#637AA3]">
+              <p className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-[#637AA3]">
                 Recordings are available for most past events.{" "}
                 <Link href="/workshop/archive" className="text-[#0474C4] hover:text-ink transition-colors">
                   Access the library →
@@ -782,19 +782,19 @@ const WorkshopPage = () => {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {past.map((p) => (
                 <div
                   key={p.id}
-                  className="bg-white border border-[#0474C4]/22 rounded p-4 opacity-70 hover:opacity-100 transition-opacity"
+                  className="bg-white border border-[#0474C4]/22 rounded p-4 sm:p-4 opacity-70 hover:opacity-100 transition-opacity"
                 >
-                  <div className="font-body text-[0.75rem] tracking-[0.05em] font-medium text-slate-400 mb-1.5">
+                  <div className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.05em] font-medium text-slate-400 mb-1.5">
                     {fmtDate(p.date)}
                   </div>
-                  <div className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-ink mb-2">
+                  <div className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-ink mb-2 line-clamp-2">
                     {p.title}
                   </div>
-                  <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400">
+                  <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400">
                     {p.type === "FREE" ? "Free" : "Paid"} · {CATEGORY_LABEL[p.category] ?? p.category}{p.duration !== null ? ` · ${p.duration} hrs` : ""}
                   </div>
                 </div>

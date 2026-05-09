@@ -109,63 +109,22 @@ function InsightCardSkeleton() {
             imageUrl="/images/insight-page-banner.jpg"
           />
 
-          
-      {/* <section className="bg-[#071639] relative overflow-hidden px-8 md:px-16 py-24 w-full">
-        <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
-        <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
-  <div className="relative z-10 gap-4 flex flex-col justify-start items-start">
-             <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC] inline-flex items-center gap-2">
-      <span className="block w-8 h-px bg-[#EBF3FC]" />
-            Research & Knowledge Hub
-          </p>
-    <h1 className="font-heading text-[2.25rem] md:text-[3rem] tracking-[-0.015em] md:tracking-[-0.02em] leading-[1.2] md:leading-[1.1] font-bold text-white max-w-lg">
-            Insights, Research &amp;{" "}
-             <em className="italic text-[#0474C4]">Expert Perspectives</em>
-          </h1>
-    <p className="font-body text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-[#EBF3FC] max-w-lg">
-            Articles, research highlights, practice guides, and news from the ARPS Institute
-            team and our network of scholars and practitioners worldwide.
-          </p>
-        </div>
-      </section> */}
-
-      {/* Filter bar */}
-     {/* <div className="sticky top-17 z-30 bg-sky-light/97 backdrop-blur border-b border-[#0474C4]/25 px-8 md:px-16 py-3 flex items-center gap-2.5 overflow-x-auto w-full">
-
-  <span className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mr-2 shrink-0">
-    Filter:
-  </span>
-
-  {categories.map((cat) => (
-    <button
-      key={cat}
-      onClick={() => setActiveCategory(cat)}
-      className={`font-body text-[0.75rem] tracking-[0.05em] leading-normal font-medium px-4 py-1.5 rounded border transition-all whitespace-nowrap shrink-0 ${
-        activeCategory === cat
-          ? "bg-[#0474C4] text-[#EBF3FC] border-[#0474C4]"
-          : "bg-sky-pale text-slate-500 border-[#0474C4]/25 hover:border-[#0474C4] hover:text-ink"
-      }`}
-    >
-      {cat}
-    </button>
-  ))}
-
-</div> */}
+        
 
       {/* Featured articles */}
       {activeCategory === "All" && featured.length >= 1 && (
-  <section className="bg-white px-8 md:px-16 py-16 w-full">
-    <div className="max-w-350 mx-auto flex flex-col gap-8 w-full">
-   <div className="flex flex-col gap-2">
-       <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3]">
-        Featured
-      </p>
-      <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
-        Editor&apos;s Picks
-      </h2>
-   </div>
+  <section className="bg-white px-4 sm:px-6 md:px-10 lg:px-16 py-10 sm:py-12 md:py-14 lg:py-16 w-full">
+    <div className="max-w-350 mx-auto flex flex-col gap-6 sm:gap-7 md:gap-8 w-full">
+      <div className="flex flex-col gap-1.5 sm:gap-2">
+        <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3]">
+          Featured
+        </p>
+        <h2 className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.625rem] lg:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
+          Editor&apos;s Picks
+        </h2>
+      </div>
 
-      <div className="grid lg:grid-cols-2 gap-6 w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6 w-full">
         {featured.map((ins) => (
           <Link
             key={ins.slug}
@@ -174,41 +133,41 @@ function InsightCardSkeleton() {
           >
             <div className="h-1 bg-[#0474C4]" />
 
-            <div className="p-7 flex flex-col flex-1">
+            <div className="p-5 sm:p-6 md:p-7 flex flex-col flex-1">
 
-              <div className="flex items-center gap-2 mb-4">
-                <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]/10 text-[#0474C4] border-0 px-2 py-0.5">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+                <Badge className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]/10 text-[#0474C4] border-0 px-2 py-0.5">
                   {ins.category}
                 </Badge>
-                <span className="bg-[#0474C4] text-white font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium px-2 py-0.5 rounded">
+                <span className="bg-[#0474C4] text-white font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium px-2 py-0.5 rounded">
                   Featured
                 </span>
               </div>
 
-              <h3 className="font-heading line-clamp-2 text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#262B40] mb-3 group-hover:text-[#0474C4] transition-colors">
+              <h3 className="font-heading line-clamp-2 text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#262B40] mb-2.5 sm:mb-3 group-hover:text-[#0474C4] transition-colors">
                 {ins.title}
               </h3>
 
-              <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-slate-500 mb-5 flex-1 line-clamp-3">
+              <p className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-slate-500 mb-4 sm:mb-5 flex-1 line-clamp-3">
                 {ins.excerpt}
               </p>
 
-              <div className="flex items-center justify-between pt-4 border-t border-[#0474C4]/18">
-                <div className="flex items-center gap-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-[#0474C4]/18">
+                <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
                   <div className="w-7 h-7 rounded-full bg-[#0474C4] flex items-center justify-center font-body text-[0.6875rem] font-medium text-[#EBF3FC] shrink-0">
                     {ins.authorInitials}
                   </div>
-                  <div>
-                    <div className="font-body text-[0.8125rem] tracking-[0em] leading-normal font-medium text-ink">
+                  <div className="min-w-0">
+                    <div className="font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0em] leading-normal font-medium text-ink truncate">
                       {ins.author}
                     </div>
-                    <div className="font-body text-[0.6875rem] tracking-[0.05em] font-normal text-slate-400">
+                    <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-normal text-slate-400">
                       {ins.date}
                     </div>
                   </div>
                 </div>
 
-                <span className="flex items-center gap-1 font-body text-[0.75rem] tracking-[0em] font-normal text-[#637AA3]">
+                <span className="flex items-center gap-1 font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0em] font-normal text-[#637AA3] shrink-0">
                   <Clock className="h-3 w-3" />
                   {ins.readTime}
                 </span>
@@ -224,34 +183,34 @@ function InsightCardSkeleton() {
 )}
 
       {/* All articles grid */}
-      <section className="bg-sky-light px-8 md:px-16 py-16 w-full">
+      <section className="bg-sky-light px-4 sm:px-6 md:px-10 lg:px-16 py-10 sm:py-12 md:py-14 lg:py-16 w-full">
         <div className="max-w-350 mx-auto flex flex-col w-full">
 
           {/* Section header */}
-          <div className="mb-8">
-            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-2">
+          <div className="mb-6 sm:mb-7 md:mb-8">
+            <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-1.5 sm:mb-2">
               {activeCategory === "All" ? "All Insights" : activeCategory}
             </p>
-            <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
+            <h2 className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.625rem] lg:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
               {activeCategory === "All" ? "Latest Articles" : `${activeCategory} Articles`}
             </h2>
           </div>
 
           {error ? (
-            <div className="text-center py-20">
-              <h3 className="font-serif text-xl text-ink mb-2">Unable to load insights</h3>
-              <p className="text-slate-400 font-light text-sm">{error}</p>
+            <div className="text-center py-12 sm:py-16 md:py-20">
+              <h3 className="font-serif text-lg sm:text-xl text-ink mb-2">Unable to load insights</h3>
+              <p className="text-slate-400 font-light text-[0.8125rem] sm:text-sm">{error}</p>
             </div>
           ) : loading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {Array.from({ length: PAGE_SIZE }).map((_, i) => (
                 <InsightCardSkeleton key={i} />
               ))}
             </div>
           ) : total === 0 ? (
-            <div className="text-center py-20">
-              <h3 className="font-serif text-xl text-ink mb-2">No articles yet</h3>
-              <p className="text-slate-400 font-light text-sm">
+            <div className="text-center py-12 sm:py-16 md:py-20">
+              <h3 className="font-serif text-lg sm:text-xl text-ink mb-2">No articles yet</h3>
+              <p className="text-slate-400 font-light text-[0.8125rem] sm:text-sm">
                 {activeCategory === "All"
                   ? "Check back soon — new insights are published regularly."
                   : `No articles in ${activeCategory} yet.`}
@@ -259,41 +218,41 @@ function InsightCardSkeleton() {
             </div>
           ) : (
             <>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                 {paginated.map((ins) => (
                   <Link
                     key={ins.slug}
                     href={`/insights/${ins.slug}`}
                     className="group border border-[#0474C4]/25 rounded overflow-hidden hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all no-underline flex flex-col"
                   >
-                    <div className="p-6 flex flex-col flex-1">
-                      <div className="flex items-center justify-between mb-4">
-                        <Badge className="font-body text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]/10 text-[#0474C4] border-0 px-2 py-0.5">
+                    <div className="p-5 sm:p-6 flex flex-col flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-3 sm:mb-4">
+                        <Badge className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]/10 text-[#0474C4] border-0 px-2 py-0.5">
                           {ins.category}
                         </Badge>
-                        <div className="flex items-center gap-1 font-body text-[0.75rem] tracking-[0em] font-normal text-[#637AA3]">
+                        <div className="flex items-center gap-1 font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0em] font-normal text-[#637AA3] shrink-0">
                           <Clock className="h-3 w-3" />
                           {ins.readTime}
                         </div>
                       </div>
-                      <h3 className="font-heading line-clamp-2 text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#262B40] mb-3 group-hover:text-[#0474C4] transition-colors">
+                      <h3 className="font-heading line-clamp-2 text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#262B40] mb-2.5 sm:mb-3 group-hover:text-[#0474C4] transition-colors">
                         {ins.title}
                       </h3>
-                      <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-slate-500 mb-5 flex-1 line-clamp-3">
+                      <p className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-slate-500 mb-4 sm:mb-5 flex-1 line-clamp-3">
                         {ins.excerpt}
                       </p>
-                      <div className="flex items-center justify-between pt-4 border-t border-[#0474C4]/18 mt-auto">
-                        <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-3 sm:pt-4 border-t border-[#0474C4]/18 mt-auto">
+                        <div className="flex items-center gap-2 min-w-0">
                           <div className="w-7 h-7 rounded-full text-[#EBF3FC] bg-[#0474C4] flex items-center justify-center font-serif text-[0.6rem] text-sky shrink-0">
                             {ins.authorInitials}
                           </div>
-                          <span className="text-[0.72rem] text-slate-500 font-light">{ins.author}</span>
+                          <span className="text-[0.6875rem] sm:text-[0.72rem] text-slate-500 font-light truncate">{ins.author}</span>
                         </div>
-                        <span className="text-[0.68rem] text-slate-400">{ins.date}</span>
+                        <span className="text-[0.625rem] sm:text-[0.68rem] text-slate-400 shrink-0">{ins.date}</span>
                       </div>
                     </div>
-                    <div className="px-6 pb-4">
-                      <span className="inline-flex items-center gap-1 text-[0.72rem] text-[#0474C4] group-hover:gap-2 transition-all">
+                    <div className="px-5 sm:px-6 pb-4">
+                      <span className="inline-flex items-center gap-1 text-[0.6875rem] sm:text-[0.72rem] text-[#0474C4] group-hover:gap-2 transition-all">
                         Read article <ArrowRight className="h-3 w-3" />
                       </span>
                     </div>
@@ -302,31 +261,31 @@ function InsightCardSkeleton() {
               </div>
 
               {/* Pagination footer */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-8">
-                <p className="font-body text-[0.8125rem] text-slate-500">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mt-6 sm:mt-8">
+                <p className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-500">
                   Showing <span className="font-medium text-ink">{startIdx}-{endIdx}</span>{" "}
                   of <span className="font-medium text-ink">{total}</span> {total === 1 ? "article" : "articles"}
                 </p>
 
                 {totalPages > 1 && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex flex-wrap items-center gap-1 w-full sm:w-auto justify-start sm:justify-end">
                     <button
                       type="button"
                       disabled={page === 1}
                       onClick={() => setPage(p => Math.max(1, p - 1))}
-                      className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
+                      className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.05em] uppercase font-medium px-2.5 sm:px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
                     >
                       Prev
                     </button>
                     {pageNumbers.map((p, i) =>
                       p === "…" ? (
-                        <span key={`ellipsis-${i}`} className="font-body text-[0.8125rem] text-slate-400 px-2">…</span>
+                        <span key={`ellipsis-${i}`} className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-400 px-1.5 sm:px-2">…</span>
                       ) : (
                         <button
                           key={p}
                           type="button"
                           onClick={() => setPage(p)}
-                          className={`min-w-8 h-8 rounded font-body text-[0.8125rem] font-medium cursor-pointer transition-colors ${
+                          className={`min-w-7 sm:min-w-8 h-7 sm:h-8 px-1.5 sm:px-2 rounded font-body text-[0.75rem] sm:text-[0.8125rem] font-medium cursor-pointer transition-colors ${
                             p === page
                               ? "bg-[#0474C4] text-white"
                               : "border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4]"
@@ -340,7 +299,7 @@ function InsightCardSkeleton() {
                       type="button"
                       disabled={page === totalPages}
                       onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                      className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
+                      className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.05em] uppercase font-medium px-2.5 sm:px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
                     >
                       Next
                     </button>

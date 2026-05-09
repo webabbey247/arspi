@@ -46,7 +46,7 @@ const SubscriptionForm = () => {
           type="email"
           placeholder="Enter your email address"
           {...register("email")}
-          className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal flex-1 rounded-l-sm px-4 py-3 rounded-r-[32px] outline-none transition-colors bg-[#A8C4EC]/6 border border-[#5379AE]/22 text-[#D4E4F6] placeholder:font-body placeholder:text-[0.875rem] placeholder:tracking-[0em] placeholder:font-light placeholder:text-[#D4E4F6]/40"
+          className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal flex-1 rounded-l-sm pl-4 pr-32 py-3 rounded-r-[32px] outline-none transition-colors bg-[#A8C4EC]/6 border border-[#5379AE]/22 text-[#D4E4F6] placeholder:font-body placeholder:text-[0.875rem] placeholder:tracking-[0em] placeholder:font-light placeholder:text-[#D4E4F6]/40"
         />
         <button
           type="submit"

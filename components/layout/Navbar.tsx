@@ -172,17 +172,15 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 h-17 flex items-center bg-white backdrop-blur-[14px] border-b border-[#5379AE]/20 w-full">
-      <div className="w-full flex items-center justify-between px-8 md:px-16">
+      <div className="w-full flex items-center justify-between gap-3 px-4 sm:px-6 md:px-8 lg:px-16">
 
-        <Link href="/" className="flex justify-start gap-2.5 shrink-0 no-underline w-50">
-          <div className="flex flex-row justify-start items-center gap-2.5 px-[1.2rem] shrink-0">
-            <div className="w-8 h-8 border-[1.5px] border-[#0474C4] rounded-full flex items-center justify-center font-heading text-lg font-medium text-[#0474C4] shrink-0">
-              A
-            </div>
-            <span className="font-heading text-xl tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4]">
-              ARPS Institute
-            </span>
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 no-underline min-w-0">
+          <div className="w-8 h-8 border-[1.5px] border-[#0474C4] rounded-full flex items-center justify-center font-heading text-lg font-medium text-[#0474C4] shrink-0">
+            A
           </div>
+          <span className="font-heading text-base sm:text-lg lg:text-xl tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4] truncate">
+            ARPS Institute
+          </span>
         </Link>
 
         {/* Desktop nav */}
@@ -236,73 +234,76 @@ export function Navbar() {
 
         {/* Mobile toggle */}
         <button
-          className="lg:hidden transition-colors"
-          style={{ color: "rgba(255,255,255,0.65)" }}
+          className="lg:hidden text-[#262b40] hover:text-[#0474C4] transition-colors p-1.5 -mr-1.5 cursor-pointer"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
+          aria-expanded={mobileOpen}
         >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div
-          className="lg:hidden absolute top-17 left-0 right-0 border-b shadow-xl z-40"
-          style={{ background: "rgba(38,43,64,0.98)", borderColor: "rgba(83,121,174,0.18)" }}
-        >
-          <div className="flex flex-col py-4 px-6 gap-1">
+        <div className="lg:hidden absolute top-17 left-0 right-0 bg-white border-b border-[#5379AE]/20 shadow-xl z-40 max-h-[calc(100vh-4.25rem)] overflow-y-auto">
+          <div className="flex flex-col py-4 px-4 sm:px-6 gap-1">
             {navLinks.map((link) => {
               if (link.children && link.children.length > 0) {
                 return (
                   <div key={link.label} className="py-1">
-                    <p className="py-2.5 text-[0.82rem] tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.85)" }}>
+                    <p className="py-2 text-[0.7rem] tracking-widest uppercase font-semibold text-[#A8A39C]">
                       {link.label}
                     </p>
-                    <div className="flex flex-col pl-3 gap-1">
-                      {link.children.map(child => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          className="py-2 text-[0.78rem] tracking-wider transition-colors"
-                          style={{ color: pathname === child.href ? "#0474C4" : "rgba(255,255,255,0.55)" }}
-                          onClick={() => setMobileOpen(false)}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
+                    <div className="flex flex-col pl-2 gap-0.5">
+                      {link.children.map(child => {
+                        const childActive = pathname === child.href || pathname?.startsWith(child.href + "/")
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className={`py-2 px-2 rounded text-[0.875rem] tracking-[0.01em] transition-colors no-underline ${
+                              childActive ? "text-[#0474C4] bg-[#EBF3FC] font-medium" : "text-[#262b40] hover:bg-[#FAFAF9] hover:text-[#0474C4]"
+                            }`}
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {child.label}
+                          </Link>
+                        )
+                      })}
                     </div>
                   </div>
                 )
               }
               const href = link.href ?? "/"
+              const active = pathname === href || (href !== "/" && pathname?.startsWith(href))
               return (
                 <Link
                   key={link.label}
                   href={href}
-                  className="py-2.5 text-[0.82rem] tracking-widest uppercase transition-colors"
-                  style={{ color: pathname === href ? "#0474C4" : "rgba(255,255,255,0.65)" }}
+                  className={`py-2.5 px-2 rounded text-[0.9375rem] capitalize transition-colors no-underline ${
+                    active ? "text-[#0474C4] bg-[#EBF3FC] font-medium" : "text-[#262b40] hover:bg-[#FAFAF9] hover:text-[#0474C4]"
+                  }`}
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
                 </Link>
               )
             })}
-            <div className="flex gap-2 pt-4 mt-2" style={{ borderTop: "1px solid rgba(83,121,174,0.18)" }}>
+            <div className="flex flex-col sm:flex-row gap-2 pt-4 mt-2 border-t border-[#5379AE]/15">
               {session ? (
                 <Link
                   href={DASHBOARD_HREF[session.role] ?? "/"}
-                  className="flex-1 text-center py-2 rounded-lg bg-[#0474C4] text-white text-[0.8125rem] font-medium no-underline"
+                  className="flex-1 text-center py-2.5 rounded bg-[#0474C4] hover:bg-[#06457F] text-white text-[0.875rem] font-medium no-underline transition-colors"
                   onClick={() => setMobileOpen(false)}
                 >
                   Dashboard
                 </Link>
               ) : (
                 <>
-                  <Button size="sm" className="flex-1" asChild>
+                  <Button size="sm" variant="outline" className="flex-1" asChild>
                     <Link href="/login" onClick={() => setMobileOpen(false)}>Sign In</Link>
                   </Button>
-                  <Button size="sm" className="flex-1" asChild>
+                  <Button size="sm" className="flex-1 bg-[#0474C4] hover:bg-[#06457F]" asChild>
                     <Link href="/register" onClick={() => setMobileOpen(false)}>Get Started</Link>
                   </Button>
                 </>

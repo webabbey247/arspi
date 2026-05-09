@@ -37,6 +37,7 @@ type Program = {
   paymentType:  string | null
   level:        CourseLevel
   featured:     boolean
+  predefinedAnalytics: boolean
   instructorId: string
   instructor:   { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null }
   categoryId:   string | null
@@ -275,6 +276,7 @@ type ProgramFormValues = {
   categoryId:  string
   tagline:     string
   featured:    boolean
+  predefinedAnalytics: boolean
 
   format:         string
   duration:       string
@@ -310,7 +312,7 @@ type ProgramFormValues = {
 const EMPTY_FORM: ProgramFormValues = {
   title: "", slug: "", excerpt: "", thumbnail: "",
   pricing: "free", paymentType: "", price: "0",
-  level: "BEGINNER", categoryId: "", tagline: "", featured: false,
+  level: "BEGINNER", categoryId: "", tagline: "", featured: false, predefinedAnalytics: false,
   format: "", duration: "", startDate: "", endDate: "", cohortSize: "",
   rating: "", reviewCount: "", enrolledCount: "", countriesCount: "",
   programLevelId: "", programFormatId: "", programPricingId: "",
@@ -393,9 +395,9 @@ const STEPS = [
 
 const programSchema = yup.object({
   title:       yup.string().min(3, "Title must be at least 3 characters").max(255, "Title is too long").required("Title is required"),
-  slug:        yup.string().test("slug-format", "Slug must be lowercase with hyphens only", v => !v || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v)).max(255, "Slug is too long"),
+  slug:        yup.string().test("slug-format", "Slug must be lowercase with hyphens only", v => !v || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v)).max(255, "Slug is too long").required("Slug is required"),
   excerpt:     yup.string().min(10, "Excerpt must be at least 10 characters").required("Excerpt / Summary is required"),
-  thumbnail:   yup.string(),
+  thumbnail:   yup.string().required("Cover image is required"),
   pricing:     yup.string().oneOf(["free", "paid"], "Invalid pricing").required("Pricing is required"),
   paymentType: yup.string().when("pricing", {
     is:   "paid",
@@ -403,9 +405,10 @@ const programSchema = yup.object({
   }),
   price:       yup.string(),
   level:       yup.string().oneOf(["BEGINNER", "INTERMEDIATE", "ADVANCED"], "Invalid level").required("Level is required"),
-  categoryId:  yup.string(),
-  tagline:     yup.string().max(500, "Tagline is too long"),
+  categoryId:  yup.string().required("Category is required"),
+  tagline:     yup.string().max(500, "Tagline is too long").required("Tagline is required"),
   featured:    yup.boolean().required(),
+  predefinedAnalytics: yup.boolean().required(),
 
   format:      yup.string(),
   duration:    yup.string(),
@@ -463,7 +466,7 @@ const programSchema = yup.object({
 })
 
 const STEP_FIELDS: Record<number, (keyof ProgramFormValues)[]> = {
-  1: ["title", "slug", "excerpt", "thumbnail", "pricing", "paymentType", "price", "level", "categoryId", "tagline", "featured", "format", "duration", "startDate", "endDate", "cohortSize", "rating", "reviewCount", "enrolledCount", "countriesCount"],
+  1: ["title", "slug", "excerpt", "thumbnail", "pricing", "paymentType", "price", "level", "categoryId", "tagline", "featured", "predefinedAnalytics", "rating", "reviewCount", "enrolledCount", "countriesCount"],
   2: ["overview", "targetAudience", "learningObjectives", "whatIsIncluded"],
   3: ["curriculum"],
   4: ["facilitators"],
@@ -1024,6 +1027,7 @@ function ProgramModal({
     categoryId:  program.categoryId  ?? "",
     tagline:     program.tagline     ?? "",
     featured:    program.featured,
+    predefinedAnalytics: program.predefinedAnalytics ?? false,
     format:         program.format         ?? "",
     duration:       program.duration       ?? "",
     startDate:      program.startDate      ?? "",
@@ -1087,6 +1091,9 @@ function ProgramModal({
   // Format-aware config
   const watchedFormat = watch("format")
   const formatCfg     = FORMAT_CONFIGS[watchedFormat] ?? DEFAULT_FORMAT_CFG
+
+  // Predefined-analytics watcher — gates Metrics + Social Proof inputs
+  const watchedPredefinedAnalytics = watch("predefinedAnalytics")
 
   // Pricing watcher — clear price/paymentType when free
   const watchedPricing = watch("pricing")
@@ -1171,40 +1178,43 @@ function ProgramModal({
             <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{serverError}</p>
           )}
 
-          {/* Step 1 — Basic Info + Programme Info (merged) */}
+          {/* Step 1 — Basic Info */}
           {step === 1 && <>
-            <Field label="Thumbnail" required>
+            <Field label="Cover Image" required>
               <Controller
                 name="thumbnail"
                 control={control}
                 render={({ field }) => <ThumbnailUpload value={field.value} onChange={field.onChange} />}
               />
+              <FieldError msg={errors.thumbnail?.message} />
             </Field>
             <Field label="Title" required>
               <input autoFocus {...register("title")} className={inputCls} placeholder="e.g. African Policy Leadership Programme" />
               <FieldError msg={errors.title?.message} />
             </Field>
-            <Field label="Slug" hint="auto-generated — read only">
+            <Field label="Slug" required hint="auto-generated from title — read only">
               <input
                 {...register("slug")}
                 readOnly
                 className={`${inputCls} bg-[#FAFAF9] text-[#6B6560] cursor-default`}
               />
+              <FieldError msg={errors.slug?.message} />
+            </Field>
+            <Field label="Tagline" required hint="Subtitle shown beneath the title">
+              <input {...register("tagline")} className={inputCls} placeholder="e.g. Master results-based frameworks and evaluation methods" />
+              <FieldError msg={errors.tagline?.message} />
             </Field>
             <Field label="Excerpt / Summary" required hint="Short note shown on listing cards">
               <textarea {...register("excerpt")} rows={3} className={inputCls} placeholder="A concise summary of this programme…" />
               <FieldError msg={errors.excerpt?.message} />
             </Field>
-            <Field label="Tagline" hint="Optional subtitle">
-              <input {...register("tagline")} className={inputCls} placeholder="e.g. Master results-based frameworks and evaluation methods" />
-              <FieldError msg={errors.tagline?.message} />
-            </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Category" required>
                 <select {...register("categoryId")} className={inputCls}>
-                  <option value="">— None —</option>
+                  <option value="">— Select —</option>
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
+                <FieldError msg={errors.categoryId?.message} />
               </Field>
               <Field label="Level" required>
                 <select {...register("level")} className={inputCls}>
@@ -1213,28 +1223,6 @@ function ProgramModal({
                   <option value="ADVANCED">Advanced</option>
                 </select>
                 <FieldError msg={errors.level?.message} />
-              </Field>
-            </div>
-
-            {/* Lookup-table relations — managed under Levels / Formats / Pricing tabs */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Field label="Level (managed)" hint="From Levels tab">
-                <select {...register("programLevelId")} className={inputCls}>
-                  <option value="">— None —</option>
-                  {levels.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                </select>
-              </Field>
-              <Field label="Format (managed)" hint="From Formats tab">
-                <select {...register("programFormatId")} className={inputCls}>
-                  <option value="">— None —</option>
-                  {formats.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                </select>
-              </Field>
-              <Field label="Pricing (managed)" hint="From Pricing tab">
-                <select {...register("programPricingId")} className={inputCls}>
-                  <option value="">— None —</option>
-                  {pricingOptions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
               </Field>
             </div>
 
@@ -1266,82 +1254,49 @@ function ProgramModal({
               </Field>
             )}
 
-            <div className="flex items-center gap-6 pt-1">
+            <div className="flex items-center gap-6 pt-1 flex-wrap">
               <Controller
                 name="featured"
                 control={control}
                 render={({ field }) => <Toggle label="Featured" checked={!!field.value} onChange={field.onChange} />}
               />
+              <Controller
+                name="predefinedAnalytics"
+                control={control}
+                render={({ field }) => <Toggle label="Predefined Analytics" checked={!!field.value} onChange={field.onChange} />}
+              />
             </div>
 
-            {/* Programme details */}
-            <div className="border-t border-[#E5E2DC] pt-4">
-              <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px] mb-3">Programme Details</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Format">
-                  <select {...register("format")} className={inputCls}>
-                    <option value="">— Select —</option>
-                    <option value="Self-Paced">Self-Paced</option>
-                    <option value="Cohort Based">Cohort Based</option>
-                    <option value="Live Online">Live Online</option>
-                    <option value="Blended">Blended</option>
-                  </select>
-                </Field>
-                <Field label={formatCfg.durationLabel} hint={formatCfg.durationHint}>
-                  <input type="number" min="1" {...register("duration")} className={inputCls} placeholder="e.g. 8" />
-                </Field>
-                {formatCfg.showDates && <>
-                  <Field label="Start Date" required>
-                    <input type="date" {...register("startDate")} className={inputCls} />
-                    <FieldError msg={errors.startDate?.message} />
+            {watchedPredefinedAnalytics && <>
+              {/* Metrics (admin-only) */}
+              <div className="border-t border-[#E5E2DC] pt-4">
+                <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px] mb-3">Metrics</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <Field label="Reviews">
+                    <input type="number" min="0" {...register("reviewCount")} className={inputCls} placeholder="e.g. 312" />
                   </Field>
-                  <Field label="End Date" hint={formatCfg.endHint} required>
-                    <input
-                      type="date"
-                      {...register("endDate")}
-                      readOnly={!formatCfg.endEditable}
-                      className={`${inputCls} ${!formatCfg.endEditable ? "bg-[#FAFAF9] text-[#6B6560] cursor-default" : ""}`}
-                    />
-                    <FieldError msg={errors.endDate?.message} />
+                  <Field label="Enrolled">
+                    <input type="number" min="0" {...register("enrolledCount")} className={inputCls} placeholder="e.g. 2100" />
                   </Field>
-                </>}
-                {formatCfg.showCohortSize && (
-                  <Field label="Cohort Size" required>
-                    <input type="number" min="1" {...register("cohortSize")} className={inputCls} placeholder="e.g. 35" />
-                    <FieldError msg={errors.cohortSize?.message} />
+                  <Field label="Countries">
+                    <input type="number" min="0" {...register("countriesCount")} className={inputCls} placeholder="e.g. 120" />
                   </Field>
-                )}
+                </div>
               </div>
-            </div>
 
-            {/* Metrics (admin-only) */}
-            <div className="border-t border-[#E5E2DC] pt-4">
-              <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px] mb-3">Metrics</p>
-              <div className="grid grid-cols-3 gap-3">
-                <Field label="Reviews">
-                  <input type="number" min="0" {...register("reviewCount")} className={inputCls} placeholder="e.g. 312" />
-                </Field>
-                <Field label="Enrolled">
-                  <input type="number" min="0" {...register("enrolledCount")} className={inputCls} placeholder="e.g. 2100" />
-                </Field>
-                <Field label="Countries">
-                  <input type="number" min="0" {...register("countriesCount")} className={inputCls} placeholder="e.g. 120" />
+              {/* Social Proof (admin-only) */}
+              <div className="border-t border-[#E5E2DC] pt-4">
+                <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px] mb-3">Social Proof</p>
+                <Field label="Rating">
+                  <Controller
+                    name="rating"
+                    control={control}
+                    render={({ field }) => <StarRating value={field.value ?? ""} onChange={field.onChange} />}
+                  />
+                  <FieldError msg={errors.rating?.message} />
                 </Field>
               </div>
-            </div>
-
-            {/* Social Proof (admin-only) */}
-            <div className="border-t border-[#E5E2DC] pt-4">
-              <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px] mb-3">Social Proof</p>
-              <Field label="Rating">
-                <Controller
-                  name="rating"
-                  control={control}
-                  render={({ field }) => <StarRating value={field.value ?? ""} onChange={field.onChange} />}
-                />
-                <FieldError msg={errors.rating?.message} />
-              </Field>
-            </div>
+            </>}
           </>}
 
           {/* Step 2 — Objectives */}
@@ -1391,7 +1346,7 @@ function ProgramModal({
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               <FieldError msg={(errors.targetAudience as any)?.message} />
             </Field>
-            <Field label="What's Included" required>
+            <Field label="Highlights" required>
               <Controller
                 name="whatIsIncluded"
                 control={control}
@@ -1855,6 +1810,7 @@ export default function AdminProgramsPage() {
       level:       values.level,
       categoryId:  values.categoryId || null,
       featured:    values.featured,
+      predefinedAnalytics: values.predefinedAnalytics,
 
       programLevelId:   values.programLevelId   || null,
       programFormatId:  values.programFormatId  || null,
@@ -1866,10 +1822,10 @@ export default function AdminProgramsPage() {
       startDate:      values.startDate     || null,
       endDate:        values.endDate       || null,
       cohortSize:     values.cohortSize     ? parseInt(values.cohortSize)    : null,
-      rating:         values.rating         ? parseFloat(values.rating)       : null,
-      reviewCount:    values.reviewCount    ? parseInt(values.reviewCount)    : null,
-      enrolledCount:  values.enrolledCount  ? parseInt(values.enrolledCount)  : null,
-      countriesCount: values.countriesCount ? parseInt(values.countriesCount) : null,
+      rating:         values.predefinedAnalytics && values.rating         ? parseFloat(values.rating)       : null,
+      reviewCount:    values.predefinedAnalytics && values.reviewCount    ? parseInt(values.reviewCount)    : null,
+      enrolledCount:  values.predefinedAnalytics && values.enrolledCount  ? parseInt(values.enrolledCount)  : null,
+      countriesCount: values.predefinedAnalytics && values.countriesCount ? parseInt(values.countriesCount) : null,
 
       overview:           values.overview || null,
       targetAudience:     filterArr(values.targetAudience),
@@ -2047,9 +2003,9 @@ export default function AdminProgramsPage() {
         </button>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — formats / pricing intentionally hidden until those features ship */}
       <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 w-fit flex-wrap">
-        {(["programs", "categories", "levels", "formats", "pricing"] as Tab[]).map(t => {
+        {(["programs", "categories", "levels"] as Tab[]).map(t => {
           const count =
             t === "programs"   ? programs.length :
             t === "categories" ? categories.length :

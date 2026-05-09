@@ -13,12 +13,12 @@ export default async function GlobalOfficesSection() {
   const offices = await getGlobalOffices({ activeOnly: true })
 
   return (
-    <section className="px-8 md:px-16 py-16 bg-[#EDF2FB] w-full">
+    <section className="px-4 sm:px-6 md:px-10 lg:px-16 py-10 md:py-14 lg:py-16 bg-[#EDF2FB] w-full">
       <div className="max-w-350 flex flex-col gap-5 mx-auto">
         <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3]">
           Our Presence
         </p>
-        <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
+        <h2 className="font-heading text-[1.5rem] sm:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#0474C4]">
           Global Offices &amp; Operations
         </h2>
 
@@ -27,19 +27,19 @@ export default async function GlobalOfficesSection() {
             Office locations coming soon.
           </p>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {offices.map(o => {
               const addrLines = [o.addressLine1, o.addressLine2, [o.postalCode, o.city, o.country].filter(Boolean).join(", ")]
                 .filter(Boolean)
                 .join("\n")
 
               return (
-                <div key={o.id} className="border bg-white/90 border-[#0474C4]/25 rounded p-6">
+                <div key={o.id} className="border bg-white/90 border-[#0474C4]/25 rounded p-5 sm:p-6">
                   <div className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-2">
                     {REGION_LABELS[o.region]}
                   </div>
 
-                  <div className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4] mb-3">
+                  <div className="font-heading text-[1.25rem] sm:text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4] mb-3">
                     {o.city}, {o.country}
                   </div>
 
@@ -53,7 +53,7 @@ export default async function GlobalOfficesSection() {
                     </div>
                   )}
                   {o.email && (
-                    <a href={`mailto:${o.email}`} className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-[#0474C4] hover:underline block mt-1">
+                    <a href={`mailto:${o.email}`} className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-[#0474C4] hover:underline block mt-1 break-all">
                       {o.email}
                     </a>
                   )}

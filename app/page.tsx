@@ -113,9 +113,9 @@ const HomePage = () => {
         <div className="absolute -top-30 -right-30 w-150 h-150 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
 
         <div className="py-16 md:py-24 px-6 md:pr-16 md:pl-20 flex flex-col justify-center relative z-2 gap-12">
-          <div className="flex flex-col gap-4 max-w-110">
+          <div className="flex flex-col gap-4 max-w-140">
             <p className="text-[0.7rem] tracking-[0.18em] uppercase text-blue-300 flex items-center gap-3 before:content-[''] before:block before:w-8 before:h-px before:bg-blue-300 before:shrink-0">
-              Global Professional Institute
+              Institute for Advanced Research and Professional Studies
             </p>
             <h1 className="font-heading text-[clamp(2.4rem,4vw,3.4rem)] leading-[1.15] text-[#F7F3ED] font-normal tracking-[-0.01em]">
               Advance Your

@@ -1246,7 +1246,7 @@ function ProgramModal({
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               <FieldError msg={(errors.targetAudience as any)?.message} />
             </Field>
-            <Field label="What's Included" required>
+            <Field label="Highlights" required>
               <Controller
                 name="whatIsIncluded"
                 control={control}

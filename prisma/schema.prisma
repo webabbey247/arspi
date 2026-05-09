@@ -170,6 +170,7 @@ model Course {
   paymentType  String?                      // "one-time" | "subscription" | "monthly" — only when pricing = "paid"
   level        CourseLevel @default(BEGINNER)
   featured     Boolean     @default(false)
+  predefinedAnalytics Boolean @default(false)  // when true, render Metrics + Social Proof publicly
 
   // Programme details
   tagline              String?
