@@ -580,7 +580,6 @@ const WorkshopPage = () => {
 
           {/* Filters (left) + cards (right) — 2-col split for the rest of upcoming */}
           <div className="flex flex-col justify-start items-start w-full lg:flex-row gap-5 sm:gap-6 mt-2">
-
             {/* Left sidebar — w-1/4 on lg, full width on smaller */}
             <aside className="w-full lg:w-1/4 shrink-0">
               <div className="bg-transparent space-y-4 sm:space-y-5 px-0 py-2 lg:py-5 lg:sticky lg:top-32">
@@ -777,15 +776,16 @@ const WorkshopPage = () => {
               <p className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-[#637AA3]">
                 Recordings are available for most past events.{" "}
                 <Link href="/workshop/archive" className="text-[#0474C4] hover:text-ink transition-colors">
-                  Access the library →
+                 <strong className="inline-flex items-center">Access the library <ChevronRight className="w-4 h-4" /></strong>
                 </Link>
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {past.map((p) => (
-                <div
+                <Link
                   key={p.id}
+                  href={`/workshop/${p.slug}`}
                   className="bg-white border border-[#0474C4]/22 rounded p-4 sm:p-4 opacity-70 hover:opacity-100 transition-opacity"
                 >
                   <div className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.05em] font-medium text-slate-400 mb-1.5">
@@ -797,7 +797,7 @@ const WorkshopPage = () => {
                   <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400">
                     {p.type === "FREE" ? "Free" : "Paid"} · {CATEGORY_LABEL[p.category] ?? p.category}{p.duration !== null ? ` · ${p.duration} hrs` : ""}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
 
