@@ -4,7 +4,7 @@ import * as React from "react";
 import withLayout from "@/hooks/useLayout";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import {
   getProjects,
   type PublicProject,
@@ -122,6 +122,7 @@ const ResearchProjectsPage = () => {
   const [services, setServices]       = React.useState<PublicTaxonomyItem[]>([])
   const [loading, setLoading]         = React.useState(true)
   const [page, setPage]               = React.useState(1)
+  const [filtersOpen, setFiltersOpen] = React.useState(false)
 
   // Filter state
   const [statusFilter,     setStatusFilter]     = React.useState<string[]>([])
@@ -197,16 +198,28 @@ const ResearchProjectsPage = () => {
       />
 
       {/* Projects — sidebar + grid */}
-      <section className="bg-white px-8 md:px-16 pb-20 pt-10 w-full border-t border-[#e8e8e8]">
-        <div className="max-w-350 mx-auto flex flex-col lg:flex-row gap-8 w-full">
+      <section className="bg-white px-4 sm:px-6 md:px-10 lg:px-16 pb-12 sm:pb-16 md:pb-20 pt-6 sm:pt-8 md:pt-10 w-full border-t border-[#e8e8e8]">
+        <div className="max-w-350 mx-auto flex flex-col lg:flex-row gap-6 sm:gap-7 md:gap-8 w-full">
 
           {/* Left sidebar */}
           <aside className="lg:w-72 shrink-0">
             <div className="lg:sticky lg:top-32 px-0">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-heading text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">
-                  Filters
-                </h3>
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFiltersOpen(o => !o)}
+                    aria-expanded={filtersOpen}
+                    aria-controls="research-projects-filter-options"
+                    aria-label={filtersOpen ? "Hide filters" : "Show filters"}
+                    className="sm:hidden inline-flex items-center justify-center w-8 h-8 rounded border border-[#0474C4]/25 text-[#0474C4] hover:bg-[#0474C4]/8 transition-colors cursor-pointer"
+                  >
+                    <SlidersHorizontal className={`h-4 w-4 transition-transform ${filtersOpen ? "rotate-90" : ""}`} />
+                  </button>
+                  <h3 className="font-heading text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">
+                    Filters
+                  </h3>
+                </div>
                 {hasActiveFilter && (
                   <button
                     type="button"
@@ -218,7 +231,10 @@ const ResearchProjectsPage = () => {
                 )}
               </div>
 
-              <div className="flex flex-col">
+              <div
+                id="research-projects-filter-options"
+                className={`flex-col ${filtersOpen ? "flex" : "hidden"} sm:flex`}
+              >
                 <FilterAccordion
                   title="Project Status"
                   options={[
@@ -255,18 +271,9 @@ const ResearchProjectsPage = () => {
           {/* Right — grid + pagination */}
           <div className="flex-1 min-w-0 flex flex-col gap-6">
 
-            {/* Count */}
-            {!loading && (
-              <p className="font-body text-[0.8125rem] text-slate-500">
-                {total !== 0 && (
-                  <>Showing <span className="font-medium text-ink">{startIdx}–{endIdx}</span> of <span className="font-medium text-ink">{total}</span> {total === 1 ? "project" : "projects"}</>
-                )}
-              </p>
-            )}
-
             {/* Grid */}
             {loading ? (
-              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="rounded-sm overflow-hidden border border-[#0474C4]/10 animate-pulse">
                     <div className="aspect-16/10 bg-slate-100" />
@@ -279,7 +286,7 @@ const ResearchProjectsPage = () => {
                 ))}
               </div>
             ) : paginated.length > 0 ? (
-              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                 {paginated.map(proj => {
                   const range    = fmtRange(proj.startDate, proj.endDate)
                   const initials = proj.client.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("")
@@ -356,11 +363,11 @@ const ResearchProjectsPage = () => {
                 })}
               </div>
             ) : (
-              <div className="bg-white rounded p-10 text-center">
-                <p className="font-heading text-[1rem] font-semibold text-ink mb-1.5">
+              <div className="bg-white rounded p-6 sm:p-8 md:p-10 text-center">
+                <p className="font-heading text-[0.9375rem] sm:text-[1rem] font-semibold text-ink mb-1.5">
                   {projects.length === 0 ? "No projects available" : "No projects match your filters"}
                 </p>
-                <p className="font-body text-[0.8125rem] text-slate-500">
+                <p className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-500">
                   {hasActiveFilter ? "Try clearing some filters to see more results." : "Check back soon — new projects are added regularly."}
                 </p>
               </div>
@@ -375,24 +382,24 @@ const ResearchProjectsPage = () => {
                 </p>
 
                 {totalPages > 1 && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex flex-wrap items-center gap-1 w-full sm:w-auto">
                     <button
                       type="button"
                       disabled={page === 1}
                       onClick={() => setPage(p => Math.max(1, p - 1))}
-                      className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.05em] uppercase font-medium px-2.5 sm:px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                     >
                       Prev
                     </button>
                     {pages.map((p, i) =>
                       p === "…" ? (
-                        <span key={`ellipsis-${i}`} className="font-body text-[0.8125rem] text-slate-400 px-2">…</span>
+                        <span key={`ellipsis-${i}`} className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-400 px-1.5 sm:px-2">…</span>
                       ) : (
                         <button
                           key={p}
                           type="button"
                           onClick={() => setPage(p)}
-                          className={`min-w-8 h-8 rounded font-body text-[0.8125rem] font-medium cursor-pointer transition-colors ${
+                          className={`min-w-7 sm:min-w-8 h-7 sm:h-8 px-1.5 sm:px-2 rounded font-body text-[0.75rem] sm:text-[0.8125rem] font-medium cursor-pointer transition-colors ${
                             p === page
                               ? "bg-[#0474C4] text-white"
                               : "border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4]"
@@ -406,7 +413,7 @@ const ResearchProjectsPage = () => {
                       type="button"
                       disabled={page === totalPages}
                       onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                      className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.05em] uppercase font-medium px-2.5 sm:px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                     >
                       Next
                     </button>

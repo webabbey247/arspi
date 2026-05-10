@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { ContactStatus, ContactSubject } from "@/services/contact.service"
+import { downloadCsv } from "@/lib/csv"
 
 type EnquiryRow = {
   id: string
@@ -161,7 +162,7 @@ export default function AdminEnquiriesPage() {
 
       <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
-          <div className="relative w-full">
+          <div className="relative w-full max-w-100">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
@@ -172,30 +173,57 @@ export default function AdminEnquiriesPage() {
               className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors"
             />
           </div>
-          <FilterDropdown
-            label="Status"
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={[
-              { value: "ALL", label: "All" },
-              { value: "NEW", label: "New" },
-              { value: "READ", label: "Read" },
-              { value: "REPLIED", label: "Replied" },
-            ]}
-          />
-          <FilterDropdown
-            label="Subject"
-            value={subjectFilter}
-            onChange={setSubjectFilter}
-            options={[
-              { value: "ALL", label: "All" },
-              { value: "ENQUIRY", label: "Enquiry" },
-              { value: "PROGRAMS", label: "Programs" },
-              { value: "PARTNERSHIPS", label: "Partnerships" },
-              { value: "MEDIA", label: "Media" },
-              { value: "OTHER", label: "Other" },
-            ]}
-          />
+          <div className="ml-auto flex items-center gap-2">
+            <FilterDropdown
+              label="Status"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: "ALL", label: "All" },
+                { value: "NEW", label: "New" },
+                { value: "READ", label: "Read" },
+                { value: "REPLIED", label: "Replied" },
+              ]}
+            />
+            <FilterDropdown
+              label="Subject"
+              value={subjectFilter}
+              onChange={setSubjectFilter}
+              options={[
+                { value: "ALL", label: "All" },
+                { value: "ENQUIRY", label: "Enquiry" },
+                { value: "PROGRAMS", label: "Programs" },
+                { value: "PARTNERSHIPS", label: "Partnerships" },
+                { value: "MEDIA", label: "Media" },
+                { value: "OTHER", label: "Other" },
+              ]}
+            />
+            <button
+              onClick={() => downloadCsv(
+                `enquiries-${new Date().toISOString().slice(0, 10)}.csv`,
+                [
+                  { header: "First Name", value: (row: EnquiryRow) => row.firstName },
+                  { header: "Last Name",  value: (row: EnquiryRow) => row.lastName },
+                  { header: "Email",      value: (row: EnquiryRow) => row.email },
+                  { header: "Phone",      value: (row: EnquiryRow) => row.phone ?? "" },
+                  { header: "Subject",    value: (row: EnquiryRow) => SUBJECT_LABELS[row.subject] },
+                  { header: "Message",    value: (row: EnquiryRow) => row.message },
+                  { header: "Status",     value: (row: EnquiryRow) => row.status },
+                  { header: "Received",   value: (row: EnquiryRow) => new Date(row.createdAt).toISOString() },
+                ],
+                enquiries,
+              )}
+              disabled={loading || enquiries.length === 0}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors whitespace-nowrap"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Export CSV
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">

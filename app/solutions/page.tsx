@@ -54,34 +54,34 @@ const SolutionsPage = () => {
   </div>
 </section> */}
 
-<section className="py-16 md:py-28 px-8 md:px-16 lg:px-20 bg-[#F9F9FB] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-24 items-center">
+<section className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F9F9FB] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 lg:gap-24 items-center">
   <div>
-    <div className="flex items-center gap-3.5 mb-7">
-      <div className="w-13 h-13 rounded-xl bg-[#EFF6FF] flex items-center justify-center shrink-0">
-        <svg className="w-6.5 h-6.5" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <div className="flex items-center gap-3 sm:gap-3.5 mb-5 sm:mb-6 md:mb-7">
+      <div className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-xl bg-[#EFF6FF] flex items-center justify-center shrink-0">
+        <svg className="w-5.5 h-5.5 sm:w-6 sm:h-6 md:w-6.5 md:h-6.5" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           <path d="M9 12l2 2 4-4"/>
         </svg>
       </div>
-      <div>
-        <div className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#2563EB]">
+      <div className="min-w-0">
+        <div className="font-heading text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#2563EB]">
           ResolveRite
         </div>
-        <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium mt-0.5 block text-[#94A3B8]">
+        <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium mt-0.5 block text-[#94A3B8]">
           Dispute &amp; Case Management Software
         </span>
       </div>
     </div>
 
-    <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#2563EB] mb-4">
+    <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#2563EB] mb-3 sm:mb-4">
       About the Platform
     </p>
 
-    <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639] mb-5">
+    <h2 className="font-heading text-[1.5rem] sm:text-[1.625rem] md:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639] mb-4 sm:mb-5">
       Smarter Dispute Resolution, End to End
     </h2>
 
-    <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-[#64748B]">
+    <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-[#64748B]">
       ResolveRite is a purpose-built case and dispute management platform
       designed for academic institutions, NGOs, HR departments, and governance
       bodies. It streamlines the entire resolution lifecycle — from intake and
@@ -94,12 +94,12 @@ const SolutionsPage = () => {
       accountable workflow.
     </p>
 
-        <div className="flex gap-3.5 flex-wrap mt-10">
-  <Button className="rounded font-body h-12 text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 cursor-pointer transition-all duration-250 no-underline inline-block bg-[#2563EB] text-white hover:bg-[#1D4ED8]">
+        <div className="flex gap-3 sm:gap-3.5 flex-wrap mt-8 sm:mt-10">
+  <Button className="rounded font-body h-11 sm:h-12 text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3 sm:py-3.25 px-5 sm:px-7 cursor-pointer transition-all duration-250 no-underline inline-block bg-[#2563EB] text-white hover:bg-[#1D4ED8]">
        Request a Demo
       </Button>
-        <Button 
-        className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all h-12 duration-250 no-underline inline-block bg-transparent border border-[#2563EB] text-[#2563EB] hover:bg-[#F0FDFA]">
+        <Button
+        className="font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3 sm:py-3.25 px-5 sm:px-7 rounded cursor-pointer transition-all h-11 sm:h-12 duration-250 no-underline inline-block bg-transparent border border-[#2563EB] text-[#2563EB] hover:bg-[#F0FDFA]">
       Learn More
       </Button>
       {/* <Link href="/solutions/resolverite" className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all h-12 duration-250 no-underline inline-block bg-transparent border border-[#2563EB] text-[#2563EB] hover:bg-[#F0FDFA]">
@@ -113,17 +113,17 @@ const SolutionsPage = () => {
 
   {/* App mockup */}
   <div className="bg-[#071639] rounded-xl overflow-hidden border border-[rgba(200,169,110,0.12)] shadow-[0_24px_60px_rgba(6,13,20,0.3)]">
-    <div className="px-3.5 py-2.5 flex items-center gap-2 border-b border-[rgba(247,243,237,0.06)]">
-      <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
-      <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]" />
-      <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
-      <div className="flex-1 bg-[rgba(247,243,237,0.06)] rounded h-5 mx-2 flex items-center px-2 font-body text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.3)]">
+    <div className="px-3 sm:px-3.5 py-2 sm:py-2.5 flex items-center gap-1.5 sm:gap-2 border-b border-[rgba(247,243,237,0.06)]">
+      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FF5F57] shrink-0" />
+      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FEBC2E] shrink-0" />
+      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#28C840] shrink-0" />
+      <div className="flex-1 min-w-0 bg-[rgba(247,243,237,0.06)] rounded h-5 mx-1.5 sm:mx-2 flex items-center px-2 font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.3)] truncate">
         app.resolverite.com/dashboard
       </div>
     </div>
 
-    <div className="p-6">
-      <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mb-2.5">
+    <div className="p-4 sm:p-5 md:p-6">
+      <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mb-2.5">
         Case Overview
       </div>
 
@@ -133,35 +133,35 @@ const SolutionsPage = () => {
           { value: "18", label: "Resolved",     color: "#86EFAC"  },
           { value: "6",  label: "Overdue",      color: "#FCA5A5"  },
         ].map(({ value, label, color }) => (
-          <div key={label} className="bg-[rgba(247,243,237,0.05)] rounded-lg p-3 flex flex-col gap-1">
-            <span className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.1] font-semibold" style={{ color }}>
+          <div key={label} className="bg-[rgba(247,243,237,0.05)] rounded-lg p-2.5 sm:p-3 flex flex-col gap-1">
+            <span className="font-heading text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.1] font-semibold" style={{ color }}>
               {value}
             </span>
-            <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.4)]">
+            <span className="font-body text-[0.5625rem] sm:text-[0.625rem] md:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.4)]">
               {label}
             </span>
           </div>
         ))}
       </div>
 
-      <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mb-2">
+      <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mb-2">
         Recent Cases
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5 sm:gap-2">
         {[
           { dot: "#FCA5A5", text: "Student grievance — Dept. of Education",  status: "Open",      statusBg: "rgba(252,165,165,0.1)", statusColor: "#FCA5A5" },
           { dot: "#86EFAC", text: "HR complaint — Policy violation review",   status: "Resolved",  statusBg: "rgba(134,239,172,0.1)", statusColor: "#86EFAC" },
           { dot: "#93C5FD", text: "Academic integrity — Investigation phase", status: "In Review", statusBg: "rgba(147,197,253,0.1)", statusColor: "#93C5FD" },
           { dot: "#FEBC2E", text: "Staff misconduct — Awaiting response",     status: "Pending",   statusBg: "rgba(254,188,46,0.1)",  statusColor: "#FEBC2E" },
         ].map(({ dot, text, status, statusBg, statusColor }) => (
-          <div key={text} className="flex items-center gap-2 bg-[rgba(247,243,237,0.03)] rounded px-3 py-2">
+          <div key={text} className="flex items-center gap-2 bg-[rgba(247,243,237,0.03)] rounded px-2.5 sm:px-3 py-2">
             <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: dot }} />
-            <div className="flex-1 font-body text-[0.75rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.7)]">
+            <div className="flex-1 min-w-0 font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.7)] truncate">
               {text}
             </div>
             <div
-              className="font-body text-[0.6875rem] tracking-[0.05em] uppercase font-medium px-2 py-0.5 rounded"
+              className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] uppercase font-medium px-1.5 sm:px-2 py-0.5 rounded shrink-0"
               style={{ background: statusBg, color: statusColor }}
             >
               {status}
@@ -175,32 +175,32 @@ const SolutionsPage = () => {
 </section>
 
 
-<section className="py-16 md:py-28 px-8 md:px-16 lg:px-20 bg-[#F7F3ED] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-24 items-center">
+<section className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F7F3ED] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 lg:gap-24 items-center">
 
   {/* App mockup */}
-  <div className="bg-[#071639] rounded-xl overflow-hidden border border-[rgba(200,169,110,0.12)] shadow-[0_24px_60px_rgba(6,13,20,0.3)]">
+  <div className="bg-[#071639] rounded-xl overflow-hidden border border-[rgba(200,169,110,0.12)] shadow-[0_24px_60px_rgba(6,13,20,0.3)] order-2 lg:order-1">
 
     {/* Browser chrome */}
-    <div className="px-3.5 py-2.5 flex items-center gap-2 border-b border-[rgba(247,243,237,0.06)]">
-      <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
-      <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]" />
-      <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
+    <div className="px-3 sm:px-3.5 py-2 sm:py-2.5 flex items-center gap-1.5 sm:gap-2 border-b border-[rgba(247,243,237,0.06)]">
+      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FF5F57] shrink-0" />
+      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FEBC2E] shrink-0" />
+      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#28C840] shrink-0" />
       {/* URL — DM Sans, 11px, 0em */}
-      <div className="flex-1 bg-[rgba(247,243,237,0.06)] rounded h-5 mx-2 flex items-center px-2 font-body text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.3)]">
+      <div className="flex-1 min-w-0 bg-[rgba(247,243,237,0.06)] rounded h-5 mx-1.5 sm:mx-2 flex items-center px-2 font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.3)] truncate">
         app.mentortrack.io/my-journey
       </div>
     </div>
 
-    <div className="p-6">
+    <div className="p-4 sm:p-5 md:p-6">
       <div className="flex items-center gap-2.5 mb-3 pb-3 border-b border-[rgba(247,243,237,0.06)]">
         <div className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center font-body text-[0.6875rem] font-medium text-[#0D9488] bg-[rgba(13,148,136,0.15)]">
           DR
         </div>
-        <div>
-          <div className="font-body text-[0.8125rem] tracking-[0em] leading-normal font-medium text-[#F7F3ED]">
+        <div className="min-w-0">
+          <div className="font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0em] leading-normal font-medium text-[#F7F3ED] truncate">
             Dr. Amara Diallo
           </div>
-          <div className="font-body text-[0.6875rem] tracking-[0em] leading-normal font-normal text-[rgba(247,243,237,0.35)]">
+          <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] leading-normal font-normal text-[rgba(247,243,237,0.35)] truncate">
             Research Fellow — Cohort 2026
           </div>
         </div>
@@ -213,10 +213,10 @@ const SolutionsPage = () => {
       ].map(({ label, value, width }) => (
         <div key={label} className="mb-3">
           <div className="flex justify-between mb-1.5">
-            <span className="font-body text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.4)]">
+            <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.4)]">
               {label}
             </span>
-            <span className="font-body text-[0.6875rem] tracking-[0em] font-medium text-[#0D9488]">
+            <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-medium text-[#0D9488]">
               {value}
             </span>
           </div>
@@ -226,7 +226,7 @@ const SolutionsPage = () => {
         </div>
       ))}
 
-      <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mb-2">
+      <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mb-2">
         Upcoming Sessions
       </div>
 
@@ -248,16 +248,16 @@ const SolutionsPage = () => {
             icon: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>,
           },
         ].map(({ text, time, icon }) => (
-          <div key={text} className="flex items-center gap-2.5 bg-[rgba(247,243,237,0.03)] border border-[rgba(247,243,237,0.06)] rounded px-3 py-2.5">
+          <div key={text} className="flex items-center gap-2 sm:gap-2.5 bg-[rgba(247,243,237,0.03)] border border-[rgba(247,243,237,0.06)] rounded px-2.5 sm:px-3 py-2 sm:py-2.5">
             <div className="w-7 h-7 rounded-[6px] flex items-center justify-center shrink-0 bg-[rgba(13,148,136,0.15)]">
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="1.8" strokeLinecap="round">
                 {icon}
               </svg>
             </div>
-            <div className="font-body text-[0.75rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.55)]">
+            <div className="flex-1 min-w-0 font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.55)] truncate">
               {text}
             </div>
-            <div className="font-body text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.28)] ml-auto">
+            <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.28)] ml-auto shrink-0">
               {time}
             </div>
           </div>
@@ -268,34 +268,34 @@ const SolutionsPage = () => {
   </div>
 
   {/* Right column */}
-  <div>
-    <div className="flex items-center gap-3.5 mb-7">
-      <div className="w-13 h-13 rounded-xl bg-[#F0FDFA] flex items-center justify-center shrink-0">
-        <svg className="w-6.5 h-6.5" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+  <div className="order-1 lg:order-2">
+    <div className="flex items-center gap-3 sm:gap-3.5 mb-5 sm:mb-6 md:mb-7">
+      <div className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-xl bg-[#F0FDFA] flex items-center justify-center shrink-0">
+        <svg className="w-5.5 h-5.5 sm:w-6 sm:h-6 md:w-6.5 md:h-6.5" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
       </div>
-      <div>
-        <div className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0D9488]">
+      <div className="min-w-0">
+        <div className="font-heading text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0D9488]">
           MentorTrack
         </div>
-        <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium mt-0.5 block text-[#94A3B8]">
+        <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium mt-0.5 block text-[#94A3B8]">
           Mentorship &amp; Learning Management Platform
         </span>
       </div>
     </div>
 
-    <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0D9488] mb-4">
+    <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0D9488] mb-3 sm:mb-4">
       About the Platform
     </p>
 
-    <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639] mb-5">
+    <h2 className="font-heading text-[1.5rem] sm:text-[1.625rem] md:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639] mb-4 sm:mb-5">
       Structured Mentorship, Measurable Growth
     </h2>
 
-    <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-[#64748B]">
+    <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-[#64748B]">
       MentorTrack is a comprehensive mentorship and learning management
       platform designed to connect mentors and mentees, structure learning
       journeys, track progress against milestones, and measure the impact
@@ -307,11 +307,11 @@ const SolutionsPage = () => {
       mentors and mentees engaged, accountable, and on track.
     </p>
 
-    <div className="flex gap-3.5 flex-wrap mt-10">
-      <Button className="font-body h-12 text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all duration-250 no-underline inline-block bg-[#0D9488] text-white hover:bg-[#0F766E]">
+    <div className="flex gap-3 sm:gap-3.5 flex-wrap mt-8 sm:mt-10">
+      <Button className="font-body h-11 sm:h-12 text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3 sm:py-3.25 px-5 sm:px-7 rounded cursor-pointer transition-all duration-250 no-underline inline-block bg-[#0D9488] text-white hover:bg-[#0F766E]">
         Request a Demo
       </Button>
-          <Button className="font-body h-12 text-[0.8125rem] inline-block tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all duration-250 no-underline bg-transparent border border-[rgba(13,148,136,0.35)] text-[#0D9488] hover:bg-[#F0FDFA]">
+          <Button className="font-body h-11 sm:h-12 text-[0.75rem] sm:text-[0.8125rem] inline-block tracking-[0.07em] uppercase font-medium py-3 sm:py-3.25 px-5 sm:px-7 rounded cursor-pointer transition-all duration-250 no-underline bg-transparent border border-[rgba(13,148,136,0.35)] text-[#0D9488] hover:bg-[#F0FDFA]">
        Learn More
       </Button>
       {/* <Link href="/solutions/mentortrack" className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all duration-250 no-underline inline-block bg-transparent border border-[rgba(13,148,136,0.35)] text-[#0D9488] hover:bg-[#F0FDFA]">

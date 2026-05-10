@@ -43,27 +43,27 @@ export default async function VerifyPage({ params }: Props) {
     <div className="min-h-screen bg-[#060D14] flex flex-col">
 
       {/* Top bar */}
-      <header className="border-b border-white/8 px-8 py-4 flex items-center justify-between">
-        <Link href="/" className="text-[#F7F3ED] text-[13px] font-semibold tracking-wide hover:text-[#C8A96E] transition-colors">
+      <header className="border-b border-white/8 px-4 sm:px-6 md:px-8 py-3 sm:py-4 flex items-center justify-between gap-3">
+        <Link href="/" className="text-[#F7F3ED] text-[12px] sm:text-[13px] font-semibold tracking-wide hover:text-[#C8A96E] transition-colors">
           ARPS Institute
         </Link>
-        <span className="text-[11px] text-white/30 uppercase tracking-widest">Certificate Verification</span>
+        <span className="text-[10px] sm:text-[11px] text-white/30 uppercase tracking-widest text-right">Certificate Verification</span>
       </header>
 
       {/* Main */}
-      <main className="flex-1 flex items-center justify-center px-6 py-16">
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-10 sm:py-12 md:py-16">
         <div className="w-full max-w-2xl">
 
           {/* Valid badge */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+          <div className="flex items-center gap-3 mb-6 sm:mb-8">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
-            <div>
-              <p className="text-emerald-400 text-[13px] font-semibold">Certificate Verified</p>
-              <p className="text-white/35 text-[11px]">This certificate is authentic and issued by ARPS Institute</p>
+            <div className="min-w-0">
+              <p className="text-emerald-400 text-[12px] sm:text-[13px] font-semibold">Certificate Verified</p>
+              <p className="text-white/35 text-[10px] sm:text-[11px]">This certificate is authentic and issued by ARPS Institute</p>
             </div>
           </div>
 
@@ -75,44 +75,44 @@ export default async function VerifyPage({ params }: Props) {
             {/* Gold top accent */}
             <div className="h-0.5 w-full" style={{ background: "linear-gradient(90deg, transparent, #C8A96E, transparent)" }} />
 
-            <div className="px-10 py-10">
+            <div className="px-5 py-6 sm:px-7 sm:py-8 md:px-10 md:py-10">
 
               {/* Certificate of completion */}
-              <div className="flex items-center gap-3 mb-8">
+              <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
                 <div className="h-px flex-1" style={{ background: "rgba(200,169,110,0.25)" }} />
-                <span className="text-[10px] tracking-[0.2em] uppercase text-[#C8A96E]/70 font-medium">Certificate of Completion</span>
+                <span className="text-[9px] sm:text-[10px] tracking-[0.2em] uppercase text-[#C8A96E]/70 font-medium text-center">Certificate of Completion</span>
                 <div className="h-px flex-1" style={{ background: "rgba(200,169,110,0.25)" }} />
               </div>
 
               {/* Recipient */}
-              <div className="text-center mb-8">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/35 mb-3">Awarded to</p>
-                <h1 className="text-[2.4rem] font-serif text-[#C8A96E] leading-tight mb-1">{recipientName}</h1>
-                <p className="text-[11px] text-white/35 tracking-wide">{cert.user.email}</p>
+              <div className="text-center mb-6 sm:mb-8">
+                <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-white/35 mb-2 sm:mb-3">Awarded to</p>
+                <h1 className="text-[1.5rem] sm:text-[1.875rem] md:text-[2.25rem] lg:text-[2.4rem] font-serif text-[#C8A96E] leading-tight mb-1 break-words">{recipientName}</h1>
+                <p className="text-[10px] sm:text-[11px] text-white/35 tracking-wide break-all">{cert.user.email}</p>
               </div>
 
               {/* Program */}
-              <div className="text-center mb-8">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/35 mb-3">For successfully completing</p>
-                <h2 className="text-[1.35rem] font-semibold text-[#F7F3ED] leading-snug">{cert.course.title}</h2>
+              <div className="text-center mb-6 sm:mb-8">
+                <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-white/35 mb-2 sm:mb-3">For successfully completing</p>
+                <h2 className="text-[1.0625rem] sm:text-[1.1875rem] md:text-[1.35rem] font-semibold text-[#F7F3ED] leading-snug">{cert.course.title}</h2>
                 {cert.course.instructorName && (
-                  <p className="text-[12px] text-white/40 mt-1.5">Facilitated by {cert.course.instructorName}</p>
+                  <p className="text-[11px] sm:text-[12px] text-white/40 mt-1.5">Facilitated by {cert.course.instructorName}</p>
                 )}
               </div>
 
               {/* Meta grid */}
-              <div className="grid grid-cols-3 gap-4 pt-8 border-t" style={{ borderColor: "rgba(200,169,110,0.15)" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-6 sm:pt-8 border-t" style={{ borderColor: "rgba(200,169,110,0.15)" }}>
                 <div className="text-center">
-                  <p className="text-[9.5px] uppercase tracking-[0.18em] text-white/30 mb-1.5">Date Issued</p>
-                  <p className="text-[13px] text-[#F7F3ED]/80 font-medium">{issuedAt}</p>
+                  <p className="text-[9px] sm:text-[9.5px] uppercase tracking-[0.18em] text-white/30 mb-1 sm:mb-1.5">Date Issued</p>
+                  <p className="text-[12px] sm:text-[13px] text-[#F7F3ED]/80 font-medium">{issuedAt}</p>
                 </div>
-                <div className="text-center border-x" style={{ borderColor: "rgba(200,169,110,0.12)" }}>
-                  <p className="text-[9.5px] uppercase tracking-[0.18em] text-white/30 mb-1.5">Certificate ID</p>
-                  <p className="text-[13px] text-[#F7F3ED]/80 font-mono">{token.slice(0, 16).toUpperCase()}</p>
+                <div className="text-center sm:border-x py-3 sm:py-0 border-y sm:border-y-0" style={{ borderColor: "rgba(200,169,110,0.12)" }}>
+                  <p className="text-[9px] sm:text-[9.5px] uppercase tracking-[0.18em] text-white/30 mb-1 sm:mb-1.5">Certificate ID</p>
+                  <p className="text-[12px] sm:text-[13px] text-[#F7F3ED]/80 font-mono break-all">{token.slice(0, 16).toUpperCase()}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[9.5px] uppercase tracking-[0.18em] text-white/30 mb-1.5">Valid Until</p>
-                  <p className="text-[13px] text-[#F7F3ED]/80 font-medium">{expiresAt ?? "No Expiry"}</p>
+                  <p className="text-[9px] sm:text-[9.5px] uppercase tracking-[0.18em] text-white/30 mb-1 sm:mb-1.5">Valid Until</p>
+                  <p className="text-[12px] sm:text-[13px] text-[#F7F3ED]/80 font-medium">{expiresAt ?? "No Expiry"}</p>
                 </div>
               </div>
 
@@ -123,11 +123,11 @@ export default async function VerifyPage({ params }: Props) {
           </div>
 
           {/* Download button */}
-          <div className="mt-6 flex items-center justify-between gap-4">
+          <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <a
               href={`/api/certificates/verify/${token}/download`}
               download
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-semibold text-[#060D14] transition-opacity hover:opacity-90"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-[12px] sm:text-[13px] font-semibold text-[#060D14] transition-opacity hover:opacity-90"
               style={{ background: "linear-gradient(135deg, #C8A96E, #D4BA85)" }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -140,14 +140,14 @@ export default async function VerifyPage({ params }: Props) {
 
             <Link
               href="/programs"
-              className="text-[12px] text-white/35 hover:text-white/60 transition-colors"
+              className="text-[11px] sm:text-[12px] text-white/35 hover:text-white/60 transition-colors text-center sm:text-right"
             >
               Browse more programs →
             </Link>
           </div>
 
           {/* Footer note */}
-          <p className="text-center text-[11px] text-white/20 mt-8">
+          <p className="text-center text-[10px] sm:text-[11px] text-white/20 mt-6 sm:mt-8">
             This certificate was issued by ARPS Institute. To report a fraudulent certificate, contact{" "}
             <a href="mailto:info@arspi.org" className="underline hover:text-white/40 transition-colors">info@arspi.org</a>
           </p>

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Calendar, ChevronDown, ChevronRight, Clock, GraduationCap, MapPin, Monitor, Users } from "lucide-react";
+import { Calendar, ChevronDown, ChevronRight, Clock, GraduationCap, MapPin, Monitor, SlidersHorizontal, Users } from "lucide-react";
 import { initialsOf } from "@/lib/workshop-helpers";
 import { Badge } from "@/components/ui/badge";
 import withLayout from "@/hooks/useLayout";
@@ -246,6 +246,7 @@ const WorkshopPage = () => {
 
   const [workshops, setWorkshops] = React.useState<PublicWorkshop[]>([])
   const [loading, setLoading]     = React.useState(true)
+  const [filtersOpen, setFiltersOpen] = React.useState(false)
 
   React.useEffect(() => {
     fetch("/api/workshops/public")
@@ -583,8 +584,20 @@ const WorkshopPage = () => {
             {/* Left sidebar — w-1/4 on lg, full width on smaller */}
             <aside className="w-full lg:w-1/4 shrink-0">
               <div className="bg-transparent space-y-4 sm:space-y-5 px-0 py-2 lg:py-5 lg:sticky lg:top-32">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-heading text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">Filters</h3>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-heading text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">Filters</h3>
+                    <button
+                      type="button"
+                      onClick={() => setFiltersOpen(o => !o)}
+                      aria-expanded={filtersOpen}
+                      aria-controls="workshop-filter-options"
+                      aria-label={filtersOpen ? "Hide filters" : "Show filters"}
+                      className="sm:hidden inline-flex items-center justify-center w-8 h-8 rounded border border-[#0474C4]/25 text-[#0474C4] hover:bg-[#0474C4]/8 transition-colors cursor-pointer"
+                    >
+                      <SlidersHorizontal className={`h-4 w-4 transition-transform ${filtersOpen ? "rotate-90" : ""}`} />
+                    </button>
+                  </div>
                   {hasActiveFilter && (
                     <button
                       type="button"
@@ -596,12 +609,16 @@ const WorkshopPage = () => {
                   )}
                 </div>
 
-                <div className="flex flex-col">
+                <div
+                  id="workshop-filter-options"
+                  className={`flex-col ${filtersOpen ? "flex" : "hidden"} sm:flex`}
+                >
                   <FilterAccordion
                     title="Category"
                     options={categoryOptions as { id: string; label: string; count: number }[]}
                     selected={categoryFilter}
                     onToggle={(id) => setCategoryFilter(toggleIn(categoryFilter, id))}
+                    defaultOpen
                   />
 
                   <FilterAccordion

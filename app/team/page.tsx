@@ -27,7 +27,7 @@ function Initials({ name }: { name: string }) {
   const text = name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase() || "?"
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#0474C4]/20 to-[#0474C4]/5">
-      <span className="font-heading text-[2.5rem] font-semibold text-[#0474C4]/70 select-none">
+      <span className="font-heading text-[1.75rem] sm:text-[2rem] md:text-[2.5rem] font-semibold text-[#0474C4]/70 select-none">
         {text}
       </span>
     </div>
@@ -60,15 +60,15 @@ function ExecutiveGrid({ members }: { members: Member[] }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent transition-opacity duration-500" />
 
           {/* Info */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-0 transition-transform duration-500">
-            <p className="font-body text-[0.7rem] tracking-[0.1em] uppercase text-white/60 mb-1.5">
+          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 md:p-6 translate-y-0 transition-transform duration-500">
+            <p className="font-body text-[0.625rem] sm:text-[0.6875rem] md:text-[0.7rem] tracking-widest uppercase text-white/60 mb-1 sm:mb-1.5">
               {m.position}
             </p>
-            <h3 className="font-heading text-xl font-normal text-white leading-snug">
+            <h3 className="font-heading text-lg sm:text-xl font-normal text-white leading-snug">
               {m.name}
             </h3>
             {m.description && (
-              <p className="font-body text-[0.8125rem] text-white/70 leading-relaxed mt-3 max-h-0 overflow-hidden opacity-0 group-hover:max-h-24 group-hover:opacity-100 transition-all duration-500 ease-out">
+              <p className="font-body text-[0.75rem] sm:text-[0.8125rem] text-white/70 leading-relaxed mt-2 sm:mt-3 max-h-0 overflow-hidden opacity-0 group-hover:max-h-24 group-hover:opacity-100 transition-all duration-500 ease-out">
                 {m.description}
               </p>
             )}
@@ -156,15 +156,15 @@ const TeamPage = () => {
 
       {/* Loading skeletons */}
       {loading && (
-        <section className="bg-white px-6 md:px-12 lg:px-20 py-20">
-          <div className="h-3 w-32 bg-[#f0efec] animate-pulse rounded mb-10" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-20">
+        <section className="bg-white px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 py-12 sm:py-16 md:py-20">
+          <div className="h-3 w-32 bg-[#f0efec] animate-pulse rounded mb-8 sm:mb-10" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-14 sm:mb-20">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="aspect-3/4 bg-[#f5f4f1] animate-pulse" />
             ))}
           </div>
-          <div className="h-3 w-32 bg-[#f0efec] animate-pulse rounded mb-10" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-10">
+          <div className="h-3 w-32 bg-[#f0efec] animate-pulse rounded mb-8 sm:mb-10" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-10">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="flex flex-col gap-3">
                 <div className="aspect-square bg-[#f5f4f1] animate-pulse" />
@@ -178,12 +178,12 @@ const TeamPage = () => {
 
       {/* Empty state */}
       {isEmpty && (
-        <section className="bg-white px-6 md:px-12 lg:px-20 py-24">
-          <div className="border border-dashed border-[#ddd] rounded p-14 text-center max-w-lg mx-auto">
-            <p className="font-heading text-[1.25rem] font-normal text-[#111] mb-2">
+        <section className="bg-white px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 py-16 sm:py-20 md:py-24">
+          <div className="border border-dashed border-[#ddd] rounded p-8 sm:p-12 md:p-14 text-center max-w-lg mx-auto">
+            <p className="font-heading text-[1.125rem] sm:text-[1.25rem] font-normal text-[#111] mb-2">
               Profiles coming soon
             </p>
-            <p className="font-body text-[0.875rem] text-[#888] leading-relaxed">
+            <p className="font-body text-[0.8125rem] sm:text-[0.875rem] text-[#888] leading-relaxed">
               We&apos;re putting the finishing touches on team profiles. Check back shortly.
             </p>
           </div>
@@ -192,9 +192,9 @@ const TeamPage = () => {
 
       {/* Executive Management */}
       {executives.length > 0 && (
-        <section className="bg-white px-6 md:px-12 lg:px-20 pt-20 pb-6 w-full">
+        <section className="bg-white px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 pt-12 sm:pt-16 md:pt-20 pb-6 w-full">
           <SectionLabel number="01" label="Leadership" />
-          <h2 className="font-heading text-4xl md:text-5xl font-normal text-[#111] tracking-tight mb-10">
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-normal text-[#111] tracking-tight mb-8 sm:mb-10">
             Executive Management
           </h2>
           <ExecutiveGrid members={executives} />
@@ -203,9 +203,9 @@ const TeamPage = () => {
 
       {/* Staff */}
       {staff.length > 0 && (
-        <section className="bg-white px-6 md:px-12 lg:px-20 py-20">
+        <section className="bg-white px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 py-12 sm:py-16 md:py-20">
           <SectionLabel number="02" label="Our People" />
-          <h2 className="font-heading text-4xl md:text-5xl font-normal text-[#111] tracking-tight mb-10">
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-normal text-[#111] tracking-tight mb-8 sm:mb-10">
             Our Staff
           </h2>
           <StaffGrid members={staff} />
@@ -214,22 +214,22 @@ const TeamPage = () => {
 
       {/* Join CTA */}
       {!loading && (
-        <section className="bg-[#060D14] px-6 md:px-12 lg:px-20 py-20 w-full">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+        <section className="bg-[#060D14] px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 py-12 sm:py-16 md:py-20 w-full">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 md:gap-8">
             <div className="max-w-lg">
-              <p className="font-body text-[0.65rem] tracking-[0.15em] uppercase text-[#0474C4] font-medium mb-4">
+              <p className="font-body text-[0.65rem] tracking-[0.15em] uppercase text-[#0474C4] font-medium mb-3 sm:mb-4">
                 Join Us
               </p>
-              <h2 className="font-heading text-4xl md:text-5xl font-normal text-white leading-[1.1] tracking-tight">
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-normal text-white leading-[1.1] tracking-tight">
                 Want to be part of our team?
               </h2>
-              <p className="font-body text-[0.9375rem] text-white/50 leading-relaxed mt-4">
+              <p className="font-body text-[0.875rem] sm:text-[0.9375rem] text-white/50 leading-relaxed mt-3 sm:mt-4">
                 We&apos;re always looking for curious minds and driven professionals to grow with us.
               </p>
             </div>
             <Link
               href="/careers"
-              className="group inline-flex items-center gap-3 border border-white/20 hover:border-[#0474C4] text-white hover:text-[#0474C4] font-body text-[0.875rem] tracking-wide px-7 py-4 transition-colors duration-300 whitespace-nowrap self-start md:self-auto"
+              className="group inline-flex items-center gap-3 border border-white/20 hover:border-[#0474C4] text-white hover:text-[#0474C4] font-body text-[0.8125rem] sm:text-[0.875rem] tracking-wide px-5 sm:px-7 py-3 sm:py-4 transition-colors duration-300 whitespace-nowrap self-start md:self-auto"
             >
               View open roles
               <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />

@@ -2,12 +2,86 @@
 
 import * as React from "react";
 import withLayout from "@/hooks/useLayout";
-import { CalendarHeart, ChevronRight, TargetIcon } from "lucide-react";
+import { CalendarHeart, ChevronLeft, ChevronRight, TargetIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { getInsights, type PublicInsight } from "@/services/public-insight.service";
 import { getWorkshops, type PublicWorkshop } from "@/services/public-workshop.service";
 import { getPrograms, type PublicProgram } from "@/services/public-program.service";
+
+function renderProgramCard(
+  prog: PublicProgram,
+  extraClass: string,
+  key: string | number = prog.id,
+  ariaHidden = false,
+) {
+  const initials = prog.instructor.name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("")
+  const price = prog.price > 0 ? `$${prog.price.toLocaleString()}` : "Free"
+  const level = prog.level.charAt(0) + prog.level.slice(1).toLowerCase()
+
+  return (
+    <Link
+      href={`/programs/${prog.slug}`}
+      key={key}
+      aria-hidden={ariaHidden || undefined}
+      tabIndex={ariaHidden ? -1 : undefined}
+      data-program-card
+      className={`group bg-white rounded-sm overflow-hidden border border-[#0474C4]/15 transition-all duration-300 cursor-pointer hover:-translate-y-1 shrink-0 ${extraClass}`}
+    >
+      <div className="relative h-75 overflow-hidden bg-slate-100">
+        <Image
+          src={prog.thumbnail || "/images/dummy/course-1.jpg"}
+          alt={prog.title}
+          width={600}
+          height={400}
+          className="w-full h-full object-cover transition-transform duration-400 group-hover:scale-[1.04]"
+        />
+        {prog.featured && (
+          <span className="absolute top-3 left-3 font-body text-[0.625rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white px-4 py-1.5 rounded">
+            Featured
+          </span>
+        )}
+        <span className="absolute bottom-3 right-3 font-body text-[0.75rem] tracking-[0.05em] font-medium bg-[#0B1625] text-[#D4BA85] py-1.5 px-3.5 rounded-xs">
+          {price}
+        </span>
+      </div>
+
+      <div className="pt-[1.4rem] px-6 pb-[1.6rem]">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-full bg-[#0474C4] text-white font-body text-[0.8125rem] font-medium flex items-center justify-center shrink-0">
+            {initials}
+          </div>
+          <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-600 truncate">
+            {prog.instructor.name}
+          </span>
+        </div>
+
+        <h3 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.35] font-medium text-[#071639] mb-4 line-clamp-2">
+          {prog.title}
+        </h3>
+
+        <div className="flex gap-[1.2rem] items-center">
+          {prog.duration && (
+            <span className="flex items-center capitalize gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
+              <CalendarHeart className="w-3.5 h-3.5 opacity-50" />
+              {`${prog.duration} ${prog.duration > "1" ? "weeks" : "week"}`}
+            </span>
+          )}
+          {prog.duration && <span className="w-0.75 h-0.75 rounded-full bg-slate-400/30" />}
+          <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
+            <TargetIcon className="w-3.5 h-3.5 opacity-50" />
+            {level}
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
+}
 
 function InsightCard({ insight }: { insight: PublicInsight }) {
   return (
@@ -58,6 +132,16 @@ const HomePage = () => {
 
   const [programs, setPrograms] = React.useState<PublicProgram[]>([]);
   const [programsLoading, setProgramsLoading] = React.useState(true);
+  const programsScrollRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollPrograms = (direction: "prev" | "next") => {
+    const el = programsScrollRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>("[data-program-card]");
+    const gap = parseFloat(getComputedStyle(el).columnGap || "0") || 0;
+    const step = card ? card.offsetWidth + gap : el.clientWidth;
+    el.scrollBy({ left: direction === "next" ? step : -step, behavior: "smooth" });
+  };
 
   const loadInsights = React.useCallback(() => {
     setInsightsLoading(true);
@@ -106,66 +190,93 @@ const HomePage = () => {
       .catch(() => setPrograms([]))
       .finally(() => setProgramsLoading(false));
   }, []);
+
+  const calendar = React.useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const todayDay = now.getDate();
+    const firstWeekday = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const eventDays = new Set<number>();
+    for (const w of workshops) {
+      if (!w.date) continue;
+      const d = new Date(w.date);
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        eventDays.add(d.getDate());
+      }
+    }
+
+    return {
+      label: new Date(year, month, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+      leadingEmpty: firstWeekday,
+      days: Array.from({ length: daysInMonth }, (_, i) => {
+        const day = i + 1;
+        return { day, today: day === todayDay, hasEvent: eventDays.has(day) };
+      }),
+    };
+  }, [workshops]);
   return (
     <>
-      <section className="bg-[#060D14] min-h-[88vh] grid grid-cols-1 md:grid-cols-2 relative overflow-hidden w-full">
+      <section className="bg-[#060D14] min-h-[80vh] sm:min-h-[88vh] grid grid-cols-1 md:grid-cols-2 relative overflow-hidden w-full">
         <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
         <div className="absolute -top-30 -right-30 w-150 h-150 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
 
-        <div className="py-16 md:py-24 px-6 md:pr-16 md:pl-20 flex flex-col justify-center relative z-2 gap-12">
-          <div className="flex flex-col gap-4 max-w-140">
-            <p className="text-[0.7rem] tracking-[0.18em] uppercase text-blue-300 flex items-center gap-3 before:content-[''] before:block before:w-8 before:h-px before:bg-blue-300 before:shrink-0">
+        <div className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 md:pr-10 md:pl-10 lg:pr-16 lg:pl-20 flex flex-col justify-center relative z-2 gap-8 sm:gap-10 md:gap-12">
+          <div className="flex flex-col gap-3 sm:gap-4 max-w-140">
+            <p className="text-[0.625rem] sm:text-[0.7rem] tracking-[0.18em] uppercase text-blue-300 flex items-center gap-3 before:content-[''] before:block before:w-6 sm:before:w-8 before:h-px before:bg-blue-300 before:shrink-0">
               Institute for Advanced Research and Professional Studies
             </p>
-            <h1 className="font-heading text-[clamp(2.4rem,4vw,3.4rem)] leading-[1.15] text-[#F7F3ED] font-normal tracking-[-0.01em]">
+            <h1 className="font-heading text-[clamp(1.875rem,5vw,3.4rem)] leading-[1.15] text-[#F7F3ED] font-normal tracking-[-0.01em]">
               Advance Your
               <br />
               <em className="italic text-[#0474C4]">Research Capacity</em>
               <br />
               &amp; Leadership
             </h1>
-            <p className="font-body text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-[#EBF3FC]">
+            <p className="font-body text-[0.9375rem] sm:text-[1rem] md:text-[1.0625rem] lg:text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-[#EBF3FC]">
               Professional certification programs, research training, and
               institutional consulting — for scholars, practitioners, and
               development professionals worldwide.
             </p>
           </div>
-          <div className="flex gap-4 items-center flex-wrap">
+          <div className="flex gap-3 sm:gap-4 items-start lg:items-center flex-col lg:flex-row flex-nowrap lg:flex-wrap w-full">
             <Link
               href="/programs"
-              className="font-body text-[0.8125rem] h-full rounded-[32px] min-w-40 tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white border-0 py-3.5 px-8 cursor-pointer transition-all duration-250 no-underline inline-block hover:bg-[#06457F] hover:border-[#06457F]"
+              className="font-body text-[0.75rem] sm:text-[0.8125rem] h-full rounded lg:min-w-40 tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white border-0 py-3 sm:py-3.5 px-6 sm:px-8 cursor-pointer transition-all duration-250 no-underline inline-block text-center hover:bg-[#06457F] hover:border-[#06457F]"
             >
               Explore Programs
             </Link>
             <Link
               href="/our-research/research-training"
-              className="font-body text-[0.8125rem] h-full rounded-[32px] min-w-40 text-center tracking-[0.07em] uppercase font-medium bg-transparent text-[#0474C4] border border-[#0474C4] py-3.25 px-7 cursor-pointer transition-all duration-250 no-underline inline-block hover:bg-[#0474C4] hover:text-white hover:border-[#0474C4]"
+              className="font-body text-[0.75rem] sm:text-[0.8125rem] h-full rounde lg:min-w-40 text-center tracking-[0.07em] uppercase font-medium bg-transparent text-[#0474C4] border border-[#0474C4] py-3 sm:py-3.25 px-5 sm:px-7 cursor-pointer transition-all duration-250 no-underline inline-block hover:bg-[#0474C4] hover:text-white hover:border-[#0474C4]"
             >
               Research Training
             </Link>
           </div>
-          <div className="flex gap-12 pt-10 border-t border-t-[rgba(200,169,110,0.15)] flex-wrap">
+          <div className="flex gap-6 sm:gap-8 md:gap-12 pt-6 sm:pt-8 md:pt-10 border-t border-t-[rgba(200,169,110,0.15)] flex-wrap">
             <div>
-              <div className="font-heading text-[1.75rem] tracking-[-0.01em] leading-[1.1] font-semibold text-[#0474C4] block mb-1">
+              <div className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.75rem] tracking-[-0.01em] leading-[1.1] font-semibold text-[#0474C4] block mb-1">
                 120+
               </div>
-              <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC]">
+              <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC]">
                 Countries Reached
               </div>
             </div>
             <div>
-              <div className="font-heading text-[1.75rem] tracking-[-0.01em] leading-[1.1] font-semibold text-[#0474C4] block mb-1">
+              <div className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.75rem] tracking-[-0.01em] leading-[1.1] font-semibold text-[#0474C4] block mb-1">
                 40+
               </div>
-              <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC]">
+              <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC]">
                 Certifications
               </div>
             </div>
             <div>
-              <div className="font-heading text-[1.75rem] tracking-[-0.01em] leading-[1.1] font-semibold text-[#0474C4] block mb-1">
+              <div className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.75rem] tracking-[-0.01em] leading-[1.1] font-semibold text-[#0474C4] block mb-1">
                 15k+
               </div>
-              <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC]">
+              <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC]">
                 Professionals Trained
               </div>
             </div>
@@ -193,19 +304,19 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="py-16 md:py-28 px-8 md:px-16 lg:px-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center bg-white">
+      <section className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 lg:gap-24 items-center bg-white">
         <div className="fle">
-          <div className="flex flex-col items-start gap-6 w-full">
-            <div className="block space-y-5">
-              <p className="text-[0.68rem] tracking-[0.18em] uppercase text-[#0474C4]">
+          <div className="flex flex-col items-start gap-5 sm:gap-6 w-full">
+            <div className="block space-y-4 sm:space-y-5 w-full">
+              <p className="text-[0.625rem] sm:text-[0.68rem] tracking-[0.18em] uppercase text-[#0474C4]">
                 About the Institute
               </p>
-              <h2 className="font-heading text-[clamp(1.8rem,2.8vw,2.4rem)] leading-[1.2] font-normal text-[#071639] tracking-[-0.01em]">
+              <h2 className="font-heading text-[clamp(1.5rem,3.5vw,2.4rem)] leading-[1.2] font-normal text-[#071639] tracking-[-0.01em]">
                 A Global Institute for Professional Learning &amp; Research
                 Innovation
               </h2>
             </div>
-            <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600">
+            <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600">
               The Institute for Advanced Research and Professional Studies (ARPS
               Institute) is a global online institute dedicated to advancing
               professional education, research capacity, leadership development,
@@ -214,7 +325,7 @@ const HomePage = () => {
               networks while expanding access to advanced professional learning
               and applied research training — without geographical limitations.
             </p>
-            <Link href="/about"  className="bg-[#0474C4] min-w-40 text-white border-none py-3.5 px-8 font-body text-[0.82rem] font-medium tracking-widest uppercase cursor-pointer rounded-[32px] transition-all duration-250 inline-block hover:bg-[#06457F] hover:border-[#06457F]">
+            <Link href="/about"  className="bg-[#0474C4] lg:min-w-40 text-white text-center border-none py-3 sm:py-3.5 px-6 sm:px-8 font-body text-[0.75rem] sm:text-[0.82rem] font-medium tracking-widest uppercase cursor-pointer rounded transition-all duration-250 inline-block hover:bg-[#06457F] hover:border-[#06457F]">
                 Learn More
             </Link>
           </div>
@@ -238,7 +349,7 @@ const HomePage = () => {
           </div> */}
         </div>
 
-        <div className="relative p-4">
+        <div className="relative p-3 sm:p-4">
           <Image
             src="/images/about-arps.webp"
             alt="Professionals in a research training session"
@@ -247,11 +358,11 @@ const HomePage = () => {
             className="w-full aspect-4/3 object-cover rounded-xs block"
           />
           <div className="absolute inset-0 border border-border rounded-xs pointer-events-none"></div>
-          <div className="absolute -bottom-2 -left-2 bg-[#0B1625] text-[#D4BA85] py-5 px-6">
-            <span className="font-heading text-[2rem] font-normal leading-none block">
+          <div className="absolute -bottom-2 -left-2 bg-[#0B1625] text-[#D4BA85] py-3 px-4 sm:py-4 sm:px-5 md:py-5 md:px-6">
+            <span className="font-heading text-[1.5rem] sm:text-[1.75rem] md:text-[2rem] font-normal leading-none block">
               120+
             </span>
-            <span className="text-[0.72rem] italic text-[rgba(232,213,168,0.6)] block mt-1">
+            <span className="text-[0.65rem] sm:text-[0.72rem] italic text-[rgba(232,213,168,0.6)] block mt-1">
               Countries Reached
             </span>
           </div>
@@ -259,43 +370,43 @@ const HomePage = () => {
       </section>
 
       {/* ============ SOFTWARE SECTION ============ */}
-      <section className="py-16 md:py-28 px-8 md:px-16 lg:px-20 bg-[#F7F3ED]/50 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-        <div className="block relative space-y-6 w-full">
-          <div className="block space-y-5">
-            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4]">
+      <section className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F7F3ED]/50 grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 lg:gap-24 items-center w-full">
+        <div className="block relative space-y-5 sm:space-y-6 w-full">
+          <div className="block space-y-4 sm:space-y-5">
+            <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4]">
               Software Sales
             </p>
-            <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639]">
+            <h2 className="font-heading text-[1.5rem] sm:text-[1.625rem] md:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639]">
               Curated Research &amp; Productivity Software
             </h2>
           </div>
-          <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600">
+          <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600">
             We supply institutions, universities, and individual professionals
             with industry-leading software tools to power modern research
             workflows, data analysis, and operational productivity.
           </p>
           <Link
             href="/solutions"
-            className="font-body min-w-40 border border-[#0474C4] rounded-[32px] mt-2 text-[0.8125rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white border-none py-3.5 px-8 cursor-pointer transition-all duration-250 inline-block hover:bg-[#06457F] hover:border-[#06457F]"
+            className="font-body lg:min-w-40 text-center border border-[#0474C4] rounded mt-2 text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white border-none py-3 sm:py-3.5 px-6 sm:px-8 cursor-pointer transition-all duration-250 inline-block hover:bg-[#06457F] hover:border-[#06457F]"
           >
             Browse Catalogue
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div className="relative z-2">
             <div className="bg-[#0D1B2A] rounded-xl overflow-hidden border border-blue-600/20 shadow-[0_24px_60px_rgba(6,13,20,0.4)]">
-              <div className="py-2.5 px-3.5 flex items-center gap-2 border-b border-[rgba(247,243,237,0.06)]">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
-                <div className="flex-1 bg-[rgba(247,243,237,0.06)] rounded-lg h-5 mx-2 flex items-center px-2 font-body text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.3)]">
+              <div className="py-2 sm:py-2.5 px-3 sm:px-3.5 flex items-center gap-1.5 sm:gap-2 border-b border-[rgba(247,243,237,0.06)]">
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FF5F57] shrink-0" />
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FEBC2E] shrink-0" />
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#28C840] shrink-0" />
+                <div className="flex-1 min-w-0 bg-[rgba(247,243,237,0.06)] rounded-lg h-5 mx-1.5 sm:mx-2 flex items-center px-2 font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.3)] truncate">
                   app.resolverite.com/dashboard
                 </div>
               </div>
 
-              <div className="p-6">
-                <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mb-2.5">
+              <div className="p-4 sm:p-5 md:p-6">
+                <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mb-2 sm:mb-2.5">
                   Case Overview
                 </div>
 
@@ -307,15 +418,15 @@ const HomePage = () => {
                   ].map(({ value, label, color }) => (
                     <div
                       key={label}
-                      className="bg-[rgba(247,243,237,0.04)] border border-blue-600/15 rounded-[6px] py-2.5 px-3"
+                      className="bg-[rgba(247,243,237,0.04)] border border-blue-600/15 rounded-[6px] py-2 px-2.5 sm:py-2.5 sm:px-3"
                     >
                       <span
-                        className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.1] font-semibold block"
+                        className="font-heading text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.1] font-semibold block"
                         style={{ color }}
                       >
                         {value}
                       </span>
-                      <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mt-0.75 block">
+                      <span className="font-body text-[0.5625rem] sm:text-[0.625rem] md:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mt-0.75 block">
                         {label}
                       </span>
                     </div>
@@ -360,17 +471,17 @@ const HomePage = () => {
                   ].map(({ dot, text, status, bg, color }) => (
                     <div
                       key={text}
-                      className="bg-[rgba(247,243,237,0.03)] border border-[rgba(247,243,237,0.06)] rounded-lg py-2.25 px-3 flex items-center gap-2.5"
+                      className="bg-[rgba(247,243,237,0.03)] border border-[rgba(247,243,237,0.06)] rounded-lg py-2 sm:py-2.25 px-2.5 sm:px-3 flex items-center gap-2 sm:gap-2.5"
                     >
                       <div
                         className="w-1.75 h-1.75 rounded-full shrink-0"
                         style={{ background: dot }}
                       />
-                      <div className="font-body text-[0.75rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.55)] flex-1">
+                      <div className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.55)] flex-1 min-w-0 truncate">
                         {text}
                       </div>
                       <div
-                        className="font-body text-[0.6875rem] tracking-[0.05em] uppercase font-medium py-0.5 px-2 rounded-[10px]"
+                        className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] uppercase font-medium py-0.5 px-1.5 sm:px-2 rounded-[10px] shrink-0"
                         style={{ background: bg, color }}
                       >
                         {status}
@@ -385,26 +496,26 @@ const HomePage = () => {
           <div className="relative z-2">
             <div className="bg-[#0B1625] rounded-xl overflow-hidden border border-[rgba(37,99,235,0.2)] shadow-[0_24px_60px_rgba(6,13,20,0.4)]">
               {/* Browser chrome */}
-              <div className="px-3.5 py-2.5 flex items-center gap-2 border-b border-[rgba(247,243,237,0.06)]">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
-                <div className="flex-1 bg-[rgba(247,243,237,0.06)] rounded-lg h-5 mx-2 flex items-center px-2 font-body text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.3)]">
+              <div className="px-3 sm:px-3.5 py-2 sm:py-2.5 flex items-center gap-1.5 sm:gap-2 border-b border-[rgba(247,243,237,0.06)]">
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FF5F57] shrink-0" />
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FEBC2E] shrink-0" />
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#28C840] shrink-0" />
+                <div className="flex-1 min-w-0 bg-[rgba(247,243,237,0.06)] rounded-lg h-5 mx-1.5 sm:mx-2 flex items-center px-2 font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.3)] truncate">
                   app.mentortrack.io/my-journey
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="p-4 sm:p-5 md:p-6">
                 {/* User row */}
                 <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-[rgba(247,243,237,0.06)]">
                   <div className="w-8 h-8 rounded-full bg-[rgba(13,148,136,0.18)] flex items-center justify-center font-body text-[0.6875rem] font-medium text-[#5EEAD4] shrink-0">
                     DA
                   </div>
-                  <div>
-                    <div className="font-body text-[0.8125rem] tracking-[0em] leading-normal font-medium text-(--cream)">
+                  <div className="min-w-0">
+                    <div className="font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0em] leading-normal font-medium text-(--cream) truncate">
                       Dr. Amara Diallo
                     </div>
-                    <div className="font-body text-[0.6875rem] tracking-[0em] leading-normal font-normal text-[rgba(247,243,237,0.3)]">
+                    <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] leading-normal font-normal text-[rgba(247,243,237,0.3)] truncate">
                       Research Fellow — Cohort 2026
                     </div>
                   </div>
@@ -467,17 +578,17 @@ const HomePage = () => {
                   ].map(({ dot, text, time, timeBg, timeColor }) => (
                     <div
                       key={text}
-                      className="bg-[rgba(247,243,237,0.03)] border border-[rgba(247,243,237,0.06)] rounded-lg py-2.25 px-3 flex items-center gap-2.5"
+                      className="bg-[rgba(247,243,237,0.03)] border border-[rgba(247,243,237,0.06)] rounded-lg py-2 sm:py-2.25 px-2.5 sm:px-3 flex items-center gap-2 sm:gap-2.5"
                     >
                       <div
                         className="w-1.75 h-1.75 rounded-full shrink-0"
                         style={{ background: dot }}
                       />
-                      <div className="font-body text-[0.75rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.55)] flex-1">
+                      <div className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.55)] flex-1 min-w-0 truncate">
                         {text}
                       </div>
                       <div
-                        className="font-body text-[0.6875rem] tracking-[0.05em] font-medium py-0.5 px-2 rounded-[10px]"
+                        className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium py-0.5 px-1.5 sm:px-2 rounded-[10px] shrink-0"
                         style={{ background: timeBg, color: timeColor }}
                       >
                         {time}
@@ -595,14 +706,12 @@ const HomePage = () => {
 
       {/* ============ RESEARCH HIGHLIGHT SECTION ============ */}
       <section
-        className="py-28 px-20 bg-[#06457F] grid grid-cols-2 gap-24 items-center"
+        className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#06457F] grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 lg:gap-24 items-center"
         id="research-highlight"
       >
-        <div className="relative">
+        <div className="relative w-full">
           <iframe
-            width="auto"
-            height="456"
-            className="w-full h-114 aspect-4/3 rounded-sm block opacity-70"
+            className="w-full aspect-video lg:aspect-4/3 rounded-sm block opacity-70"
             src="https://www.youtube.com/embed/zlRl8sJU_4I?si=wIGyhgKvevZC22vc"
             title="YouTube video player"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -611,19 +720,19 @@ const HomePage = () => {
           />
         </div>
 
-        <div>
-          <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#F7F3ED] mb-5">
+        <div className="w-full">
+          <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#F7F3ED] mb-4 sm:mb-5">
             Research Training
           </p>
-          <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#F7F3ED] mb-6">
+          <h2 className="font-heading text-[1.5rem] sm:text-[1.625rem] md:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#F7F3ED] mb-4 sm:mb-6">
             Build Capacity. Produce Impact.
           </h2>
-          <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-300 mb-6">
+          <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-300 mb-5 sm:mb-6">
             Our research training programs equip scholars, practitioners, and
             institutional teams with the analytical skills and methodological
             rigour needed to produce credible, high-impact research.
           </p>
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-6 sm:mb-8">
             {[
               "Research Design",
               "Quantitative Methods",
@@ -636,7 +745,7 @@ const HomePage = () => {
             ].map((tag) => (
               <span
                 key={tag}
-                className="font-body text-[0.6875rem] tracking-[0.05em] font-medium text-slate-300 border border-white py-1.25 px-3.5 rounded-[32px] transition-[background,color] duration-200 cursor-default"
+                className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium text-slate-300 border border-white py-1 sm:py-1.25 px-2.5 sm:px-3.5 rounded transition-[background,color] duration-200 cursor-default"
               >
                 {tag}
               </span>
@@ -644,7 +753,7 @@ const HomePage = () => {
           </div>
           <Link
             href="/our-research/research-training"
-            className="font-body min-w-40 border border-[#0474C4] rounded-[32px] mt-2 text-[0.8125rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white border-none py-3.5 px-8 cursor-pointer transition-all duration-250 inline-block hover:bg-[#060d14] hover:border-[#060d14]"
+            className="font-body lg:min-w-40 text-center border border-[#0474C4] rounded mt-2 text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white border-none py-3 sm:py-3.5 px-6 sm:px-8 cursor-pointer transition-all duration-250 inline-block hover:bg-[#060d14] hover:border-[#060d14]"
           >
             Explore Research
           </Link>
@@ -652,30 +761,32 @@ const HomePage = () => {
       </section>
 
       {/* ============ PROGRAMS SECTION ============ */}
-      <section className="py-28 px-20 bg-white" id="products">
-        <div className="flex justify-between items-end mb-14 gap-8">
+      <section className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-white space-y-10 w-full" id="products">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-10 sm:mb-12 md:mb-14 gap-4 sm:gap-8">
           <div>
-            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-4">
+            <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-3 sm:mb-4">
               Featured Programs
             </p>
-            <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639]">
+            <h2 className="font-heading text-[1.5rem] sm:text-[1.625rem] md:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639]">
               Explore Our Courses
             </h2>
           </div>
-          <Link
-            href="/programs"
-            className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] no-underline border-b border-b-border pb-0.5 whitespace-nowrap transition-[color,border-color] duration-200 hover:text-[#0B1625] hover:border-b-[#0B1625]"
-          >
-            View All Programs →
-          </Link>
+          <div className="flex flex-col items-center gap-3 sm:gap-4 self-start sm:self-auto">
+            <Link
+              href="/programs"
+              className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] no-underline border-b border-b-border pb-0.5 whitespace-nowrap transition-[color,border-color] duration-200 hover:text-[#0B1625] hover:border-b-[#0B1625]"
+            >
+              View All Programs →
+            </Link>
+          </div>
         </div>
 
         {programsLoading ? (
-          <div className="grid grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-sm overflow-hidden border border-[#0474C4]/10 animate-pulse">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6 w-full">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="w-full rounded-sm overflow-hidden border border-[#0474C4]/10 animate-pulse">
                 <div className="aspect-16/10 bg-slate-100" />
-                <div className="p-6 space-y-3">
+                <div className="p-5 sm:p-6 space-y-3">
                   <div className="h-3 bg-slate-100 rounded w-1/2" />
                   <div className="h-4 bg-slate-100 rounded w-3/4" />
                   <div className="h-3 bg-slate-100 rounded w-1/3" />
@@ -684,92 +795,56 @@ const HomePage = () => {
             ))}
           </div>
         ) : programs.length > 0 ? (
-          <div className="grid grid-cols-3 gap-6">
-            {programs.map((prog) => {
-              const initials = prog.instructor.name
-                .split(" ")
-                .filter(Boolean)
-                .slice(0, 2)
-                .map((w) => w[0]?.toUpperCase() ?? "")
-                .join("")
-              const price = prog.price > 0 ? `$${prog.price.toLocaleString()}` : "Free"
-              const level = prog.level.charAt(0) + prog.level.slice(1).toLowerCase()
+          <div className="relative -mx-4 sm:-mx-6 md:-mx-10 lg:-mx-16 xl:-mx-20">
+            <div
+              ref={programsScrollRef}
+              className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 sm:gap-5 md:gap-6 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {programs.map((prog) =>
+                renderProgramCard(
+                  prog,
+                  "snap-start basis-[280px] sm:basis-[calc(50%-0.625rem)] md:basis-[calc(50%-0.625rem)] lg:basis-[calc(25%-1.125rem)]",
+                ),
+              )}
+            </div>
 
-              return (
-                <Link
-                  href={`/programs/${prog.slug}`}
-                  key={prog.id}
-                  className="group bg-white rounded-sm overflow-hidden border border-[#0474C4]/15 transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(13,27,42,0.1)]"
-                >
-                  <div className="relative aspect-16/10 overflow-hidden bg-slate-100">
-                    <Image
-                      src={prog.thumbnail || "/images/dummy/course-1.jpg"}
-                      alt={prog.title}
-                      width={600}
-                      height={400}
-                      className="w-full h-full object-cover transition-transform duration-400 group-hover:scale-[1.04]"
-                    />
-                    {prog.featured && (
-                      <span className="absolute top-3 left-3 font-body text-[0.625rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white px-4 py-1.5 rounded-full">
-                        Featured
-                      </span>
-                    )}
-                    <span className="absolute bottom-3 right-3 font-body text-[0.75rem] tracking-[0.05em] font-medium bg-[#0B1625] text-[#D4BA85] py-1.5 px-3.5 rounded-xs">
-                      {price}
-                    </span>
-                  </div>
-
-                  <div className="pt-[1.4rem] px-6 pb-[1.6rem]">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-8 h-8 rounded-full bg-[#0474C4] text-white font-body text-[0.8125rem] font-medium flex items-center justify-center shrink-0">
-                        {initials}
-                      </div>
-                      <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-600 truncate">
-                        {prog.instructor.name}
-                      </span>
-                    </div>
-
-                    <h3 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.35] font-medium text-[#071639] mb-4 line-clamp-2">
-                      {prog.title}
-                    </h3>
-
-                    <div className="flex gap-[1.2rem] items-center">
-                      {prog.duration && (
-                        <span className="flex items-center capitalize gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
-                          <CalendarHeart className="w-3.5 h-3.5 opacity-50" />
-                          {`${prog.duration} ${prog.duration > "1" ? "weeks" : "week"}`}
-                        </span>
-                      )}
-                      {prog.duration && <span className="w-0.75 h-0.75 rounded-full bg-slate-400/30" />}
-                      <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
-                        <TargetIcon className="w-3.5 h-3.5 opacity-50" />
-                        {level}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
+            <button
+              type="button"
+              onClick={() => scrollPrograms("prev")}
+              aria-label="Previous programs"
+              className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/95 border border-[#0474C4]/30 text-[#0474C4] flex items-center justify-center shadow-md backdrop-blur transition-colors duration-200 cursor-pointer hover:bg-[#0474C4] hover:text-white"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollPrograms("next")}
+              aria-label="Next programs"
+              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/95 border border-[#0474C4]/30 text-[#0474C4] flex items-center justify-center shadow-md backdrop-blur transition-colors duration-200 cursor-pointer hover:bg-[#0474C4] hover:text-white"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
           </div>
         ) : (
           <div className="text-slate-400 py-12 text-center">No programs available yet.</div>
         )}
+      
       </section>
 
       {/* ============ INSIGHTS SECTION ============ */}
-      <section className="py-28 px-20 bg-[#06457F] w-full">
-        <div className="flex justify-between items-end mb-14 gap-8">
+      <section className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#06457F] w-full">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-10 sm:mb-12 md:mb-14 gap-4 sm:gap-8">
           <div>
-            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-slate-300 mb-4">
+            <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-slate-300 mb-3 sm:mb-4">
               Knowledge Hub
             </p>
-            <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-white">
+            <h2 className="font-heading text-[1.5rem] sm:text-[1.625rem] md:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-white">
               Insights &amp; Articles
             </h2>
           </div>
           <Link
             href="/insights"
-            className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white no-underline border-b border-b-border pb-0.5 whitespace-nowrap transition-[color,border-color] duration-200 hover:text-[#F7F3ED] hover:border-b-[#F7F3ED]"
+            className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white no-underline border-b border-b-border pb-0.5 whitespace-nowrap transition-[color,border-color] duration-200 hover:text-[#F7F3ED] hover:border-b-[#F7F3ED] self-start sm:self-auto"
           >
             View All Articles →
           </Link>
@@ -781,98 +856,40 @@ const HomePage = () => {
           <div className="text-red-300 py-12">{insightsError}</div>
         ) : insights.length === 0 ? (
           <div className="text-slate-300 py-12">No insights available yet.</div>
-        ) : insights.length <= 2 ? (
-          /* 1–2 items: two equal columns */
-          <div className="grid grid-cols-2 gap-6">
-            {insights.map((insight) => (
-              <InsightCard key={insight.slug} insight={insight} />
-            ))}
-          </div>
-        ) : insights.length === 3 ? (
-          /* Exactly 3: three equal columns */
-          <div className="grid grid-cols-3 gap-6">
-            {insights.map((insight) => (
-              <InsightCard key={insight.slug} insight={insight} />
-            ))}
-          </div>
         ) : (
-          /* 4+: featured wide card + two stacked columns */
-          <div className="grid grid-cols-[1.6fr_1fr_1fr] gap-6 items-start">
-            {/* Featured */}
-            <Link
-              href={`/insights/${insights[0].slug}`}
-              className="group bg-transparent rounded-sm border border-[rgba(200,169,110,0.15)] overflow-hidden cursor-pointer transition-[border-color,background] duration-300 hover:border-[rgba(200,169,110,0.4)] hover:bg-[rgba(247,243,237,0.07)]"
-            >
-              <Image
-                className="w-full aspect-video object-cover block opacity-75 transition-opacity duration-300 group-hover:opacity-90"
-                src={insights[0].coverImage || "/images/dummy/article-1.jpg"}
-                alt={insights[0].title}
-                width={700}
-                height={400}
-              />
-              <div className="pt-[1.6rem] px-[1.8rem] pb-8 bg-white">
-                <span className="inline-block font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4]/10 text-[#0474C4] border border-[#0474C4]/10 py-0.75 px-2.5 rounded-full mb-4">
-                  {insights[0].category}
-                </span>
-                <h3 className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.35] font-medium text-[#071639] mb-3 transition-colors duration-200 group-hover:text-[#0474C4]">
-                  {insights[0].title}
-                </h3>
-                <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.7] font-normal text-slate-600 mb-5">
-                  {insights[0].excerpt}
-                </p>
-                <div className="flex justify-between items-center pt-4 border-t border-t-[rgba(200,169,110,0.1)]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-[#0474C4] border border-[#0474C4] font-body text-[0.8125rem] font-medium text-white flex items-center justify-center">
-                      {insights[0].authorInitials}
-                    </div>
-                    <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
-                      {insights[0].author}
-                    </span>
-                  </div>
-                  <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#637AA3]">
-                    {insights[0].date}
-                  </span>
-                </div>
-              </div>
-            </Link>
-
-            {/* Two stacked columns */}
-            {[insights.slice(1, 3), insights.slice(3, 5)].map((col, ci) => (
-              <div key={ci} className="flex flex-col gap-6">
-                {col.map((insight) => (
-                  <InsightCard key={insight.slug} insight={insight} />
-                ))}
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+            {insights.map((insight) => (
+              <InsightCard key={insight.slug} insight={insight} />
             ))}
           </div>
         )}
       </section>
 
       {/* ============ EVENTS SECTION ============ */}
-      <section className="py-28 px-20 bg-[#F7F3ED]/50 w-full">
-        <div className="flex justify-between items-end mb-14 gap-8">
+      <section className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F7F3ED]/50 w-full">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-10 sm:mb-12 md:mb-14 gap-4 sm:gap-8">
           <div>
-            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-4">
+            <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-3 sm:mb-4">
               What&apos;s On
             </p>
-            <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639]">
-              Upcoming Events
+            <h2 className="font-heading text-[1.5rem] sm:text-[1.625rem] md:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639]">
+              Upcoming Workshops
             </h2>
           </div>
           <Link
             href="/workshops"
-            className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] no-underline border-b border-b-border pb-0.5 whitespace-nowrap transition-[color,border-color] duration-200 hover:text-[#071639] hover:border-b-[#071639]"
+            className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] no-underline border-b border-b-border pb-0.5 whitespace-nowrap transition-[color,border-color] duration-200 hover:text-[#071639] hover:border-b-[#071639] self-start sm:self-auto"
           >
-            View All Events →
+            View All Workshops →
           </Link>
         </div>
 
-        <div className="grid grid-cols-[1fr_2fr] gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-6 md:gap-8 lg:gap-12 items-start">
           {/* Mini calendar */}
-          <div className="bg-[#06457F] rounded-sm p-[1.8rem] sticky top-22">
+          <div className="bg-[#06457F] rounded-sm p-5 sm:p-6 md:p-[1.8rem] lg:sticky lg:top-22">
             <div className="flex justify-between items-center mb-6">
               <span className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-300">
-                March 2026
+                {calendar.label}
               </span>
               <div className="flex gap-2">
                 <button className="bg-[#EDF2FB]/20 border border-[#EDF2FB]/20 text-slate-300 w-7 h-7 rounded-xs cursor-pointer font-body text-[0.75rem] flex items-center justify-center transition-[background] duration-200 hover:bg-[rgba(200,169,110,0.2)]">
@@ -893,39 +910,10 @@ const HomePage = () => {
                   {d}
                 </span>
               ))}
-              {[
-                { day: 1 },
-                { day: 2 },
-                { day: 3 },
-                { day: 4 },
-                { day: 5 },
-                { day: 6 },
-                { day: 7 },
-                { day: 8 },
-                { day: 9 },
-                { day: 10 },
-                { day: 11 },
-                { day: 12, hasEvent: true },
-                { day: 13 },
-                { day: 14 },
-                { day: 15 },
-                { day: 16, today: true },
-                { day: 17, hasEvent: true },
-                { day: 18 },
-                { day: 19 },
-                { day: 20, hasEvent: true },
-                { day: 21 },
-                { day: 22 },
-                { day: 23 },
-                { day: 24 },
-                { day: 25, hasEvent: true },
-                { day: 26 },
-                { day: 27 },
-                { day: 28, hasEvent: true },
-                { day: 29 },
-                { day: 30 },
-                { day: 31 },
-              ].map(({ day, hasEvent, today }) => (
+              {Array.from({ length: calendar.leadingEmpty }).map((_, i) => (
+                <span key={`empty-${i}`} aria-hidden className="py-1.5 px-1" />
+              ))}
+              {calendar.days.map(({ day, hasEvent, today }) => (
                 /* Day number — DM Sans, 12px, font-normal/medium */
                 <span
                   key={day}
@@ -965,28 +953,28 @@ const HomePage = () => {
                 return (
                   <div
                     key={workshop.id}
-                    className="group bg-white grid grid-cols-[72px_1fr_auto] gap-6 py-[1.6rem] px-[1.8rem] items-center transition-[background] duration-250 cursor-pointer hover:bg-[#EDF2FB]/50"
+                    className="group bg-white grid grid-cols-[60px_1fr] sm:grid-cols-[72px_1fr_auto] gap-4 sm:gap-5 md:gap-6 py-4 sm:py-5 md:py-[1.6rem] px-4 sm:px-5 md:px-[1.8rem] items-start sm:items-center transition-[background] duration-250 cursor-pointer hover:bg-[#EDF2FB]/50"
                 >
                     {/* Date block */}
-                    <div className="text-center bg-[#0474C4] rounded-xs py-2.5 px-2 shrink-0">
-                      <span className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.1] font-semibold text-[#EDF2FB] block">
+                    <div className="text-center bg-[#0474C4] rounded-xs py-2 px-2 sm:py-2.5 shrink-0">
+                      <span className="font-heading text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.1] font-semibold text-[#EDF2FB] block">
                         {workshopDate.getDate()}
                       </span>
-                      <span className="font-body text-[0.625rem] tracking-[0.07em] uppercase font-medium text-[#EDF2FB] block mt-0.75">
+                      <span className="font-body text-[0.5625rem] sm:text-[0.625rem] tracking-[0.07em] uppercase font-medium text-[#EDF2FB] block mt-0.75">
                         {workshopDate.toLocaleDateString("en-US", { month: "short" })}
                       </span>
                     </div>
 
                     {/* Event info */}
                     <div className="min-w-0">
-                      <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-1.5 block">
+                      <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-1 sm:mb-1.5 block">
                         {workshop.type}
                       </span>
-                      <h3 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#071639] mb-1.5 transition-colors duration-200 group-hover:text-[#0474C4]">
+                      <h3 className="font-heading text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#071639] mb-1.5 transition-colors duration-200 group-hover:text-[#0474C4]">
                         {workshop.title}
                       </h3>
-                      <div className="flex gap-4 items-center flex-wrap">
-                        <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
+                      <div className="flex gap-3 sm:gap-4 items-center flex-wrap">
+                        <span className="font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
                           {workshop.startTime
                             ? workshop.endTime
                               ? `${workshop.startTime} – ${workshop.endTime}`
@@ -994,27 +982,27 @@ const HomePage = () => {
                             : "Time TBA"}
                         </span>
                         {!!workshop.duration && (
-                          <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
+                          <span className="font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
                             {workshop.duration}h
                           </span>
                         )}
-                        <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
+                        <span className="font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0em] font-normal text-slate-400">
                           {Number(workshop.fee) === 0 ? "Free" : `$${Number(workshop.fee).toLocaleString()}`}
                         </span>
                       </div>
                     </div>
 
                     {/* CTA */}
-                    <div className="shrink-0 text-right">
+                    <div className="shrink-0 col-span-2 sm:col-span-1 sm:text-right flex sm:block items-center gap-3 sm:gap-0 mt-1 sm:mt-0">
                       <span
-                        className={`font-body text-[0.75rem] tracking-[0em] font-normal block mb-2 whitespace-nowrap ${isUrgent ? "text-[#0474C4]" : "text-slate-400"}`}
+                        className={`font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0em] font-normal sm:block sm:mb-2 whitespace-nowrap ${isUrgent ? "text-[#0474C4]" : "text-slate-400"}`}
                     >
-                    
+
                         {isFull ? "Full" : `${availableSpots} spots left`}
                       </span>
                       <button
                         disabled={isFull}
-                        className={`font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium py-1.75 px-4.5 rounded-full whitespace-nowrap transition-all duration-200 ${
+                        className={`font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium py-1.5 sm:py-1.75 px-3.5 sm:px-4.5 rounded-full whitespace-nowrap transition-all duration-200 ml-auto sm:ml-0 ${
                           isFull
                             ? "border border-[#0474C4] text-[#0474C4] min-w-20 cursor-not-allowed"
                             : "bg-transparent border border-[#0474C4] min-w-20 text-[#0474C4] cursor-pointer hover:bg-[#0474C4] hover:text-white"
@@ -1044,33 +1032,33 @@ const HomePage = () => {
       </section>
 
       {/* ============ CTA SECTION ============ */}
-      <section className="w-full py-28 px-20 text-center bg-[#181C2C] relative overflow-hidden">
+      <section className="w-full py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-20 text-center bg-[#181C2C] relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
         <div className="relative max-w-140 mx-auto">
-          <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-blue-300 mb-6">
+          <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-blue-300 mb-4 sm:mb-6">
             Get Started
           </p>
 
-          <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-white mb-5">
+          <h2 className="font-heading text-[1.5rem] sm:text-[1.625rem] md:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-white mb-4 sm:mb-5">
             Begin Your Professional Learning Journey
           </h2>
 
-          <p className="font-body text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-slate-300 mb-10">
+          <p className="font-body text-[0.9375rem] sm:text-[1rem] md:text-[1.0625rem] lg:text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-slate-300 mb-8 sm:mb-10">
             Join thousands of professionals advancing their expertise with ARPS
             Institute.
           </p>
 
-          <div className="flex gap-4 justify-center flex-wrap">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center sm:flex-wrap">
             <Link
               href="/contact"
-              className="font-body text-[0.875rem] tracking-[0.02em] font-medium bg-[#0474C4] text-[#EBF3FC] capitalize border-[#0474C4] py-3.5 px-5 h-12 rounded-[32px] min-w-40  transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
+              className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0.02em] font-medium bg-[#0474C4] text-[#EBF3FC] capitalize border-[#0474C4] py-3 sm:py-3.5 px-5 h-11 sm:h-12 rounded inline-flex items-center justify-center gap-1 min-w-40 transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
             >
               Contact Us <ChevronRight className="h-4 w-4" />
             </Link>
 
             <Link
               href="/programs"
-              className="font-body text-[0.875rem] tracking-[0.02em] font-medium bg-transparent text-center text-[#EBF3FC] capitalize border border-[#EBF3FC] py-3.5 px-5 h-12 rounded-[32px] min-w-40  transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
+              className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0.02em] font-medium bg-transparent text-center text-[#EBF3FC] capitalize border border-[#EBF3FC] py-3 sm:py-3.5 px-5 h-11 sm:h-12 rounded inline-flex items-center justify-center gap-1 min-w-40 transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
             >
               Explore Programs <ChevronRight className="h-4 w-4" />
             </Link>

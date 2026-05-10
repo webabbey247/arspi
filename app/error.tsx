@@ -17,26 +17,26 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-ink-deep flex items-center justify-center px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-ink-deep flex items-center justify-center px-4 sm:px-6 md:px-10 py-12 relative overflow-hidden">
       <div className="absolute inset-0 bg-grid-ink bg-size-[60px_60px] pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-125 rounded-full bg-red-500/5 blur-[100px] pointer-events-none" />
 
-      <div className="relative z-10 text-center max-w-md">
-        <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
-          <svg className="h-7 w-7 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+      <div className="relative z-10 text-center max-w-md w-full">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-5 sm:mb-6">
+          <svg className="h-6 w-6 sm:h-7 sm:w-7 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
         </div>
 
-        <p className="text-[0.68rem] tracking-[0.18em] uppercase text-sapphire mb-4">
+        <p className="text-[0.625rem] sm:text-[0.68rem] tracking-[0.18em] uppercase text-sapphire mb-3 sm:mb-4">
           Something went wrong
         </p>
-        <h1 className="font-serif text-sky-light text-2xl md:text-3xl font-normal mb-4 leading-snug">
+        <h1 className="font-serif text-sky-light text-xl sm:text-2xl md:text-3xl font-normal mb-3 sm:mb-4 leading-snug">
           An unexpected error occurred
         </h1>
-        <p className="text-white/40 font-light text-sm leading-loose mb-8">
+        <p className="text-white/40 font-light text-[0.8125rem] sm:text-sm leading-loose mb-6 sm:mb-8">
           We apologise for the inconvenience. Please try refreshing the page or returning to the homepage.
         </p>
 

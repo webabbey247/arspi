@@ -58,23 +58,23 @@ const ProjectDetailPage = async ({ params }: { params: Promise<{ slug: string }>
   return (
     <>
       {/* ── Section 1: Title (2/3) + Share (1/3) ───────────────────────── */}
-      <section className="bg-[#071639] relative px-8 md:px-16 py-16 md:py-24 w-full">
+      <section className="bg-[#071639] relative px-4 sm:px-6 md:px-10 lg:px-16 py-12 sm:py-16 md:py-20 lg:py-24 w-full">
         <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
         <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
 
         <div className="relative max-w-350 mx-auto z-10">
           <Link
             href="/our-research/research-projects"
-            className="inline-flex items-center gap-1.5 font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#5EEAD4] hover:text-[#67e8d6] no-underline mb-8"
+            className="inline-flex items-center gap-1.5 font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#5EEAD4] hover:text-[#67e8d6] no-underline mb-6 sm:mb-8"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
             All Projects
           </Link>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-16 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10 lg:gap-16 items-start">
             {/* Left — title (2/3) */}
             <div className="lg:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider ${STATUS_COLORS[project.status]}`}>
                   Project ({STATUS_LABELS[project.status]})
                 </span>
@@ -84,10 +84,10 @@ const ProjectDetailPage = async ({ params }: { params: Promise<{ slug: string }>
                   </span>
                 )}
               </div>
-              <h1 className="font-heading text-[2.25rem] md:text-[3rem] tracking-[-0.015em] md:tracking-[-0.02em] leading-[1.2] md:leading-[1.1] font-bold text-white mb-4">
+              <h1 className="font-heading text-[1.75rem] sm:text-[2rem] md:text-[2.5rem] lg:text-[3rem] tracking-[-0.015em] md:tracking-[-0.02em] leading-[1.2] md:leading-[1.1] font-bold text-white mb-3 sm:mb-4">
                 {project.title}
               </h1>
-              <p className="font-body text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-[#EBF3FC]/75">
+              <p className="font-body text-[0.9375rem] sm:text-[1rem] md:text-[1.0625rem] lg:text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-[#EBF3FC]/75">
                 {project.excerpt}
               </p>
             </div>
@@ -114,13 +114,13 @@ const ProjectDetailPage = async ({ params }: { params: Promise<{ slug: string }>
       )}
 
       {/* ── Section 3: Body + sticky 400px sidebar ─────────────────────── */}
-      <section className="bg-white py-16 md:py-20 px-8 md:px-16 w-full">
-        <div className="max-w-350 mx-auto grid lg:grid-cols-[1fr_400px] gap-12">
+      <section className="bg-white py-12 sm:py-14 md:py-16 lg:py-20 px-4 sm:px-6 md:px-10 lg:px-16 w-full">
+        <div className="max-w-350 mx-auto grid lg:grid-cols-[1fr_400px] gap-8 md:gap-10 lg:gap-12">
 
           {/* Main */}
           <div className="min-w-0">
             <article
-              className="prose prose-slate max-w-none font-body text-[1rem] leading-[1.8] text-[#1A1916] [&_h2]:tracking-[-0.01em] [&_h2]:leading-tight [&_h2]:font-heading [&_h2]:text-[#071639] [&_h2]:mt-10 [&_h2]:mb-2 [&_h2]:text-[1.75rem] [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6"
+              className="prose prose-slate max-w-none font-body text-[0.9375rem] sm:text-[1rem] leading-[1.8] text-[#1A1916] [&_h2]:tracking-[-0.01em] [&_h2]:leading-tight [&_h2]:font-heading [&_h2]:text-[#071639] [&_h2]:mt-8 sm:[&_h2]:mt-10 [&_h2]:mb-2 [&_h2]:text-[1.375rem] sm:[&_h2]:text-[1.5rem] md:[&_h2]:text-[1.625rem] lg:[&_h2]:text-[1.75rem] [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6"
               dangerouslySetInnerHTML={{ __html: project.description }}
             />
 
@@ -133,8 +133,8 @@ const ProjectDetailPage = async ({ params }: { params: Promise<{ slug: string }>
           </div>
 
           {/* Sidebar — max 400px, sticky on scroll */}
-         <aside className="w-full max-w-100 lg:sticky lg:top-24 self-start space-y-6">
-  <div className="bg-[#F9F9FB] border border-[#E5E2DC] rounded p-6">
+         <aside className="w-full lg:max-w-100 lg:sticky lg:top-24 self-start space-y-6">
+  <div className="bg-[#F9F9FB] border border-[#E5E2DC] rounded p-5 sm:p-6">
 
     {/* Section label — DM Sans, 11px, +0.07em, font-medium, uppercase */}
     <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-4">
@@ -228,14 +228,14 @@ const ProjectDetailPage = async ({ params }: { params: Promise<{ slug: string }>
 
       {/* ── Related Projects (max 4 cards) ─────────────────────────────── */}
       {related.length > 0 && (
-        <section className="bg-[#FAFAF9] py-16 md:py-20 px-8 md:px-16 w-full border-t border-[#E5E2DC]">
+        <section className="bg-[#FAFAF9] py-12 sm:py-14 md:py-16 lg:py-20 px-4 sm:px-6 md:px-10 lg:px-16 w-full border-t border-[#E5E2DC]">
           <div className="max-w-350 mx-auto">
-            <div className="flex items-end justify-between gap-4 mb-8 md:mb-10">
+            <div className="flex items-end justify-between gap-4 mb-6 sm:mb-8 md:mb-10">
               <div>
-                <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-2">
+                <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-1.5 sm:mb-2">
                   Continue Exploring
                 </p>
-                <h2 className="font-heading text-[1.75rem] md:text-[2.25rem] tracking-[-0.015em] leading-tight font-semibold text-[#071639]">
+                <h2 className="font-heading text-[1.5rem] sm:text-[1.75rem] md:text-[2rem] lg:text-[2.25rem] tracking-[-0.015em] leading-tight font-semibold text-[#071639]">
                   Related Projects
                 </h2>
               </div>
@@ -248,7 +248,7 @@ const ProjectDetailPage = async ({ params }: { params: Promise<{ slug: string }>
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {related.map(r => (
                 <Link
                   key={r.id}

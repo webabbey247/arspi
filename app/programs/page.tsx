@@ -4,7 +4,7 @@ import * as React from "react";
 import withLayout from "@/hooks/useLayout";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, SlidersHorizontal } from "lucide-react";
 import {
   getPrograms,
   getProgramLookups,
@@ -104,24 +104,22 @@ const ProgramsPage = () => {
   const [programs, setPrograms] = React.useState<PublicProgram[]>([]);
   const [loading, setLoading]   = React.useState(true);
   const [page, setPage]         = React.useState(1);
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
 
-  // Lookup-table options (Levels / Formats / Pricing tabs in admin)
+  // Lookup-table options (Levels / Pricing tabs in admin)
   const [levelOptionsList,   setLevelOptionsList]   = React.useState<ProgramLookup[]>([])
-  const [formatOptionsList,  setFormatOptionsList]  = React.useState<ProgramLookup[]>([])
   const [pricingOptionsList, setPricingOptionsList] = React.useState<ProgramLookup[]>([])
 
   // Filter state — store ids for managed lookups
   const [categoryFilter, setCategoryFilter] = React.useState<string[]>([])
   const [priceFilter,    setPriceFilter]    = React.useState<string[]>([])
   const [levelFilter,    setLevelFilter]    = React.useState<string[]>([])
-  const [formatFilter,   setFormatFilter]   = React.useState<string[]>([])
 
   React.useEffect(() => {
     setLoading(true);
     Promise.all([
       getPrograms().then(setPrograms).catch(() => setPrograms([])),
       getProgramLookups("levels").then(setLevelOptionsList).catch(() => setLevelOptionsList([])),
-      getProgramLookups("formats").then(setFormatOptionsList).catch(() => setFormatOptionsList([])),
       getProgramLookups("pricing").then(setPricingOptionsList).catch(() => setPricingOptionsList([])),
     ]).finally(() => setLoading(false));
   }, []);
@@ -148,15 +146,6 @@ const ProgramsPage = () => {
     [levelOptionsList, programs],
   );
 
-  const formats = React.useMemo(
-    () => formatOptionsList.map(o => ({
-      id:    o.id,
-      label: o.name,
-      count: programs.filter(p => p.programFormat?.id === o.id).length,
-    })),
-    [formatOptionsList, programs],
-  );
-
   const priceOptions = React.useMemo(
     () => pricingOptionsList.map(o => ({
       id:    o.id,
@@ -168,19 +157,17 @@ const ProgramsPage = () => {
 
   const hasActiveFilter =
     categoryFilter.length > 0 || priceFilter.length > 0 ||
-    levelFilter.length > 0 || formatFilter.length > 0
+    levelFilter.length > 0
 
   function clearFilters() {
     setCategoryFilter([])
     setPriceFilter([])
     setLevelFilter([])
-    setFormatFilter([])
   }
 
   function passesFilters(p: PublicProgram): boolean {
     return (categoryFilter.length === 0 || (!!p.category       && categoryFilter.includes(p.category.id)))
       && (levelFilter.length    === 0   || (!!p.programLevel   && levelFilter.includes(p.programLevel.id)))
-      && (formatFilter.length   === 0   || (!!p.programFormat  && formatFilter.includes(p.programFormat.id)))
       && (priceFilter.length    === 0   || (!!p.programPricing && priceFilter.includes(p.programPricing.id)))
   }
 
@@ -193,7 +180,7 @@ const ProgramsPage = () => {
   const pages      = pageWindow(page, totalPages)
 
   React.useEffect(() => { setPage(1) }, [
-    categoryFilter, priceFilter, levelFilter, formatFilter,
+    categoryFilter, priceFilter, levelFilter,
   ])
 
   return (
@@ -299,16 +286,28 @@ const ProgramsPage = () => {
       </section> */}
 
       {/* Programs — sidebar + grid */}
-      <section className="bg-white px-8 md:px-16 pb-20 pt-10 w-full border-t border-[#e8e8e8]">
+      <section className="bg-white px-4 md:px-16 pb-20 pt-10 w-full border-t border-[#e8e8e8]">
         <div className="max-w-350 mx-auto flex flex-col lg:flex-row gap-8 w-full">
 
           {/* Left sidebar */}
           <aside className="lg:w-72 shrink-0">
             <div className="lg:sticky lg:top-32 px-0">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-heading text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">
-                  Filters
-                </h3>
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-heading text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">
+                    Filters
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setFiltersOpen(o => !o)}
+                    aria-expanded={filtersOpen}
+                    aria-controls="programs-filter-options"
+                    aria-label={filtersOpen ? "Hide filters" : "Show filters"}
+                    className="sm:hidden inline-flex items-center justify-center w-8 h-8 rounded border border-[#0474C4]/25 text-[#0474C4] hover:bg-[#0474C4]/8 transition-colors cursor-pointer"
+                  >
+                    <SlidersHorizontal className={`h-4 w-4 transition-transform ${filtersOpen ? "rotate-90" : ""}`} />
+                  </button>
+                </div>
                 {hasActiveFilter && (
                   <button
                     type="button"
@@ -320,7 +319,10 @@ const ProgramsPage = () => {
                 )}
               </div>
 
-              <div className="flex flex-col">
+              <div
+                id="programs-filter-options"
+                className={`flex-col ${filtersOpen ? "flex" : "hidden"} sm:flex`}
+              >
                 <FilterAccordion
                   title="Category"
                   options={categories}
@@ -343,14 +345,6 @@ const ProgramsPage = () => {
                     options={levelOptions}
                     selected={levelFilter}
                     onToggle={id => setLevelFilter(toggleIn(levelFilter, id))}
-                  />
-                )}
-                {formats.length > 0 && (
-                  <FilterAccordion
-                    title="Format"
-                    options={formats}
-                    selected={formatFilter}
-                    onToggle={id => setFormatFilter(toggleIn(formatFilter, id))}
                   />
                 )}
               </div>

@@ -73,24 +73,24 @@ research."
     </div>
   </div>
 </section> */}
-      <section className="py-16 md:py-28 px-8 md:px-16 lg:px-20 bg-[#F9F9FB]">
-        <div className="mb-12 md:mb-16 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-end">
+      <section className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F9F9FB]">
+        <div className="mb-10 sm:mb-12 md:mb-16 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-16 md:items-end">
           <div>
-            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-4">
+            <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#637AA3] mb-3 sm:mb-4">
               How We Teach
             </p>
-            <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639]">
+            <h2 className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.625rem] lg:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639]">
               The Research Training Cycle
             </h2>
           </div>
-          <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600">
+          <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600">
             Our programmes follow a structured five-phase learning cycle, taking
             participants from foundational concepts through to published outputs
             and real-world application.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-0 relative mb-12 md:mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-8 gap-x-4 sm:gap-6 lg:gap-0 relative mb-10 sm:mb-12 md:mb-16">
           {[
             {
               label: "Foundations",
@@ -140,11 +140,11 @@ research."
           ].map((step, i, arr) => (
             <div
               key={step.label}
-              className={`flex flex-col items-center text-center relative ${i < arr.length - 1 ? "[&]:after:content-['→'] after:absolute after:-right-3 after:top-7 after:text-[#0474C4] after:text-base after:opacity-60 after:z-1" : ""}`}
+              className={`flex flex-col items-center text-center relative ${i < arr.length - 1 ? "lg:after:content-['→'] after:absolute after:-right-3 after:top-7 after:text-[#0474C4] after:text-base after:opacity-60 after:z-1" : ""}`}
             >
-              <div className="w-14 h-14 rounded-full bg-[#0474C4] border-2 border-[#0474C4]/25 flex items-center justify-center mb-4 relative z-2 transition-[background,border-color] duration-300 ">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#0474C4] border-2 border-[#0474C4]/25 flex items-center justify-center mb-3 sm:mb-4 relative z-2 transition-[background,border-color] duration-300 ">
                 <svg
-                  className="w-5.5 h-5.5"
+                  className="w-5 h-5 sm:w-5.5 sm:h-5.5"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="#EBF3FC"
@@ -154,10 +154,10 @@ research."
                   {step.icon}
                 </svg>
               </div>
-              <div className="font-heading text-[0.875rem] tracking-[0em] leading-[1.3] font-medium text-[#071639] transition-colors duration-300">
+              <div className="font-heading text-[0.8125rem] sm:text-[0.875rem] tracking-[0em] leading-[1.3] font-medium text-[#071639] transition-colors duration-300">
                 {step.label}
               </div>
-              <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-600 mt-1">
+              <div className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-600 mt-1">
                 {step.sub}
               </div>
             </div>
@@ -213,15 +213,15 @@ research."
           ].map((card) => (
             <div
               key={card.title}
-              className="bg-white border border-slate-200 rounded p-8 transition-[border-color,transform] duration-250 hover:border-[#0474C4] hover:-translate-y-0.5"
+              className="bg-white border border-slate-200 rounded p-5 sm:p-6 md:p-8 transition-[border-color,transform] duration-250 hover:border-[#0474C4] hover:-translate-y-0.5"
             >
-              <div className="flex items-center gap-3.5 mb-4">
+              <div className="flex items-center gap-3 sm:gap-3.5 mb-3 sm:mb-4">
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0"
                   style={{ background: card.bg }}
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-4.5 h-4.5 sm:w-5 sm:h-5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke={card.color}
@@ -232,12 +232,12 @@ research."
                   </svg>
                 </div>
                 {/* H3 — Playfair Display, 18px, -0.005em, lh 1.3 */}
-                <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#071639]">
+                <div className="font-heading text-[1rem] sm:text-[1.0625rem] md:text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#071639]">
                   {card.title}
                 </div>
               </div>
               {/* Body — DM Sans, 15px, 0em, lh 1.7 */}
-              <div className="font-body text-[0.9375rem] tracking-[0em] leading-[1.7] font-normal text-slate-600">
+              <div className="font-body text-[0.875rem] sm:text-[0.9375rem] tracking-[0em] leading-[1.7] font-normal text-slate-600">
                 {card.desc}
               </div>
             </div>
@@ -246,17 +246,17 @@ research."
       </section>
 
       <section
-        className="py-16 md:py-28 px-8 md:px-16 lg:px-20 bg-white w-full"
+        className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-white w-full"
         id="focus"
       >
-        <div className="mb-16">
-          <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-4 block">
+        <div className="mb-10 sm:mb-12 md:mb-16">
+          <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4] mb-3 sm:mb-4 block">
             Areas of Focus
           </p>
-          <h2 className="font-heading text-[1.75rem] tracking-[-0.015em] leading-[1.2] font-semibold mb-5 text-[#071639] max-w-150">
+          <h2 className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.625rem] lg:text-[1.75rem] tracking-[-0.015em] leading-[1.2] font-semibold mb-4 sm:mb-5 text-[#071639] max-w-150">
             Disciplines We Cover
           </h2>
-          <p className="font-body text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 max-w-160">
+          <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 max-w-160">
             ARPS Institute focuses on professional, research, and leadership
             development fields — providing accessible and high-quality training
             across key disciplines worldwide. We do not provide clinical or
@@ -264,7 +264,7 @@ research."
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
           {[
             {
               num: "01",
@@ -441,28 +441,28 @@ research."
           ].map((card) => (
             <div
               key={card.num}
-              className="group relative overflow-hidden cursor-default rounded-xs border border-[#0474C4]/25 bg-white/90 py-[2.2rem] px-8 transition-[background-color,border-color] duration-300"
+              className="group relative overflow-hidden cursor-default rounded-xs border border-[#0474C4]/25 bg-white/90 py-7 px-5 sm:py-8 sm:px-6 md:py-[2.2rem] md:px-8 transition-[background-color,border-color] duration-300"
             >
-              <div className="flex flex-col gap-4 mb-4">
-                <div className="font-heading text-[3rem] tracking-[-0.02em] leading-[1.1] font-bold text-[#0474C4]/50">
+              <div className="flex flex-col gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <div className="font-heading text-[2.25rem] sm:text-[2.5rem] md:text-[3rem] tracking-[-0.02em] leading-[1.1] font-bold text-[#0474C4]/50">
                   {card.num}
                 </div>
 
-                <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#071639]">
+                <div className="font-heading text-[1rem] sm:text-[1.0625rem] md:text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#071639]">
                   {card.title}
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4">
-                <p className="font-body text-[0.9375rem] tracking-[0em] leading-[1.7] font-normal text-slate-600">
+              <div className="flex flex-col gap-3 sm:gap-4">
+                <p className="font-body text-[0.875rem] sm:text-[0.9375rem] tracking-[0em] leading-[1.7] font-normal text-slate-600">
                   {card.desc}
                 </p>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {card.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="font-body text-[0.6875rem] tracking-[0.05em] font-medium text-[#0474C4] py-1 px-3 rounded-full bg-[#0474C4]/10 transition-all duration-200"
+                      className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium text-[#0474C4] py-1 px-2.5 sm:px-3 rounded-full bg-[#0474C4]/10 transition-all duration-200"
                     >
                       {tag}
                     </span>
@@ -474,35 +474,35 @@ research."
         </div>
       </section>
 
-      <section className="py-28 w-full px-20 text-center bg-[#181C2C] relative overflow-hidden">
+      <section className="py-16 sm:py-20 md:py-24 lg:py-28 w-full px-4 sm:px-6 md:px-10 lg:px-20 text-center bg-[#181C2C] relative overflow-hidden">
         <div className="relative max-w-140 mx-auto">
-          <div className=" flex flex-col gap-5 mb-12">
-            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4]">
+          <div className=" flex flex-col gap-4 sm:gap-5 mb-10 sm:mb-12">
+            <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4]">
               Start Learning
             </p>
 
-            <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-white">
+            <h2 className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.625rem] lg:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-white">
               Ready to Strengthen Your Research Capacity?
             </h2>
 
-            <p className="font-body text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-slate-300 max-w-lg mx-auto">
+            <p className="font-body text-[0.9375rem] sm:text-[1rem] md:text-[1.0625rem] lg:text-[1.125rem] tracking-[-0.01em] leading-[1.65] font-light text-slate-300 max-w-lg mx-auto">
               Join scholars and professionals from 120+ countries advancing
               their research skills with ARPS Institute — fully online, at your
               own pace.
             </p>
           </div>
 
-          <div className="flex gap-4 justify-center flex-wrap">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center sm:flex-wrap">
             <Link
               href="/programs"
-              className="font-body text-[0.875rem] tracking-[0.02em] font-medium bg-[#0474C4] text-[#EBF3FC] border-[#0474C4] py-3.5 px-5 h-12 rounded min-w-40  transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
+              className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0.02em] font-medium bg-[#0474C4] text-[#EBF3FC] border-[#0474C4] py-3 sm:py-3.5 px-5 h-11 sm:h-12 rounded inline-flex items-center justify-center min-w-40 transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
             >
               Browse Programs{" "}
             </Link>
 
             <Link
               href="/contact"
-              className="font-body text-[0.875rem] tracking-[0.02em] font-medium bg-transparent text-[#EBF3FC] border border-[#EBF3FC] py-3.5 px-5 h-12 rounded min-w-40  transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
+              className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0.02em] font-medium bg-transparent text-[#EBF3FC] border border-[#EBF3FC] py-3 sm:py-3.5 px-5 h-11 sm:h-12 rounded inline-flex items-center justify-center min-w-40 transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
             >
               Contact Us
             </Link>

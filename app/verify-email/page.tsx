@@ -67,22 +67,22 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-sky-pale px-6 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-sky-pale px-4 sm:px-6 py-10 sm:py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-6 sm:mb-8">
           <Link href="/">
             <Image
               src="/images/arps-institute-logo.webp"
               alt="ARPS Institute"
               width={148}
               height={29}
-              className="h-8 w-auto"
+              className="h-7 sm:h-8 w-auto"
             />
           </Link>
         </div>
 
-        <div className="bg-white border border-[#0474C4]/15 rounded-lg p-8 shadow-sm">
+        <div className="bg-white border border-[#0474C4]/15 rounded-lg p-5 sm:p-6 md:p-8 shadow-sm">
 
           {/* ── Verifying (spinner) ── */}
           {status === "verifying" && (
@@ -98,10 +98,10 @@ export default function VerifyEmailPage() {
               <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="h-6 w-6 text-emerald-600" />
               </div>
-              <h1 className="font-heading text-[1.375rem] font-semibold text-[#071639] mb-2">
+              <h1 className="font-heading text-[1.25rem] sm:text-[1.375rem] font-semibold text-[#071639] mb-2">
                 Email verified
               </h1>
-              <p className="font-body text-[0.875rem] text-slate-500">
+              <p className="font-body text-[0.8125rem] sm:text-[0.875rem] text-slate-500">
                 Your email has been confirmed. Redirecting you to sign in…
               </p>
             </div>
@@ -113,10 +113,10 @@ export default function VerifyEmailPage() {
               <div className="w-12 h-12 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mx-auto mb-4">
                 <XCircle className="h-6 w-6 text-red-500" />
               </div>
-              <h1 className="font-heading text-[1.375rem] font-semibold text-[#071639] mb-2">
+              <h1 className="font-heading text-[1.25rem] sm:text-[1.375rem] font-semibold text-[#071639] mb-2">
                 Link invalid or expired
               </h1>
-              <p className="font-body text-[0.875rem] text-slate-500 mb-6">{verifyError}</p>
+              <p className="font-body text-[0.8125rem] sm:text-[0.875rem] text-slate-500 mb-5 sm:mb-6">{verifyError}</p>
               <p className="font-body text-[0.8125rem] text-slate-400 mb-4">
                 Enter your email below to receive a new verification link.
               </p>

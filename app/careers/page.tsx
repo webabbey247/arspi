@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ChevronDown, ChevronRight, MapPin, Search } from "lucide-react"
+import { ChevronDown, ChevronRight, MapPin, Search, SlidersHorizontal } from "lucide-react"
 import withLayout from "@/hooks/useLayout"
 import PageHero from "@/components/sections/PageHero"
 
@@ -145,6 +145,7 @@ const CareersPage = () => {
   const [locationFilter,   setLocationFilter]   = React.useState<string[]>([])
 
   const [page, setPage] = React.useState(1)
+  const [filtersOpen, setFiltersOpen] = React.useState(false)
 
   React.useEffect(() => {
     fetch("/api/careers/public")
@@ -262,17 +263,32 @@ const CareersPage = () => {
       </section> */}
 
       {/* Body — sidebar + cards */}
-      <section className="bg-white px-8 md:px-16 pb-16 w-full mt-10">
-        <div className="max-w-350 mx-auto flex flex-col lg:flex-row gap-8">
+      <section className="bg-white px-4 sm:px-6 md:px-10 lg:px-16 pb-12 sm:pb-14 md:pb-16 w-full mt-8 sm:mt-10">
+        <div className="max-w-350 mx-auto flex flex-col lg:flex-row gap-6 sm:gap-7 md:gap-8">
 
           {/* Left sidebar — w-100 */}
           <aside className="lg:w-100 shrink-0">
-            <div className="bg-white  p-5 lg:sticky lg:top-32">
-              <h3 className="font-heading text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4] mb-2">
-                Search filters
-              </h3>
+            <div className="bg-white p-4 sm:p-5 lg:sticky lg:top-32">
+              <div className="flex items-center gap-2 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(o => !o)}
+                  aria-expanded={filtersOpen}
+                  aria-controls="careers-filter-options"
+                  aria-label={filtersOpen ? "Hide filters" : "Show filters"}
+                  className="sm:hidden inline-flex items-center justify-center w-8 h-8 rounded border border-[#0474C4]/25 text-[#0474C4] hover:bg-[#0474C4]/8 transition-colors cursor-pointer"
+                >
+                  <SlidersHorizontal className={`h-4 w-4 transition-transform ${filtersOpen ? "rotate-90" : ""}`} />
+                </button>
+                <h3 className="font-heading text-[1rem] tracking-[-0.005em] font-semibold text-[#0474C4]">
+                  Search filters
+                </h3>
+              </div>
 
-              <div className="flex flex-col">
+              <div
+                id="careers-filter-options"
+                className={`flex-col ${filtersOpen ? "flex" : "hidden"} sm:flex`}
+              >
                 <FilterAccordion
                   title="Department"
                   options={departments.map(d => ({ id: d, label: d }))}
@@ -310,11 +326,11 @@ const CareersPage = () => {
                 ))}
               </div>
             ) : paginated.length === 0 ? (
-              <div className="bg-white p-10 text-center flex flex-col gap-2 items-center justify-center w-full h-full">
-                <p className="font-heading text-[1rem] font-semibold text-ink mb-1.5">
+              <div className="bg-white p-6 sm:p-8 md:p-10 text-center flex flex-col gap-2 items-center justify-center w-full h-full">
+                <p className="font-heading text-[0.9375rem] sm:text-[1rem] font-semibold text-ink mb-1.5">
                   {careers.length === 0 ? "No open roles right now" : "No roles match your search"}
                 </p>
-                <p className="font-body text-[0.8125rem] text-slate-500">
+                <p className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-500">
                   Try adjusting your search or clearing some filters.
                 </p>
               </div>
@@ -323,14 +339,14 @@ const CareersPage = () => {
                 {paginated.map(c => (
                   <div
                     key={c.id}
-                    className="bg-white border border-[#0474C4]/22 rounded hover:border-[#0474C4]/55 transition-all px-5 py-4 flex items-center justify-between gap-4"
+                    className="bg-white border border-[#0474C4]/22 rounded hover:border-[#0474C4]/55 transition-all px-4 sm:px-5 py-3.5 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4"
                   >
                     {/* Left — job title + department | location */}
                     <div className="flex flex-col min-w-0">
-                      <h3 className="font-heading text-[1rem] tracking-[-0.005em] leading-[1.3] font-medium text-ink mb-1 truncate">
+                      <h3 className="font-heading text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.3] font-medium text-ink mb-1 truncate">
                         {c.title}
                       </h3>
-                      <p className="font-body text-[0.8125rem] text-slate-500 truncate">
+                      <p className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-500 truncate">
                         {c.department} <span className="text-slate-300 mx-1.5">|</span> {c.location}
                       </p>
                     </div>
@@ -338,7 +354,7 @@ const CareersPage = () => {
                     {/* Right — Apply button → single career page */}
                     <Link
                       href={`/careers/${c.slug}`}
-                      className="inline-flex items-center gap-1 font-body text-[0.8125rem] tracking-[0.02em] font-medium px-4 py-2 rounded bg-[#0474C4] text-white hover:bg-[#06457f] transition-colors shrink-0"
+                      className="inline-flex items-center justify-center gap-1 font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0.02em] font-medium px-4 py-2 rounded bg-[#0474C4] text-white hover:bg-[#06457f] transition-colors shrink-0 self-start sm:self-auto"
                     >
                       Apply
                       <ChevronRight className="h-4 w-4" />
@@ -351,30 +367,30 @@ const CareersPage = () => {
             {/* Pagination footer — Showing X-Y of N jobs + windowed pagination */}
             {!loading && paginated.length > 0 && (
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-6">
-                <p className="font-body text-[0.8125rem] text-slate-500">
+                <p className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-500">
                   Showing <span className="font-medium text-ink">{startIdx}-{endIdx}</span>{" "}
                   of <span className="font-medium text-ink">{total}</span> {total === 1 ? "job" : "jobs"}
                 </p>
 
                 {totalPages > 1 && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex flex-wrap items-center gap-1 w-full sm:w-auto">
                     <button
                       type="button"
                       disabled={page === 1}
                       onClick={() => setPage(p => Math.max(1, p - 1))}
-                      className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
+                      className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.05em] uppercase font-medium px-2.5 sm:px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
                     >
                       Prev
                     </button>
                     {window.map((p, i) =>
                       p === "…" ? (
-                        <span key={`ellipsis-${i}`} className="font-body text-[0.8125rem] text-slate-400 px-2">…</span>
+                        <span key={`ellipsis-${i}`} className="font-body text-[0.75rem] sm:text-[0.8125rem] text-slate-400 px-1.5 sm:px-2">…</span>
                       ) : (
                         <button
                           key={p}
                           type="button"
                           onClick={() => setPage(p)}
-                          className={`min-w-8 h-8 rounded font-body text-[0.8125rem] font-medium cursor-pointer transition-colors ${
+                          className={`min-w-7 sm:min-w-8 h-7 sm:h-8 px-1.5 sm:px-2 rounded font-body text-[0.75rem] sm:text-[0.8125rem] font-medium cursor-pointer transition-colors ${
                             p === page
                               ? "bg-[#0474C4] text-white"
                               : "border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4]"
@@ -388,7 +404,7 @@ const CareersPage = () => {
                       type="button"
                       disabled={page === totalPages}
                       onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                      className="font-body text-[0.75rem] tracking-[0.05em] uppercase font-medium px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
+                      className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.05em] uppercase font-medium px-2.5 sm:px-3 py-1.5 rounded border border-[#0474C4]/20 text-slate-500 hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:hover:border-[#0474C4]/20 disabled:hover:text-slate-500 cursor-pointer disabled:cursor-not-allowed"
                     >
                       Next
                     </button>

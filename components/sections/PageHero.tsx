@@ -56,7 +56,7 @@ export default function PageHero({
           <div className="text-[0.68rem] text-[#EBF3FC] tracking-[0.08em] uppercase">Dispute &amp; Case Management</div>
         </div>
       </a>
-      <a href="#mentortrack" className="flex items-center gap-2.5 border border-[rgba(200,169,110,0.2)] rounded-[40px] px-5 py-2.5 no-underline transition-all duration-250 bg-[rgba(247,243,237,0.04)] hover:border-[#C8A96E] hover:bg-[rgba(200,169,110,0.08)]">
+      <a href="#mentortrack" className="flex items-center gap-2.5 border border-[rgba(200,169,110,0.2)] rounded px-5 py-2.5 no-underline transition-all duration-250 bg-[rgba(247,243,237,0.04)] hover:border-[#C8A96E] hover:bg-[rgba(200,169,110,0.08)]">
         <span className="w-2 h-2 rounded-full shrink-0 bg-[#0D9488]" />
         <div>
           <span className="font-heading text-[0.95rem] text-[#EBF3FC] font-normal">MentorTrack</span>
