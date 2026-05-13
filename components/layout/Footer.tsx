@@ -1,8 +1,26 @@
+"use client";
+
+import * as React from "react";
 import Link from "next/link";
 import SubscriptionForm from "../forms/SubscriptionForm";
 import { footerLinks } from "@/lib/data";
+import { getProjects, type PublicProject } from "@/services/public-project.service";
+import { getWorkshops, type PublicWorkshop } from "@/services/public-workshop.service";
 
 export function Footer() {
+  const [researchProjects, setResearchProjects] = React.useState<PublicProject[]>([]);
+  const [workshops, setWorkshops] = React.useState<PublicWorkshop[]>([]);
+
+  React.useEffect(() => {
+    getProjects({ limit: 6 })
+      .then(payload => setResearchProjects(payload.projects.slice(0, 6)))
+      .catch(() => setResearchProjects([]));
+
+    getWorkshops({ limit: 6 })
+      .then(items => setWorkshops(items.slice(0, 6)))
+      .catch(() => setWorkshops([]));
+  }, []);
+
   return (
     <footer className="bg-[#06457f] border-t border-[#5379AE]/15 w-full">
       <div className="px-4 sm:px-6 md:px-10 lg:px-16 py-10 sm:py-12 md:py-14 lg:py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.8fr_1fr_1fr_1.6fr] gap-8 md:gap-10 lg:gap-16 border-b border-white/5 mx-auto">
@@ -20,13 +38,12 @@ export function Footer() {
           </p>
         </div>
 
-        {/* Link columns */}
-        {Object.entries(footerLinks).map(([title, links]) => (
-          <div key={title}>
+              {Object.entries(footerLinks).map(([title, links]) => (
+          <div key={title} className="flex flex-col gap-3 w-full">
             <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium mb-4 text-white">
               {title}
             </p>
-            <ul className="flex flex-col gap-2.5">
+            <ul className="flex flex-col gap-2">
               {links.map(({ label, href }) => (
                 <li key={label}>
                   <Link
@@ -41,6 +58,49 @@ export function Footer() {
           </div>
         ))}
 
+
+          <div className="flex lg:flex-col gap-8 w-full">
+            
+          <div className="flex flex-col gap-3 w-full">
+            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white">
+              Research Projects
+            </p>
+            <ul className="flex flex-col gap-2">
+              {researchProjects.map(project => (
+                <li key={project.id}>
+                  <Link
+                    className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal transition-colors text-white/60 hover:text-white line-clamp-1"
+                    href={`/our-research/research-projects/${project.slug}`}
+                  >
+                    {project.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+           <div className="flex flex-col gap-3 w-full">
+            <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-white">
+              Workshops &amp; Training
+            </p>
+            <ul className="flex flex-col gap-2">
+              {workshops.map(workshop => (
+                <li key={workshop.id}>
+                  <Link
+                    className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal transition-colors text-white/60 hover:text-white line-clamp-1"
+                    href={`/workshop/${workshop.slug}`}
+                  >
+                    {workshop.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+  
+      
+
         {/* Newsletter */}
         <div className="sm:col-span-2 lg:col-span-1">
           <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal mb-4 text-[#D4E4F6]">
@@ -49,9 +109,7 @@ export function Footer() {
 
           <SubscriptionForm />
 
-          <p
-            className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-white/60 "
-          >
+          <p className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-white/60 ">
             No spam. Unsubscribe at any time.
           </p>
         </div>

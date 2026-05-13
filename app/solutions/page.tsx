@@ -54,7 +54,7 @@ const SolutionsPage = () => {
   </div>
 </section> */}
 
-<section className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F9F9FB] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 lg:gap-24 items-center">
+<section id="resolverite" className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F9F9FB] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 lg:gap-24 items-center">
   <div>
     <div className="flex items-center gap-3 sm:gap-3.5 mb-5 sm:mb-6 md:mb-7">
       <div className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-xl bg-[#EFF6FF] flex items-center justify-center shrink-0">
@@ -175,8 +175,7 @@ const SolutionsPage = () => {
 </section>
 
 
-<section className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F7F3ED] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 lg:gap-24 items-center">
-
+<section id="mentortrack" className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F7F3ED] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 lg:gap-24 items-center">
   {/* App mockup */}
   <div className="bg-[#071639] rounded-xl overflow-hidden border border-[rgba(200,169,110,0.12)] shadow-[0_24px_60px_rgba(6,13,20,0.3)] order-2 lg:order-1">
 

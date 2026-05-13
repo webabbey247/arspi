@@ -15,6 +15,10 @@ import OrganizationsStrip from "@/components/sections/OrganizationsStrip"
 import ProjectShareCard from "@/components/sections/ProjectShareCard"
 import RegisterCTA from "./RegisterCTA"
 
+// Always render at request time so the past-event check reflects "today".
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "")
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -87,6 +91,14 @@ const WorkshopDetailPage = async ({
   const duration     = computeDurationHours(workshop.startTime, workshop.endTime)
   const isPaid       = workshop.fee > 0
   const registered   = workshop._count?.registrations ?? workshop.registered
+  const isPast       = (() => {
+    if (!workshop.date) return false
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const eventDay = new Date(workshop.date)
+    eventDay.setHours(0, 0, 0, 0)
+    return eventDay.getTime() < today.getTime()
+  })()
   const excerpt      = htmlToExcerpt(workshop.description)
   const workshopUrl  = `${APP_URL}/workshop/${workshop.slug}`
 
@@ -242,6 +254,7 @@ const WorkshopDetailPage = async ({
                 time:  fmtTime(workshop.startTime, workshop.endTime, workshop.timezone),
                 fee:   workshop.fee,
               }}
+              isPast={isPast}
             />
           </aside>
         </div>

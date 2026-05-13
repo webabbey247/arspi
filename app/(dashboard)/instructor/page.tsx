@@ -12,7 +12,7 @@ export default async function InstructorPage() {
         Welcome back, {session.firstName ?? session.email}.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {[
           { label: "My Courses",      value: "—" },
           { label: "Total Students",  value: "—" },
@@ -20,7 +20,7 @@ export default async function InstructorPage() {
         ].map(({ label, value }) => (
           <div
             key={label}
-            className="bg-white border border-[#0474C4]/15 rounded-md px-5 py-4"
+            className="bg-white border border-[#0474C4]/15 rounded-md p-4 sm:px-5 sm:py-4"
           >
             <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400 mb-1">
               {label}

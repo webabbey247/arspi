@@ -13,9 +13,10 @@ type Props = {
     time:  string
     fee:   number
   }
+  isPast?: boolean
 }
 
-export default function RegisterCTA({ workshop }: Props) {
+export default function RegisterCTA({ workshop, isPast = false }: Props) {
   const [open, setOpen] = useState(false)
   const isPaid = workshop.fee > 0
 
@@ -30,20 +31,22 @@ export default function RegisterCTA({ workshop }: Props) {
             {isPaid ? `$${workshop.fee}` : "Free"}
           </span>
         </div>
-        <Button
-          className={`w-full h-11 sm:h-12 rounded font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0.02em] font-medium ${
-            !isPaid
-              ? "bg-[#0474C4] text-white hover:bg-[#071639]/90"
-              : "bg-emerald-500 text-white hover:bg-emerald-600"
-          }`}
-          onClick={() => setOpen(true)}
-        >
-          {isPaid ? "Enrol Now" : "Register Free"}
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        {!isPast && (
+          <Button
+            className={`w-full h-11 sm:h-12 rounded font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0.02em] font-medium ${
+              !isPaid
+                ? "bg-[#0474C4] text-white hover:bg-[#071639]/90"
+                : "bg-emerald-500 text-white hover:bg-emerald-600"
+            }`}
+            onClick={() => setOpen(true)}
+          >
+            {isPaid ? "Enrol Now" : "Register Free"}
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
-      {open && (
+      {open && !isPast && (
         <WorkshopRegistrationForm
           modalEvent={{
             id:    workshop.id,

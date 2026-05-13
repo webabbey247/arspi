@@ -1557,14 +1557,14 @@ function LookupTab({
   const PAGE_SIZE = 20
   return (
     <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-      <div className="flex gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
         <div className="relative w-full sm:w-64">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${meta.plural.toLowerCase()}…`} className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-[13px]">
           <thead>
             <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -1604,7 +1604,54 @@ function LookupTab({
         </table>
       </div>
 
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+      {/* Cards — mobile */}
+      <div className="md:hidden flex flex-col">
+        {loading ? (
+          <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+        ) : paginated.length === 0 ? (
+          <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No {meta.plural.toLowerCase()} yet.</div>
+        ) : paginated.map(item => (
+          <div key={item.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+            <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{item.name}</p>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">
+                {item._count.courses} {item._count.courses === 1 ? "program" : "programs"}
+              </span>
+            </div>
+
+            <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+              <div>
+                <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Slug</dt>
+                <dd className="text-[#1A1916] font-medium truncate">{item.slug}</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Created</dt>
+                <dd className="text-[#1A1916] font-medium">{new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</dd>
+              </div>
+            </dl>
+
+            <div className="flex items-center justify-end gap-1.5 pt-1">
+              <button
+                onClick={() => onEdit(item)}
+                aria-label="Edit"
+                className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button
+                onClick={() => onDelete(item)}
+                aria-label="Delete"
+                className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
         <p className="text-[11px] text-[#A8A39C]">
           {paginated.length === 0 ? (
             <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{items.length}</span> {meta.plural.toLowerCase()}</>
@@ -1976,10 +2023,10 @@ export default function AdminProgramsPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
 
       {/* Page header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-[18px] font-extrabold text-[#1A1916]">Programs</h1>
           <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage learning programs and categories</p>
@@ -1992,7 +2039,7 @@ export default function AdminProgramsPage() {
             else if (tab === "formats")    setFormatModal("create")
             else                           setPricingModal("create")
           }}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
+          className="self-start sm:self-auto flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           {tab === "programs"   ? "New Program"
@@ -2004,7 +2051,7 @@ export default function AdminProgramsPage() {
       </div>
 
       {/* Tabs — formats / pricing intentionally hidden until those features ship */}
-      <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 w-fit flex-wrap">
+      <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 overflow-x-auto sm:overflow-x-visible sm:w-fit sm:flex-wrap">
         {(["programs", "categories", "levels"] as Tab[]).map(t => {
           const count =
             t === "programs"   ? programs.length :
@@ -2013,7 +2060,7 @@ export default function AdminProgramsPage() {
             t === "formats"    ? formats.length :
                                  pricingList.length
           return (
-            <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}>
+            <button key={t} onClick={() => setTab(t)} className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}>
               {t}
               <span className="ml-1 font-normal text-[#A8A39C]">({count})</span>
             </button>
@@ -2026,13 +2073,13 @@ export default function AdminProgramsPage() {
         <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
 
           {/* Toolbar */}
-          <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
             <div className="relative w-full sm:w-64">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search programs…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
             </div>
 
-            <div className="ml-auto flex items-center gap-2">
+            <div className="sm:ml-auto flex flex-wrap items-center gap-2">
               {/* Pricing / featured filter */}
               <div ref={statusRef} className="relative">
                 <button
@@ -2094,8 +2141,8 @@ export default function AdminProgramsPage() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
+          {/* Table — desktop */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -2199,7 +2246,104 @@ export default function AdminProgramsPage() {
             </table>
           </div>
 
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+          {/* Cards — mobile */}
+          <div className="md:hidden flex flex-col">
+            {programsLoading ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            ) : filteredPrograms.length === 0 ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No programs found.</div>
+            ) : paginatedPrograms.map(p => (
+              <div key={p.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  {p.thumbnail ? (
+                    <div className="relative w-10 h-10 rounded-[8px] overflow-hidden shrink-0 border border-[#E5E2DC]">
+                      <Image src={p.thumbnail} alt={p.title} fill className="object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-[8px] bg-[#EEF6FF] flex items-center justify-center shrink-0">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0474C4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                      </svg>
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight line-clamp-2">{p.title}</p>
+                    <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{instructorName(p)}</p>
+                    {p.featured && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#0474C4] mt-0.5">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Featured
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {p.category && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-[11px] font-semibold">{p.category.name}</span>
+                  )}
+                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${LEVEL_COLORS[p.level]}`}>
+                    {LEVEL_LABELS[p.level]}
+                  </span>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${p.pricing === "free" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                    {fmtPrice(p.price, p.pricing)}
+                  </span>
+                </div>
+
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Instructors</dt>
+                    <dd className="text-[#1A1916] font-medium truncate">{facilitatorSummary(p) || "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Enrolled</dt>
+                    <dd className="text-[#1A1916] font-medium">{p._count.enrollments}</dd>
+                  </div>
+                  {p.pricing === "paid" && p.paymentType && (
+                    <div className="col-span-2">
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Payment</dt>
+                      <dd className="text-[#1A1916] font-medium capitalize">{p.paymentType.replace(/-/g, " ")}</dd>
+                    </div>
+                  )}
+                </dl>
+
+                <div className="flex items-center justify-end gap-1.5 pt-1">
+                  <Link
+                    href={`/administrator/programs/${p.slug}`}
+                    aria-label="Analytics & details"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-blue-50 transition-colors"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                  </Link>
+                  <Link
+                    href={`/programs/${p.slug}`}
+                    target="_blank"
+                    aria-label="View public page"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </Link>
+                  <button
+                    onClick={() => setProgramModal(p)}
+                    aria-label="Edit"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button
+                    onClick={() => setDeleteProgram(p)}
+                    aria-label="Delete"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
             <p className="text-[11px] text-[#A8A39C]">
               {filteredPrograms.length === 0 ? (
                 <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{programs.length}</span> programs</>
@@ -2221,14 +2365,14 @@ export default function AdminProgramsPage() {
       {/* ── CATEGORIES TAB ────────────────────────────────────────────────────── */}
       {tab === "categories" && (
         <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-          <div className="flex gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
             <div className="relative w-full sm:w-64">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input value={categorySearch} onChange={e => setCategorySearch(e.target.value)} placeholder="Search categories…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -2264,7 +2408,54 @@ export default function AdminProgramsPage() {
             </table>
           </div>
 
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+          {/* Cards — mobile */}
+          <div className="md:hidden flex flex-col">
+            {categoriesLoading ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            ) : filteredCategories.length === 0 ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No categories yet.</div>
+            ) : paginatedCategories.map(cat => (
+              <div key={cat.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{cat.name}</p>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">
+                    {cat._count.courses} {cat._count.courses === 1 ? "program" : "programs"}
+                  </span>
+                </div>
+
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Slug</dt>
+                    <dd className="text-[#1A1916] font-medium truncate">{cat.slug}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Created</dt>
+                    <dd className="text-[#1A1916] font-medium">{fmtDate(cat.createdAt)}</dd>
+                  </div>
+                </dl>
+
+                <div className="flex items-center justify-end gap-1.5 pt-1">
+                  <button
+                    onClick={() => setCategoryModal(cat)}
+                    aria-label="Edit"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button
+                    onClick={() => setDeleteCategory(cat)}
+                    aria-label="Delete"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
             <p className="text-[11px] text-[#A8A39C]">
               {filteredCategories.length === 0 ? (
                 <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{categories.length}</span> categories</>

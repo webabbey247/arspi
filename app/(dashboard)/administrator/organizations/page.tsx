@@ -266,15 +266,15 @@ export default function AdminOrganizationsPage() {
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto">
-      <div className="flex items-start justify-between mb-6">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-[18px] font-extrabold text-[#1A1916]">Organizations</h1>
           <p className="text-[#A8A39C] text-[13px] mt-0.5">Affiliated organisations shown on the research projects page</p>
         </div>
         <button
           onClick={() => setDrawer("create")}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer self-start sm:self-auto"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New Organization
@@ -282,14 +282,14 @@ export default function AdminOrganizationsPage() {
       </div>
 
       <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
           <div className="relative w-full sm:w-64">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search organizations…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
               <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -332,7 +332,56 @@ export default function AdminOrganizationsPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+        {/* Cards — mobile */}
+        <div className="md:hidden flex flex-col">
+          {loading ? (
+            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+          ) : filtered.length === 0 ? (
+            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No organizations yet.</div>
+          ) : paginated.map(o => (
+            <div key={o.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <div className="flex items-start gap-3">
+                <div className="relative w-10 h-10 bg-white border border-[#E5E2DC] rounded-md overflow-hidden flex items-center justify-center shrink-0">
+                  <Image src={o.logo} alt={o.name} fill className="object-contain p-1.5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-[#1A1916] text-[14px] leading-tight truncate">{o.name}</p>
+                  {o.url && (
+                    <a href={o.url} target="_blank" rel="noreferrer" className="text-[12px] text-[#0474C4] hover:underline truncate block mt-0.5">
+                      {o.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {o.description && (
+                <p className="text-[12px] text-[#6B6560] line-clamp-2">{o.description}</p>
+              )}
+
+              <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                <div>
+                  <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Order</dt>
+                  <dd className="text-[#1A1916] font-medium">{o.displayOrder}</dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Updated</dt>
+                  <dd className="text-[#1A1916] font-medium">{fmtDate(o.updatedAt)}</dd>
+                </div>
+              </dl>
+
+              <div className="flex items-center justify-end gap-1.5 pt-1">
+                <button onClick={() => setDrawer(o)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button onClick={() => setToDelete(o)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
           <p className="text-[11px] text-[#A8A39C]">
             {filtered.length === 0 ? (
               <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{orgs.length}</span> organizations</>

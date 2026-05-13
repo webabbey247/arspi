@@ -442,7 +442,7 @@ function CareerDrawer({
           />
 
           {watch("salaryEnabled") && (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label="Salary Min" required>
                 <input type="number" min="0" step="100" {...register("salaryMin")} className={inputCls} placeholder="0" />
                 {errors.salaryMin && <p className="text-[11px] text-red-500 mt-0.5">{errors.salaryMin.message}</p>}
@@ -775,16 +775,16 @@ export default function AdminCareersPage() {
   const paginatedDepts  = filteredDepts.slice((deptPage - 1) * PAGE_SIZE, deptPage * PAGE_SIZE)
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-[18px] font-extrabold text-[#1A1916]">Careers</h1>
           <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage open roles and departments</p>
         </div>
         <button
           onClick={() => tab === "jobs" ? setDrawer("create") : setDeptModal("create")}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer w-fit"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           {tab === "jobs" ? "New Posting" : "New Department"}
@@ -811,12 +811,12 @@ export default function AdminCareersPage() {
       {tab === "jobs" && (
         <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
           {/* Toolbar */}
-          <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
             <div className="relative w-full sm:w-64">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search postings…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
             </div>
-            <div className="ml-auto flex items-center gap-2">
+            <div className="sm:ml-auto flex flex-wrap items-center gap-2">
               <FilterDropdown
                 label="Department"
                 icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>}
@@ -844,8 +844,8 @@ export default function AdminCareersPage() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
+          {/* Table — desktop */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -911,8 +911,71 @@ export default function AdminCareersPage() {
             </table>
           </div>
 
+          {/* Cards — mobile */}
+          <div className="md:hidden flex flex-col">
+            {loading ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            ) : filtered.length === 0 ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No career postings found.</div>
+            ) : paginated.map(career => (
+              <div key={career.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight line-clamp-2">{career.title}</p>
+                    <p className="text-[12px] text-[#A8A39C] mt-0.5">{career.applications} application{career.applications === 1 ? "" : "s"} · {career.views} views</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${career.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${career.status === "PUBLISHED" ? "bg-emerald-500" : "bg-amber-400"}`} />
+                    {career.status === "PUBLISHED" ? "Published" : "Archived"}
+                  </span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700">
+                    {TYPE_LABELS[career.type]}
+                  </span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-700">
+                    {LEVEL_LABELS[career.experienceLevel]}
+                  </span>
+                </div>
+
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Department</dt>
+                    <dd className="text-[#1A1916] font-medium">{career.department}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Location</dt>
+                    <dd className="text-[#1A1916] font-medium">
+                      {career.location}{career.remote && <span className="ml-1 text-[10px] text-[#0474C4] font-semibold">· Remote</span>}
+                    </dd>
+                  </div>
+                </dl>
+
+                <div className="flex items-center justify-end gap-1.5 pt-1">
+                  <button onClick={() => setDrawer(career)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button onClick={() => handleToggleStatus(career)} disabled={togglingIds.has(career.id)} aria-label={career.status === "PUBLISHED" ? "Archive" : "Publish"} className={`w-8 h-8 flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer disabled:opacity-50 ${career.status === "PUBLISHED" ? "border-amber-200 bg-amber-50 text-amber-600 hover:border-amber-300" : "border-emerald-200 bg-emerald-50 text-emerald-600 hover:border-emerald-300"}`}>
+                    {career.status === "PUBLISHED" ? (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
+                    ) : (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                    )}
+                  </button>
+                  <Link href={`/administrator/careers/${career.id}`} aria-label="View analytics" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                  </Link>
+                  <button onClick={() => setToDelete(career)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Footer */}
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
             <p className="text-[11px] text-[#A8A39C]">
               {filtered.length === 0 ? (
                 <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{careers.length}</span> {careers.length === 1 ? "posting" : "postings"}</>
@@ -935,15 +998,15 @@ export default function AdminCareersPage() {
       {tab === "departments" && (
         <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
           {/* Toolbar */}
-          <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
             <div className="relative w-full sm:w-64">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input value={deptSearch} onChange={e => { setDeptSearch(e.target.value); setDeptPage(1) }} placeholder="Search departments…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
+          {/* Table — desktop */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -979,8 +1042,43 @@ export default function AdminCareersPage() {
             </table>
           </div>
 
+          {/* Cards — mobile */}
+          <div className="md:hidden flex flex-col">
+            {deptLoading ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            ) : filteredDepts.length === 0 ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No departments found. Create one to get started.</div>
+            ) : paginatedDepts.map(dept => (
+              <div key={dept.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{dept.name}</p>
+                  </div>
+                </div>
+
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Created</dt>
+                    <dd className="text-[#1A1916] font-medium">
+                      {new Date(dept.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                    </dd>
+                  </div>
+                </dl>
+
+                <div className="flex items-center justify-end gap-1.5 pt-1">
+                  <button onClick={() => setDeptModal(dept)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button onClick={() => setDeptToDelete(dept)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Footer */}
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
             <p className="text-[11px] text-[#A8A39C]">
               <span className="font-semibold text-[#6B6560]">{filteredDepts.length}</span> {filteredDepts.length === 1 ? "department" : "departments"}
             </p>

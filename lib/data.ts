@@ -570,20 +570,13 @@ export const testimonials = [
 ];
 
 export const footerLinks = {
-  Programs: [
-    { label: "Applied Research", href: "/programs#research" },
-    { label: "Education", href: "/programs#education" },
-    { label: "Management", href: "/programs#management" },
-    { label: "IT & Data", href: "/programs#technology" },
-    { label: "Social Sciences", href: "/programs#social" },
-    { label: "PAR", href: "/programs#par" },
-  ],
-  Institute: [
+  Company: [
     { label: "About Us", href: "/about" },
-    { label: "Research Training", href: "/research" },
     { label: "Solutions", href: "/solutions" },
     { label: "Workshops", href: "/workshop" },
+    { label: "Programs", href: "/programs" },
     { label: "Insights", href: "/insights" },
+    { label: "Join Us", href: "/careers" },
     { label: "Contact", href: "/contact" },
   ],
 };

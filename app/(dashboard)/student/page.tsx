@@ -22,7 +22,7 @@ function TableToolbar({
   }, []);
 
   return (
-    <div className="flex gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+    <div className="flex flex-col sm:flex-row gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
       <div className="relative flex-1">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
@@ -101,7 +101,7 @@ function DataTable({
           onFilter={onFilter ?? (() => {})}
         />
       )}
-      <div className="overflow-x-auto">
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-[13px]">
           <thead>
             <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -127,7 +127,31 @@ function DataTable({
           </tbody>
         </table>
       </div>
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+
+      {/* Cards — mobile */}
+      <div className="md:hidden flex flex-col">
+        {rows.length === 0 ? (
+          <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">{empty}</div>
+        ) : (
+          rows.map((row, ri) => (
+            <div key={ri} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <div className="font-semibold text-[#1A1916] text-[14px] leading-tight">
+                {row[0]}
+              </div>
+              <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                {row.slice(1).map((cell, ci) => (
+                  <div key={ci}>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">{cols[ci + 1]}</dt>
+                    <dd className="text-[#1A1916] font-medium">{cell}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
         <p className="text-[11px] text-[#A8A39C]">
           Showing <span className="font-semibold text-[#6B6560]">{rows.length}</span> of{" "}
           <span className="font-semibold text-[#6B6560]">{total}</span>{" "}
@@ -150,7 +174,7 @@ const StudentDashboardPage = () => {
   const rows: (string | number)[][] = [];
 
   return (
-    <div className="max-w-350 mx-auto px-8 py-8">
+    <div className="max-w-350 mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div className="mb-5">
         <h2 className="text-[#1A1916] text-[18px] font-extrabold">My Courses</h2>
         <p className="text-[#A8A39C] text-[13px] mt-0.5">Your enrolled courses and progress</p>

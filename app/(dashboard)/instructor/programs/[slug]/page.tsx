@@ -198,7 +198,7 @@ export default function InstructorProgramDetailPage() {
 
   if (loading) {
     return (
-      <div className="px-8 py-8 max-w-350 mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
         <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">Loading…</div>
       </div>
     )
@@ -206,7 +206,7 @@ export default function InstructorProgramDetailPage() {
 
   if (error || !program) {
     return (
-      <div className="px-8 py-8 max-w-350 mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
         <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">{error ?? "Program not found."}</div>
       </div>
     )
@@ -219,10 +219,10 @@ export default function InstructorProgramDetailPage() {
   const faqs            = Array.isArray(program.faqs) ? (program.faqs as { q: string; a: string }[]) : []
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto space-y-5">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto space-y-5">
 
       {/* Page header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link
             href="/instructor/programs"
@@ -236,7 +236,7 @@ export default function InstructorProgramDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/programs/${program.slug}`}
             target="_blank"
@@ -260,7 +260,7 @@ export default function InstructorProgramDetailPage() {
       </div>
 
       {/* Analytics cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Enrolled"  value={total}     sub={`${program._count.enrollments} registered`} />
         <StatCard
           label="Revenue"
@@ -541,32 +541,61 @@ export default function InstructorProgramDetailPage() {
         ) : enrollments.length === 0 ? (
           <div className="p-8 flex items-center justify-center text-[13px] text-[#A8A39C]">No enrollments yet.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr className="border-b border-[#F0EEE9]">
-                  {["Name", "Email", "Status", "Enrolled", "Completed"].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {enrollments.map((e, i) => (
-                  <tr key={e.id} className={cn("border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors", i % 2 !== 0 ? "bg-[#FAFAF9]/40" : "")}>
-                    <td className="px-4 py-3 font-medium text-[#1A1916] whitespace-nowrap">{userName(e)}</td>
-                    <td className="px-4 py-3 text-[#6B6560]">{e.user.email}</td>
-                    <td className="px-4 py-3">
-                      <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", STATUS_COLORS[e.status])}>
-                        {e.status.charAt(0) + e.status.slice(1).toLowerCase()}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(e.enrolledAt)}</td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(e.completedAt)}</td>
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-[13px]">
+                <thead>
+                  <tr className="border-b border-[#F0EEE9]">
+                    {["Name", "Email", "Status", "Enrolled", "Completed"].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide whitespace-nowrap">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {enrollments.map((e, i) => (
+                    <tr key={e.id} className={cn("border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors", i % 2 !== 0 ? "bg-[#FAFAF9]/40" : "")}>
+                      <td className="px-4 py-3 font-medium text-[#1A1916] whitespace-nowrap">{userName(e)}</td>
+                      <td className="px-4 py-3 text-[#6B6560]">{e.user.email}</td>
+                      <td className="px-4 py-3">
+                        <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", STATUS_COLORS[e.status])}>
+                          {e.status.charAt(0) + e.status.slice(1).toLowerCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(e.enrolledAt)}</td>
+                      <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(e.completedAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden flex flex-col">
+              {enrollments.map(e => (
+                <div key={e.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[#1A1916] text-[14px] leading-tight truncate">{userName(e)}</p>
+                      <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{e.user.email}</p>
+                    </div>
+                    <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0", STATUS_COLORS[e.status])}>
+                      {e.status.charAt(0) + e.status.slice(1).toLowerCase()}
+                    </span>
+                  </div>
+
+                  <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12px]">
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Enrolled</dt>
+                      <dd className="text-[#1A1916] font-medium">{fmtDate(e.enrolledAt)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Completed</dt>
+                      <dd className="text-[#1A1916] font-medium">{fmtDate(e.completedAt)}</dd>
+                    </div>
+                  </dl>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

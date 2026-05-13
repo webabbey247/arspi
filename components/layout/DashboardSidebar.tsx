@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { SessionPayload } from "@/types/session";
 
 // ─── Nav structure ────────────────────────────────────────────────────────────
@@ -262,6 +264,22 @@ const NAV: NavSection[] = [
       },
     ],
   },
+  {
+    section: "System",
+    role: "INSTRUCTOR",
+    items: [
+      {
+        label: "Settings",
+        href: "/settings",
+        icon: (
+          <>
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </>
+        ),
+      },
+    ],
+  },
 
   // ── Student ──────────────────────────────────────────────────────────────────
   {
@@ -319,6 +337,22 @@ const NAV: NavSection[] = [
       },
     ],
   },
+  {
+    section: "System",
+    role: "USER",
+    items: [
+      {
+        label: "Settings",
+        href: "/settings",
+        icon: (
+          <>
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </>
+        ),
+      },
+    ],
+  },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -338,7 +372,15 @@ function navItemClass(isActive: boolean) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const DashboardSidebar = ({ userRole }: { userRole: Role }) => {
+const DashboardSidebar = ({
+  userRole,
+  isOpen = false,
+  onClose,
+}: {
+  userRole: Role;
+  isOpen?: boolean;
+  onClose?: () => void;
+}) => {
   const pathname = usePathname();
 
   const visibleSections = NAV
@@ -350,47 +392,83 @@ const DashboardSidebar = ({ userRole }: { userRole: Role }) => {
     .filter(s => s.items.length > 0);
 
   return (
-    <aside className="bg-white border-r border-[rgba(200,169,110,0.1)] py-4 flex flex-col sticky top-0 h-screen overflow-y-auto shrink-0 w-56">
-      {visibleSections.map(({ section, items }) => (
-        <div key={section}>
-          <span className="block text-[0.58rem] tracking-[0.18em] uppercase text-slate-400 px-[1.2rem] mt-4 mb-1.5">
-            {section}
+    <>
+      {/* Mobile backdrop */}
+      <div
+        onClick={onClose}
+        aria-hidden="true"
+        className={cn(
+          "lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px] transition-opacity",
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+      />
+
+      <aside
+        className={cn(
+          "bg-white border-r border-[rgba(200,169,110,0.1)] py-4 flex flex-col overflow-y-auto shrink-0 w-64",
+          // Mobile: fixed drawer
+          "fixed top-0 left-0 z-50 h-screen transform transition-transform duration-200",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+          // Desktop: static in flex flow
+          "lg:static lg:translate-x-0 lg:w-56 lg:h-auto lg:sticky lg:top-0 lg:z-auto"
+        )}
+      >
+        {/* Mobile-only close button */}
+        <div className="flex items-center justify-between px-[1.2rem] mb-2 lg:hidden">
+          <span className="font-heading text-[0.9375rem] tracking-[-0.005em] font-medium text-[#0474C4]">
+            Menu
           </span>
-
-          {items.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/" && pathname.startsWith(item.href));
-            return (
-              <Link key={item.href} href={item.href} className={navItemClass(isActive)}>
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-3.75 h-3.75 stroke-current fill-none stroke-[1.6] shrink-0"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {item.icon}
-                </svg>
-
-                {item.label}
-
-                {item.count !== undefined && (
-                  <span
-                    className={`ml-auto text-[0.6rem] px-1.5 py-0.5 rounded-lg font-medium ${
-                      item.countRed
-                        ? "bg-[rgba(239,68,68,0.15)] text-[#FCA5A5]"
-                        : "bg-[rgba(200,169,110,0.14)] text-[#C8A96E]"
-                    }`}
-                  >
-                    {item.count}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close menu"
+            className="w-8 h-8 inline-flex items-center justify-center rounded-md text-[#6B6560] hover:bg-[rgba(200,169,110,0.08)] cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
-      ))}
-    </aside>
+
+        {visibleSections.map(({ section, items }) => (
+          <div key={section}>
+            <span className="block text-[0.58rem] tracking-[0.18em] uppercase text-slate-400 px-[1.2rem] mt-4 mb-1.5">
+              {section}
+            </span>
+
+            {items.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                (item.href !== "/" && pathname.startsWith(item.href));
+              return (
+                <Link key={item.href} href={item.href} className={navItemClass(isActive)}>
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-3.75 h-3.75 stroke-current fill-none stroke-[1.6] shrink-0"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {item.icon}
+                  </svg>
+
+                  {item.label}
+
+                  {item.count !== undefined && (
+                    <span
+                      className={`ml-auto text-[0.6rem] px-1.5 py-0.5 rounded-lg font-medium ${
+                        item.countRed
+                          ? "bg-[rgba(239,68,68,0.15)] text-[#FCA5A5]"
+                          : "bg-[rgba(200,169,110,0.14)] text-[#C8A96E]"
+                      }`}
+                    >
+                      {item.count}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+      </aside>
+    </>
   );
 };
 

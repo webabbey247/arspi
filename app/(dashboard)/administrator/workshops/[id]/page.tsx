@@ -205,7 +205,7 @@ export default function WorkshopDetailPage() {
 
   if (loading) {
     return (
-      <div className="px-8 py-8 max-w-350 mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
         <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">
           Loading…
         </div>
@@ -215,7 +215,7 @@ export default function WorkshopDetailPage() {
 
   if (!workshop) {
     return (
-      <div className="px-8 py-8 max-w-350 mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
         <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">
           Workshop not found.
         </div>
@@ -229,12 +229,12 @@ export default function WorkshopDetailPage() {
     : 0
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto space-y-5">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto space-y-5">
 
       {/* Toast */}
       {toast && (
         <div className={cn(
-          "fixed top-4 right-4 z-100 px-4 py-3 rounded-lg shadow-lg text-[13px] font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150",
+          "fixed top-4 right-4 left-4 sm:left-auto z-100 px-4 py-3 rounded-lg shadow-lg text-[13px] font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150",
           toast.ok
             ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
             : "bg-red-50 text-red-600 border border-red-200"
@@ -245,7 +245,7 @@ export default function WorkshopDetailPage() {
       )}
 
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/administrator/workshops")}
@@ -261,7 +261,7 @@ export default function WorkshopDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {registrations.length > 0 && (
             <button
               onClick={() => exportCSV(registrations, workshop.title)}
@@ -449,45 +449,86 @@ export default function WorkshopDetailPage() {
             No registrations yet.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr className="border-b border-[#F0EEE9]">
-                  {["Name", "Email", "Organisation", "Payment", "Status", "Fee", "Registered"].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {registrations.map((r, i) => (
-                  <tr
-                    key={r.id}
-                    className={cn("border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors", i % 2 === 0 ? "" : "bg-[#FAFAF9]/40")}
-                  >
-                    <td className="px-4 py-3 font-medium text-[#1A1916] whitespace-nowrap">
-                      {r.firstName} {r.lastName}
-                    </td>
-                    <td className="px-4 py-3 text-[#6B6560]">{r.email}</td>
-                    <td className="px-4 py-3 text-[#6B6560]">{r.organisation ?? <span className="text-[#A8A39C]">—</span>}</td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">
-                      {r.paymentMethod ? PAYMENT_LABELS[r.paymentMethod] ?? r.paymentMethod : <span className="text-[#A8A39C]">—</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", STATUS_COLORS[r.status])}>
-                        {r.status.charAt(0) + r.status.slice(1).toLowerCase()}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">
-                      {r.fee > 0 ? `$${r.fee}` : <span className="text-emerald-700 font-medium">Free</span>}
-                    </td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDateTime(r.createdAt)}</td>
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-[13px]">
+                <thead>
+                  <tr className="border-b border-[#F0EEE9]">
+                    {["Name", "Email", "Organisation", "Payment", "Status", "Fee", "Registered"].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {registrations.map((r, i) => (
+                    <tr
+                      key={r.id}
+                      className={cn("border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors", i % 2 === 0 ? "" : "bg-[#FAFAF9]/40")}
+                    >
+                      <td className="px-4 py-3 font-medium text-[#1A1916] whitespace-nowrap">
+                        {r.firstName} {r.lastName}
+                      </td>
+                      <td className="px-4 py-3 text-[#6B6560]">{r.email}</td>
+                      <td className="px-4 py-3 text-[#6B6560]">{r.organisation ?? <span className="text-[#A8A39C]">—</span>}</td>
+                      <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">
+                        {r.paymentMethod ? PAYMENT_LABELS[r.paymentMethod] ?? r.paymentMethod : <span className="text-[#A8A39C]">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", STATUS_COLORS[r.status])}>
+                          {r.status.charAt(0) + r.status.slice(1).toLowerCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">
+                        {r.fee > 0 ? `$${r.fee}` : <span className="text-emerald-700 font-medium">Free</span>}
+                      </td>
+                      <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDateTime(r.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden flex flex-col">
+              {registrations.map(r => (
+                <div key={r.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[#1A1916] text-[14px] leading-tight truncate">{r.firstName} {r.lastName}</p>
+                      <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{r.email}</p>
+                    </div>
+                    <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0", STATUS_COLORS[r.status])}>
+                      {r.status.charAt(0) + r.status.slice(1).toLowerCase()}
+                    </span>
+                  </div>
+
+                  <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12px]">
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Organisation</dt>
+                      <dd className="text-[#1A1916] font-medium truncate">{r.organisation ?? "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Payment</dt>
+                      <dd className="text-[#1A1916] font-medium">
+                        {r.paymentMethod ? PAYMENT_LABELS[r.paymentMethod] ?? r.paymentMethod : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Fee</dt>
+                      <dd className="text-[#1A1916] font-medium">
+                        {r.fee > 0 ? `$${r.fee}` : <span className="text-emerald-700">Free</span>}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Registered</dt>
+                      <dd className="text-[#1A1916] font-medium">{fmtDateTime(r.createdAt)}</dd>
+                    </div>
+                  </dl>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

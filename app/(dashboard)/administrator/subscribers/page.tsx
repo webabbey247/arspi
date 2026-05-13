@@ -130,7 +130,7 @@ export default function AdminSubscribersPage() {
   const paginated  = subscribers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-[18px] font-extrabold text-[#1A1916]">Subscribers</h1>
@@ -139,8 +139,8 @@ export default function AdminSubscribersPage() {
       </div>
 
       <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
-          <div className="relative w-full max-w-100">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="relative w-full sm:max-w-100">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
@@ -151,7 +151,7 @@ export default function AdminSubscribersPage() {
               className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors"
             />
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="sm:ml-auto flex flex-wrap items-center gap-2">
             <FilterDropdown value={statusFilter} onChange={setStatusFilter} />
             <button
               onClick={() => downloadCsv(
@@ -177,7 +177,7 @@ export default function AdminSubscribersPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
               <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -207,7 +207,37 @@ export default function AdminSubscribersPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+        {/* Cards — mobile */}
+        <div className="md:hidden flex flex-col">
+          {loading ? (
+            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading...</div>
+          ) : subscribers.length === 0 ? (
+            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No subscribers found.</div>
+          ) : paginated.map((subscriber) => (
+            <div key={subscriber.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <p className="font-semibold text-[#1A1916] text-[14px] leading-tight truncate">{subscriber.email}</p>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_COLORS[subscriber.status]}`}>
+                  {subscriber.status === "ACTIVE" ? "Active" : "Unsubscribed"}
+                </span>
+              </div>
+
+              <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                <div>
+                  <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Subscribed</dt>
+                  <dd className="text-[#1A1916] font-medium">{fmtDate(subscriber.subscribedAt)}</dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Unsubscribed</dt>
+                  <dd className="text-[#1A1916] font-medium">{fmtDate(subscriber.unsubscribedAt)}</dd>
+                </div>
+              </dl>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
           <p className="text-[11px] text-[#A8A39C]">
             {subscribers.length === 0 ? (
               <>Showing <span className="font-semibold text-[#6B6560]">0</span> subscribers</>

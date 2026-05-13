@@ -775,10 +775,10 @@ export default function AdminInsightsPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
 
       {/* Page header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-[18px] font-extrabold text-[#1A1916]">Insights</h1>
           <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage articles, categories, and visibility</p>
@@ -789,7 +789,7 @@ export default function AdminInsightsPage() {
             else if (tab === "authors") setAuthorModal("create")
             else setCategoryModal("create")
           }}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer w-fit"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           {tab === "insights" ? "New Insight" : tab === "authors" ? "New Author" : "New Category"}
@@ -813,13 +813,13 @@ export default function AdminInsightsPage() {
       {tab === "insights" && (
         <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
           {/* Toolbar */}
-          <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
             <div className="relative w-full sm:w-64">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input value={insightSearch} onChange={e => setInsightSearch(e.target.value)} placeholder="Search insights…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
             </div>
 
-            <div className="ml-auto flex items-center gap-2">
+            <div className="sm:ml-auto flex flex-wrap items-center gap-2">
               {/* Filter */}
               <div ref={filterRef} className="relative">
                 <button
@@ -855,8 +855,8 @@ export default function AdminInsightsPage() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
+          {/* Table — desktop */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -913,7 +913,77 @@ export default function AdminInsightsPage() {
             </table>
           </div>
 
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+          {/* Cards — mobile */}
+          <div className="md:hidden flex flex-col">
+            {insightsLoading ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            ) : filteredInsights.length === 0 ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No insights found.</div>
+            ) : paginatedInsights.map(ins => (
+              <div key={ins.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  {ins.coverImage ? (
+                    <Image src={ins.coverImage} alt="" width={40} height={40} className="w-10 h-10 rounded-[8px] object-cover border border-[#E5E2DC] shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-[8px] bg-[#F5F4F1] border border-[#E5E2DC] flex items-center justify-center text-[#A8A39C] shrink-0">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight line-clamp-2">{ins.title}</p>
+                    <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{ins.slug}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <StatusBadge published={ins.published} onClick={() => handleTogglePublished(ins)} loading={togglingIds.has(ins.id)} />
+                  {ins.category && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-[11px] font-semibold">{ins.category.name}</span>
+                  )}
+                  {ins.featured && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 text-[11px] font-semibold">
+                      <span>★</span> Featured
+                    </span>
+                  )}
+                </div>
+
+                {ins.excerpt && (
+                  <p className="text-[12px] text-[#6B6560] line-clamp-2">{ins.excerpt}</p>
+                )}
+
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Author</dt>
+                    <dd className="text-[#1A1916] font-medium">
+                      {ins.author ? (
+                        <span className="flex items-center gap-1.5">
+                          {ins.author.avatar
+                            ? <Image src={ins.author.avatar} alt={ins.author.name} width={20} height={20} className="rounded-full w-5 h-5 object-cover border border-[#E5E2DC] shrink-0" />
+                            : <span className="w-5 h-5 rounded-full bg-[#0474C4] flex items-center justify-center text-white text-[9px] font-semibold shrink-0">{ins.author.name.split(" ").map(p => p[0]).slice(0,2).join("").toUpperCase()}</span>}
+                          <span className="truncate">{ins.author.name}</span>
+                        </span>
+                      ) : "—"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Date</dt>
+                    <dd className="text-[#1A1916] font-medium">{fmtDate(ins.createdAt)}</dd>
+                  </div>
+                </dl>
+
+                <div className="flex items-center justify-end gap-1.5 pt-1">
+                  <button onClick={() => setInsightModal(ins)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button onClick={() => setDeleteInsight(ins)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
             <p className="text-[11px] text-[#A8A39C]">
               {filteredInsights.length === 0 ? (
                 <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{insights.length}</span> insights</>
@@ -935,14 +1005,14 @@ export default function AdminInsightsPage() {
       {/* ── AUTHORS TAB ───────────────────────────────────────────────────────── */}
       {tab === "authors" && (
         <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-          <div className="flex gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
             <div className="relative w-full sm:w-64">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input value={authorSearch} onChange={e => setAuthorSearch(e.target.value)} placeholder="Search authors…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -991,7 +1061,56 @@ export default function AdminInsightsPage() {
             </table>
           </div>
 
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+          {/* Cards — mobile */}
+          <div className="md:hidden flex flex-col">
+            {authorsLoading ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            ) : filteredAuthors.length === 0 ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No authors found.</div>
+            ) : paginatedAuthors.map(a => (
+              <div key={a.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  {a.avatar ? (
+                    <Image src={a.avatar} alt={a.name} width={40} height={40} className="rounded-full w-10 h-10 object-cover border border-[#E5E2DC] shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-[#0474C4] flex items-center justify-center text-white text-[12px] font-semibold shrink-0">
+                      {a.name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{a.name}</p>
+                    {a.jobTitle && <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{a.jobTitle}</p>}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">{a._count.insights} {a._count.insights === 1 ? "insight" : "insights"}</span>
+                </div>
+
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Job Title</dt>
+                    <dd className="text-[#1A1916] font-medium">{a.jobTitle ?? "—"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Joined</dt>
+                    <dd className="text-[#1A1916] font-medium">{fmtDate(a.createdAt)}</dd>
+                  </div>
+                </dl>
+
+                <div className="flex items-center justify-end gap-1.5 pt-1">
+                  <button onClick={() => setAuthorModal(a)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button onClick={() => setDeleteAuthor(a)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
             <p className="text-[11px] text-[#A8A39C]">
               {filteredAuthors.length === 0 ? (
                 <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{authors.length}</span> {authors.length === 1 ? "author" : "authors"}</>
@@ -1013,14 +1132,14 @@ export default function AdminInsightsPage() {
       {/* ── CATEGORIES TAB ────────────────────────────────────────────────────── */}
       {tab === "categories" && (
         <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-          <div className="flex gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
             <div className="relative w-full sm:w-64">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input value={categorySearch} onChange={e => setCategorySearch(e.target.value)} placeholder="Search categories…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -1056,7 +1175,45 @@ export default function AdminInsightsPage() {
             </table>
           </div>
 
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+          {/* Cards — mobile */}
+          <div className="md:hidden flex flex-col">
+            {categoriesLoading ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            ) : filteredCategories.length === 0 ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No categories yet.</div>
+            ) : paginatedCategories.map(cat => (
+              <div key={cat.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{cat.name}</p>
+                    <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{cat.slug}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">{cat._count.insights} {cat._count.insights === 1 ? "insight" : "insights"}</span>
+                </div>
+
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Created</dt>
+                    <dd className="text-[#1A1916] font-medium">{fmtDate(cat.createdAt)}</dd>
+                  </div>
+                </dl>
+
+                <div className="flex items-center justify-end gap-1.5 pt-1">
+                  <button onClick={() => setCategoryModal(cat)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button onClick={() => setDeleteCategory(cat)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
             <p className="text-[11px] text-[#A8A39C]">
               {filteredCategories.length === 0 ? (
                 <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{categories.length}</span> categories</>

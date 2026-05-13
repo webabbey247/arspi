@@ -152,7 +152,7 @@ export default function AdminEnquiriesPage() {
   const paginated  = enquiries.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-[18px] font-extrabold text-[#1A1916]">Enquiries</h1>
@@ -161,8 +161,8 @@ export default function AdminEnquiriesPage() {
       </div>
 
       <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
-          <div className="relative w-full max-w-100">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="relative w-full sm:max-w-100">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
@@ -173,7 +173,7 @@ export default function AdminEnquiriesPage() {
               className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors"
             />
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="sm:ml-auto flex flex-wrap items-center gap-2">
             <FilterDropdown
               label="Status"
               value={statusFilter}
@@ -226,7 +226,7 @@ export default function AdminEnquiriesPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
               <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -265,7 +265,48 @@ export default function AdminEnquiriesPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+        {/* Cards — mobile */}
+        <div className="md:hidden flex flex-col">
+          {loading ? (
+            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading...</div>
+          ) : enquiries.length === 0 ? (
+            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No enquiries found.</div>
+          ) : paginated.map((enquiry) => (
+            <div key={enquiry.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <div>
+                <p className="font-semibold text-[#1A1916] text-[14px] leading-tight truncate">{fullName(enquiry)}</p>
+                <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{enquiry.email}</p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#EBF3FC] text-[#0474C4] text-[11px] font-semibold">
+                  {SUBJECT_LABELS[enquiry.subject]}
+                </span>
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_COLORS[enquiry.status]}`}>
+                  {enquiry.status}
+                </span>
+              </div>
+
+              <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                <div>
+                  <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Phone</dt>
+                  <dd className="text-[#1A1916] font-medium truncate">{enquiry.phone ?? "-"}</dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Received</dt>
+                  <dd className="text-[#1A1916] font-medium">{fmtDate(enquiry.createdAt)}</dd>
+                </div>
+              </dl>
+
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Message</p>
+                <p className="text-[12px] text-[#1A1916] font-medium line-clamp-2 mt-0.5">{enquiry.message}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
           <p className="text-[11px] text-[#A8A39C]">
             {enquiries.length === 0 ? (
               <>Showing <span className="font-semibold text-[#6B6560]">0</span> enquiries</>

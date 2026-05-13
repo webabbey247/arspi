@@ -292,12 +292,12 @@ export default function UsersPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
 
       {/* Toast */}
       {toast && (
         <div className={cn(
-          "fixed top-4 right-4 z-100 px-4 py-3 rounded-lg shadow-lg text-[13px] font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150",
+          "fixed top-4 right-4 left-4 sm:left-auto z-100 px-4 py-3 rounded-lg shadow-lg text-[13px] font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150",
           toast.ok
             ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
             : "bg-red-50 text-red-600 border border-red-200"
@@ -319,7 +319,7 @@ export default function UsersPage() {
       <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
 
         {/* Toolbar */}
-        <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
           {/* Search */}
           <div className="relative w-full sm:w-64">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -333,7 +333,7 @@ export default function UsersPage() {
             />
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="sm:ml-auto flex flex-wrap items-center gap-2">
 
             {/* Role filter */}
             <div ref={roleRef} className="relative">
@@ -442,8 +442,8 @@ export default function UsersPage() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
+        {/* Table — desktop */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
               <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -573,8 +573,103 @@ export default function UsersPage() {
           </table>
         </div>
 
+        {/* Cards — mobile */}
+        <div className="md:hidden flex flex-col">
+          {loading ? (
+            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+          ) : users.length === 0 ? (
+            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No users found.</div>
+          ) : paginated.map(user => (
+            <div key={user.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <div className="flex items-start gap-3">
+                {user.profile?.avatar ? (
+                  <Image src={user.profile.avatar} alt="" width={40} height={40} className="rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-xs font-semibold shrink-0", avatarColor(user.id))}>
+                    {initials(user.profile, user.email)}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-[#1A1916] text-[14px] leading-tight truncate">{fullName(user.profile, user.email)}</p>
+                  <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{user.email}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold", ROLE_COLORS[user.role])}>
+                  {ROLE_ICONS[user.role]}
+                  {ROLE_LABELS[user.role]}
+                </span>
+                <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold", STATUS_COLORS[user.status])}>
+                  {user.status === "ACTIVE" ? "Active" : "Disabled"}
+                </span>
+                <span className={cn(
+                  "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold",
+                  user.emailVerified ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                )}>
+                  {user.emailVerified ? "Verified" : "Pending"}
+                </span>
+              </div>
+
+              <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                <div>
+                  <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Enrolled</dt>
+                  <dd className="text-[#1A1916] font-medium">{user._count.enrollments}</dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Joined</dt>
+                  <dd className="text-[#1A1916] font-medium">{fmtDate(user.createdAt)}</dd>
+                </div>
+              </dl>
+
+              <div className="flex items-center justify-end gap-1.5 pt-1">
+                <button
+                  onClick={() => router.push(`/administrator/users/${user.id}`)}
+                  aria-label="View"
+                  className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setPwdUser(user)}
+                  aria-label="Set password"
+                  className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => toggleStatus(user)}
+                  aria-label={user.status === "ACTIVE" ? "Disable account" : "Approve account"}
+                  className={cn(
+                    "w-8 h-8 flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer",
+                    user.status === "ACTIVE"
+                      ? "border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300"
+                      : "border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:border-emerald-300"
+                  )}
+                >
+                  {user.status === "ACTIVE" ? (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                    </svg>
+                  ) : (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
           <p className="text-[11px] text-[#A8A39C]">
             {users.length === 0 ? (
               <>Showing <span className="font-semibold text-[#6B6560]">0</span> users</>

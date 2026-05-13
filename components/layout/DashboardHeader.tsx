@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react'
+import { Menu } from 'lucide-react'
 import type { SessionPayload } from "@/types/session"
 
 async function logout() {
@@ -8,7 +9,13 @@ async function logout() {
   window.location.href = '/api/auth/logout'
 }
 
-const DashboardHeader = ({ user }: { user: SessionPayload }) => {
+const DashboardHeader = ({
+  user,
+  onMenuClick,
+}: {
+  user: SessionPayload
+  onMenuClick?: () => void
+}) => {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -30,37 +37,48 @@ const DashboardHeader = ({ user }: { user: SessionPayload }) => {
 
   return (
     <>
-      <header className="col-span-full bg-white border-b border-[rgba(200,169,110,0.15)] flex items-center justify-between pr-6 sticky top-0 z-100 h-15">
+      <header className="col-span-full bg-white border-b border-[rgba(200,169,110,0.15)] flex items-center justify-between pr-3 sm:pr-6 sticky top-0 z-100 h-15">
 
-        {/* Brand */}
-        <div className="w-70 flex flex-row items-center gap-2.5 px-[1.2rem] shrink-0">
+        {/* Brand + menu */}
+        <div className="flex flex-row items-center gap-2 lg:w-70 px-3 sm:px-[1.2rem] shrink-0 min-w-0">
+          {/* Hamburger — mobile only */}
+          <button
+            type="button"
+            onClick={onMenuClick}
+            aria-label="Open menu"
+            className="lg:hidden inline-flex items-center justify-center w-8 h-8 rounded-md text-[#0474C4] hover:bg-[rgba(200,169,110,0.08)] cursor-pointer shrink-0"
+          >
+            <Menu className="w-4.5 h-4.5" />
+          </button>
+
           <div className="w-7 h-7 border-[1.5px] border-[#0474C4] rounded-full flex items-center justify-center font-heading text-[0.6875rem] font-medium text-[#0474C4] shrink-0">
             A
           </div>
           {/* Brand name — Playfair Display, 15px, -0.005em */}
-          <span className="font-heading text-[0.9375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4]">
-            ARPS Institute
+          <span className="font-heading text-[0.9375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0474C4] truncate">
+            <span className="hidden sm:inline">ARPS Institute</span>
+            <span className="sm:hidden">ARPS</span>
           </span>
           {/* Role badge — DM Sans, 10px, +0.07em, font-medium, uppercase */}
-          <span className="font-body text-[0.625rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white px-1.5 py-0.5 rounded-[3px] ml-0.5">
+          <span className="hidden sm:inline-block font-body text-[0.625rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white px-1.5 py-0.5 rounded-[3px] ml-0.5 shrink-0">
             {user?.role}
           </span>
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-[0.8rem]">
+        <div className="flex items-center gap-[0.8rem] min-w-0">
 
           {/* Avatar + dropdown */}
           <div ref={dropdownRef} className="relative">
             <button
               onClick={() => setDropdownOpen(o => !o)}
-              className="flex items-center gap-1.75 bg-transparent border-none px-3 py-1.25 cursor-pointer rounded-lg hover:bg-[rgba(200,169,110,0.08)] transition-colors"
+              className="flex items-center gap-1.75 bg-transparent border-none px-2 sm:px-3 py-1.25 cursor-pointer rounded-lg hover:bg-[rgba(200,169,110,0.08)] transition-colors"
             >
-              <div className="w-8 h-8 rounded-full bg-[#0474C4]/10 flex items-center justify-center font-body text-[0.6875rem] font-medium text-[#0474C4]">
+              <div className="w-8 h-8 rounded-full bg-[#0474C4]/10 flex items-center justify-center font-body text-[0.6875rem] font-medium text-[#0474C4] shrink-0">
                 {initials}
               </div>
               {/* Name — DM Sans, 13px, 0em, font-normal */}
-              <span className="font-body text-[0.8125rem] tracking-[0em] font-normal text-[#0474C4]">
+              <span className="hidden sm:inline font-body text-[0.8125rem] tracking-[0em] font-normal text-[#0474C4] truncate max-w-32">
                 {user.firstName ?? user.email}
               </span>
               <svg

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import type Stripe from "stripe"
 import { stripe } from "@/lib/stripe"
 import { db } from "@/lib/db"
+import { sendWorkshopConfirmationEmail } from "@/lib/email"
+import { computeDurationHours, normalizeFacilitators } from "@/lib/workshop-helpers"
 
 /** POST /api/webhooks/stripe
  *  Listens for Stripe events and confirms/cancels workshop registrations.
@@ -63,7 +65,7 @@ export async function POST(req: NextRequest) {
 
           if (!registrationId) break
 
-          await db.workshopRegistration.update({
+          const registration = await db.workshopRegistration.update({
             where: { id: registrationId },
             data:  {
               status:                  "CONFIRMED",
@@ -77,6 +79,30 @@ export async function POST(req: NextRequest) {
               data:  { registered: { increment: 1 } },
             })
           }
+
+          // Send confirmation email — non-blocking, errors are logged only
+          const workshop = workshopId
+            ? await db.workshop.findUnique({ where: { id: workshopId } }).catch(() => null)
+            : null
+
+          sendWorkshopConfirmationEmail(registration.email, {
+            firstName:      registration.firstName,
+            workshopTitle:  registration.workshopTitle,
+            workshopDate:   registration.workshopDate,
+            workshopTime:   registration.workshopTime,
+            fee:            registration.fee,
+            isConfirmed:    true,
+            category:       workshop?.category,
+            level:          workshop?.level,
+            duration:       computeDurationHours(workshop?.startTime, workshop?.endTime) ?? undefined,
+            facilitators:   normalizeFacilitators(workshop?.facilitators).map(f => f.fullName),
+            medium:         workshop?.medium,
+            onlinePlatform: workshop?.onlinePlatform,
+            onlineLink:     workshop?.onlineLink,
+            venueAddress:   workshop?.venueAddress,
+            venueCity:      workshop?.venueCity,
+            venueCountry:   workshop?.venueCountry,
+          }).catch(err => console.error("[stripe webhook] workshop confirmation email failed:", err))
         }
         break
       }

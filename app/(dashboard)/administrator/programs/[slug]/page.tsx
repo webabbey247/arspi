@@ -255,7 +255,7 @@ export default function ProgramDetailPage() {
 
   if (loading) {
     return (
-      <div className="px-8 py-8 max-w-350 mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
         <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">Loading…</div>
       </div>
     )
@@ -263,17 +263,17 @@ export default function ProgramDetailPage() {
 
   if (error || !program) {
     return (
-      <div className="px-8 py-8 max-w-350 mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
         <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">{error ?? "Program not found."}</div>
       </div>
     )
   }
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto space-y-5">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto space-y-5">
 
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/administrator/programs")}
@@ -301,7 +301,7 @@ export default function ProgramDetailPage() {
       </div>
 
       {/* Analytics cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Enrolled" value={total} sub={`of ${program._count.enrollments} registered`} />
         <StatCard
           label="Revenue"
@@ -539,83 +539,163 @@ export default function ProgramDetailPage() {
         ) : enrollments.length === 0 ? (
           <div className="p-8 flex items-center justify-center text-[13px] text-[#A8A39C]">No enrollments yet.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr className="border-b border-[#F0EEE9]">
-                  {["Name", "Email", "Status", "Enrolled", "Completed", "Certificate", ""].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {enrollments.map((e, i) => (
-                  <tr key={e.id} className={cn("border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors", i % 2 === 0 ? "" : "bg-[#FAFAF9]/40")}>
-                    <td className="px-4 py-3 font-medium text-[#1A1916] whitespace-nowrap">{userName(e)}</td>
-                    <td className="px-4 py-3 text-[#6B6560]">{e.user.email}</td>
-                    <td className="px-4 py-3">
-                      <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", STATUS_COLORS[e.status])}>
-                        {e.status.charAt(0) + e.status.slice(1).toLowerCase()}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(e.enrolledAt)}</td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(e.completedAt)}</td>
-
-                    {/* Certificate column */}
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {e.certificate ? (
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700">Issued</span>
-                          <a
-                            href={`/verify/${e.certificate.verifyCode}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[11px] text-[#0474C4] hover:underline"
-                          >
-                            Verify
-                          </a>
-                        </div>
-                      ) : e.status === "COMPLETED" ? (
-                        <button
-                          onClick={() => issueCert(e.id, e.userId, e.courseId)}
-                          disabled={actionId === e.id}
-                          className="text-[11px] font-semibold text-[#0474C4] hover:text-[#06457F] disabled:opacity-50 transition-colors cursor-pointer"
-                        >
-                          {actionId === e.id ? "Issuing…" : "Issue Certificate"}
-                        </button>
-                      ) : (
-                        <span className="text-[#A8A39C]">—</span>
-                      )}
-                    </td>
-
-                    {/* Actions column */}
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {e.status === "ACTIVE" && (
-                          <button
-                            onClick={() => markComplete(e.id)}
-                            disabled={actionId === e.id}
-                            className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-800 disabled:opacity-50 transition-colors cursor-pointer"
-                          >
-                            {actionId === e.id ? "Saving…" : "Mark Complete"}
-                          </button>
-                        )}
-                        {e.certificate && (
-                          <button
-                            onClick={() => revokeCert(e.certificate!.id, e.id)}
-                            disabled={actionId === e.id}
-                            className="text-[11px] font-semibold text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors cursor-pointer"
-                          >
-                            Revoke
-                          </button>
-                        )}
-                      </div>
-                    </td>
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-[13px]">
+                <thead>
+                  <tr className="border-b border-[#F0EEE9]">
+                    {["Name", "Email", "Status", "Enrolled", "Completed", "Certificate", ""].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide whitespace-nowrap">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {enrollments.map((e, i) => (
+                    <tr key={e.id} className={cn("border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors", i % 2 === 0 ? "" : "bg-[#FAFAF9]/40")}>
+                      <td className="px-4 py-3 font-medium text-[#1A1916] whitespace-nowrap">{userName(e)}</td>
+                      <td className="px-4 py-3 text-[#6B6560]">{e.user.email}</td>
+                      <td className="px-4 py-3">
+                        <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", STATUS_COLORS[e.status])}>
+                          {e.status.charAt(0) + e.status.slice(1).toLowerCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(e.enrolledAt)}</td>
+                      <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(e.completedAt)}</td>
+
+                      {/* Certificate column */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {e.certificate ? (
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700">Issued</span>
+                            <a
+                              href={`/verify/${e.certificate.verifyCode}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[11px] text-[#0474C4] hover:underline"
+                            >
+                              Verify
+                            </a>
+                          </div>
+                        ) : e.status === "COMPLETED" ? (
+                          <button
+                            onClick={() => issueCert(e.id, e.userId, e.courseId)}
+                            disabled={actionId === e.id}
+                            className="text-[11px] font-semibold text-[#0474C4] hover:text-[#06457F] disabled:opacity-50 transition-colors cursor-pointer"
+                          >
+                            {actionId === e.id ? "Issuing…" : "Issue Certificate"}
+                          </button>
+                        ) : (
+                          <span className="text-[#A8A39C]">—</span>
+                        )}
+                      </td>
+
+                      {/* Actions column */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          {e.status === "ACTIVE" && (
+                            <button
+                              onClick={() => markComplete(e.id)}
+                              disabled={actionId === e.id}
+                              className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-800 disabled:opacity-50 transition-colors cursor-pointer"
+                            >
+                              {actionId === e.id ? "Saving…" : "Mark Complete"}
+                            </button>
+                          )}
+                          {e.certificate && (
+                            <button
+                              onClick={() => revokeCert(e.certificate!.id, e.id)}
+                              disabled={actionId === e.id}
+                              className="text-[11px] font-semibold text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors cursor-pointer"
+                            >
+                              Revoke
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden flex flex-col">
+              {enrollments.map(e => (
+                <div key={e.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[#1A1916] text-[14px] leading-tight truncate">{userName(e)}</p>
+                      <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{e.user.email}</p>
+                    </div>
+                    <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0", STATUS_COLORS[e.status])}>
+                      {e.status.charAt(0) + e.status.slice(1).toLowerCase()}
+                    </span>
+                  </div>
+
+                  <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12px]">
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Enrolled</dt>
+                      <dd className="text-[#1A1916] font-medium">{fmtDate(e.enrolledAt)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Completed</dt>
+                      <dd className="text-[#1A1916] font-medium">{fmtDate(e.completedAt)}</dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Certificate</dt>
+                      <dd className="text-[#1A1916] font-medium mt-0.5">
+                        {e.certificate ? (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700">Issued</span>
+                            <a
+                              href={`/verify/${e.certificate.verifyCode}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[11px] text-[#0474C4] hover:underline"
+                            >
+                              Verify
+                            </a>
+                          </div>
+                        ) : e.status === "COMPLETED" ? (
+                          <button
+                            onClick={() => issueCert(e.id, e.userId, e.courseId)}
+                            disabled={actionId === e.id}
+                            className="text-[11px] font-semibold text-[#0474C4] hover:text-[#06457F] disabled:opacity-50 transition-colors cursor-pointer"
+                          >
+                            {actionId === e.id ? "Issuing…" : "Issue Certificate"}
+                          </button>
+                        ) : (
+                          <span className="text-[#A8A39C]">—</span>
+                        )}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  {(e.status === "ACTIVE" || e.certificate) && (
+                    <div className="flex flex-wrap items-center gap-3 pt-1">
+                      {e.status === "ACTIVE" && (
+                        <button
+                          onClick={() => markComplete(e.id)}
+                          disabled={actionId === e.id}
+                          className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-800 disabled:opacity-50 transition-colors cursor-pointer"
+                        >
+                          {actionId === e.id ? "Saving…" : "Mark Complete"}
+                        </button>
+                      )}
+                      {e.certificate && (
+                        <button
+                          onClick={() => revokeCert(e.certificate!.id, e.id)}
+                          disabled={actionId === e.id}
+                          className="text-[11px] font-semibold text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors cursor-pointer"
+                        >
+                          Revoke
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

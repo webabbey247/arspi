@@ -200,14 +200,14 @@ Promotes excellence in professional education and research capacity development 
               priority
             />
           </div>
-          <div className="mt-4 sm:mt-5">
+          {/* <div className="mt-4 sm:mt-5">
             <h2 className="font-heading text-xl sm:text-2xl font-semibold text-[#1a1a1a] tracking-tight leading-snug">
              Professor Bunmi Omodan
             </h2>
             <p className="text-sm sm:text-base text-[#444] mt-1 font-light tracking-wide">
               Chairman and Chief Executive Officer
             </p>
-          </div>
+          </div> */}
         </div>
 
         {/* Right: Executive Committee + Board of Directors */}

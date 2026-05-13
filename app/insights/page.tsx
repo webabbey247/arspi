@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Clock, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import withLayout from "@/hooks/useLayout";
@@ -25,6 +26,7 @@ function pageWindow(current: number, total: number): (number | "…")[] {
 function InsightCardSkeleton() {
   return (
     <div className="border border-[#0474C4]/15 rounded overflow-hidden flex flex-col animate-pulse">
+      <div className="w-full aspect-video bg-slate-200" />
       <div className="p-6 flex flex-col flex-1">
         <div className="flex items-center justify-between mb-4">
           <div className="h-5 w-20 bg-slate-200 rounded" />
@@ -133,6 +135,16 @@ function InsightCardSkeleton() {
           >
             <div className="h-1 bg-[#0474C4]" />
 
+            <div className="relative w-full aspect-[16/9] overflow-hidden bg-slate-100">
+              <Image
+                src={ins.coverImage || "/images/placeholder-img.png"}
+                alt={ins.title}
+                fill
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+              />
+            </div>
+
             <div className="p-5 sm:p-6 md:p-7 flex flex-col flex-1">
 
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
@@ -223,8 +235,17 @@ function InsightCardSkeleton() {
                   <Link
                     key={ins.slug}
                     href={`/insights/${ins.slug}`}
-                    className="group border border-[#0474C4]/25 rounded overflow-hidden hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all no-underline flex flex-col"
+                    className="group border border-[#0474C4]/25 rounded overflow-hidden hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all no-underline flex flex-col bg-white"
                   >
+                    <div className="relative w-full aspect-[16/9] overflow-hidden bg-slate-100">
+                      <Image
+                        src={ins.coverImage || "/images/placeholder-img.png"}
+                        alt={ins.title}
+                        fill
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      />
+                    </div>
                     <div className="p-5 sm:p-6 flex flex-col flex-1">
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-3 sm:mb-4">
                         <Badge className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] font-medium bg-[#0474C4]/10 text-[#0474C4] border-0 px-2 py-0.5">

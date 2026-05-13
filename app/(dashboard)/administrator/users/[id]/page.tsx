@@ -131,10 +131,10 @@ function SetPasswordDialog({
 
   return (
     <div
-      className="fixed inset-0 z-60 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 px-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="w-full max-w-sm bg-white rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 mx-4">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E2DC] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-[10px] bg-[#FDF3E0] flex items-center justify-center shrink-0">
@@ -297,7 +297,7 @@ export default function UserDetailPage() {
 
   if (loading) {
     return (
-      <div className="px-8 py-8 max-w-350 mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
         <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">
           Loading…
         </div>
@@ -307,7 +307,7 @@ export default function UserDetailPage() {
 
   if (!user) {
     return (
-      <div className="px-8 py-8 max-w-350 mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
         <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">
           User not found.
         </div>
@@ -318,12 +318,12 @@ export default function UserDetailPage() {
   const name = fullName(user.profile, user.email)
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto space-y-5">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto space-y-5">
 
       {/* Toast */}
       {toast && (
         <div className={cn(
-          "fixed top-4 right-4 z-100 px-4 py-3 rounded-lg shadow-lg text-[13px] font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150",
+          "fixed top-4 right-4 left-4 sm:left-auto z-100 px-4 py-3 rounded-lg shadow-lg text-[13px] font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150",
           toast.ok
             ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
             : "bg-red-50 text-red-600 border border-red-200"
@@ -334,7 +334,7 @@ export default function UserDetailPage() {
       )}
 
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/administrator/users")}
@@ -351,7 +351,7 @@ export default function UserDetailPage() {
         </div>
 
         {/* Actions — single ⋯ menu */}
-        <div ref={menuRef} className="relative">
+        <div ref={menuRef} className="relative self-start sm:self-auto">
           <button
             onClick={() => setMenuOpen(o => !o)}
             className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"

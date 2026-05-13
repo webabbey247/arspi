@@ -130,12 +130,12 @@ export default function AdminCareerDetailPage() {
   useEffect(() => { fetchApplicants() }, [fetchApplicants])
 
   if (loading) {
-    return <div className="px-8 py-8 max-w-350 mx-auto text-[#A8A39C] text-[13px]">Loading…</div>
+    return <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto text-[#A8A39C] text-[13px]">Loading…</div>
   }
 
   if (error || !career) {
     return (
-      <div className="px-8 py-8 max-w-350 mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
         <p className="text-[13px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
           {error ?? "Career posting not found."}
         </p>
@@ -149,7 +149,7 @@ export default function AdminCareerDetailPage() {
   const benefits         = asArr(career.benefits)
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
       {/* Back */}
       <Link href="/administrator/careers" className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#6B6560] hover:text-[#0474C4] transition-colors mb-4">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
@@ -279,50 +279,92 @@ export default function AdminCareerDetailPage() {
         ) : applicants.length === 0 ? (
           <div className="px-5 py-10 text-center text-[12px] text-[#A8A39C]">No applications yet.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-[12px]">
-              <thead className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
-                <tr className="text-left text-[10px] font-bold text-[#A8A39C] uppercase tracking-[0.5px]">
-                  <th className="px-5 py-2.5">Name</th>
-                  <th className="px-3 py-2.5">Email</th>
-                  <th className="px-3 py-2.5">Country</th>
-                  <th className="px-3 py-2.5">Mobile</th>
-                  <th className="px-3 py-2.5">Resume</th>
-                  <th className="px-3 py-2.5">Cover letter</th>
-                  <th className="px-3 py-2.5">LinkedIn</th>
-                  <th className="px-3 py-2.5">Source</th>
-                  <th className="px-5 py-2.5">Submitted</th>
-                </tr>
-              </thead>
-              <tbody>
-                {applicants.map((a) => (
-                  <tr key={a.id} className="border-b border-[#F5F4F1] last:border-b-0 text-[#1A1916]">
-                    <td className="px-5 py-3 font-semibold">{a.fullName}</td>
-                    <td className="px-3 py-3 text-[#3F3B36]">
-                      <a href={`mailto:${a.email}`} className="hover:text-[#0474C4]">{a.email}</a>
-                    </td>
-                    <td className="px-3 py-3 text-[#3F3B36]">{a.country}</td>
-                    <td className="px-3 py-3 text-[#3F3B36]">{a.mobile}</td>
-                    <td className="px-3 py-3">
-                      <a href={a.resumeUrl} target="_blank" rel="noreferrer" className="text-[#0474C4] hover:underline">View</a>
-                    </td>
-                    <td className="px-3 py-3">
-                      {a.coverLetterUrl
-                        ? <a href={a.coverLetterUrl} target="_blank" rel="noreferrer" className="text-[#0474C4] hover:underline">View</a>
-                        : <span className="text-[#A8A39C]">—</span>}
-                    </td>
-                    <td className="px-3 py-3">
-                      {a.linkedinUrl
-                        ? <a href={a.linkedinUrl} target="_blank" rel="noreferrer" className="text-[#0474C4] hover:underline">Profile</a>
-                        : <span className="text-[#A8A39C]">—</span>}
-                    </td>
-                    <td className="px-3 py-3 text-[#3F3B36]">{a.source ?? "—"}</td>
-                    <td className="px-5 py-3 text-[#A8A39C] whitespace-nowrap">{fmtDate(a.createdAt)}</td>
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-[12px]">
+                <thead className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                  <tr className="text-left text-[10px] font-bold text-[#A8A39C] uppercase tracking-[0.5px]">
+                    <th className="px-5 py-2.5">Name</th>
+                    <th className="px-3 py-2.5">Email</th>
+                    <th className="px-3 py-2.5">Country</th>
+                    <th className="px-3 py-2.5">Mobile</th>
+                    <th className="px-3 py-2.5">Resume</th>
+                    <th className="px-3 py-2.5">Cover letter</th>
+                    <th className="px-3 py-2.5">LinkedIn</th>
+                    <th className="px-3 py-2.5">Source</th>
+                    <th className="px-5 py-2.5">Submitted</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {applicants.map((a) => (
+                    <tr key={a.id} className="border-b border-[#F5F4F1] last:border-b-0 text-[#1A1916]">
+                      <td className="px-5 py-3 font-semibold">{a.fullName}</td>
+                      <td className="px-3 py-3 text-[#3F3B36]">
+                        <a href={`mailto:${a.email}`} className="hover:text-[#0474C4]">{a.email}</a>
+                      </td>
+                      <td className="px-3 py-3 text-[#3F3B36]">{a.country}</td>
+                      <td className="px-3 py-3 text-[#3F3B36]">{a.mobile}</td>
+                      <td className="px-3 py-3">
+                        <a href={a.resumeUrl} target="_blank" rel="noreferrer" className="text-[#0474C4] hover:underline">View</a>
+                      </td>
+                      <td className="px-3 py-3">
+                        {a.coverLetterUrl
+                          ? <a href={a.coverLetterUrl} target="_blank" rel="noreferrer" className="text-[#0474C4] hover:underline">View</a>
+                          : <span className="text-[#A8A39C]">—</span>}
+                      </td>
+                      <td className="px-3 py-3">
+                        {a.linkedinUrl
+                          ? <a href={a.linkedinUrl} target="_blank" rel="noreferrer" className="text-[#0474C4] hover:underline">Profile</a>
+                          : <span className="text-[#A8A39C]">—</span>}
+                      </td>
+                      <td className="px-3 py-3 text-[#3F3B36]">{a.source ?? "—"}</td>
+                      <td className="px-5 py-3 text-[#A8A39C] whitespace-nowrap">{fmtDate(a.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden flex flex-col">
+              {applicants.map((a) => (
+                <div key={a.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                  <div>
+                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{a.fullName}</p>
+                    <a href={`mailto:${a.email}`} className="text-[12px] text-[#A8A39C] hover:text-[#0474C4] block truncate mt-0.5">{a.email}</a>
+                  </div>
+
+                  <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12px]">
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Country</dt>
+                      <dd className="text-[#1A1916] font-medium">{a.country}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Mobile</dt>
+                      <dd className="text-[#1A1916] font-medium">{a.mobile}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Source</dt>
+                      <dd className="text-[#1A1916] font-medium">{a.source ?? "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Submitted</dt>
+                      <dd className="text-[#1A1916] font-medium">{fmtDate(a.createdAt)}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="flex flex-wrap items-center gap-3 text-[12px] pt-1">
+                    <a href={a.resumeUrl} target="_blank" rel="noreferrer" className="font-semibold text-[#0474C4] hover:underline">Resume</a>
+                    {a.coverLetterUrl && (
+                      <a href={a.coverLetterUrl} target="_blank" rel="noreferrer" className="font-semibold text-[#0474C4] hover:underline">Cover letter</a>
+                    )}
+                    {a.linkedinUrl && (
+                      <a href={a.linkedinUrl} target="_blank" rel="noreferrer" className="font-semibold text-[#0474C4] hover:underline">LinkedIn</a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Pager — hidden when no rows */}

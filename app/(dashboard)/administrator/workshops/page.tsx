@@ -1017,16 +1017,16 @@ export default function AdminWorkshopsPage() {
   }
 
   return (
-    <div className="px-8 py-8 max-w-350 mx-auto">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
       {/* Page header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-[18px] font-extrabold text-[#1A1916]">Workshops</h1>
           <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage workshops, webinars and masterclasses</p>
         </div>
         <button
           onClick={() => setModal("create")}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
+          className="self-start sm:self-auto flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New Workshop
@@ -1034,7 +1034,7 @@ export default function AdminWorkshopsPage() {
       </div>
 
       {/* Category filter tabs */}
-      <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 w-fit flex-wrap">
+      <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 overflow-x-auto sm:overflow-x-visible sm:w-fit sm:flex-wrap">
         {([
           ["ALL",         "All"],
           ["SHORT_COURSE","Short Course"],
@@ -1046,7 +1046,7 @@ export default function AdminWorkshopsPage() {
           <button
             key={val}
             onClick={() => setCatTabFilter(val)}
-            className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold transition-colors cursor-pointer ${catTabFilter === val ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}
+            className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-[9px] text-[13px] font-semibold transition-colors cursor-pointer ${catTabFilter === val ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}
           >
             {label}
             <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${catTabFilter === val ? "bg-[#F5F4F1] text-[#6B6560]" : "bg-[#E5E2DC] text-[#A8A39C]"}`}>{catCounts[val]}</span>
@@ -1057,13 +1057,13 @@ export default function AdminWorkshopsPage() {
       {/* Table card */}
       <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
         {/* Toolbar */}
-        <div className="flex items-center gap-2 px-4 py-3 bg-white border-b border-[#E5E2DC]">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
           <div className="relative w-full sm:w-64">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search workshops…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="sm:ml-auto flex flex-wrap items-center gap-2">
             <div ref={filterRef} className="relative">
               <button
                 onClick={() => setFilterOpen(o => !o)}
@@ -1089,8 +1089,8 @@ export default function AdminWorkshopsPage() {
           </div>
         </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
+          {/* Table — desktop */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
@@ -1210,8 +1210,102 @@ export default function AdminWorkshopsPage() {
             </table>
           </div>
 
+          {/* Cards — mobile */}
+          <div className="md:hidden flex flex-col">
+            {loading ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            ) : filtered.length === 0 ? (
+              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No workshops found.</div>
+            ) : paginated.map(workshop => (
+              <div key={workshop.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  {workshop.coverImage ? (
+                    <div className="relative w-10 h-10 rounded-[8px] overflow-hidden shrink-0 border border-[#E5E2DC]">
+                      <Image src={workshop.coverImage} alt={workshop.title} fill className="object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-[8px] bg-[#F5F4F1] flex items-center justify-center shrink-0">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A39C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                      </svg>
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight line-clamp-2">{workshop.title}</p>
+                    {workshop.facilitator && (
+                      <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{workshop.facilitator}</p>
+                    )}
+                    {workshop.featured && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#0474C4] mt-0.5">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Featured
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${TYPE_COLORS[workshop.type]}`}>
+                    {TYPE_LABELS[workshop.type]}
+                  </span>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${CATEGORY_COLORS[workshop.category]}`}>
+                    {CATEGORY_LABELS[workshop.category]}
+                  </span>
+                  <StatusBadge
+                    published={workshop.published}
+                    loading={togglingIds.has(workshop.id)}
+                    onClick={() => handleTogglePublished(workshop)}
+                  />
+                </div>
+
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Fee</dt>
+                    <dd className={`font-medium ${workshop.fee === 0 ? "text-emerald-600" : "text-[#1A1916]"}`}>{fmtFee(workshop.fee)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Date</dt>
+                    <dd className="text-[#1A1916] font-medium">{fmtDate(workshop.date)}</dd>
+                  </div>
+                </dl>
+
+                <div className="flex items-center justify-end gap-1.5 pt-1">
+                  <button
+                    onClick={() => router.push(`/administrator/workshops/${workshop.id}`)}
+                    aria-label="Analytics & details"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                  </button>
+                  <button
+                    onClick={() => setModal(workshop)}
+                    aria-label="Edit"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget(workshop)}
+                    aria-label="Delete"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Footer */}
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
             <p className="text-[11px] text-[#A8A39C]">
               {filtered.length === 0 ? "No entries" : <>
                 Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span> of{" "}
