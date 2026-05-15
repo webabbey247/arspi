@@ -50,7 +50,7 @@ const ContactPage = () => {
                   Phone
                 </span>
                 <span className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-[#262b40]">
-                  8:00 AM – 4:00 PM UTC
+                 -
                 </span>
               </div>
             </div>
