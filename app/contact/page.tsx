@@ -41,7 +41,7 @@ const ContactPage = () => {
                   Email
                 </span>
                 <span className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-[#262b40] break-all">
-                  press-media@arpsinstitute.org
+                 support@iarps.com
                 </span>
               </div>
 
