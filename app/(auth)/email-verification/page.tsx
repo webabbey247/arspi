@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import ResendEmailVerificationForm from "@/components/forms/ResendEmailVerificationForm";
 import withAuthLayout from "@/hooks/useAuthLayout";
@@ -14,21 +14,21 @@ const EmailVerificationPage = () => {
   const token = searchParams.get("token");
   const [resendMail, setResendMail] = useState<boolean>(false);
   const { verifyEmail, isLoading } = useEmailVerification();
-
-  const handleEmailVerification = async () => {
-    if (!token) return;
-    const result = await verifyEmail(token);
-    if (result.success) {
-      setTimeout(() => router.push("/login"), 3000);
-    } else {
-      toast.error(result.error || "Verification failed. Please try again.");
-    }
-  };
+  const hasVerifiedRef = useRef(false);
 
   useEffect(() => {
-    if (!token) return;
-    handleEmailVerification();
-  });
+    if (!token || hasVerifiedRef.current) return;
+    hasVerifiedRef.current = true;
+
+    (async () => {
+      const result = await verifyEmail(token);
+      if (result.success) {
+        setTimeout(() => router.push("/login"), 3000);
+      } else {
+        toast.error(result.error || "Verification failed. Please try again.");
+      }
+    })();
+  }, [token, router, verifyEmail]);
   return (
     <>
       {token && isLoading ? (
