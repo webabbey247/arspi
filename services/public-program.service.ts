@@ -2,7 +2,7 @@ export type PublicProgram = {
   id:          string
   title:       string
   slug:        string
-  description: string
+  excerpt:     string
   thumbnail:   string | null
   price:       number
   level:       string

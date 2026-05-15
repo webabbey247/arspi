@@ -4,7 +4,7 @@ import * as React from "react";
 import withLayout from "@/hooks/useLayout";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, ChevronRight, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import {
   getPrograms,
   getProgramLookups,
@@ -409,21 +409,25 @@ const ProgramsPage = () => {
                         </span>
                       </div>
 
-                      <div className="px-5 pt-[1.3rem] pb-[1.5rem]">
-                        <div className="flex items-center gap-2 mb-3">
+                      <div className="px-5 pt-[1.3rem] pb-6">
+                        {/* <div className="flex items-center gap-2 mb-3">
                           <div className="w-8 h-8 rounded-full bg-[#0474C4] text-white font-body text-[0.8125rem] font-medium flex items-center justify-center shrink-0">
                             {initials}
                           </div>
                           <span className="font-body text-[0.8125rem] font-normal text-slate-600 truncate">
                             {prog.instructor.name}
                           </span>
-                        </div>
+                        </div> */}
 
                         <h3 className="font-heading text-[1.02rem] font-normal text-[#071639] leading-[1.35] mb-4 line-clamp-2">
                           {prog.title}
                         </h3>
+                        <p className="font-body text-[0.8125rem] text-slate-500 leading-relaxed line-clamp-2">
+                          {prog.excerpt}
+                          </p>
+              
 
-                        <div className="flex gap-[1.2rem] items-center">
+                        <div className="flex gap-[1.2rem] items-center mt-4">
                           {prog.duration && (
                             <>
                               <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
@@ -431,7 +435,7 @@ const ProgramsPage = () => {
                                   <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2" />
                                   <path d="M8 5v3.5l2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                                 </svg>
-                                {prog.duration}
+                                {prog.duration.length > 1 ? `${prog.duration} hrs` : `${prog.duration} hr`}
                               </span>
                               <span className="w-0.75 h-0.75 rounded-full bg-slate-400/30" />
                             </>
