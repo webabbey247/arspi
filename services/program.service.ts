@@ -1,7 +1,15 @@
 import { db } from "@/lib/db"
+import { revalidateTag } from "next/cache"
 import { CourseLevel } from "@prisma/client"
 
 export type { CourseLevel }
+
+/** Tag for /api/programs/public listing cache. */
+export const PROGRAMS_PUBLIC_TAG = "programs:public"
+
+export function bumpProgramsPublicCache() {
+  revalidateTag(PROGRAMS_PUBLIC_TAG, "max")
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -171,6 +179,7 @@ export async function createProgramCategory(
     data:    { name, slug },
     include: { _count: { select: { courses: true } } },
   })
+  bumpProgramsPublicCache()
   return { success: true, data: row as unknown as ProgramCategoryRow }
 }
 
@@ -190,6 +199,7 @@ export async function updateProgramCategory(
     data:    { name, slug },
     include: { _count: { select: { courses: true } } },
   })
+  bumpProgramsPublicCache()
   return { success: true, data: row as unknown as ProgramCategoryRow }
 }
 
@@ -211,6 +221,7 @@ export async function deleteProgramCategory(
   }
 
   await db.category.delete({ where: { id } })
+  bumpProgramsPublicCache()
   return { success: true, data: null }
 }
 
@@ -233,6 +244,86 @@ export async function getPrograms(filters?: {
     orderBy: { createdAt: "desc" },
   })
   return rows as unknown as ProgramRow[]
+}
+
+/** Listing-shaped fetch for /api/programs/public.
+ *  Drops the heavy JSON columns (overview, targetAudience, learningObjectives,
+ *  curriculum, whatIsIncluded, faqs, facilitators) and the unused
+ *  category._count.courses aggregate — these are detail-page only. */
+export type ProgramListingRow = {
+  id:          string
+  title:       string
+  slug:        string
+  excerpt:     string
+  thumbnail:   string | null
+  price:       number
+  pricing:     string
+  paymentType: string | null
+  level:       CourseLevel
+  featured:    boolean
+  tagline:     string | null
+  duration:    string | null
+  format:      string | null
+  startDate:   string | null
+  endDate:     string | null
+  rating:      number | null
+  reviewCount: number | null
+  createdAt:   Date
+  instructor:  {
+    email:   string
+    profile: { firstName: string | null; lastName: string | null } | null
+  }
+  category:        { id: string; name: string; slug: string } | null
+  programLevel:    { id: string; name: string; slug: string } | null
+  programFormat:   { id: string; name: string; slug: string } | null
+  programPricing:  { id: string; name: string; slug: string } | null
+  _count:          { enrollments: number }
+}
+
+export async function getProgramsForListing(filters?: {
+  categoryId?:   string
+  level?:        CourseLevel
+  featured?:     boolean
+}): Promise<ProgramListingRow[]> {
+  return db.course.findMany({
+    where: {
+      ...(filters?.categoryId !== undefined && { categoryId: filters.categoryId }),
+      ...(filters?.level      !== undefined && { level:      filters.level      }),
+      ...(filters?.featured   !== undefined && { featured:   filters.featured   }),
+    },
+    select: {
+      id:          true,
+      title:       true,
+      slug:        true,
+      excerpt:     true,
+      thumbnail:   true,
+      price:       true,
+      pricing:     true,
+      paymentType: true,
+      level:       true,
+      featured:    true,
+      tagline:     true,
+      duration:    true,
+      format:      true,
+      startDate:   true,
+      endDate:     true,
+      rating:      true,
+      reviewCount: true,
+      createdAt:   true,
+      instructor: {
+        select: {
+          email:   true,
+          profile: { select: { firstName: true, lastName: true } },
+        },
+      },
+      category:       { select: { id: true, name: true, slug: true } },
+      programLevel:   { select: { id: true, name: true, slug: true } },
+      programFormat:  { select: { id: true, name: true, slug: true } },
+      programPricing: { select: { id: true, name: true, slug: true } },
+      _count:         { select: { enrollments: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  })
 }
 
 export async function getProgramById(id: string): Promise<ProgramRow | null> {
@@ -292,6 +383,7 @@ export async function createProgram(
     },
     include: programInclude,
   })
+  bumpProgramsPublicCache()
   return { success: true, data: row as unknown as ProgramRow }
 }
 
@@ -347,6 +439,7 @@ export async function updateProgram(
     },
     include: programInclude,
   })
+  bumpProgramsPublicCache()
   return { success: true, data: row as unknown as ProgramRow }
 }
 
@@ -366,6 +459,7 @@ export async function deleteProgram(id: string): Promise<ProgramServiceResult<nu
   }
 
   await db.course.delete({ where: { id } })
+  bumpProgramsPublicCache()
   return { success: true, data: null }
 }
 

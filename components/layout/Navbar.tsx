@@ -39,8 +39,9 @@ function NavAvatarDropdown({ session }: { session: SessionInfo }) {
     return () => document.removeEventListener("mousedown", h)
   }, [])
 
-  function logout() {
-    window.location.href = "/api/auth/logout"
+  async function logout() {
+    const resp = await fetch("/api/auth/logout", { method: "POST" })
+    window.location.href = resp.redirected ? resp.url : "/login"
   }
 
   return (

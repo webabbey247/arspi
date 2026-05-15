@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import withLayout from "@/hooks/useLayout";
 import { getInsightBySlug, type PublicInsightDetailResponse } from "@/services/public-insight.service";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 function InsightDetailSkeleton() {
   return (
@@ -243,7 +244,7 @@ const InsightDetailPage = () => {
         <article className="w-full min-w-0">
           <div
               className="prose prose-slate max-w-none font-body text-[0.9375rem] sm:text-[1rem] leading-[1.75] sm:leading-[1.8] text-[#1A1916] [&_h2]:tracking-[-0.01em] [&_h2]:leading-tight [&_h2]:font-heading [&_h2]:text-[#071639] [&_h2]:mt-6 sm:[&_h2]:mt-8 md:[&_h2]:mt-10 [&_h2]:mb-2 [&_h2]:text-[1.25rem] sm:[&_h2]:text-[1.5rem] md:[&_h2]:text-[1.75rem] [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ml-5 sm:[&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-5 sm:[&_ol]:ml-6 [&_img]:max-w-full [&_img]:h-auto"
-            dangerouslySetInnerHTML={{ __html: ins.body }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(ins.body) }}
           />
           <div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-sapphire/20 flex items-center gap-2 sm:gap-3 md:gap-4 flex-wrap">
             <span className="text-[0.625rem] sm:text-[0.68rem] uppercase tracking-widest text-slate-400">

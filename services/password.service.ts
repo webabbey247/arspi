@@ -6,6 +6,12 @@ import { sendPasswordResetEmail } from "@/lib/email"
 const TOKEN_TTL_MS = 60 * 60 * 1000 // 1 hour
 const BASE_URL     = process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
 
+// Deterministic SHA-256 so we can index/look up by the hash. The raw token is
+// only emailed; the DB only stores the hash, so a DB read can't be replayed.
+function hashToken(raw: string): string {
+  return crypto.createHash("sha256").update(raw).digest("hex")
+}
+
 // ── Request reset ──────────────────────────────────────────────────────────
 
 export async function requestPasswordReset(email: string): Promise<void> {
@@ -23,17 +29,17 @@ export async function requestPasswordReset(email: string): Promise<void> {
     data:   { used: true },
   })
 
-  const token = crypto.randomBytes(32).toString("hex")
+  const rawToken = crypto.randomBytes(32).toString("hex")
 
   await db.passwordResetToken.create({
     data: {
       userId:    user.id,
-      token,
+      token:     hashToken(rawToken),
       expiresAt: new Date(Date.now() + TOKEN_TTL_MS),
     },
   })
 
-  const resetLink = `${BASE_URL}/reset-password?token=${token}`
+  const resetLink = `${BASE_URL}/reset-password?token=${rawToken}`
   await sendPasswordResetEmail(email, resetLink)
 }
 
@@ -43,9 +49,9 @@ export type ResetPasswordResult =
   | { success: true }
   | { success: false; reason: "invalid_token" | "expired_token" }
 
-export async function resetPassword(token: string, newPassword: string): Promise<ResetPasswordResult> {
+export async function resetPassword(rawToken: string, newPassword: string): Promise<ResetPasswordResult> {
   const record = await db.passwordResetToken.findUnique({
-    where: { token },
+    where: { token: hashToken(rawToken) },
   })
 
   if (!record || record.used) {

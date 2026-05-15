@@ -2,13 +2,10 @@ import "server-only"
 import { cookies } from "next/headers"
 import { jwtVerify } from "jose"
 import { redirect } from "next/navigation"
+import { getSessionSecret } from "@/lib/auth-secret"
 
 export type { SessionPayload } from "@/types/session"
 import type { SessionPayload } from "@/types/session"
-
-const secret = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET ?? "dev-secret-change-in-production"
-)
 
 export async function getSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies()
@@ -16,7 +13,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   if (!token) return null
 
   try {
-    const { payload } = await jwtVerify(token, secret)
+    const { payload } = await jwtVerify(token, getSessionSecret(), { algorithms: ["HS256"] })
     return payload as unknown as SessionPayload
   } catch {
     return null

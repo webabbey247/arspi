@@ -4,6 +4,7 @@ import { Briefcase, Calendar, ChevronLeft, GraduationCap, Mail, MapPin } from "l
 import { getCareerBySlug } from "@/services/career.service"
 import withLayout from "@/hooks/useLayout"
 import ApplyCTA from "./ApplyCTA"
+import { sanitizeHtml } from "@/lib/sanitize"
 
 type CareerType      = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY"
 type ExperienceLevel = "ENTRY" | "JUNIOR" | "MID" | "SENIOR" | "LEAD" | "EXECUTIVE"
@@ -107,7 +108,7 @@ const CareerDetailPage = async ({
               <h2 className="font-heading text-[1.25rem] tracking-[-0.005em] font-semibold text-[#0474C4] mb-4">About the role</h2>
               <div
                 className="font-body text-[0.9375rem] leading-[1.7] text-slate-600 prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: career.description }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(career.description) }}
               />
             </div>
 

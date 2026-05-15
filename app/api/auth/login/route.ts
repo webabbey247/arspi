@@ -4,13 +4,14 @@ import { SignJWT } from "jose"
 import { loginSchema } from "@/lib/validators/auth"
 import { loginUser } from "@/services/auth.service"
 import { sendVerificationEmail } from "@/services/email-verification.service"
-
-const secret = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET ?? "dev-secret-change-in-production"
-)
+import { getSessionSecret } from "@/lib/auth-secret"
+import { enforceRateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = enforceRateLimit(req, { name: "login", limit: 10, windowMs: 15 * 60_000 })
+    if (limited) return limited
+
     const body = await req.json()
 
     const result = loginSchema.safeParse(body)
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
       .setExpirationTime(rememberMe ? "30d" : "1d")
-      .sign(secret)
+      .sign(getSessionSecret())
 
     // Set httpOnly cookie
     const cookieStore = await cookies()

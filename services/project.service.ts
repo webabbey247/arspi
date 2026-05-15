@@ -1,7 +1,15 @@
 import { db } from "@/lib/db"
+import { revalidateTag } from "next/cache"
 import { ProjectStatus } from "@prisma/client"
 
 export type { ProjectStatus }
+
+/** Tag for /api/projects/public listing cache (projects + filter taxonomies). */
+export const PROJECTS_PUBLIC_TAG = "projects:public"
+
+function bumpProjectsPublicCache() {
+  revalidateTag(PROJECTS_PUBLIC_TAG, "max")
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -145,6 +153,7 @@ function makeTaxonomyService(
       const existing = await delegate.findFirst({ where: { OR: [{ name }, { slug }] } })
       if (existing) return { success: false, error: `A ${noun} with this name already exists.` }
       const row = await delegate.create({ data: { name, slug }, include })
+      bumpProjectsPublicCache()
       return { success: true, data: row as unknown as TaxonomyRow }
     },
     update: async (id: string, name: string): Promise<ProjectServiceResult<TaxonomyRow>> => {
@@ -154,6 +163,7 @@ function makeTaxonomyService(
       const conflict = await delegate.findFirst({ where: { OR: [{ name }, { slug }], NOT: { id } } })
       if (conflict) return { success: false, error: `A ${noun} with this name already exists.` }
       const row = await delegate.update({ where: { id }, data: { name, slug }, include })
+      bumpProjectsPublicCache()
       return { success: true, data: row as unknown as TaxonomyRow }
     },
     remove: async (id: string): Promise<ProjectServiceResult<null>> => {
@@ -167,6 +177,7 @@ function makeTaxonomyService(
         }
       }
       await delegate.delete({ where: { id } })
+      bumpProjectsPublicCache()
       return { success: true, data: null }
     },
   }
@@ -230,6 +241,50 @@ export async function getProjects(filters?: {
   return rows.map(normalizeProject)
 }
 
+/** Listing-shaped fetch — same row shape as getProjects but skips the
+ *  per-row `_count.projects` aggregates on each taxonomy join (those are
+ *  unused by /api/projects/public). Used to keep public listings fast. */
+export async function getProjectsForListing(filters?: {
+  status?:       ProjectStatus
+  divisionId?:   string
+  departmentId?: string
+  serviceId?:    string
+}): Promise<ProjectRow[]> {
+  const rows = await db.project.findMany({
+    where: {
+      ...(filters?.status       !== undefined && { status:       filters.status }),
+      ...(filters?.divisionId   !== undefined && { divisionId:   filters.divisionId }),
+      ...(filters?.departmentId !== undefined && { departmentId: filters.departmentId }),
+      ...(filters?.serviceId    !== undefined && { services: { some: { id: filters.serviceId } } }),
+    },
+    select: {
+      id:           true,
+      title:        true,
+      slug:         true,
+      excerpt:      true,
+      description:  true,
+      coverImage:   true,
+      status:       true,
+      client:       true,
+      clientLogo:   true,
+      startDate:    true,
+      endDate:      true,
+      displayOrder: true,
+      divisionId:   true,
+      departmentId: true,
+      investigators: true,
+      members:       true,
+      createdAt:    true,
+      updatedAt:    true,
+      division:   { select: { id: true, name: true, slug: true, createdAt: true } },
+      department: { select: { id: true, name: true, slug: true, createdAt: true } },
+      services:   { select: { id: true, name: true, slug: true, createdAt: true } },
+    },
+    orderBy: [{ displayOrder: "asc" }, { createdAt: "desc" }],
+  })
+  return rows.map(normalizeProject)
+}
+
 export async function getProjectById(id: string): Promise<ProjectRow | null> {
   const row = await db.project.findUnique({ where: { id }, include: projectInclude })
   return row ? normalizeProject(row) : null
@@ -270,6 +325,7 @@ export async function createProject(
     },
     include: projectInclude,
   })
+  bumpProjectsPublicCache()
   return { success: true, data: normalizeProject(row) }
 }
 
@@ -309,6 +365,7 @@ export async function updateProject(
     },
     include: projectInclude,
   })
+  bumpProjectsPublicCache()
   return { success: true, data: normalizeProject(row) }
 }
 
@@ -317,5 +374,6 @@ export async function deleteProject(id: string): Promise<ProjectServiceResult<nu
   if (!existing) return { success: false, error: "Project not found." }
 
   await db.project.delete({ where: { id } })
+  bumpProjectsPublicCache()
   return { success: true, data: null }
 }

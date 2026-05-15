@@ -3,8 +3,13 @@ import { getSession } from "@/lib/session"
 import { adminSetPassword } from "@/services/user.service"
 import { z } from "zod"
 
+// Match the self-service rules in /api/account/password — no weaker admin path.
 const schema = z.object({
-  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  newPassword: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+    .regex(/[0-9]/, "Must contain at least one number"),
 })
 
 type Context = { params: Promise<{ id: string }> }

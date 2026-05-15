@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { slugify } from "@/services/program.service"
+import { slugify, bumpProgramsPublicCache } from "@/services/program.service"
 import type { ProgramServiceResult } from "@/services/program.service"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -57,6 +57,7 @@ async function createLookup(
     data:    { name, slug },
     include: { _count: { select: { courses: true } } },
   })
+  bumpProgramsPublicCache()
   return { success: true, data: row }
 }
 
@@ -86,6 +87,7 @@ async function updateLookup(
     data:    { name, slug },
     include: { _count: { select: { courses: true } } },
   })
+  bumpProgramsPublicCache()
   return { success: true, data: row }
 }
 
@@ -111,6 +113,7 @@ async function deleteLookup(
   }
 
   await model.delete({ where: { id } })
+  bumpProgramsPublicCache()
   return { success: true, data: null }
 }
 

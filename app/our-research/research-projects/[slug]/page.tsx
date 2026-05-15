@@ -6,6 +6,7 @@ import withLayout from "@/hooks/useLayout"
 import OrganizationsStrip from "@/components/sections/OrganizationsStrip"
 import ProjectShareCard from "@/components/sections/ProjectShareCard"
 import { getProjectBySlug, getProjects, type ProjectStatus } from "@/services/project.service"
+import { sanitizeHtml } from "@/lib/sanitize"
 
 const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "")
 
@@ -121,7 +122,7 @@ const ProjectDetailPage = async ({ params }: { params: Promise<{ slug: string }>
           <div className="min-w-0">
             <article
               className="prose prose-slate max-w-none font-body text-[0.9375rem] sm:text-[1rem] leading-[1.8] text-[#1A1916] [&_h2]:tracking-[-0.01em] [&_h2]:leading-tight [&_h2]:font-heading [&_h2]:text-[#071639] [&_h2]:mt-8 sm:[&_h2]:mt-10 [&_h2]:mb-2 [&_h2]:text-[1.375rem] sm:[&_h2]:text-[1.5rem] md:[&_h2]:text-[1.625rem] lg:[&_h2]:text-[1.75rem] [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6"
-              dangerouslySetInnerHTML={{ __html: project.description }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(project.description) }}
             />
 
             {project.investigators.length > 0 && (

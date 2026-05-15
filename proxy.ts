@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { jwtVerify } from "jose"
-
-const secret = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET ?? "dev-secret-change-in-production"
-)
+import { getSessionSecret } from "@/lib/auth-secret"
 
 // Maps route prefix → roles that are allowed in
 const ROLE_ROUTES: Record<string, string[]> = {
@@ -24,7 +21,7 @@ export async function proxy(req: NextRequest) {
   }
 
   try {
-    const { payload } = await jwtVerify(token, secret)
+    const { payload } = await jwtVerify(token, getSessionSecret(), { algorithms: ["HS256"] })
     const role = payload.role as string
 
     for (const [prefix, allowed] of Object.entries(ROLE_ROUTES)) {

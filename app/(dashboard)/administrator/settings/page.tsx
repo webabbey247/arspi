@@ -448,7 +448,7 @@ export default function SettingsPage() {
   }
 
   async function handleSignOutAll() {
-    const resp = await fetch("/api/auth/logout")
+    const resp = await fetch("/api/auth/logout", { method: "POST" })
     if (resp.redirected) {
       window.location.href = resp.url
     } else {

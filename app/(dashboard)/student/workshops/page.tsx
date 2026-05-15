@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
+import { sanitizeHtml } from "@/lib/sanitize"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -206,7 +207,7 @@ function WorkshopViewModal({ registration, onClose }: { registration: Registrati
             <Section title="About this Workshop">
               <div
                 className="text-[13px] text-[#6B6560] leading-relaxed prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: w.description }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(w.description) }}
               />
             </Section>
           )}

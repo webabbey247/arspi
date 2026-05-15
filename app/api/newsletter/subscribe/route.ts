@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { subscriptionSchema } from "@/lib/validators/subscription"
 import { subscribeEmail } from "@/services/subscription.service"
+import { enforceRateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = enforceRateLimit(req, { name: "newsletter", limit: 10, windowMs: 60 * 60_000 })
+    if (limited) return limited
+
     const body = await req.json()
 
     let validated: { email: string }

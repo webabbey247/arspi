@@ -59,13 +59,15 @@ export default function AdminSidebar({ user }: { user: SessionPayload }) {
             <p className="font-body text-[0.625rem] text-slate-400 uppercase tracking-wider">Admin</p>
           </div>
         </div>
-        <Link
-          href="/api/auth/logout"
-          className="text-slate-400 hover:text-white transition-colors shrink-0"
-          title="Sign out"
-        >
-          <LogOut className="h-4 w-4" />
-        </Link>
+        <form action="/api/auth/logout" method="post" className="shrink-0">
+          <button
+            type="submit"
+            className="text-slate-400 hover:text-white transition-colors"
+            title="Sign out"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </form>
       </div>
     </aside>
   )

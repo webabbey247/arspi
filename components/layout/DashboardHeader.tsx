@@ -6,7 +6,8 @@ import type { SessionPayload } from "@/types/session"
 
 async function logout() {
   ['staff_name', 'staff_role'].forEach(k => localStorage.removeItem(k))
-  window.location.href = '/api/auth/logout'
+  const resp = await fetch('/api/auth/logout', { method: 'POST' })
+  window.location.href = resp.redirected ? resp.url : '/login'
 }
 
 const DashboardHeader = ({

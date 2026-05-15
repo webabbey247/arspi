@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import withLayout from "@/hooks/useLayout";
 import type { Facilitator } from "@/lib/workshop-helpers";
 import PageHero from "@/components/sections/PageHero";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 type PublicWorkshop = {
   id:             string
@@ -495,7 +496,7 @@ const WorkshopPage = () => {
                   {nearest.title}
                 </h3>
 
-                <p className="font-body text-[0.875rem] sm:text-[0.9375rem] md:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 mb-5 sm:mb-6 max-w-lg line-clamp-3"  dangerouslySetInnerHTML={{ __html: nearest.description }} />
+                <p className="font-body text-[0.875rem] sm:text-[0.9375rem] md:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 mb-5 sm:mb-6 max-w-lg line-clamp-3"  dangerouslySetInnerHTML={{ __html: sanitizeHtml(nearest.description) }} />
 
                 {(nearest.facilitators.length > 0 || nearest.facilitator) && (
                   <div className="mb-5 sm:mb-6">

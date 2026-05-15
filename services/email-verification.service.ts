@@ -5,6 +5,12 @@ import { sendEmailVerificationEmail } from "@/lib/email"
 
 const EXPIRES_IN_HOURS = 24
 
+// Deterministic SHA-256 so we can look up the user by the hashed token. The
+// raw token is only emailed; the DB never sees it.
+function hashToken(raw: string): string {
+  return crypto.createHash("sha256").update(raw).digest("hex")
+}
+
 export async function sendVerificationEmail(userId: string): Promise<void> {
   const user = await db.user.findUnique({
     where:  { id: userId },
@@ -12,23 +18,23 @@ export async function sendVerificationEmail(userId: string): Promise<void> {
   })
   if (!user) throw new Error("User not found")
 
-  const token   = crypto.randomBytes(32).toString("hex")
-  const expires = new Date(Date.now() + EXPIRES_IN_HOURS * 60 * 60 * 1000)
+  const rawToken = crypto.randomBytes(32).toString("hex")
+  const expires  = new Date(Date.now() + EXPIRES_IN_HOURS * 60 * 60 * 1000)
 
   await db.user.update({
     where: { id: userId },
-    data:  { emailVerificationToken: token, emailVerificationExpires: expires },
+    data:  { emailVerificationToken: hashToken(rawToken), emailVerificationExpires: expires },
   })
 
-  const verifyLink = `${process.env.NEXTAUTH_URL}/email-verification?token=${token}`
+  const verifyLink = `${process.env.NEXTAUTH_URL}/email-verification?token=${rawToken}`
   await sendEmailVerificationEmail(user.email, verifyLink)
 }
 
 export async function verifyEmailToken(
-  token: string
+  rawToken: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const user = await db.user.findUnique({
-    where:  { emailVerificationToken: token },
+    where:  { emailVerificationToken: hashToken(rawToken) },
     select: { id: true, emailVerified: true, emailVerificationExpires: true },
   })
 

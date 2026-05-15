@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getInsights } from "@/services/insight.service"
+import { unstable_cache } from "next/cache"
+import {
+  getInsightsForListing,
+  INSIGHTS_PUBLIC_TAG,
+  type InsightListingRow,
+} from "@/services/insight.service"
 
 type PublicInsight = {
   id: string
@@ -33,7 +38,7 @@ function formatDate(publishedAt: Date | null, createdAt: Date) {
   }).format(publishedAt ?? createdAt)
 }
 
-function mapInsightToPublicPayload(insight: Awaited<ReturnType<typeof getInsights>>[number]): PublicInsight {
+function mapInsightToPublicPayload(insight: InsightListingRow): PublicInsight {
   const authorName = insight.author?.name ?? "ARPS Institute"
 
   return {
@@ -52,6 +57,17 @@ function mapInsightToPublicPayload(insight: Awaited<ReturnType<typeof getInsight
   }
 }
 
+/** Cached listing payload, 60s revalidate. Invalidated on insight mutations
+ *  via revalidateTag(INSIGHTS_PUBLIC_TAG). */
+const getCachedInsightsPayload = unstable_cache(
+  async (filters: { featured?: boolean; categorySlug?: string }): Promise<PublicInsight[]> => {
+    const rows = await getInsightsForListing({ published: true, ...filters })
+    return rows.map(mapInsightToPublicPayload)
+  },
+  ["insights:public:v1"],
+  { tags: [INSIGHTS_PUBLIC_TAG], revalidate: 60 },
+)
+
 /** GET /api/insights/public — publicly accessible list of published insights */
 export async function GET(req: NextRequest) {
   try {
@@ -59,20 +75,11 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category")?.trim().toLowerCase()
     const featuredRaw = searchParams.get("featured")
 
-    const rows = await getInsights({
-      published: true,
+    const insights = await getCachedInsightsPayload({
       ...(featuredRaw !== null && { featured: featuredRaw === "true" }),
+      ...(category && { categorySlug: category }),
     })
 
-    const filtered = category
-      ? rows.filter((row) => {
-          const categoryName = row.category?.name?.toLowerCase() ?? ""
-          const categorySlug = row.category?.slug?.toLowerCase() ?? ""
-          return categoryName === category || categorySlug === category
-        })
-      : rows
-
-    const insights = filtered.map(mapInsightToPublicPayload)
     return NextResponse.json({ insights })
   } catch (error) {
     console.error("[GET /api/insights/public]", error)

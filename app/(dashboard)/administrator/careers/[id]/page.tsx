@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
+import { sanitizeHtml } from "@/lib/sanitize"
 
 type Applicant = {
   id:             string
@@ -210,7 +211,7 @@ export default function AdminCareerDetailPage() {
       <div className="rounded-[14px] border border-[#E5E2DC] bg-white p-6 space-y-6">
         <section>
           <h3 className="text-[14px] font-bold text-[#1A1916] mb-2">Description</h3>
-          <div className="text-[13px] text-[#3F3B36] leading-relaxed [&_a]:text-[#0474C4] [&_a]:underline" dangerouslySetInnerHTML={{ __html: career.description }} />
+          <div className="text-[13px] text-[#3F3B36] leading-relaxed [&_a]:text-[#0474C4] [&_a]:underline" dangerouslySetInnerHTML={{ __html: sanitizeHtml(career.description) }} />
         </section>
 
         {responsibilities.length > 0 && (

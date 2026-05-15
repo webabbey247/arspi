@@ -1,4 +1,14 @@
 import { db } from "@/lib/db"
+import { revalidateTag } from "next/cache"
+
+/** Tag for the /api/insights/public listing cache. Bumped by createInsight /
+ *  updateInsight / deleteInsight below; otherwise a 60s revalidate covers
+ *  rarer changes like category renames. */
+export const INSIGHTS_PUBLIC_TAG = "insights:public"
+
+function bumpInsightsPublicCache() {
+  revalidateTag(INSIGHTS_PUBLIC_TAG, "max")
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -164,6 +174,59 @@ export async function getInsights(filters?: {
   })
 }
 
+/** Card-shaped listing — drops the heavy `body` HTML and the per-row
+ *  `category._count.insights` aggregate. Used by /api/insights/public. */
+export type InsightListingRow = {
+  id:          string
+  title:       string
+  slug:        string
+  excerpt:     string
+  featured:    boolean
+  readTime:    string
+  coverImage:  string | null
+  publishedAt: Date | null
+  createdAt:   Date
+  author:      { name: string } | null
+  category:    { name: string; slug: string } | null
+}
+
+export async function getInsightsForListing(filters?: {
+  categoryId?: string
+  categorySlug?: string
+  published?: boolean
+  featured?: boolean
+}): Promise<InsightListingRow[]> {
+  return db.insight.findMany({
+    where: {
+      ...(filters?.categoryId   !== undefined && { categoryId: filters.categoryId }),
+      ...(filters?.published    !== undefined && { published:  filters.published  }),
+      ...(filters?.featured     !== undefined && { featured:   filters.featured   }),
+      ...(filters?.categorySlug && {
+        category: {
+          OR: [
+            { slug: { equals: filters.categorySlug, mode: "insensitive" } },
+            { name: { equals: filters.categorySlug, mode: "insensitive" } },
+          ],
+        },
+      }),
+    },
+    select: {
+      id:          true,
+      title:       true,
+      slug:        true,
+      excerpt:     true,
+      featured:    true,
+      readTime:    true,
+      coverImage:  true,
+      publishedAt: true,
+      createdAt:   true,
+      author:      { select: { name: true } },
+      category:    { select: { name: true, slug: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
 export async function getInsightById(id: string): Promise<InsightRow | null> {
   return db.insight.findUnique({ where: { id }, include: insightInclude })
 }
@@ -201,6 +264,7 @@ export async function createInsight(
     include: insightInclude,
   })
 
+  bumpInsightsPublicCache()
   return { success: true, data: insight }
 }
 
@@ -241,6 +305,7 @@ export async function updateInsight(
     include: insightInclude,
   })
 
+  bumpInsightsPublicCache()
   return { success: true, data: insight }
 }
 
@@ -249,5 +314,6 @@ export async function deleteInsight(id: string): Promise<ServiceResult<null>> {
   if (!existing) return { success: false, error: "Insight not found." }
 
   await db.insight.delete({ where: { id } })
+  bumpInsightsPublicCache()
   return { success: true, data: null }
 }

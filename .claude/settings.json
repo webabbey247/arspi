@@ -1,7 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(npm audit *)",
+      "Bash(git ls-tree *)",
+      "Bash(npm install *)",
+      "Bash(lsof -nP -iTCP:3000 -sTCP:LISTEN)",
+      "Bash(curl -s -o /dev/null -w \"homepage: %{http_code} in %{time_total}s\\\\n\"           http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"programs:  %{http_code} in %{time_total}s\\\\n\" http://localhost:3000/api/programs/public)",
+      "Bash(curl -s -o /dev/null -w \"workshops: %{http_code} in %{time_total}s\\\\n\" http://localhost:3000/api/workshops/public)",
+      "Bash(curl -s -o /dev/null -w \"insights:  %{http_code} in %{time_total}s\\\\n\" http://localhost:3000/api/insights/public)",
+      "Bash(curl -s -o /dev/null -w \"projects:  %{http_code} in %{time_total}s\\\\n\" http://localhost:3000/api/projects/public)",
+      "Bash(curl -s http://localhost:3000/api/programs/public -i)",
+      "Bash(curl -s http://localhost:3000/api/insights/public -i)"
     ]
   }
 }

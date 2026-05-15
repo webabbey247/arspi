@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { forgotPasswordSchema } from "@/lib/validators/auth"
 import { requestPasswordReset } from "@/services/password.service"
+import { enforceRateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = enforceRateLimit(req, { name: "forgot-password", limit: 5, windowMs: 60 * 60_000 })
+    if (limited) return limited
+
     const body = await req.json()
 
     const result = forgotPasswordSchema.safeParse(body)

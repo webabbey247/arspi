@@ -14,11 +14,12 @@ export async function POST(req: NextRequest) {
     const outcome = await resetPassword(result.data.token, result.data.password)
 
     if (!outcome.success) {
-      const message =
-        outcome.reason === "expired_token"
-          ? "This reset link has expired. Please request a new one."
-          : "Invalid or already-used reset link."
-      return NextResponse.json({ error: message }, { status: 400 })
+      // Same response for expired vs invalid/used — prevents enumerating
+      // which tokens were ever issued or have already been consumed.
+      return NextResponse.json(
+        { error: "This reset link is invalid or has expired. Please request a new one." },
+        { status: 400 },
+      )
     }
 
     return NextResponse.json({ message: "Password updated successfully." })
