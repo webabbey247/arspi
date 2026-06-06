@@ -79,7 +79,7 @@ export async function sendEmailVerificationEmail(to: string, verifyLink: string)
               <p style="margin:0;font-size:12px;color:#94A3B8;line-height:1.6;">
                 If you didn&apos;t create an ARPS Institute account, no action is needed — this email can
                 be safely ignored. For help, contact
-                <a href="mailto:support@arpsinstitute.org" style="color:#0474C4;">support@arpsinstitute.org</a>.
+                <a href="mailto:support@iarps.com" style="color:#0474C4;">support@iarps.com</a>.
               </p>
             </td>
           </tr>
@@ -171,7 +171,7 @@ export async function sendWorkshopConfirmationEmail(to: string, data: WorkshopCo
     from:    FROM,
     to,
     subject,
-    text: `Hi ${firstName},\n\n${isConfirmed ? "You are confirmed!" : "Your registration has been received."}\n\nWorkshop: ${workshopTitle}\nDate: ${workshopDate}\nTime: ${workshopTime}\nFee: ${feeLabel}\nStatus: ${statusText}\n\nFor help, contact support@arpsinstitute.org`,
+    text: `Hi ${firstName},\n\n${isConfirmed ? "You are confirmed!" : "Your registration has been received."}\n\nWorkshop: ${workshopTitle}\nDate: ${workshopDate}\nTime: ${workshopTime}\nFee: ${feeLabel}\nStatus: ${statusText}\n\nFor help, contact support@iarps.com`,
     html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -284,7 +284,7 @@ export async function sendWorkshopConfirmationEmail(to: string, data: WorkshopCo
             <td style="padding:20px 32px;border-top:1px solid #E2EAF4;">
               <p style="margin:0;font-size:12px;color:#94A3B8;line-height:1.6;">
                 Questions? Contact us at
-                <a href="mailto:support@arpsinstitute.org" style="color:#0474C4;">support@arpsinstitute.org</a>.
+                <a href="mailto:support@iarps.com" style="color:#0474C4;">support@iarps.com</a>.
                 &mdash; ARPS Institute
               </p>
             </td>
@@ -366,7 +366,7 @@ export async function sendPasswordResetEmail(to: string, resetLink: string): Pro
               <p style="margin:0;font-size:12px;color:#94A3B8;line-height:1.6;">
                 If you didn&apos;t request a password reset, no action is needed — your password
                 will not change. For security questions contact
-                <a href="mailto:support@arpsinstitute.org" style="color:#0474C4;">support@arpsinstitute.org</a>.
+                <a href="mailto:support@iarps.com" style="color:#0474C4;">support@iarps.com</a>.
               </p>
             </td>
           </tr>

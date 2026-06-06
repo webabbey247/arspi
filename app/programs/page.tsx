@@ -388,7 +388,8 @@ const ProgramsPage = () => {
 
                   return (
                     <Link
-                      href={`/programs/${prog.slug}`}
+                      // href={`/programs/${prog.slug}`}
+                      href="#"
                       key={prog.id}
                       className="group bg-white rounded-sm overflow-hidden transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(13,27,42,0.1)]"
                     >

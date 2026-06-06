@@ -41,9 +41,9 @@ const faqSections = [
     faqs: [
       { q: "How do I enrol in a programme?", a: "Navigate to the Programmes page, find the programme you're interested in, and click 'Enrol Now'. You'll be prompted to log in, complete a brief application form, and proceed to payment." },
       { q: "Can I access recorded sessions if I miss a live class?", a: "Yes. All live sessions are recorded and uploaded to your dashboard within 24 hours. Recordings are available for 12 months from your programme start date." },
-      { q: "What is your cancellation and refund policy?", a: "We offer a 14-day money-back guarantee for all certificate programmes. Contact support@arpsinstitute.org within 14 days of your cohort start date for a full refund." },
+      { q: "What is your cancellation and refund policy?", a: "We offer a 14-day money-back guarantee for all certificate programmes. Contact support@iarps.com within 14 days of your cohort start date for a full refund." },
       { q: "Can I transfer to a different cohort?", a: "Yes. You can request a cohort transfer up to 7 days before your current cohort starts — free of charge. After the cohort has started, a one-cohort extension is available." },
-      { q: "Do you offer group or institutional pricing?", a: "Yes. We offer group discounts for 3+ staff from the same organisation. Contact programs@arpsinstitute.org for a group quote." },
+      { q: "Do you offer group or institutional pricing?", a: "Yes. We offer group discounts for 3+ staff from the same organisation. Contact programs@iarps.com for a group quote." },
     ],
   },
   {
@@ -209,7 +209,7 @@ export default function SupportPage() {
           {/* Contact */}
           <div className="border-t border-sapphire/20 pt-5">
             <div className="font-serif text-sm text-ink mb-2">Contact Support</div>
-            <a href="mailto:support@arpsinstitute.org" className="text-sapphire text-sm hover:text-ink transition-colors">support@arpsinstitute.org</a>
+            <a href="mailto:support@arpsinstitute.org" className="text-sapphire text-sm hover:text-ink transition-colors">support@iarps.com</a>
             <p className="text-[0.74rem] text-slate-400 font-light mt-1 leading-relaxed">Mon–Fri · 8:00 AM – 6:00 PM UTC<br />Response within 24–48 hours</p>
           </div>
         </div>
