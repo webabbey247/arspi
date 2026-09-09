@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Produce a self-contained server in .next/standalone — required for shared hosting
-  output: "standalone",
+  // Produce a self-contained server in .next/standalone — required for shared/cPanel
+  // hosting. Must NOT be set when building on Vercel: standalone mode changes where
+  // Next.js writes its build output, so Vercel's own builder never finds the
+  // `next-server.js.nft.json` trace file it expects and the build fails with
+  // `ENOENT ... next-server.js.nft.json`. Vercel sets the VERCEL env var during its
+  // build, so this only applies "standalone" for other hosts.
+  ...(process.env.VERCEL ? {} : { output: "standalone" as const }),
 
   // Don't advertise the framework/version via the X-Powered-By response header.
   poweredByHeader: false,
