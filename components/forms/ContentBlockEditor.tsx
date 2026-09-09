@@ -30,8 +30,48 @@ export type ContentBlock =
   | PdfBlock
   | SurveyBlock
 
+/** Surrounding course context threaded down from the program form so the
+ *  "Expand with AI" action (on text/assignment blocks) can prompt with
+ *  something more specific than the block's own content. Optional — when
+ *  omitted, the AI action is simply not shown. */
+export type AiExpandContext = {
+  courseTitle:   string
+  chapterTitle?: string
+  lessonTitle?:  string
+  lessonSummary?: string
+}
+
 function uid() {
   return Math.random().toString(36).slice(2, 10)
+}
+
+/** Calls the block-expansion endpoint. Returns the new HTML content, or
+ *  throws with a user-facing message on failure. */
+async function requestAiExpand(opts: {
+  kind:        "lesson" | "assignment"
+  context:     AiExpandContext
+  blockTitle?: string
+  current:     string
+}): Promise<string> {
+  const resp = await fetch("/api/programs/ai-expand-block", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      kind:           opts.kind,
+      courseTitle:    opts.context.courseTitle,
+      chapterTitle:   opts.context.chapterTitle,
+      lessonTitle:    opts.context.lessonTitle,
+      lessonSummary:  opts.context.lessonSummary,
+      blockTitle:     opts.blockTitle,
+      currentContent: opts.current,
+    }),
+  })
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}))
+    throw new Error(err.error ?? "AI expand failed. Please try again.")
+  }
+  const data = await resp.json()
+  return data.content as string
 }
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
@@ -40,7 +80,16 @@ const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#E5E2DC] 
 
 // ── Mini rich-text editor ─────────────────────────────────────────────────────
 
-function MiniRTE({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+function MiniRTE({
+  value, onChange, placeholder, onAiExpand, aiLoading, aiError,
+}: {
+  value:       string
+  onChange:    (v: string) => void
+  placeholder?: string
+  onAiExpand?: () => void
+  aiLoading?:  boolean
+  aiError?:    string | null
+}) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -72,27 +121,67 @@ function MiniRTE({ value, onChange, placeholder }: { value: string; onChange: (v
 
   return (
     <div className="border border-[#E5E2DC] rounded-[10px] overflow-hidden focus-within:border-[#0474C4] transition-colors">
-      <div className="flex items-center gap-0.5 px-2 py-1 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-        {tb(!!editor?.isActive("bold"),   <b>B</b>,   () => editor?.chain().focus().toggleBold().run())}
-        {tb(!!editor?.isActive("italic"), <em>I</em>, () => editor?.chain().focus().toggleItalic().run())}
-        {tb(!!editor?.isActive("bulletList"),
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/><circle cx="4" cy="18" r="1.5" fill="currentColor"/></svg>,
-          () => editor?.chain().focus().toggleBulletList().run()
+      <div className="flex items-center justify-between gap-1 px-2 py-1 border-b border-[#E5E2DC] bg-[#FAFAF9]">
+        <div className="flex items-center gap-0.5">
+          {tb(!!editor?.isActive("bold"),   <b>B</b>,   () => editor?.chain().focus().toggleBold().run())}
+          {tb(!!editor?.isActive("italic"), <em>I</em>, () => editor?.chain().focus().toggleItalic().run())}
+          {tb(!!editor?.isActive("bulletList"),
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/><circle cx="4" cy="18" r="1.5" fill="currentColor"/></svg>,
+            () => editor?.chain().focus().toggleBulletList().run()
+          )}
+        </div>
+        {onAiExpand && (
+          <button
+            type="button"
+            onClick={onAiExpand}
+            disabled={aiLoading}
+            className="flex items-center gap-1 px-2 py-1 rounded-[6px] text-[10.5px] font-semibold text-[#0474C4] hover:bg-[#0474C4]/10 disabled:opacity-50 cursor-pointer transition-colors shrink-0"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
+            {aiLoading ? "Generating…" : value.trim() ? "Expand with AI" : "Write with AI"}
+          </button>
         )}
       </div>
       <EditorContent editor={editor} />
+      {aiError && <p className="px-3 py-1.5 text-[11px] text-red-500 border-t border-red-100 bg-red-50">{aiError}</p>}
     </div>
   )
 }
 
 // ── Individual block editors ───────────────────────────────────────────────────
 
-function TextBlockEditor({ block, onChange }: { block: TextBlock; onChange: (b: TextBlock) => void }) {
+function TextBlockEditor({
+  block, onChange, aiContext,
+}: {
+  block:     TextBlock
+  onChange:  (b: TextBlock) => void
+  aiContext?: AiExpandContext
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState<string | null>(null)
+
+  async function handleAiExpand() {
+    if (!aiContext) return
+    setLoading(true)
+    setError(null)
+    try {
+      const content = await requestAiExpand({ kind: "lesson", context: aiContext, current: block.content })
+      onChange({ ...block, content })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "AI expand failed. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <MiniRTE
       value={block.content}
       onChange={content => onChange({ ...block, content })}
       placeholder="Write rich text content…"
+      onAiExpand={aiContext ? handleAiExpand : undefined}
+      aiLoading={loading}
+      aiError={error}
     />
   )
 }
@@ -268,7 +357,32 @@ function QuestionnaireBlockEditor({ block, onChange }: { block: QuestionnaireBlo
   )
 }
 
-function AssignmentBlockEditor({ block, onChange }: { block: AssignmentBlock; onChange: (b: AssignmentBlock) => void }) {
+function AssignmentBlockEditor({
+  block, onChange, aiContext,
+}: {
+  block:     AssignmentBlock
+  onChange:  (b: AssignmentBlock) => void
+  aiContext?: AiExpandContext
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState<string | null>(null)
+
+  async function handleAiExpand() {
+    if (!aiContext) return
+    setLoading(true)
+    setError(null)
+    try {
+      const content = await requestAiExpand({
+        kind: "assignment", context: aiContext, blockTitle: block.title, current: block.instructions,
+      })
+      onChange({ ...block, instructions: content })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "AI expand failed. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-2">
       <input
@@ -281,6 +395,9 @@ function AssignmentBlockEditor({ block, onChange }: { block: AssignmentBlock; on
         value={block.instructions}
         onChange={instructions => onChange({ ...block, instructions })}
         placeholder="Instructions for this assignment…"
+        onAiExpand={aiContext ? handleAiExpand : undefined}
+        aiLoading={loading}
+        aiError={error}
       />
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
@@ -580,6 +697,7 @@ function BlockCard({
   onChange,
   onRemove,
   onMove,
+  aiContext,
 }: {
   block:    ContentBlock
   index:    number
@@ -587,6 +705,7 @@ function BlockCard({
   onChange: (b: ContentBlock) => void
   onRemove: () => void
   onMove:   (dir: -1 | 1) => void
+  aiContext?: AiExpandContext
 }) {
   const [collapsed, setCollapsed] = useState(false)
   const meta = BLOCK_TYPES.find(bt => bt.type === block.type)!
@@ -636,7 +755,7 @@ function BlockCard({
 
       {!collapsed && (
         <div className="px-3 py-3">
-          {block.type === "text"          && <TextBlockEditor          block={block} onChange={b => onChange(b)} />}
+          {block.type === "text"          && <TextBlockEditor          block={block} onChange={b => onChange(b)} aiContext={aiContext} />}
           {block.type === "video"         && <VideoBlockEditor         block={block} onChange={b => onChange(b)} />}
           {block.type === "image"         && <ImageBlockEditor         block={block} onChange={b => onChange(b)} />}
           {block.type === "document"      && <DocumentBlockEditor      block={block} onChange={b => onChange(b)} />}
@@ -644,7 +763,7 @@ function BlockCard({
           {block.type === "quiz"          && <QuizBlockEditor          block={block} onChange={b => onChange(b)} />}
           {block.type === "questionnaire" && <QuestionnaireBlockEditor block={block} onChange={b => onChange(b)} />}
           {block.type === "survey"        && <SurveyBlockEditor        block={block} onChange={b => onChange(b)} />}
-          {block.type === "assignment"    && <AssignmentBlockEditor    block={block} onChange={b => onChange(b)} />}
+          {block.type === "assignment"    && <AssignmentBlockEditor    block={block} onChange={b => onChange(b)} aiContext={aiContext} />}
         </div>
       )}
     </div>
@@ -656,9 +775,15 @@ function BlockCard({
 export default function ContentBlockEditor({
   blocks,
   onChange,
+  aiContext,
 }: {
   blocks:   ContentBlock[]
   onChange: (blocks: ContentBlock[]) => void
+  /** Course/chapter/lesson context to enable "Expand with AI" on text and
+   *  assignment blocks. Omit to hide the action entirely (e.g. no AI keys
+   *  configured, or the block editor is used somewhere without course
+   *  context). */
+  aiContext?: AiExpandContext
 }) {
   const [pickerOpen, setPickerOpen] = useState(false)
 
@@ -695,6 +820,7 @@ export default function ContentBlockEditor({
           onChange={b => updateBlock(i, b)}
           onRemove={() => removeBlock(i)}
           onMove={dir => moveBlock(i, dir)}
+          aiContext={aiContext}
         />
       ))}
 

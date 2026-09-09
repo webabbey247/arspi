@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { getSession } from "@/lib/session"
+import { getSession, clearSession } from "@/lib/session"
 import { disableOwnAccount } from "@/services/profile.service"
 
 export async function POST() {
@@ -14,8 +13,7 @@ export async function POST() {
       return NextResponse.json({ error: result.error }, { status })
     }
 
-    const cookieStore = await cookies()
-    cookieStore.delete("arspi-auth")
+    await clearSession()
 
     return NextResponse.json({ ok: true })
   } catch (error) {

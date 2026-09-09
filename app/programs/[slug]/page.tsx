@@ -117,7 +117,7 @@ function pickFirstFacilitator(v: unknown): {
 
 async function resolveProgram(slug: string): Promise<PageProgram | null> {
   const dbProg = await getProgramBySlug(slug)
-  if (!dbProg) return null
+  if (!dbProg || dbProg.status !== "PUBLISHED") return null
 
   const cat = catMetaFor(dbProg.category?.name)
 
@@ -162,7 +162,7 @@ async function resolveProgram(slug: string): Promise<PageProgram | null> {
 // ── Static params & metadata ──────────────────────────────────────────────────
 
 export async function generateStaticParams() {
-  const programs = await getPrograms()
+  const programs = await getPrograms({ status: "PUBLISHED" })
   return programs.map((p) => ({ slug: p.slug }))
 }
 

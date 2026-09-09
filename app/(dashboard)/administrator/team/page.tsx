@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import { useUploadThing } from "@/lib/uploadthing-client"
+import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -392,7 +393,7 @@ export default function AdminTeamPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+                <TableSkeletonRows colSpan={6} />
               ) : filtered.length === 0 ? (
                 <tr><td colSpan={6} className="px-4 py-10 text-center text-[#A8A39C]">No team members found.</td></tr>
               ) : filtered.map(m => (
@@ -436,7 +437,7 @@ export default function AdminTeamPage() {
         {/* Cards — mobile */}
         <div className="md:hidden flex flex-col">
           {loading ? (
-            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            <SkeletonCardList />
           ) : filtered.length === 0 ? (
             <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No team members found.</div>
           ) : filtered.map(m => (

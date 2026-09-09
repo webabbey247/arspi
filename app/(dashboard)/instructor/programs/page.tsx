@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useUploadThing } from "@/lib/uploadthing-client"
-import { useForm, useFieldArray, Controller } from "react-hook-form"
+import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form"
 import type { Control, UseFormRegister, FieldErrors } from "react-hook-form"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
@@ -13,6 +13,7 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import ContentBlockEditor from "@/components/forms/ContentBlockEditor"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
+import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -205,11 +206,13 @@ function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: s
 // ── Program modal (multi-step) ────────────────────────────────────────────────
 
 type Lesson = {
+  id:          string
   title:       string
   description: string
   blocks:      ContentBlock[]
 }
 type CurriculumItem = {
+  id:      string
   title:   string
   desc:    string
   lessons: Lesson[]
@@ -373,9 +376,11 @@ const programSchema = yup.object({
 
   // Step 3
   curriculum: yup.array(yup.object({
+    id:    yup.string(),
     title: yup.string().required("Chapter title is required"),
     desc:  yup.string(),
     lessons: yup.array(yup.object({
+      id:          yup.string(),
       title:       yup.string().required("Lesson title is required"),
       description: yup.string(),
       blocks:      yup.array(yup.mixed()).default([]),
@@ -613,6 +618,76 @@ function FacilitatorAvatarUpload({ value, onChange }: { value: string; onChange:
 
 // ── Lessons editor (nested within a chapter) ──────────────────────────────────
 
+function LessonItem({
+  control, register, errors, moduleIndex, lessonIndex, onRemove, courseTitle, chapterTitle,
+}: {
+  control:      Control<ProgramFormValues>
+  register:     UseFormRegister<ProgramFormValues>
+  errors:       FieldErrors<ProgramFormValues>
+  moduleIndex:  number
+  lessonIndex:  number
+  onRemove:     () => void
+  courseTitle:  string
+  chapterTitle: string
+}) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lessonTitle = useWatch({ control, name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.title` as any }) as string | undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lessonSummary = useWatch({ control, name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.description` as any }) as string | undefined
+
+  return (
+    <div className="border border-[#E5E2DC] rounded-[10px] bg-white overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2 bg-[#F5F4F1] border-b border-[#E5E2DC]">
+        <span className="text-[10px] font-bold text-[#6B6560] uppercase tracking-wide">Lesson {lessonIndex + 1}</span>
+        <button type="button" onClick={onRemove} className="w-5 h-5 flex items-center justify-center rounded-full text-[#A8A39C] hover:bg-red-50 hover:text-red-500 cursor-pointer">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div className="px-3 py-3 space-y-3">
+        <Field label="Title" required>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <input {...register(`curriculum.${moduleIndex}.lessons.${lessonIndex}.title` as any)} className={inputCls} placeholder="e.g. Introduction to Results Frameworks" />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <FieldError msg={(errors.curriculum?.[moduleIndex] as any)?.lessons?.[lessonIndex]?.title?.message} />
+        </Field>
+        <Field label="Short Description">
+          <Controller
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            name={`curriculum.${moduleIndex}.lessons.${lessonIndex}.description` as any}
+            control={control}
+            render={({ field }) => (
+              <RichTextEditor
+                value={(field.value as string) ?? ""}
+                onChange={field.onChange}
+                placeholder="Brief description of this lesson…"
+              />
+            )}
+          />
+        </Field>
+        <Field label="Embedded Content">
+          <Controller
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            name={`curriculum.${moduleIndex}.lessons.${lessonIndex}.blocks` as any}
+            control={control}
+            render={({ field }) => (
+              <ContentBlockEditor
+                blocks={(field.value as ContentBlock[]) ?? []}
+                onChange={field.onChange}
+                aiContext={{
+                  courseTitle,
+                  chapterTitle,
+                  lessonTitle:   lessonTitle || undefined,
+                  lessonSummary: lessonSummary || undefined,
+                }}
+              />
+            )}
+          />
+        </Field>
+      </div>
+    </div>
+  )
+}
+
 function LessonsEditor({
   control, register, errors, moduleIndex,
 }: {
@@ -626,58 +701,29 @@ function LessonsEditor({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     name: `curriculum.${moduleIndex}.lessons` as any,
   })
+  const courseTitle  = (useWatch({ control, name: "title" }) as string | undefined) ?? ""
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chapterTitle = (useWatch({ control, name: `curriculum.${moduleIndex}.title` as any }) as string | undefined) ?? ""
 
   return (
     <div className="space-y-3">
       <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">Lessons</p>
       {fields.map((field, j) => (
-        <div key={field.id} className="border border-[#E5E2DC] rounded-[10px] bg-white overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 bg-[#F5F4F1] border-b border-[#E5E2DC]">
-            <span className="text-[10px] font-bold text-[#6B6560] uppercase tracking-wide">Lesson {j + 1}</span>
-            <button type="button" onClick={() => remove(j)} className="w-5 h-5 flex items-center justify-center rounded-full text-[#A8A39C] hover:bg-red-50 hover:text-red-500 cursor-pointer">
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-          <div className="px-3 py-3 space-y-3">
-            <Field label="Title" required>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <input {...register(`curriculum.${moduleIndex}.lessons.${j}.title` as any)} className={inputCls} placeholder="e.g. Introduction to Results Frameworks" />
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <FieldError msg={(errors.curriculum?.[moduleIndex] as any)?.lessons?.[j]?.title?.message} />
-            </Field>
-            <Field label="Short Description">
-              <Controller
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                name={`curriculum.${moduleIndex}.lessons.${j}.description` as any}
-                control={control}
-                render={({ field }) => (
-                  <RichTextEditor
-                    value={(field.value as string) ?? ""}
-                    onChange={field.onChange}
-                    placeholder="Brief description of this lesson…"
-                  />
-                )}
-              />
-            </Field>
-            <Field label="Embedded Content">
-              <Controller
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                name={`curriculum.${moduleIndex}.lessons.${j}.blocks` as any}
-                control={control}
-                render={({ field }) => (
-                  <ContentBlockEditor
-                    blocks={(field.value as ContentBlock[]) ?? []}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </Field>
-          </div>
-        </div>
+        <LessonItem
+          key={field.id}
+          control={control}
+          register={register}
+          errors={errors}
+          moduleIndex={moduleIndex}
+          lessonIndex={j}
+          onRemove={() => remove(j)}
+          courseTitle={courseTitle}
+          chapterTitle={chapterTitle}
+        />
       ))}
       <button
         type="button"
-        onClick={() => append({ title: "", description: "", blocks: [] } as never)}
+        onClick={() => append({ id: crypto.randomUUID(), title: "", description: "", blocks: [] } as never)}
         className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
       >
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -755,7 +801,7 @@ function CurriculumEditor({
       ))}
       <button
         type="button"
-        onClick={() => append({ title: "", desc: "", lessons: [] })}
+        onClick={() => append({ id: crypto.randomUUID(), title: "", desc: "", lessons: [] })}
         className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -948,10 +994,14 @@ function ProgramModal({
     whatIsIncluded:     Array.isArray(program.whatIsIncluded)     ? (program.whatIsIncluded as string[])     : [],
     curriculum: Array.isArray(program.curriculum)
       ? (program.curriculum as Record<string, unknown>[]).map(m => ({
+          // Backfill a stable id for curriculum authored before lesson-level
+          // completion tracking existed — it's written back on next save.
+          id:    typeof m.id === "string" && m.id ? m.id : crypto.randomUUID(),
           title: String(m.title ?? ""),
           desc:  String(m.desc  ?? ""),
           lessons: Array.isArray(m.lessons)
             ? (m.lessons as Record<string, unknown>[]).map(l => ({
+                id:          typeof l.id === "string" && l.id ? l.id : crypto.randomUUID(),
                 title:       String(l.title       ?? ""),
                 description: String(l.description ?? ""),
                 blocks:      Array.isArray(l.blocks) ? l.blocks as ContentBlock[] : [],
@@ -1087,7 +1137,7 @@ function ProgramModal({
               />
             </Field>
             <Field label="Title" required>
-              <input autoFocus {...register("title")} className={inputCls} placeholder="e.g. African Policy Leadership Programme" />
+              <input autoFocus {...register("title")} className={inputCls} placeholder="e.g. Policy Leadership Programme" />
               <FieldError msg={errors.title?.message} />
             </Field>
             <Field label="Slug" hint="auto-generated — read only">
@@ -1410,11 +1460,13 @@ export default function InstructorProgramsPage() {
     const curriculumPayload = values.curriculum
       .filter(m => m.title.trim())
       .map(m => ({
+        id:    m.id || crypto.randomUUID(),
         title: m.title,
         desc:  m.desc || null,
         lessons: m.lessons
           .filter(l => l.title.trim())
           .map(l => ({
+            id:          l.id || crypto.randomUUID(),
             title:       l.title,
             description: l.description || null,
             blocks:      l.blocks ?? [],
@@ -1615,7 +1667,7 @@ export default function InstructorProgramsPage() {
             </thead>
             <tbody>
               {programsLoading ? (
-                <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+                <TableSkeletonRows colSpan={7} />
               ) : filteredPrograms.length === 0 ? (
                 <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">No programs found.</td></tr>
               ) : paginatedPrograms.map(p => (
@@ -1710,7 +1762,7 @@ export default function InstructorProgramsPage() {
         {/* Cards — mobile */}
         <div className="md:hidden flex flex-col">
           {programsLoading ? (
-            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            <SkeletonCardList />
           ) : filteredPrograms.length === 0 ? (
             <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No programs found.</div>
           ) : paginatedPrograms.map(p => (

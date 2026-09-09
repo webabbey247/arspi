@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { renderToBuffer } from "@react-pdf/renderer"
 import type { ReactElement } from "react"
 import { createElement } from "react"
-import { getCertificateByToken } from "@/services/certificate.service"
+import { getCertificateByToken, displayName } from "@/services/certificate.service"
 import { CertificatePDF } from "@/components/CertificatePDF"
 
 type Context = { params: Promise<{ token: string }> }
@@ -16,12 +16,6 @@ export async function GET(_req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: "Certificate not found." }, { status: 404 })
     }
 
-    const profile = cert.user.profile
-    const recipientName =
-      profile?.firstName || profile?.lastName
-        ? [profile.firstName, profile.lastName].filter(Boolean).join(" ")
-        : cert.user.email
-
     const issuedAt = new Date(cert.issuedAt).toLocaleDateString("en-GB", {
       day:   "2-digit",
       month: "long",
@@ -31,14 +25,14 @@ export async function GET(_req: NextRequest, { params }: Context) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://arspi.org"
 
     const buffer = await renderToBuffer(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       createElement(CertificatePDF, {
-        recipientName,
+        recipientName: displayName(cert.user),
         programTitle:  cert.course.title,
-        facilitator:   cert.course.instructorName,
+        facilitator:   displayName(cert.course.instructor),
         issuedAt,
         verifyCode:    cert.verifyCode,
         verifyBaseUrl: baseUrl,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }) as ReactElement<any>
     )
 

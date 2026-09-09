@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
+import type { Role } from "@prisma/client"
 import type { BasicInfoInput } from "@/lib/validators/onboarding"
 
 export type CreateUserResult =
@@ -29,8 +30,8 @@ export async function createUser(input: BasicInfoInput): Promise<CreateUserResul
 // ── Login ──────────────────────────────────────────────────────────────────
 
 export type LoginUserResult =
-  | { success: true; user: { id: string; email: string; role: string; firstName: string | null; lastName: string | null; hasProfile: boolean; hasInterests: boolean; emailVerified: boolean } }
-  | { success: false; reason: "not_found" | "invalid_password" }
+  | { success: true; user: { id: string; email: string; role: Role; firstName: string | null; lastName: string | null; hasProfile: boolean; hasInterests: boolean; emailVerified: boolean } }
+  | { success: false; reason: "not_found" | "invalid_password" | "disabled" }
 
 export async function loginUser(email: string, password: string): Promise<LoginUserResult> {
   const user = await db.user.findUnique({
@@ -43,6 +44,11 @@ export async function loginUser(email: string, password: string): Promise<LoginU
 
   const valid = await bcrypt.compare(password, user.password)
   if (!valid) return { success: false, reason: "invalid_password" }
+
+  // Checked only after the password is proven correct — an unauthenticated
+  // prober who doesn't know the password should never learn an account is
+  // disabled just from its email.
+  if (user.status !== "ACTIVE") return { success: false, reason: "disabled" }
 
   return {
     success: true,

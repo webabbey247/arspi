@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useUploadThing } from "@/lib/uploadthing-client"
-import { useForm, useFieldArray, Controller } from "react-hook-form"
+import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form"
 import type { Control, UseFormRegister, FieldErrors } from "react-hook-form"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
@@ -13,10 +13,12 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import ContentBlockEditor from "@/components/forms/ContentBlockEditor"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
+import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type CourseLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+type CourseStatus = "DRAFT" | "PUBLISHED"
 
 type Category = {
   id:        string
@@ -38,6 +40,7 @@ type Program = {
   level:        CourseLevel
   featured:     boolean
   predefinedAnalytics: boolean
+  status:       CourseStatus
   instructorId: string
   instructor:   { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null }
   categoryId:   string | null
@@ -252,11 +255,13 @@ function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: s
 // ── Program modal (multi-step) ────────────────────────────────────────────────
 
 type Lesson = {
+  id:          string
   title:       string
   description: string
   blocks:      ContentBlock[]
 }
 type CurriculumItem = {
+  id:      string
   title:   string
   desc:    string
   lessons: Lesson[]
@@ -437,9 +442,11 @@ const programSchema = yup.object({
 
   // Step 3
   curriculum: yup.array(yup.object({
+    id:    yup.string(),
     title: yup.string().required("Chapter title is required"),
     desc:  yup.string(),
     lessons: yup.array(yup.object({
+      id:          yup.string(),
       title:       yup.string().required("Lesson title is required"),
       description: yup.string(),
       blocks:      yup.array(yup.mixed()).default([]),
@@ -700,6 +707,76 @@ function FacilitatorAvatarUpload({ value, onChange }: { value: string; onChange:
 
 // ── Lessons editor (nested within a chapter) ──────────────────────────────────
 
+function LessonItem({
+  control, register, errors, moduleIndex, lessonIndex, onRemove, courseTitle, chapterTitle,
+}: {
+  control:      Control<ProgramFormValues>
+  register:     UseFormRegister<ProgramFormValues>
+  errors:       FieldErrors<ProgramFormValues>
+  moduleIndex:  number
+  lessonIndex:  number
+  onRemove:     () => void
+  courseTitle:  string
+  chapterTitle: string
+}) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lessonTitle = useWatch({ control, name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.title` as any }) as string | undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lessonSummary = useWatch({ control, name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.description` as any }) as string | undefined
+
+  return (
+    <div className="border border-[#E5E2DC] rounded-[10px] bg-white overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2 bg-[#F5F4F1] border-b border-[#E5E2DC]">
+        <span className="text-[10px] font-bold text-[#6B6560] uppercase tracking-wide">Lesson {lessonIndex + 1}</span>
+        <button type="button" onClick={onRemove} className="w-5 h-5 flex items-center justify-center rounded-full text-[#A8A39C] hover:bg-red-50 hover:text-red-500 cursor-pointer">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div className="px-3 py-3 space-y-3">
+        <Field label="Title" required>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <input {...register(`curriculum.${moduleIndex}.lessons.${lessonIndex}.title` as any)} className={inputCls} placeholder="e.g. Introduction to Results Frameworks" />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <FieldError msg={(errors.curriculum?.[moduleIndex] as any)?.lessons?.[lessonIndex]?.title?.message} />
+        </Field>
+        <Field label="Short Description">
+          <Controller
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            name={`curriculum.${moduleIndex}.lessons.${lessonIndex}.description` as any}
+            control={control}
+            render={({ field }) => (
+              <RichTextEditor
+                value={(field.value as string) ?? ""}
+                onChange={field.onChange}
+                placeholder="Brief description of this lesson…"
+              />
+            )}
+          />
+        </Field>
+        <Field label="Embedded Content">
+          <Controller
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            name={`curriculum.${moduleIndex}.lessons.${lessonIndex}.blocks` as any}
+            control={control}
+            render={({ field }) => (
+              <ContentBlockEditor
+                blocks={(field.value as ContentBlock[]) ?? []}
+                onChange={field.onChange}
+                aiContext={{
+                  courseTitle,
+                  chapterTitle,
+                  lessonTitle:   lessonTitle || undefined,
+                  lessonSummary: lessonSummary || undefined,
+                }}
+              />
+            )}
+          />
+        </Field>
+      </div>
+    </div>
+  )
+}
+
 function LessonsEditor({
   control, register, errors, moduleIndex,
 }: {
@@ -713,58 +790,29 @@ function LessonsEditor({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     name: `curriculum.${moduleIndex}.lessons` as any,
   })
+  const courseTitle  = (useWatch({ control, name: "title" }) as string | undefined) ?? ""
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chapterTitle = (useWatch({ control, name: `curriculum.${moduleIndex}.title` as any }) as string | undefined) ?? ""
 
   return (
     <div className="space-y-3">
       <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">Lessons</p>
       {fields.map((field, j) => (
-        <div key={field.id} className="border border-[#E5E2DC] rounded-[10px] bg-white overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 bg-[#F5F4F1] border-b border-[#E5E2DC]">
-            <span className="text-[10px] font-bold text-[#6B6560] uppercase tracking-wide">Lesson {j + 1}</span>
-            <button type="button" onClick={() => remove(j)} className="w-5 h-5 flex items-center justify-center rounded-full text-[#A8A39C] hover:bg-red-50 hover:text-red-500 cursor-pointer">
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-          <div className="px-3 py-3 space-y-3">
-            <Field label="Title" required>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <input {...register(`curriculum.${moduleIndex}.lessons.${j}.title` as any)} className={inputCls} placeholder="e.g. Introduction to Results Frameworks" />
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <FieldError msg={(errors.curriculum?.[moduleIndex] as any)?.lessons?.[j]?.title?.message} />
-            </Field>
-            <Field label="Short Description">
-              <Controller
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                name={`curriculum.${moduleIndex}.lessons.${j}.description` as any}
-                control={control}
-                render={({ field }) => (
-                  <RichTextEditor
-                    value={(field.value as string) ?? ""}
-                    onChange={field.onChange}
-                    placeholder="Brief description of this lesson…"
-                  />
-                )}
-              />
-            </Field>
-            <Field label="Embedded Content">
-              <Controller
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                name={`curriculum.${moduleIndex}.lessons.${j}.blocks` as any}
-                control={control}
-                render={({ field }) => (
-                  <ContentBlockEditor
-                    blocks={(field.value as ContentBlock[]) ?? []}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </Field>
-          </div>
-        </div>
+        <LessonItem
+          key={field.id}
+          control={control}
+          register={register}
+          errors={errors}
+          moduleIndex={moduleIndex}
+          lessonIndex={j}
+          onRemove={() => remove(j)}
+          courseTitle={courseTitle}
+          chapterTitle={chapterTitle}
+        />
       ))}
       <button
         type="button"
-        onClick={() => append({ title: "", description: "", blocks: [] } as never)}
+        onClick={() => append({ id: crypto.randomUUID(), title: "", description: "", blocks: [] } as never)}
         className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
       >
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -842,7 +890,7 @@ function CurriculumEditor({
       ))}
       <button
         type="button"
-        onClick={() => append({ title: "", desc: "", lessons: [] })}
+        onClick={() => append({ id: crypto.randomUUID(), title: "", desc: "", lessons: [] })}
         className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1001,9 +1049,11 @@ function FaqEditor({
 }
 
 function ProgramModal({
-  program, categories, levels, formats, pricingOptions, onSave, onClose,
+  program, initialValues, aiGenerated, categories, levels, formats, pricingOptions, onSave, onClose,
 }: {
   program:        Program | null
+  initialValues?: Partial<ProgramFormValues>
+  aiGenerated?:   boolean
   categories:     Category[]
   levels:         Lookup[]
   formats:        Lookup[]
@@ -1046,10 +1096,14 @@ function ProgramModal({
     whatIsIncluded:     Array.isArray(program.whatIsIncluded)     ? (program.whatIsIncluded as string[])     : [],
     curriculum: Array.isArray(program.curriculum)
       ? (program.curriculum as Record<string, unknown>[]).map(m => ({
+          // Backfill a stable id for curriculum authored before lesson-level
+          // completion tracking existed — it's written back on next save.
+          id:    typeof m.id === "string" && m.id ? m.id : crypto.randomUUID(),
           title: String(m.title ?? ""),
           desc:  String(m.desc  ?? ""),
           lessons: Array.isArray(m.lessons)
             ? (m.lessons as Record<string, unknown>[]).map(l => ({
+                id:          typeof l.id === "string" && l.id ? l.id : crypto.randomUUID(),
                 title:       String(l.title       ?? ""),
                 description: String(l.description ?? ""),
                 blocks:      Array.isArray(l.blocks) ? l.blocks as ContentBlock[] : [],
@@ -1067,7 +1121,7 @@ function ProgramModal({
         }))
       : [],
     faqs: Array.isArray(program.faqs) ? (program.faqs as FaqItem[]) : [],
-  } : EMPTY_FORM
+  } : { ...EMPTY_FORM, ...initialValues }
 
   const {
     register,
@@ -1157,12 +1211,18 @@ function ProgramModal({
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 text-white/70 uppercase tracking-wider">
               {STEPS[step - 1].label}
             </span>
+            {aiGenerated && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-400/90 text-[#4A2E00] uppercase tracking-wider">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
+                AI Draft
+              </span>
+            )}
           </div>
           <h2 className="text-[18px] font-extrabold text-white leading-tight">
             {program ? program.title : "Create Program"}
           </h2>
           <p className="text-[12px] text-white/80 mt-1">
-            {STEPS[step - 1].desc}
+            {aiGenerated ? "AI-generated — review every field, then upload a cover image and save." : STEPS[step - 1].desc}
           </p>
         </div>
 
@@ -1189,7 +1249,7 @@ function ProgramModal({
               <FieldError msg={errors.thumbnail?.message} />
             </Field>
             <Field label="Title" required>
-              <input autoFocus {...register("title")} className={inputCls} placeholder="e.g. African Policy Leadership Programme" />
+              <input autoFocus {...register("title")} className={inputCls} placeholder="e.g. Policy Leadership Programme" />
               <FieldError msg={errors.title?.message} />
             </Field>
             <Field label="Slug" required hint="auto-generated from title — read only">
@@ -1411,7 +1471,7 @@ function ProgramModal({
                 disabled={saving}
                 className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer"
               >
-                {saving ? "Saving…" : program ? "Save Changes" : "Create Program"}
+                {saving ? "Saving…" : program ? "Save Changes" : aiGenerated ? "Save as Draft" : "Create Program"}
               </button>
             ) : (
               <button
@@ -1425,6 +1485,167 @@ function ProgramModal({
             )}
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ── AI Course Builder modal ───────────────────────────────────────────────────
+
+type AiDraftResponse = {
+  title:               string
+  excerpt:             string
+  tagline:             string
+  overview:            string
+  learningObjectives:  string[]
+  targetAudience:      string[]
+  whatIsIncluded:      string[]
+  curriculum:          { id: string; title: string; desc: string; lessons: { id: string; title: string; description: string; blocks: ContentBlock[] }[] }[]
+  faqs:                { q: string; a: string }[]
+  categoryId:          string
+  level:               CourseLevel
+}
+
+function AiCourseBuilderModal({
+  categories, onGenerated, onClose,
+}: {
+  categories:  Category[]
+  onGenerated: (draft: Partial<ProgramFormValues>) => void
+  onClose:     () => void
+}) {
+  const [topic, setTopic]           = useState("")
+  const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "")
+  const [level, setLevel]           = useState<CourseLevel>("BEGINNER")
+  const [notes, setNotes]           = useState("")
+  const [provider, setProvider]     = useState<"anthropic" | "openai">("anthropic")
+  const [loading, setLoading]       = useState(false)
+  const [error, setError]           = useState("")
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!topic.trim() || !categoryId) return
+    setLoading(true)
+    setError("")
+    try {
+      const res = await fetch("/api/programs/ai-generate", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ topic: topic.trim(), categoryId, level, notes: notes.trim() || undefined, provider }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? "Failed to generate a draft.")
+
+      const draft = data.draft as AiDraftResponse
+      onGenerated({
+        title:              draft.title,
+        excerpt:            draft.excerpt,
+        tagline:            draft.tagline,
+        overview:           draft.overview,
+        learningObjectives: draft.learningObjectives,
+        targetAudience:     draft.targetAudience,
+        whatIsIncluded:     draft.whatIsIncluded,
+        curriculum: draft.curriculum.map(chapter => ({
+          id:    chapter.id,
+          title: chapter.title,
+          desc:  chapter.desc,
+          lessons: chapter.lessons.map(lesson => ({
+            id:          lesson.id,
+            title:       lesson.title,
+            description: lesson.description,
+            blocks:      lesson.blocks ?? [],
+          })),
+        })),
+        faqs:       draft.faqs,
+        categoryId: draft.categoryId,
+        level:      draft.level,
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-1.5 text-white font-extrabold text-[16px]">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
+              AI Program Builder
+            </div>
+            <p className="text-[12px] text-white/80 mt-0.5">Generate a draft using our programme structure — you review before publishing.</p>
+          </div>
+          <button type="button" onClick={onClose} className="text-white/70 hover:text-white shrink-0 bg-white/10 hover:bg-white/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors cursor-pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
+          {error && <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+          <Field label="AI Model">
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                ["anthropic", "Anthropic Claude"],
+                ["openai",    "GPT-4.1 mini"],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setProvider(value)}
+                  className={`px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${
+                    provider === value
+                      ? "bg-[#0474C4] border-[#0474C4] text-white"
+                      : "bg-white border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4]"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </Field>
+          <Field label="Course Topic" required hint="what should this programme teach?">
+            <textarea
+              autoFocus
+              value={topic}
+              onChange={e => setTopic(e.target.value)}
+              rows={3}
+              className={inputCls}
+              placeholder="e.g. Monitoring and Evaluation (M&E) fundamentals for public sector analysts"
+              required
+            />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Category" required>
+              <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={inputCls} required>
+                {categories.length === 0 && <option value="">— No categories —</option>}
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </Field>
+            <Field label="Level">
+              <select value={level} onChange={e => setLevel(e.target.value as CourseLevel)} className={inputCls}>
+                <option value="BEGINNER">Beginner</option>
+                <option value="INTERMEDIATE">Intermediate</option>
+                <option value="ADVANCED">Advanced</option>
+              </select>
+            </Field>
+          </div>
+          <Field label="Notes" hint="optional">
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              rows={2}
+              className={inputCls}
+              placeholder="e.g. focus on results-based frameworks, keep it self-paced"
+            />
+          </Field>
+          <div className="flex gap-2 justify-end pt-1">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
+            <button type="submit" disabled={loading || !topic.trim() || !categoryId} className="flex items-center gap-1.5 px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+              {loading ? "Generating…" : "Generate Draft"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )
@@ -1575,7 +1796,7 @@ function LookupTab({
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+              <TableSkeletonRows colSpan={5} />
             ) : paginated.length === 0 ? (
               <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No {meta.plural.toLowerCase()} yet.</td></tr>
             ) : paginated.map(item => (
@@ -1607,7 +1828,7 @@ function LookupTab({
       {/* Cards — mobile */}
       <div className="md:hidden flex flex-col">
         {loading ? (
-          <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+          <SkeletonCardList />
         ) : paginated.length === 0 ? (
           <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No {meta.plural.toLowerCase()} yet.</div>
         ) : paginated.map(item => (
@@ -1682,7 +1903,9 @@ export default function AdminProgramsPage() {
   const [search, setSearch]                   = useState("")
   const [levelFilter, setLevelFilter]         = useState<CourseLevel | "All">("All")
   const [pricingFilter, setPricingFilter]     = useState<"All" | "Free" | "Paid" | "Featured">("All")
-  const [programModal, setProgramModal]       = useState<"create" | Program | null>(null)
+  const [programModal, setProgramModal]       = useState<"create" | "ai" | Program | null>(null)
+  const [aiDraft, setAiDraft]                 = useState<Partial<ProgramFormValues> | null>(null)
+  const [aiBuilderOpen, setAiBuilderOpen]     = useState(false)
   const [deleteProgram, setDeleteProgram]     = useState<Program | null>(null)
   const [filterOpen, setFilterOpen]           = useState(false)
   const [statusOpen, setStatusOpen]           = useState(false)
@@ -1818,16 +2041,18 @@ export default function AdminProgramsPage() {
   }
 
   async function handleSaveProgram(values: ProgramFormValues) {
-    const editing = programModal !== "create" ? programModal : null
+    const editing = programModal !== "create" && programModal !== "ai" ? programModal : null
 
     const curriculumPayload = values.curriculum
       .filter(m => m.title.trim())
       .map(m => ({
+        id:    m.id || crypto.randomUUID(),
         title: m.title,
         desc:  m.desc || null,
         lessons: m.lessons
           .filter(l => l.title.trim())
           .map(l => ({
+            id:          l.id || crypto.randomUUID(),
             title:       l.title,
             description: l.description || null,
             blocks:      l.blocks ?? [],
@@ -1858,6 +2083,7 @@ export default function AdminProgramsPage() {
       categoryId:  values.categoryId || null,
       featured:    values.featured,
       predefinedAnalytics: values.predefinedAnalytics,
+      ...(programModal === "ai" && !editing && { status: "DRAFT" as const }),
 
       programLevelId:   values.programLevelId   || null,
       programFormatId:  values.programFormatId  || null,
@@ -1890,6 +2116,7 @@ export default function AdminProgramsPage() {
     const data = await res.json()
     if (!res.ok) throw new Error(data.error ?? "Failed to save program.")
     setProgramModal(null)
+    setAiDraft(null)
     await fetchPrograms()
   }
 
@@ -1902,6 +2129,20 @@ export default function AdminProgramsPage() {
       return
     }
     setDeleteProgram(null)
+    await fetchPrograms()
+  }
+
+  async function handlePublishProgram(p: Program) {
+    const res = await fetch(`/api/programs/${p.id}`, {
+      method:  "PUT",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ status: "PUBLISHED" }),
+    })
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      alert(d.error ?? "Failed to publish program.")
+      return
+    }
     await fetchPrograms()
   }
 
@@ -2031,23 +2272,34 @@ export default function AdminProgramsPage() {
           <h1 className="text-[18px] font-extrabold text-[#1A1916]">Programs</h1>
           <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage learning programs and categories</p>
         </div>
-        <button
-          onClick={() => {
-            if (tab === "programs")   setProgramModal("create")
-            else if (tab === "categories") setCategoryModal("create")
-            else if (tab === "levels")     setLevelModal("create")
-            else if (tab === "formats")    setFormatModal("create")
-            else                           setPricingModal("create")
-          }}
-          className="self-start sm:self-auto flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          {tab === "programs"   ? "New Program"
-           : tab === "categories" ? "New Category"
-           : tab === "levels"     ? "New Level"
-           : tab === "formats"    ? "New Format"
-           :                        "New Pricing"}
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {tab === "programs" && (
+            <button
+              onClick={() => setAiBuilderOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#0474C4] text-[#0474C4] bg-white hover:bg-[#EEF6FF] transition-colors cursor-pointer"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
+              AI Program Builder
+            </button>
+          )}
+          <button
+            onClick={() => {
+              if (tab === "programs")   setProgramModal("create")
+              else if (tab === "categories") setCategoryModal("create")
+              else if (tab === "levels")     setLevelModal("create")
+              else if (tab === "formats")    setFormatModal("create")
+              else                           setPricingModal("create")
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            {tab === "programs"   ? "New Program"
+             : tab === "categories" ? "New Category"
+             : tab === "levels"     ? "New Level"
+             : tab === "formats"    ? "New Format"
+             :                        "New Pricing"}
+          </button>
+        </div>
       </div>
 
       {/* Tabs — formats / pricing intentionally hidden until those features ship */}
@@ -2153,7 +2405,7 @@ export default function AdminProgramsPage() {
               </thead>
               <tbody>
                 {programsLoading ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+                  <TableSkeletonRows colSpan={7} />
                 ) : filteredPrograms.length === 0 ? (
                   <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">No programs found.</td></tr>
                 ) : paginatedPrograms.map(p => (
@@ -2175,7 +2427,12 @@ export default function AdminProgramsPage() {
                           </div>
                         )}
                         <div>
-                          <p className="font-semibold text-[#1A1916] leading-tight line-clamp-1">{p.title}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-semibold text-[#1A1916] leading-tight line-clamp-1">{p.title}</p>
+                            {p.status === "DRAFT" && (
+                              <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Draft</span>
+                            )}
+                          </div>
                           <p className="text-[11px] text-[#A8A39C] mt-0.5">{instructorName(p)}</p>
                           {p.featured && (
                             <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#0474C4] mt-0.5">
@@ -2232,6 +2489,11 @@ export default function AdminProgramsPage() {
                         <Link href={`/programs/${p.slug}`} target="_blank" title="View public page" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                         </Link>
+                        {p.status === "DRAFT" && (
+                          <button onClick={() => handlePublishProgram(p)} title="Publish" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-emerald-200 bg-emerald-50 text-emerald-600 hover:border-emerald-400 hover:bg-emerald-100 cursor-pointer transition-colors">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          </button>
+                        )}
                         <button onClick={() => setProgramModal(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
@@ -2249,7 +2511,7 @@ export default function AdminProgramsPage() {
           {/* Cards — mobile */}
           <div className="md:hidden flex flex-col">
             {programsLoading ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+              <SkeletonCardList />
             ) : filteredPrograms.length === 0 ? (
               <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No programs found.</div>
             ) : paginatedPrograms.map(p => (
@@ -2268,7 +2530,12 @@ export default function AdminProgramsPage() {
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight line-clamp-2">{p.title}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-semibold text-[#1A1916] text-[14px] leading-tight line-clamp-2">{p.title}</p>
+                      {p.status === "DRAFT" && (
+                        <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Draft</span>
+                      )}
+                    </div>
                     <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{instructorName(p)}</p>
                     {p.featured && (
                       <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#0474C4] mt-0.5">
@@ -2324,6 +2591,15 @@ export default function AdminProgramsPage() {
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                   </Link>
+                  {p.status === "DRAFT" && (
+                    <button
+                      onClick={() => handlePublishProgram(p)}
+                      aria-label="Publish"
+                      className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-emerald-200 bg-emerald-50 text-emerald-600 hover:border-emerald-400 hover:bg-emerald-100 cursor-pointer transition-colors"
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </button>
+                  )}
                   <button
                     onClick={() => setProgramModal(p)}
                     aria-label="Edit"
@@ -2383,7 +2659,7 @@ export default function AdminProgramsPage() {
               </thead>
               <tbody>
                 {categoriesLoading ? (
-                  <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+                  <TableSkeletonRows colSpan={5} />
                 ) : filteredCategories.length === 0 ? (
                   <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No categories yet.</td></tr>
                 ) : paginatedCategories.map(cat => (
@@ -2411,7 +2687,7 @@ export default function AdminProgramsPage() {
           {/* Cards — mobile */}
           <div className="md:hidden flex flex-col">
             {categoriesLoading ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+              <SkeletonCardList />
             ) : filteredCategories.length === 0 ? (
               <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No categories yet.</div>
             ) : paginatedCategories.map(cat => (
@@ -2519,13 +2795,26 @@ export default function AdminProgramsPage() {
       {/* Modals */}
       {programModal !== null && (
         <ProgramModal
-          program={programModal === "create" ? null : programModal}
+          program={programModal === "create" || programModal === "ai" ? null : programModal}
+          initialValues={programModal === "ai" ? aiDraft ?? undefined : undefined}
+          aiGenerated={programModal === "ai"}
           categories={categories}
           levels={levels}
           formats={formats}
           pricingOptions={pricingList}
           onSave={handleSaveProgram}
-          onClose={() => setProgramModal(null)}
+          onClose={() => { setProgramModal(null); setAiDraft(null) }}
+        />
+      )}
+      {aiBuilderOpen && (
+        <AiCourseBuilderModal
+          categories={categories}
+          onClose={() => setAiBuilderOpen(false)}
+          onGenerated={draft => {
+            setAiDraft(draft)
+            setAiBuilderOpen(false)
+            setProgramModal("ai")
+          }}
         />
       )}
       {categoryModal !== null && (

@@ -6,6 +6,7 @@ import { useUploadThing } from "@/lib/uploadthing-client"
 import { useForm, Controller } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
+import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -448,7 +449,7 @@ export default function AdminGlobalOfficesPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+                <TableSkeletonRows colSpan={7} />
               ) : filtered.length === 0 ? (
                 <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">No offices yet.</td></tr>
               ) : paginated.map(o => (
@@ -485,7 +486,7 @@ export default function AdminGlobalOfficesPage() {
         {/* Cards — mobile */}
         <div className="md:hidden flex flex-col">
           {loading ? (
-            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            <SkeletonCardList />
           ) : filtered.length === 0 ? (
             <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No offices yet.</div>
           ) : paginated.map(o => (

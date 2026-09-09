@@ -11,6 +11,7 @@ import { Clock, Globe } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import { computeDurationHours, normalizeFacilitators, type Facilitator } from "@/lib/workshop-helpers"
+import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 // ── Timezone list (built from Intl API — evaluated once at module load) ────────
 const TIMEZONES: string[] = (Intl as unknown as { supportedValuesOf(key: string): string[] })
@@ -1085,7 +1086,7 @@ export default function InstructorWorkshopsPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</td></tr>
+                  <TableSkeletonRows colSpan={7} />
                 ) : filtered.length === 0 ? (
                   <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No workshops found.</td></tr>
                 ) : paginated.map(workshop => (
@@ -1190,7 +1191,7 @@ export default function InstructorWorkshopsPage() {
           {/* Cards — mobile */}
           <div className="md:hidden flex flex-col">
             {loading ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+              <SkeletonCardList />
             ) : filtered.length === 0 ? (
               <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No workshops found.</div>
             ) : paginated.map(workshop => (

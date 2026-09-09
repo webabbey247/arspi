@@ -39,9 +39,11 @@ const updateSchema = z.object({
   targetAudience:     z.array(z.string()).nullable().optional(),
   learningObjectives: z.array(z.string()).nullable().optional(),
   curriculum:         z.array(z.object({
+    id:    z.string().optional(),
     title: z.string(),
     desc:  z.string().nullable().optional(),
     lessons: z.array(z.object({
+      id:          z.string().optional(),
       title:       z.string(),
       description: z.string().nullable().optional(),
       blocks:      z.array(z.any()).optional(),

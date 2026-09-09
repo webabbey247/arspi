@@ -1,5 +1,13 @@
 import { db } from "@/lib/db"
 
+/** Formats a name from an optional first/last name pair, falling back to email. */
+export function displayName(person: { email: string; profile: { firstName: string | null; lastName: string | null } | null }): string {
+  const profile = person.profile
+  return profile?.firstName || profile?.lastName
+    ? [profile.firstName, profile.lastName].filter(Boolean).join(" ")
+    : person.email
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type CertificateRow = {
@@ -16,10 +24,10 @@ export type CertificateRow = {
     profile: { firstName: string | null; lastName: string | null } | null
   }
   course: {
-    id:    string
-    title: string
-    slug:  string
-    instructorName: string | null
+    id:         string
+    title:      string
+    slug:       string
+    instructor: { email: string; profile: { firstName: string | null; lastName: string | null } | null }
   }
 }
 
@@ -33,10 +41,15 @@ const certInclude = {
   },
   course: {
     select: {
-      id:             true,
-      title:          true,
-      slug:           true,
-      instructorName: true,
+      id:    true,
+      title: true,
+      slug:  true,
+      instructor: {
+        select: {
+          email:   true,
+          profile: { select: { firstName: true, lastName: true } },
+        },
+      },
     },
   },
 } as const
@@ -109,6 +122,25 @@ export async function getCertificatesByProgram(
 ): Promise<CertificateRow[]> {
   const certs = await db.certificate.findMany({
     where:   { courseId },
+    include: certInclude,
+    orderBy: { issuedAt: "desc" },
+  })
+  return certs as unknown as CertificateRow[]
+}
+
+export async function getCertificatesByUser(
+  userId: string
+): Promise<CertificateRow[]> {
+  const certs = await db.certificate.findMany({
+    where:   { userId },
+    include: certInclude,
+    orderBy: { issuedAt: "desc" },
+  })
+  return certs as unknown as CertificateRow[]
+}
+
+export async function getAllCertificates(): Promise<CertificateRow[]> {
+  const certs = await db.certificate.findMany({
     include: certInclude,
     orderBy: { issuedAt: "desc" },
   })

@@ -8,6 +8,7 @@ import * as yup from "yup"
 import { Check, X, ShieldCheck, GraduationCap, User as UserIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUploadThing } from "@/lib/uploadthing-client"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { AccountProfile } from "@/services/profile.service"
 
 type Role = "ADMIN" | "INSTRUCTOR" | "USER"
@@ -497,30 +498,43 @@ export default function SettingsPage() {
 
       {/* Identity header */}
       <section className="rounded-[14px] border border-[#E5E2DC] bg-white px-4 sm:px-5 py-4 mb-6 flex items-center gap-3 sm:gap-4 flex-wrap">
-        <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border border-[#E5E2DC] bg-[#F5F4F1] shrink-0">
-          {avatar ? (
-            <Image src={avatar} alt="Avatar" fill className="object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center font-heading text-[1.125rem] font-semibold text-[#0474C4]">
-              {initials}
+        {loading ? (
+          <>
+            <Skeleton className="w-14 h-14 sm:w-16 sm:h-16 rounded-full shrink-0" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-52" />
             </div>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-[15px] text-[#1A1916] truncate">
-            {profile
-              ? [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.email.split("@")[0]
-              : "—"}
-          </p>
-          <p className="text-[12px] text-[#A8A39C] truncate">{profile?.email ?? ""}</p>
-        </div>
-        <span className={cn(
-          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0",
-          ROLE_COLORS[role],
-        )}>
-          {ROLE_ICONS[role]}
-          {ROLE_LABELS[role]}
-        </span>
+            <Skeleton className="h-5 w-20 rounded-full shrink-0" />
+          </>
+        ) : (
+          <>
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border border-[#E5E2DC] bg-[#F5F4F1] shrink-0">
+              {avatar ? (
+                <Image src={avatar} alt="Avatar" fill className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center font-heading text-[1.125rem] font-semibold text-[#0474C4]">
+                  {initials}
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-[15px] text-[#1A1916] truncate">
+                {profile
+                  ? [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.email.split("@")[0]
+                  : "—"}
+              </p>
+              <p className="text-[12px] text-[#A8A39C] truncate">{profile?.email ?? ""}</p>
+            </div>
+            <span className={cn(
+              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0",
+              ROLE_COLORS[role],
+            )}>
+              {ROLE_ICONS[role]}
+              {ROLE_LABELS[role]}
+            </span>
+          </>
+        )}
       </section>
 
       {/* Tabs section */}

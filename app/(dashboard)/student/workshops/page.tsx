@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import { sanitizeHtml } from "@/lib/sanitize"
+import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -377,7 +378,7 @@ export default function StudentWorkshopsPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</td></tr>
+                <TableSkeletonRows colSpan={5} />
               ) : filtered.length === 0 ? (
                 <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No workshops found.</td></tr>
               ) : filtered.map(reg => (
@@ -455,7 +456,7 @@ export default function StudentWorkshopsPage() {
         {/* Cards — mobile */}
         <div className="md:hidden flex flex-col">
           {loading ? (
-            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            <SkeletonCardList />
           ) : filtered.length === 0 ? (
             <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No workshops found.</div>
           ) : filtered.map(reg => (

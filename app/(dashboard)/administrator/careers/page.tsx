@@ -11,6 +11,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import RichTextEditor from "@/components/ui/RichTextEditor"
 import { cn } from "@/lib/utils"
+import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -856,7 +857,7 @@ export default function AdminCareersPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</td></tr>
+                  <TableSkeletonRows colSpan={7} />
                 ) : filtered.length === 0 ? (
                   <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No career postings found.</td></tr>
                 ) : paginated.map(career => (
@@ -914,7 +915,7 @@ export default function AdminCareersPage() {
           {/* Cards — mobile */}
           <div className="md:hidden flex flex-col">
             {loading ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+              <SkeletonCardList />
             ) : filtered.length === 0 ? (
               <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No career postings found.</div>
             ) : paginated.map(career => (
@@ -1017,7 +1018,7 @@ export default function AdminCareersPage() {
               </thead>
               <tbody>
                 {deptLoading ? (
-                  <tr><td colSpan={3} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</td></tr>
+                  <TableSkeletonRows colSpan={3} />
                 ) : filteredDepts.length === 0 ? (
                   <tr><td colSpan={3} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No departments found. Create one to get started.</td></tr>
                 ) : paginatedDepts.map(dept => (
@@ -1045,7 +1046,7 @@ export default function AdminCareersPage() {
           {/* Cards — mobile */}
           <div className="md:hidden flex flex-col">
             {deptLoading ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+              <SkeletonCardList />
             ) : filteredDepts.length === 0 ? (
               <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No departments found. Create one to get started.</div>
             ) : paginatedDepts.map(dept => (

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { computeDurationHours } from "@/lib/workshop-helpers"
+import { DetailPageSkeleton, InlineSkeleton } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -204,13 +205,7 @@ export default function WorkshopDetailPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   if (loading) {
-    return (
-      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
-        <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">
-          Loading…
-        </div>
-      </div>
-    )
+    return <DetailPageSkeleton />
   }
 
   if (!workshop) {
@@ -441,9 +436,7 @@ export default function WorkshopDetailPage() {
         </div>
 
         {regLoading ? (
-          <div className="p-8 flex items-center justify-center text-[13px] text-[#A8A39C]">
-            Loading registrations…
-          </div>
+          <InlineSkeleton rows={3} />
         ) : registrations.length === 0 ? (
           <div className="p-8 flex items-center justify-center text-[13px] text-[#A8A39C]">
             No registrations yet.

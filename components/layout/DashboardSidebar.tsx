@@ -197,7 +197,7 @@ const NAV: NavSection[] = [
     items: [
       {
         label: "Settings",
-        href: "/administrator/settings",
+        href: "/settings",
         icon: (
           <>
             <circle cx="12" cy="12" r="3" />
@@ -435,9 +435,17 @@ const DashboardSidebar = ({
             </span>
 
             {items.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(item.href));
+              // A single-segment href (e.g. "/administrator", the section's own
+              // "Dashboard" entry) is a path prefix of every other page in that
+              // section, so it must match exactly — otherwise "Dashboard" stays
+              // highlighted no matter which page you're actually on. Deeper
+              // hrefs (e.g. "/administrator/programs") still match their own
+              // sub-pages, respecting a "/" boundary so a sibling path that
+              // merely starts with the same characters doesn't false-match.
+              const isRootLevel = item.href.split("/").filter(Boolean).length <= 1;
+              const isActive = isRootLevel
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link key={item.href} href={item.href} className={navItemClass(isActive)}>
                   <svg

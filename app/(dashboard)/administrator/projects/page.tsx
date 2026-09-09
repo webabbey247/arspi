@@ -12,6 +12,7 @@ import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import LinkExtension from "@tiptap/extension-link"
+import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -833,7 +834,7 @@ function TaxonomyTab({
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+              <TableSkeletonRows colSpan={5} />
             ) : filtered.length === 0 ? (
               <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No {singular + "s"} yet.</td></tr>
             ) : paginated.map(item => (
@@ -861,7 +862,7 @@ function TaxonomyTab({
       {/* Cards — mobile */}
       <div className="md:hidden flex flex-col">
         {loading ? (
-          <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+          <SkeletonCardList />
         ) : filtered.length === 0 ? (
           <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No {singular + "s"} yet.</div>
         ) : paginated.map(item => (
@@ -1212,7 +1213,7 @@ export default function AdminProjectsPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+                  <TableSkeletonRows colSpan={7} />
                 ) : filteredProjects.length === 0 ? (
                   <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">No projects found.</td></tr>
                 ) : paginatedProjects.map(p => (
@@ -1273,7 +1274,7 @@ export default function AdminProjectsPage() {
           {/* Cards — mobile */}
           <div className="md:hidden flex flex-col">
             {loading ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+              <SkeletonCardList />
             ) : filteredProjects.length === 0 ? (
               <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No projects found.</div>
             ) : paginatedProjects.map(p => (

@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import StepIndicator from "@/components/ui/step-indicator";
+import SocialLoginButtons from "@/components/forms/SocialLoginButtons";
 import StepOneRegisterForm from "@/components/forms/StepOneRegisterForm";
 import StepTwoRegisterForm from "@/components/forms/StepTwoRegisterForm";
 import StepThreeRegisterForm from "@/components/forms/StepThreeRegisterForm";
@@ -143,11 +144,21 @@ export default function RegisterPage() {
 
               {/* ── Step 1 ── */}
               {step === 1 && (
-                <StepOneRegisterForm
-                  showPw={showPw}
-                  setShowPw={setShowPw}
-                  onComplete={({ userId: id }) => { setUserId(id); setStep(2); }}
-                />
+                <>
+                  {/* <SocialLoginButtons />
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex-1 h-px bg-sapphire/20" />
+                    <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400">
+                      or sign up with email
+                    </span>
+                    <div className="flex-1 h-px bg-sapphire/20" />
+                  </div> */}
+                  <StepOneRegisterForm
+                    showPw={showPw}
+                    setShowPw={setShowPw}
+                    onComplete={({ userId: id }) => { setUserId(id); setStep(2); }}
+                  />
+                </>
               )}
 
               {/* ── Step 2 ── */}

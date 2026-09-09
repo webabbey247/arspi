@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import dynamic from "next/dynamic"
 import Image from "next/image"
 import { useUploadThing } from "@/lib/uploadthing-client"
+import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 // Load Tiptap editor client-side only (uses browser APIs)
 const RichTextEditor = dynamic(() => import("@/components/ui/RichTextEditor"), { ssr: false })
@@ -867,7 +868,7 @@ export default function AdminInsightsPage() {
               </thead>
               <tbody>
                 {insightsLoading ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+                  <TableSkeletonRows colSpan={7} />
                 ) : filteredInsights.length === 0 ? (
                   <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">No insights found.</td></tr>
                 ) : paginatedInsights.map(ins => (
@@ -916,7 +917,7 @@ export default function AdminInsightsPage() {
           {/* Cards — mobile */}
           <div className="md:hidden flex flex-col">
             {insightsLoading ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+              <SkeletonCardList />
             ) : filteredInsights.length === 0 ? (
               <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No insights found.</div>
             ) : paginatedInsights.map(ins => (
@@ -1023,7 +1024,7 @@ export default function AdminInsightsPage() {
               </thead>
               <tbody>
                 {authorsLoading ? (
-                  <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+                  <TableSkeletonRows colSpan={5} />
                 ) : filteredAuthors.length === 0 ? (
                   <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No authors found.</td></tr>
                 ) : paginatedAuthors.map(a => (
@@ -1064,7 +1065,7 @@ export default function AdminInsightsPage() {
           {/* Cards — mobile */}
           <div className="md:hidden flex flex-col">
             {authorsLoading ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+              <SkeletonCardList />
             ) : filteredAuthors.length === 0 ? (
               <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No authors found.</div>
             ) : paginatedAuthors.map(a => (
@@ -1150,7 +1151,7 @@ export default function AdminInsightsPage() {
               </thead>
               <tbody>
                 {categoriesLoading ? (
-                  <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">Loading…</td></tr>
+                  <TableSkeletonRows colSpan={5} />
                 ) : filteredCategories.length === 0 ? (
                   <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No categories yet.</td></tr>
                 ) : paginatedCategories.map(cat => (
@@ -1178,7 +1179,7 @@ export default function AdminInsightsPage() {
           {/* Cards — mobile */}
           <div className="md:hidden flex flex-col">
             {categoriesLoading ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+              <SkeletonCardList />
             ) : filteredCategories.length === 0 ? (
               <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No categories yet.</div>
             ) : paginatedCategories.map(cat => (

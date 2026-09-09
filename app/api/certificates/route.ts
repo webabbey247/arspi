@@ -1,12 +1,41 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { issueCertificate } from "@/services/certificate.service"
+import { issueCertificate, getAllCertificates } from "@/services/certificate.service"
 import { z } from "zod"
 
 const issueSchema = z.object({
   userId:   z.string().min(1),
   courseId: z.string().min(1),
 })
+
+/** GET /api/certificates — list every issued certificate (admin only) */
+export async function GET() {
+  try {
+    const session = await getSession()
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const certificates = await getAllCertificates()
+    return NextResponse.json({
+      certificates: certificates.map(c => ({
+        id:         c.id,
+        verifyCode: c.verifyCode,
+        issuedAt:   c.issuedAt.toISOString(),
+        expiresAt:  c.expiresAt?.toISOString() ?? null,
+        user: {
+          id:    c.user.id,
+          email: c.user.email,
+          name:  [c.user.profile?.firstName, c.user.profile?.lastName].filter(Boolean).join(" ") || c.user.email,
+        },
+        course: { id: c.course.id, title: c.course.title, slug: c.course.slug },
+      })),
+    })
+  } catch (error) {
+    console.error("[GET /api/certificates]", error)
+    return NextResponse.json({ error: "Something went wrong." }, { status: 500 })
+  }
+}
 
 /** POST /api/certificates — manually issue a certificate for a completed enrollment (admin only) */
 export async function POST(req: NextRequest) {

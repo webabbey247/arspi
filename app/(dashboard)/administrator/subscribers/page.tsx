@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { SubscriptionStatus } from "@/services/subscription.service"
 import { downloadCsv } from "@/lib/csv"
+import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 type SubscriberRow = {
   id: string
@@ -188,7 +189,7 @@ export default function AdminSubscribersPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={4} className="px-4 py-10 text-center text-[#A8A39C]">Loading...</td></tr>
+                <TableSkeletonRows colSpan={4} />
               ) : subscribers.length === 0 ? (
                 <tr><td colSpan={4} className="px-4 py-10 text-center text-[#A8A39C]">No subscribers found.</td></tr>
               ) : paginated.map((subscriber) => (
@@ -210,7 +211,7 @@ export default function AdminSubscribersPage() {
         {/* Cards — mobile */}
         <div className="md:hidden flex flex-col">
           {loading ? (
-            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading...</div>
+            <SkeletonCardList />
           ) : subscribers.length === 0 ? (
             <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No subscribers found.</div>
           ) : paginated.map((subscriber) => (

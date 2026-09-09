@@ -25,6 +25,7 @@ const updateSchema = z.object({
   level:        z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
   featured:     z.boolean().optional(),
   predefinedAnalytics: z.boolean().optional(),
+  status:       z.enum(["DRAFT", "PUBLISHED"]).optional(),
   categoryId:   z.string().nullable().optional(),
 
   // Lookup-table relations (Levels / Formats / Pricing tabs)
@@ -49,9 +50,11 @@ const updateSchema = z.object({
   targetAudience:     z.array(z.string()).nullable().optional(),
   learningObjectives: z.array(z.string()).nullable().optional(),
   curriculum:         z.array(z.object({
+    id:    z.string().optional(),
     title: z.string(),
     desc:  z.string().nullable().optional(),
     lessons: z.array(z.object({
+      id:          z.string().optional(),
       title:       z.string(),
       description: z.string().nullable().optional(),
       blocks:      z.array(z.any()).optional(),

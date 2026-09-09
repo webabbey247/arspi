@@ -1,8 +1,8 @@
 import { db } from "@/lib/db"
 import { revalidateTag } from "next/cache"
-import { CourseLevel } from "@prisma/client"
+import { CourseLevel, CourseStatus } from "@prisma/client"
 
-export type { CourseLevel }
+export type { CourseLevel, CourseStatus }
 
 /** Tag for /api/programs/public listing cache. */
 export const PROGRAMS_PUBLIC_TAG = "programs:public"
@@ -33,6 +33,7 @@ export type ProgramRow = {
   level:       CourseLevel
   featured:    boolean
   predefinedAnalytics: boolean
+  status:      CourseStatus
 
   tagline:              string | null
   duration:             string | null
@@ -86,6 +87,7 @@ export type ProgramInput = {
   level?:       CourseLevel
   featured?:    boolean
   predefinedAnalytics?: boolean
+  status?:      CourseStatus
   categoryId?:  string | null
   instructorId?: string
 
@@ -232,6 +234,7 @@ export async function getPrograms(filters?: {
   level?:        CourseLevel
   featured?:     boolean
   instructorId?: string
+  status?:       CourseStatus
 }): Promise<ProgramRow[]> {
   const rows = await db.course.findMany({
     where: {
@@ -239,6 +242,7 @@ export async function getPrograms(filters?: {
       ...(filters?.level        !== undefined && { level:        filters.level }),
       ...(filters?.featured     !== undefined && { featured:     filters.featured }),
       ...(filters?.instructorId !== undefined && { instructorId: filters.instructorId }),
+      ...(filters?.status       !== undefined && { status:       filters.status }),
     },
     include: programInclude,
     orderBy: { createdAt: "desc" },
@@ -287,6 +291,8 @@ export async function getProgramsForListing(filters?: {
 }): Promise<ProgramListingRow[]> {
   return db.course.findMany({
     where: {
+      // AI-generated / unfinished drafts never appear on the public site
+      status: "PUBLISHED",
       ...(filters?.categoryId !== undefined && { categoryId: filters.categoryId }),
       ...(filters?.level      !== undefined && { level:      filters.level      }),
       ...(filters?.featured   !== undefined && { featured:   filters.featured   }),
@@ -356,6 +362,7 @@ export async function createProgram(
       level:        input.level        ?? "BEGINNER",
       featured:     input.featured     ?? false,
       predefinedAnalytics: input.predefinedAnalytics ?? false,
+      status:       input.status       ?? "PUBLISHED",
       categoryId:   input.categoryId   ?? null,
       instructorId: input.instructorId ?? instructorId,
 
@@ -412,6 +419,7 @@ export async function updateProgram(
       ...(input.level        !== undefined && { level:        input.level }),
       ...(input.featured     !== undefined && { featured:     input.featured }),
       ...(input.predefinedAnalytics !== undefined && { predefinedAnalytics: input.predefinedAnalytics }),
+      ...(input.status       !== undefined && { status:       input.status }),
       ...(input.categoryId   !== undefined && { categoryId:   input.categoryId }),
       ...(input.instructorId !== undefined && { instructorId: input.instructorId }),
 

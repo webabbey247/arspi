@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { sanitizeHtml } from "@/lib/sanitize"
+import { DetailPageSkeleton, InlineSkeleton } from "@/components/ui/skeleton"
 
 type Applicant = {
   id:             string
@@ -131,7 +132,7 @@ export default function AdminCareerDetailPage() {
   useEffect(() => { fetchApplicants() }, [fetchApplicants])
 
   if (loading) {
-    return <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto text-[#A8A39C] text-[13px]">Loading…</div>
+    return <DetailPageSkeleton />
   }
 
   if (error || !career) {
@@ -276,7 +277,7 @@ export default function AdminCareerDetailPage() {
         </div>
 
         {applicantsLoading ? (
-          <div className="px-5 py-10 text-center text-[12px] text-[#A8A39C]">Loading applicants…</div>
+          <InlineSkeleton rows={3} />
         ) : applicants.length === 0 ? (
           <div className="px-5 py-10 text-center text-[12px] text-[#A8A39C]">No applications yet.</div>
         ) : (

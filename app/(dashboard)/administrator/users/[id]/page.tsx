@@ -8,6 +8,7 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import { Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { DetailPageSkeleton } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -296,13 +297,7 @@ export default function UserDetailPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   if (loading) {
-    return (
-      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
-        <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">
-          Loading…
-        </div>
-      </div>
-    )
+    return <DetailPageSkeleton />
   }
 
   if (!user) {

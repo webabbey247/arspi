@@ -42,6 +42,11 @@ enum UserStatus {
   DISABLED
 }
 
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+}
+
 model User {
   id        String     @id @default(cuid())
   email     String     @unique
@@ -50,9 +55,8 @@ model User {
   status    UserStatus @default(ACTIVE)
   createdAt DateTime   @default(now())
 
-  // NextAuth
+  // Linked OAuth identities (Google, LinkedIn, …) — see services/oauth.service.ts
   accounts Account[]
-  sessions Session[]
 
   // Onboarding flags
   hasProfile   Boolean  @default(false)
@@ -67,6 +71,7 @@ model User {
   profile             Profile?
   enrollments         Enrollment[]
   lessonCompletions   LessonCompletion[]
+  lessonProgress      LessonProgress[]
   certificates        Certificate[]
   taughtCourses       Course[]           @relation("CourseInstructor")
   taughtWorkshops     Workshop[]         @relation("WorkshopInstructor")
@@ -113,13 +118,14 @@ model Profile {
   @@map("profiles")
 }
 
-// NextAuth required models
-
+// Linked OAuth identities — one row per (provider, providerAccountId) a user
+// has signed in with. This app's own session cookies (lib/session.ts) are the
+// only session mechanism; there is no separate NextAuth-style Session table.
 model Account {
   id                String  @id @default(cuid())
   userId            String
-  type              String
-  provider          String
+  type              String // "oauth"
+  provider          String // "google" | "linkedin"
   providerAccountId String
   refresh_token     String?
   access_token      String?
@@ -133,26 +139,6 @@ model Account {
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("sessions")
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-  @@map("verification_tokens")
 }
 
 // ============================================================
@@ -183,6 +169,7 @@ model Course {
   level        CourseLevel @default(BEGINNER)
   featured     Boolean     @default(false)
   predefinedAnalytics Boolean @default(false)  // when true, render Metrics + Social Proof publicly
+  status       CourseStatus @default(PUBLISHED) // DRAFT = AI-generated / unfinished, hidden from public site
 
   // Programme details
   tagline              String?
@@ -226,10 +213,11 @@ model Course {
   programPricing   ProgramPricing? @relation(fields: [programPricingId], references: [id])
 
   // Relations
-  sections     Section[]
-  enrollments  Enrollment[]
-  certificates Certificate[]
-  tags         CourseTag[]
+  sections       Section[]
+  enrollments    Enrollment[]
+  lessonProgress LessonProgress[]
+  certificates   Certificate[]
+  tags           CourseTag[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -334,6 +322,12 @@ model Enrollment {
   enrolledAt  DateTime         @default(now())
   completedAt DateTime?
 
+  // Student's own rating of this program (1-5), and per-student card state —
+  // distinct from Course.rating, which is the admin-set overall rating.
+  studentRating Int?
+  favorited     Boolean @default(false)
+  archived      Boolean @default(false)
+
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
@@ -352,6 +346,24 @@ model LessonCompletion {
 
   @@unique([userId, lessonId])
   @@map("lesson_completions")
+}
+
+// Tracks per-student progress against a program's `Course.curriculum` JSON
+// (chapter/lesson objects carry their own stable `id` — there is no relational
+// Lesson row to key off, since curriculum content lives as JSON, not the
+// Section/Lesson tables above). One row per student per course.
+model LessonProgress {
+  id           String   @id @default(cuid())
+  userId       String
+  courseId     String
+  completedIds Json // string[] — curriculum lesson ids the student has marked complete
+  updatedAt    DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("lesson_progress")
 }
 // ============================================================
 // CERTIFICATES

@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { getCertificateByToken } from "@/services/certificate.service"
+import { getCertificateByToken, displayName } from "@/services/certificate.service"
 
 type Props = { params: Promise<{ token: string }> }
 
@@ -9,12 +9,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { token } = await params
   const cert = await getCertificateByToken(token)
   if (!cert) return { title: "Certificate Not Found — ARPS Institute" }
-  const profile = cert.user.profile
-  const name =
-    profile?.firstName || profile?.lastName
-      ? [profile.firstName, profile.lastName].filter(Boolean).join(" ")
-      : cert.user.email
-  return { title: `Certificate — ${name} · ARPS Institute` }
+  return { title: `Certificate — ${displayName(cert.user)} · ARPS Institute` }
 }
 
 export default async function VerifyPage({ params }: Props) {
@@ -23,11 +18,7 @@ export default async function VerifyPage({ params }: Props) {
 
   if (!cert) notFound()
 
-  const profile = cert.user.profile
-  const recipientName =
-    profile?.firstName || profile?.lastName
-      ? [profile.firstName, profile.lastName].filter(Boolean).join(" ")
-      : cert.user.email
+  const recipientName = displayName(cert.user)
 
   const issuedAt = new Date(cert.issuedAt).toLocaleDateString("en-GB", {
     day:   "2-digit",
@@ -95,9 +86,7 @@ export default async function VerifyPage({ params }: Props) {
               <div className="text-center mb-6 sm:mb-8">
                 <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-white/35 mb-2 sm:mb-3">For successfully completing</p>
                 <h2 className="text-[1.0625rem] sm:text-[1.1875rem] md:text-[1.35rem] font-semibold text-[#F7F3ED] leading-snug">{cert.course.title}</h2>
-                {cert.course.instructorName && (
-                  <p className="text-[11px] sm:text-[12px] text-white/40 mt-1.5">Facilitated by {cert.course.instructorName}</p>
-                )}
+                <p className="text-[11px] sm:text-[12px] text-white/40 mt-1.5">Facilitated by {displayName(cert.course.instructor)}</p>
               </div>
 
               {/* Meta grid */}

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { ContactStatus, ContactSubject } from "@/services/contact.service"
 import { downloadCsv } from "@/lib/csv"
+import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 type EnquiryRow = {
   id: string
@@ -237,7 +238,7 @@ export default function AdminEnquiriesPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-[#A8A39C]">Loading...</td></tr>
+                <TableSkeletonRows colSpan={6} />
               ) : enquiries.length === 0 ? (
                 <tr><td colSpan={6} className="px-4 py-10 text-center text-[#A8A39C]">No enquiries found.</td></tr>
               ) : paginated.map((enquiry) => (
@@ -268,7 +269,7 @@ export default function AdminEnquiriesPage() {
         {/* Cards — mobile */}
         <div className="md:hidden flex flex-col">
           {loading ? (
-            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading...</div>
+            <SkeletonCardList />
           ) : enquiries.length === 0 ? (
             <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No enquiries found.</div>
           ) : paginated.map((enquiry) => (

@@ -192,7 +192,7 @@ const ResearchProjectsPage = () => {
         captionTextOne="Evidence-led "
         highlightText="Projects."
         captionTextTwo="Real-World Impact."
-        description="Explore the research, evaluation, and policy projects we deliver in partnership with foundations, governments, and civil society organisations across Africa and beyond."
+        description="Explore the research, evaluation, and policy projects we deliver in partnership with foundations, governments, and civil society organisations across the United States and beyond."
         pageType=""
         imageUrl="/images/about-arps.webp"
       />

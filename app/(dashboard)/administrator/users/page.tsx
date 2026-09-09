@@ -8,6 +8,7 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import { Check, ShieldCheck, GraduationCap, User as UserIcon, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -456,11 +457,7 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">
-                    Loading…
-                  </td>
-                </tr>
+                <TableSkeletonRows colSpan={7} />
               ) : users.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">
@@ -576,7 +573,7 @@ export default function UsersPage() {
         {/* Cards — mobile */}
         <div className="md:hidden flex flex-col">
           {loading ? (
-            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">Loading…</div>
+            <SkeletonCardList />
           ) : users.length === 0 ? (
             <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No users found.</div>
           ) : paginated.map(user => (

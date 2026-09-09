@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { DetailPageSkeleton, InlineSkeleton } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -197,11 +198,7 @@ export default function InstructorProgramDetailPage() {
   // ── Loading / Error ────────────────────────────────────────────────────────
 
   if (loading) {
-    return (
-      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
-        <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">Loading…</div>
-      </div>
-    )
+    return <DetailPageSkeleton />
   }
 
   if (error || !program) {
@@ -537,7 +534,7 @@ export default function InstructorProgramDetailPage() {
         </div>
 
         {enrollLoading ? (
-          <div className="p-8 flex items-center justify-center text-[13px] text-[#A8A39C]">Loading enrollments…</div>
+          <InlineSkeleton rows={3} />
         ) : enrollments.length === 0 ? (
           <div className="p-8 flex items-center justify-center text-[13px] text-[#A8A39C]">No enrollments yet.</div>
         ) : (

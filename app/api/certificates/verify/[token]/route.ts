@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getCertificateByToken } from "@/services/certificate.service"
+import { getCertificateByToken, displayName } from "@/services/certificate.service"
 
 type Context = { params: Promise<{ token: string }> }
 
@@ -12,12 +12,6 @@ export async function GET(_req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: "Certificate not found." }, { status: 404 })
     }
 
-    const profile = cert.user.profile
-    const recipientName =
-      profile?.firstName || profile?.lastName
-        ? [profile.firstName, profile.lastName].filter(Boolean).join(" ")
-        : cert.user.email
-
     return NextResponse.json({
       valid: true,
       certificate: {
@@ -25,11 +19,11 @@ export async function GET(_req: NextRequest, { params }: Context) {
         verifyCode:     cert.verifyCode,
         issuedAt:       cert.issuedAt.toISOString(),
         expiresAt:      cert.expiresAt?.toISOString() ?? null,
-        recipientName,
+        recipientName:  displayName(cert.user),
         recipientEmail: cert.user.email,
         programTitle:   cert.course.title,
         programSlug:    cert.course.slug,
-        facilitator:    cert.course.instructorName,
+        facilitator:    displayName(cert.course.instructor),
       },
     })
   } catch (error) {
