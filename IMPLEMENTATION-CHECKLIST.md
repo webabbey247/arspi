@@ -225,7 +225,10 @@ repo). Core model groups:
       serverless, a documented/accepted trade-off) across every public write endpoint:
       contact, newsletter, forgot-password, resend-verification, registration (both
       onboarding steps), and both AI routes.
-- [x] HTML sanitization (`lib/sanitize.ts`, DOMPurify) on every rich-text render path —
+- [x] HTML sanitization (`lib/sanitize.ts`, `sanitize-html` — an allowlist-based
+      sanitizer with no DOM/jsdom dependency, chosen after `isomorphic-dompurify`'s
+      jsdom chain broke on Vercel with `ERR_REQUIRE_ESM`, see `SECURITY-REVIEW.md`) on
+      every rich-text render path —
       9 call sites, all confirmed sanitized (see SECURITY-REVIEW.md).
 - [x] Baseline HTTP security headers + `X-Powered-By` disabled (`next.config.ts`).
 - [x] Skeleton loading states across all admin/instructor/student list and detail pages.

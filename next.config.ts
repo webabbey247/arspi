@@ -13,10 +13,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 
   // nodemailer uses Node.js built-ins that Turbopack must not bundle.
-  // isomorphic-dompurify pulls in jsdom, whose html-encoding-sniffer dep does a
-  // CJS require() of the ESM-only @exodus/bytes — Turbopack's bundled require
-  // shim can't do that interop (Node's own runtime can), so it must stay external.
-  serverExternalPackages: ["nodemailer", "uploadthing", "@uploadthing/shared", "@prisma/adapter-pg", "pg", "@react-pdf/renderer", "canvas", "isomorphic-dompurify", "jsdom"],
+  serverExternalPackages: ["nodemailer", "uploadthing", "@uploadthing/shared", "@prisma/adapter-pg", "pg", "@react-pdf/renderer", "canvas"],
   images: {
     remotePatterns: [
       // UploadThing CDN

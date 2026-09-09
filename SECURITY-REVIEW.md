@@ -9,12 +9,16 @@ accounts — not an automated scanner report.
 
 ## Summary
 
-| Severity | Found | Fixed this session | Documented for follow-up |
+| Severity | Found | Fixed | Documented for follow-up |
 |---|---|---|---|
 | Critical | 1 | 1 | 0 |
 | High | 2 | 2 | 1 |
-| Medium | 3 | 0 | 3 |
+| Medium | 3 | 1 | 2 |
 | Low / informational | — | — | confirmed clean, see below |
+
+Plus one production-only bug (`ERR_REQUIRE_ESM` in `sanitizeHtml()`, only reproducible on
+Vercel's actual serverless runtime) found and fixed after this review's initial pass —
+see "Post-review production incident" below.
 
 The one critical finding (outdated Next.js with two unauthenticated RCEs) has been
 fixed, verified, and is live in the working tree. Two more issues were fixed alongside
@@ -118,20 +122,18 @@ this app actually uses at runtime to render user-controlled content:
   (`components/forms/ContentBlockEditor.tsx`, `RichTextEditor`), used only in
   authenticated admin/instructor screens. **Mitigating factor**: every place this app
   renders Tiptap-produced HTML back out (`dangerouslySetInnerHTML`) already passes it
-  through `sanitizeHtml()` (DOMPurify) first — confirmed across all 9 render sites, see
+  through `sanitizeHtml()` first — confirmed across all 9 render sites, see
   finding #8 below — so exploitation would require the *editor itself* misbehaving
   client-side, not a stored-XSS path through the render layer.
-- **`dompurify` (moderate, via `isomorphic-dompurify`)** — several IN_PLACE-mode
-  sanitization-bypass advisories in versions ≤3.4.12. This one matters more directly
-  since `sanitizeHtml()` is this app's actual XSS defense line for every rich-text field
-  in the product (program/workshop/insight/career descriptions, lesson content, etc.).
+- ~~`dompurify` (moderate, via `isomorphic-dompurify`)`~~ — **resolved**, see "Post-review
+  production incident" below: `sanitizeHtml()` no longer uses `isomorphic-dompurify`/
+  `dompurify`/`jsdom` at all (swapped to `sanitize-html`, an allowlist-based sanitizer
+  with no DOM dependency), so this advisory no longer applies to this codebase.
 
-**Recommendation**: run `npm audit fix` (non-breaking fixes only) in a follow-up pass,
-confirm `isomorphic-dompurify`/`@tiptap/*` land on patched versions, then re-run the full
-`tsc`/`lint`/`build` + a manual pass through the rich-text editor and a few public pages
-that render stored HTML. Not done here because it touches the editor and every public
-content page — wider blast radius than this session's scope, and deserves its own
-verification pass rather than being bundled into a security-review commit.
+**Recommendation**: run `npm audit fix` (non-breaking fixes only) in a follow-up pass to
+patch `@tiptap/core`, then re-run the full `tsc`/`lint`/`build` + a manual pass through
+the rich-text editor. Not done here because it touches the editor itself — wider blast
+radius than this review's scope, and deserves its own verification pass.
 
 ### 5. [MEDIUM] No Content-Security-Policy
 
@@ -170,7 +172,7 @@ actually creates the `CareerApplication` record if abuse is ever observed.
 ## Confirmed clean (no action needed)
 
 - **XSS / sanitization**: every one of the 9 `dangerouslySetInnerHTML` call sites in the
-  codebase passes through `sanitizeHtml()` (DOMPurify) immediately before rendering —
+  codebase passes through `sanitizeHtml()` (allowlist-based, via `sanitize-html`) immediately before rendering —
   defense-in-depth even if stored data were ever malformed.
 - **SQL injection**: zero uses of `$queryRaw`/`$executeRaw` anywhere — all data access
   goes through Prisma's parameterized query builder.
@@ -226,6 +228,49 @@ actually creates the `CareerApplication` record if abuse is ever observed.
   `npm run lint` is now 0 errors / 27 pre-existing warnings (unused imports scattered
   across older files, unrelated to security — not touched, out of scope for this
   review).
+
+## Post-review production incident (fixed) — 2026-09-09
+
+Deploying this review's Next.js 16.3.4 bump to Vercel surfaced a real runtime bug that
+`tsc`/`lint`/`build`/local smoke-testing all missed, because it only reproduces in
+Vercel's actual serverless bundling — not `next dev`, and not even a locally-run
+`.next/standalone` server (which is a *different* code path from what Vercel itself
+runs). `POST /api/programs/ai-generate` (and anything else calling `sanitizeHtml()`)
+threw `Error [ERR_REQUIRE_ESM]` in the deployed function logs.
+
+**Root cause**: `sanitizeHtml()` used `isomorphic-dompurify`, which pulls in `jsdom`,
+whose `html-encoding-sniffer` dependency does `require("@exodus/bytes/encoding-lite.js")`
+— and `@exodus/bytes` is pure ESM (`"type": "module"`). A plain CommonJS `require()` of
+a pure-ESM package fails in Node.js itself, not just under a bundler — so this wasn't
+fixable by adjusting `serverExternalPackages` (tried first; it only changes *when*
+Node attempts the `require()`, not whether that `require()` can succeed).
+
+**Fix**: replaced `isomorphic-dompurify` with
+[`sanitize-html`](https://www.npmjs.com/package/sanitize-html) — an allowlist-based HTML
+sanitizer with zero DOM dependency (its own dependency tree is `htmlparser2`, `postcss`,
+`deepmerge`, and a couple of small pure-CJS helpers; no jsdom, no ESM landmines). This
+removes the vulnerable dependency chain entirely rather than working around it, which
+also **resolves finding #4's `dompurify` advisory** (the package is no longer in the
+tree at all). `jsdom`/`isomorphic-dompurify` were removed from `next.config.ts`'s
+`serverExternalPackages` (no longer needed) and from `package.json`.
+
+Verified: unit-level checks of every `sanitizeHtml()` behavior this app relies on
+(script-tag stripping, `on*=` handler stripping, `javascript:` URI stripping, safe-link
++ `target`/`rel` preservation, list/formatting preservation, unknown-tag stripping,
+null-input handling) — all correct against the new implementation. Full `tsc`/`lint`/
+`build` clean in both build modes (`VERCEL=1` and unset). Live end-to-end test against
+the exact route that broke in production (`/api/programs/ai-generate`, via a real
+Anthropic call), run through `node .next/standalone/server.js` (the most faithful local
+approximation available) — `200`, a correctly-sanitized draft returned, zero errors in
+the server log.
+
+**Lesson for future changes to this dependency**: any fix to a "works in bundler A, not
+bundler B" class of problem should be verified by actually reproducing the *failing*
+environment, not just a build that happens to succeed. The first attempt at this fix
+(`serverExternalPackages`) passed every local check available at the time and still
+failed identically in production, because the true runtime behavior (Vercel's serverless
+function loader) wasn't reproducible locally — only the underlying dependency swap,
+which is bundler-agnostic by construction, gives real confidence here.
 
 ## What this review did not cover
 
