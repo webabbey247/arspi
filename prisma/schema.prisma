@@ -353,11 +353,12 @@ model LessonCompletion {
 // Lesson row to key off, since curriculum content lives as JSON, not the
 // Section/Lesson tables above). One row per student per course.
 model LessonProgress {
-  id           String   @id @default(cuid())
-  userId       String
-  courseId     String
-  completedIds Json // string[] — curriculum lesson ids the student has marked complete
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String
+  courseId      String
+  completedIds  Json // string[] — curriculum lesson ids the student has marked complete
+  passedQuizIds Json     @default("[]") // string[] — quiz content-block ids answered correctly
+  updatedAt     DateTime @updatedAt
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)

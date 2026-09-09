@@ -7,6 +7,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { programCategories } from "@/lib/data"
 import { getProgramBySlug, getPrograms } from "@/services/program.service"
 import withLayout from "@/hooks/useLayout"
+import EnrollCTA from "./EnrollCTA"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,7 @@ type PageModule = { week?: string; title: string; desc?: string; topics?: string
 type PageFaq = { q: string; a: string }
 
 type PageProgram = {
+  id:             string
   title:          string
   slug:           string
   description:    string
@@ -134,6 +136,7 @@ async function resolveProgram(slug: string): Promise<PageProgram | null> {
     .map((p) => ({ slug: p.slug, title: p.title, duration: p.duration ?? "Self-Paced" }))
 
   return {
+    id:             dbProg.id,
     title:          dbProg.title,
     slug:           dbProg.slug,
     description:    dbProg.excerpt,
@@ -251,9 +254,9 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
 
           {/* CTAs */}
           <div className="flex gap-3 flex-wrap mb-8">
-            <Button asChild className="font-body text-[0.82rem] tracking-[0.08em] uppercase font-medium bg-[#0D9488] hover:bg-[#0F766E] text-white px-7 rounded">
-              <Link href="/signup">Enrol Now</Link>
-            </Button>
+            <EnrollCTA programId={prog.id} programSlug={prog.slug} className="font-body text-[0.82rem] tracking-[0.08em] uppercase font-medium bg-[#0D9488] hover:bg-[#0F766E] text-white px-7 rounded">
+              Enrol Now
+            </EnrollCTA>
             <Button variant="outline" className="font-body text-[0.82rem] tracking-[0.06em] uppercase font-normal border-white/15 text-white/70 hover:text-[#F7F3ED] hover:border-white/40 bg-transparent rounded">
               Request Group Quote
             </Button>
@@ -364,9 +367,9 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
           <div className="font-heading text-[1.4rem] text-[#E8D5A8]">{priceLabel}</div>
           {prog.nextIntake && <div className="font-body text-[0.7rem] text-[#F7F3ED]/35">{prog.duration} · {prog.nextIntake}</div>}
         </div>
-        <Button asChild className="font-body text-[0.82rem] tracking-[0.08em] uppercase font-medium bg-[#0D9488] hover:bg-[#0F766E] text-white rounded shrink-0">
-          <Link href="/signup">Enrol Now</Link>
-        </Button>
+        <EnrollCTA programId={prog.id} programSlug={prog.slug} className="font-body text-[0.82rem] tracking-[0.08em] uppercase font-medium bg-[#0D9488] hover:bg-[#0F766E] text-white rounded shrink-0">
+          Enrol Now
+        </EnrollCTA>
       </div>
 
       {/* ════ TWO-COLUMN PAGE ════ */}
@@ -598,9 +601,9 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
                   </div>
                 ))}
               </div>
-              <Button asChild className="w-full mb-2.5 font-body text-[0.82rem] tracking-[0.08em] uppercase font-medium bg-[#0D9488] hover:bg-[#0F766E] text-white rounded">
-                <Link href="/signup">Enrol Now</Link>
-              </Button>
+              <EnrollCTA programId={prog.id} programSlug={prog.slug} className="w-full mb-2.5 font-body text-[0.82rem] tracking-[0.08em] uppercase font-medium bg-[#0D9488] hover:bg-[#0F766E] text-white rounded">
+                Enrol Now
+              </EnrollCTA>
               <Button variant="outline" className="w-full font-body text-[0.82rem] tracking-[0.06em] uppercase font-normal bg-transparent border-white/15 text-[#F7F3ED]/60 hover:text-[#F7F3ED] hover:border-white/40 rounded">
                 Request Group Quote
               </Button>

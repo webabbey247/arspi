@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireApiRole } from "@/lib/guard"
 import { db } from "@/lib/db"
 import { getProgramBySlug } from "@/services/program.service"
-import { collectLessonIds, setLessonCompletion } from "@/services/lesson-progress.service"
+import {
+  collectLessonIds, setLessonCompletion, findLessonById, lessonRequiresQuiz,
+  isLessonUnlocked, getLessonProgress, getQuizProgress,
+} from "@/services/lesson-progress.service"
 import { z } from "zod"
 
 const patchSchema = z.object({ completed: z.boolean() })
@@ -43,6 +46,29 @@ export async function PATCH(req: NextRequest, { params }: Context) {
     const allLessonIds = collectLessonIds(program.curriculum)
     if (!allLessonIds.includes(lessonId)) {
       return NextResponse.json({ error: "Lesson not found in this program." }, { status: 404 })
+    }
+
+    // Only enforced when advancing (completed: true) — un-checking is always
+    // allowed, it doesn't skip ahead of anything.
+    if (parsed.data.completed) {
+      const lesson = findLessonById(program.curriculum, lessonId)
+      if (lessonRequiresQuiz(lesson)) {
+        return NextResponse.json(
+          { error: "This lesson is completed automatically by passing its quiz." },
+          { status: 400 }
+        )
+      }
+
+      const [completedIds, passedQuizIds] = await Promise.all([
+        getLessonProgress(session.sub, program.id),
+        getQuizProgress(session.sub, program.id),
+      ])
+      if (!isLessonUnlocked(program.curriculum, lessonId, new Set(completedIds), new Set(passedQuizIds))) {
+        return NextResponse.json(
+          { error: "Complete the previous chapter before continuing." },
+          { status: 403 }
+        )
+      }
     }
 
     const result = await setLessonCompletion(

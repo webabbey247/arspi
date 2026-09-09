@@ -132,8 +132,30 @@ across all three roles' loading states.
       Continue / View certificate / Share / Favorite / Archive), progress bar, real
       per-student 1-5 star rating (`Enrollment.studentRating`, distinct from the
       admin-set `Course.rating`), filter chips (All/Favorites/Archived).
-- [x] **Course player** (`/student/programs/[slug]`) — chapter/lesson navigation,
-      per-lesson content-block viewer, lesson-completion checkboxes.
+- [x] **Course player** (`/student/programs/[slug]`) — two-pane layout: the selected
+      lesson's content (title, "Mark as complete"/quiz-status pill, description,
+      content blocks, Previous/Next) in the main column, with a "Course content"
+      navigator (collapsible chapters, per-chapter completion fraction, per-lesson
+      status dot) in a right-hand column (stacks above the content on mobile). Auto-
+      selects the first not-yet-done lesson in an unlocked chapter on load.
+- [x] **Sequential chapter gating** — chapter *N* stays locked (collapsed, disabled,
+      lock icon, "Complete the previous chapter to unlock") until every lesson in
+      chapter *N-1* is done; lessons within a chapter can be done in any order. The
+      first chapter is always open. **Enforced server-side, not just in the UI** — both
+      `PATCH .../lessons/[lessonId]` and `PATCH .../quizzes/[blockId]` independently
+      recompute unlock state from the DB (`isLessonUnlocked()`) before accepting a
+      request that would advance progress; un-checking a lesson is exempt since it's
+      reversible and doesn't skip ahead.
+- [x] **Interactive quizzes** — quiz content-blocks are no longer static text: the
+      student picks an answer and submits it; correctness is checked server-side
+      against the admin-set `correctIndex` (never trust a client-side "I got it right"
+      claim, and never send `correctIndex` to the student at all — `stripQuizAnswers()`
+      strips it from the curriculum the GET route returns), with unlimited retries on a
+      wrong answer. A lesson containing a quiz has no separate manual completion
+      checkbox and the lessons-PATCH route rejects trying to force one complete
+      manually — it can only auto-complete by answering its quiz correctly, which is
+      what the chapter-gating above keys off of. `LessonProgress.passedQuizIds` (new
+      field) tracks which quiz blocks a student has passed, alongside `completedIds`.
 - [x] **Lesson progress tracking** (`LessonProgress`, `services/lesson-progress.service.ts`)
       — completing 100% of a program's lessons auto-flips the `Enrollment` to
       `COMPLETED` and auto-issues a `Certificate`.

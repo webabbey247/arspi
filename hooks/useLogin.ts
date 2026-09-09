@@ -48,7 +48,16 @@ export function useLogin() {
         return { success: true }
       }
 
-      // Fully onboarded — go to role dashboard
+      // Fully onboarded — honor a same-origin callbackUrl (e.g. "Enrol Now" on a
+      // program page redirects here to sign in first), else go to role dashboard.
+      // Never redirect to an absolute/external URL from a query param.
+      const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl")
+      if (callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")) {
+        router.push(callbackUrl)
+        router.refresh()
+        return { success: true }
+      }
+
       const roleRoutes: Record<string, string> = {
         ADMIN:      "/administrator",
         INSTRUCTOR: "/instructor",

@@ -272,6 +272,39 @@ failed identically in production, because the true runtime behavior (Vercel's se
 function loader) wasn't reproducible locally — only the underlying dependency swap,
 which is bundler-agnostic by construction, gives real confidence here.
 
+## Post-review finding (fixed) — course-player sequential unlocking
+
+Built after this review (student course-player chapter/quiz gating — see
+`IMPLEMENTATION-CHECKLIST.md`), and audited as soon as it shipped since gating logic is
+exactly the class of thing worth checking for server-side enforcement. Found and fixed
+two real gaps, both in the same area:
+
+- **[HIGH] Quiz answers leaked to the student client.** `GET /api/student/programs/
+  [slug]` returned `program.curriculum` verbatim, including each quiz block's
+  `correctIndex` — any enrolled student could read every quiz's correct answer straight
+  out of the Network tab, regardless of chapter lock state. **Fixed**: added
+  `stripQuizAnswers()` (`services/lesson-progress.service.ts`), which deep-clones the
+  curriculum and removes `correctIndex` from every quiz block before that response is
+  built. Confirmed neither the public program page nor the admin/instructor program
+  routes had the same issue (public pages only ever send a filtered subset; admin/
+  instructor routes are the content's own authors, who are supposed to see it).
+- **[MEDIUM] Chapter-lock and quiz-gating were UI-only.** `PATCH .../lessons/[lessonId]`
+  would mark *any* lesson in the curriculum complete on request — including one behind
+  a quiz (bypassing the "must answer correctly" requirement) or in a chapter that should
+  still be locked. `PATCH .../quizzes/[blockId]` had the same gap: nothing stopped
+  answering a quiz in a locked chapter directly. **Fixed**: both routes now compute
+  server-side whether the target lesson is unlocked (`isLessonUnlocked()`, using the
+  same completedIds/passedQuizIds the client's lock logic uses — a single shared
+  definition, not a second copy that could drift), and the lessons route separately
+  rejects manually completing a quiz-gated lesson. Un-checking a lesson (`completed:
+  false`) is still always allowed — it's reversible and doesn't skip ahead of anything.
+
+Verified live end-to-end: the GET response contains zero occurrences of `correctIndex`;
+manually completing a quiz-gated lesson returns `400`; completing a chapter-2 lesson
+while chapter 1 is untouched returns `403`; un-checking that same lesson still succeeds;
+the legitimate path (finish chapter 1 including its quiz, then chapter 2) still
+completes the course and issues a certificate exactly as before.
+
 ## What this review did not cover
 
 - No penetration testing / active exploitation attempts — this was a code-level audit.

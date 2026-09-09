@@ -3,7 +3,7 @@ import { z } from "zod"
 import { requireApiRole } from "@/lib/guard"
 import { db } from "@/lib/db"
 import { getProgramBySlug } from "@/services/program.service"
-import { getLessonProgress, collectLessonIds } from "@/services/lesson-progress.service"
+import { getLessonProgress, getQuizProgress, collectLessonIds, stripQuizAnswers } from "@/services/lesson-progress.service"
 import { getCertificateForEnrollment } from "@/services/certificate.service"
 
 type Context = { params: Promise<{ slug: string }> }
@@ -30,13 +30,16 @@ export async function GET(_req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: "You are not enrolled in this program." }, { status: 403 })
     }
 
-    const [completedIds, certificate] = await Promise.all([
+    const [completedIds, passedQuizIds, certificate] = await Promise.all([
       getLessonProgress(session.sub, program.id),
+      getQuizProgress(session.sub, program.id),
       getCertificateForEnrollment(session.sub, program.id),
     ])
 
     return NextResponse.json({
-      program,
+      // Never send correctIndex to a student — only server-side answer-checking
+      // (the quizzes PATCH route) may see it.
+      program: { ...program, curriculum: stripQuizAnswers(program.curriculum) },
       enrollment: {
         status:      enrollment.status,
         enrolledAt:  enrollment.enrolledAt.toISOString(),
@@ -44,6 +47,7 @@ export async function GET(_req: NextRequest, { params }: Context) {
       },
       totalLessons: collectLessonIds(program.curriculum).length,
       completedIds,
+      passedQuizIds,
       certificate: certificate ? { verifyCode: certificate.verifyCode } : null,
     })
   } catch (error) {
