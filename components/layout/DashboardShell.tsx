@@ -16,9 +16,13 @@ export default function DashboardShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
-  useEffect(() => {
+  // Close the mobile sidebar on route change — adjusted during render (not an
+  // effect) per React's guidance for resetting state when a prop changes.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setSidebarOpen(false);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     if (sidebarOpen) {

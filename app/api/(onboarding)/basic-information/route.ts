@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { basicInfoSchema } from "@/lib/validators/onboarding"
 import { createUser } from "@/services/auth.service"
+import { enforceRateLimit } from "@/lib/rate-limit"
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = enforceRateLimit(req, { name: "register", limit: 10, windowMs: 60 * 60_000 })
+    if (limited) return limited
+
     const body = await req.json()
 
     const result = basicInfoSchema.safeParse(body)
