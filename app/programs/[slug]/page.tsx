@@ -1,13 +1,15 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { Clock, Monitor, Calendar, Users, BookOpen, Award, Check, DollarSign, ArrowRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
+import Image from "next/image"
 import { programCategories } from "@/lib/data"
 import { getProgramBySlug, getPrograms } from "@/services/program.service"
 import withLayout from "@/hooks/useLayout"
 import EnrollCTA from "./EnrollCTA"
+import ShareButton from "./ShareButton"
+import CurriculumAccordion from "./CurriculumAccordion"
+import FaqAccordion from "./FaqAccordion"
+import InstructorProfileModal, { type InstructorProgramStat } from "./InstructorProfileModal"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -15,11 +17,17 @@ type CatMeta = { id: string; label: string; color: string; bg: string }
 type PageModule = { week?: string; title: string; desc?: string; topics?: string[] }
 type PageFaq = { q: string; a: string }
 
+type RelatedProgram = {
+  slug: string; title: string; duration: string; categoryLabel: string
+  thumbnail: string | null; price: number; rating: number | null
+}
+
 type PageProgram = {
   id:             string
   title:          string
   slug:           string
   description:    string
+  thumbnail:      string | null
   price:          number
   level:          string
   duration:       string
@@ -43,8 +51,13 @@ type PageProgram = {
     initials:    string | null
     credentials: string[]
   }
-  cat:     CatMeta
-  related: { slug: string; title: string; duration: string }[]
+  cat: CatMeta
+  related: RelatedProgram[]
+  moreByInstructor: RelatedProgram[]
+  instructorProgramCount:  number
+  instructorPrograms:      InstructorProgramStat[]
+  instructorAvgRating:     string | null
+  instructorTotalReviews:  number
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -59,6 +72,16 @@ function catMetaFor(name?: string | null): CatMeta {
     (c) => c.label.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(c.id)
   )
   return match ?? DEFAULT_CAT
+}
+
+/** Fisher-Yates shuffle — used to randomize the "You May Also Like" picks. */
+function shuffle<T>(items: T[]): T[] {
+  const arr = [...items]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
 }
 
 function toStrArr(v: unknown): string[] {
@@ -82,9 +105,117 @@ function toFaqs(v: unknown): PageFaq[] {
   return (v as { q: string; a: string }[]).filter((f) => f.q && f.a)
 }
 
-/** Short label for the curriculum stepper — first couple of meaningful words. */
-function stepLabel(title: string): string {
-  return title.replace(/[&]/g, "").split(/\s+/).filter(Boolean).slice(0, 2).join(" ")
+// ── Small shared bits ────────────────────────────────────────────────────────
+
+function Kicker({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2.5 font-body text-[10.5px] tracking-[0.18em] uppercase text-[#128C6E]">
+      <span className="w-4.5 h-px bg-[#128C6E]" />
+      {children}
+    </div>
+  )
+}
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="font-heading font-medium text-[32px] leading-[1.15] tracking-[-0.015em] text-[#0B2239] max-[760px]:text-[26px]">
+      {children}
+    </h2>
+  )
+}
+
+// ── Program mini card (You May Also Like / More by Instructor) ─────────────────
+
+function ProgramMiniCard({ program }: { program: RelatedProgram }) {
+  const price = program.price > 0 ? `$${program.price.toLocaleString()}` : "Free"
+  return (
+    <Link
+      href={`/programs/${program.slug}`}
+      className="block bg-white border border-[#E1E8F4] rounded-[3px] overflow-hidden text-[#1C2430] hover:border-[#0B6FC4] transition-colors duration-200"
+    >
+      <div className="relative aspect-video bg-[#EFEAE1]">
+        {program.thumbnail ? (
+          <Image src={program.thumbnail} alt={program.title} fill className="object-cover" />
+        ) : (
+          <div className="absolute inset-0" style={{ background: "repeating-linear-gradient(135deg,#EFEAE1 0 8px,#E7E1D6 8px 16px)" }} />
+        )}
+      </div>
+      <div className="px-4.5 pt-4 pb-4.5">
+        <div className="font-body text-[10px] tracking-[0.14em] uppercase text-[#0B6FC4]">{program.categoryLabel}</div>
+        <div className="mt-2 font-heading text-[17px] leading-[1.3] text-[#0B2239] line-clamp-2 min-h-[2.6em]">{program.title}</div>
+        <div className="mt-3 pt-3 border-t border-[#EFEAE1] flex items-center justify-between font-body text-[13px] text-[#6B7684]">
+          <span>{program.rating != null ? `★ ${program.rating}` : program.duration}</span>
+          <span className="text-[#0B2239]">{price}</span>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+// ── Purchase card — sticky rail, overlaps the hero via CSS grid row-span ───────
+
+function PurchaseCard({ prog }: { prog: PageProgram }) {
+  const priceLabel = prog.price > 0 ? `$${prog.price.toLocaleString()}` : "Free"
+  const bullets = prog.included.length > 0
+    ? prog.included.slice(0, 4)
+    : [prog.duration, "Verified digital certificate", "Full lifetime access"].filter(Boolean)
+
+  return (
+    <div className="bg-white rounded-[4px] overflow-hidden shadow-[0_24px_60px_rgba(6,28,50,0.28)] text-[#1C2430]">
+      {/* Preview */}
+      <div className="relative aspect-[16/10] flex items-center justify-center" style={{ background: "repeating-linear-gradient(135deg,#E7E2D9 0 8px,#DFD9CE 8px 16px)" }}>
+        {prog.thumbnail && <Image src={prog.thumbnail} alt={prog.title} fill className="object-cover" />}
+        <button
+          type="button"
+          className="relative z-10 w-13 h-13 rounded-full bg-white shadow-[0_6px_18px_rgba(0,0,0,0.2)] cursor-pointer text-[#0A3D6B] text-[15px] flex items-center justify-center pl-[3px]"
+        >
+          ▶
+        </button>
+        <div className="absolute left-3.5 bottom-3 z-10 font-body text-[11px] tracking-[0.1em] uppercase text-[#5A6675]">
+          Preview this programme
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="px-6 pt-5.5 pb-6">
+        <div className="flex items-baseline justify-between gap-3 flex-wrap">
+          <div>
+            <div className="font-heading text-[32px] leading-none text-[#0A3D6B]">{priceLabel}</div>
+            <div className="mt-1.5 font-body text-[13px] text-[#6B7684]">
+              {prog.price > 0 ? "One-time payment" : "No payment required"}
+            </div>
+          </div>
+          <div className="font-body text-[11px] tracking-[0.12em] uppercase text-[#0E6E57] bg-[#E8F5F0] px-2.25 py-1.25 rounded-[3px] whitespace-nowrap">
+            Open enrolment
+          </div>
+        </div>
+
+        <EnrollCTA
+          programId={prog.id}
+          programSlug={prog.slug}
+          className="mt-5 w-full h-12 rounded-[3px] bg-[#0B6FC4] hover:bg-[#0A5CA5] text-white font-body text-[13px] font-semibold tracking-[0.14em] uppercase transition-colors duration-200"
+        >
+          Enrol Now
+        </EnrollCTA>
+
+        <div className="mt-3.5 flex justify-center">
+          <ShareButton className="font-body text-[12.5px] text-[#6B7684] hover:text-[#0A3D6B] transition-colors duration-200 cursor-pointer" />
+        </div>
+
+        <div className="mt-5.5 pt-5 border-t border-[#EAE5DC]">
+          <div className="font-body text-[10.5px] tracking-[0.16em] uppercase text-[#5A6675]">In this programme</div>
+          <div className="grid gap-2.5 mt-3">
+            {bullets.map((item) => (
+              <div key={item} className="flex gap-2.25">
+                <span className="text-[#128C6E] shrink-0">✓</span>
+                <span className="font-body text-[13.5px] leading-[1.45] text-[#3E4A59]">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ── Resolve program from DB ───────────────────────────────────────────────────
@@ -124,21 +255,66 @@ async function resolveProgram(slug: string): Promise<PageProgram | null> {
   const cat = catMetaFor(dbProg.category?.name)
 
   // Related = same-category siblings first, topped up with other programmes so
-  // the "You May Also Like" section always populates when more than one exists.
+  // the "You May Also Like" section always populates when more than one exists —
+  // shuffled so it's a different random 4 on each visit, not always the same set.
+  // Status is explicitly PUBLISHED-only here — getPrograms() has no default
+  // status filter, so omitting this would leak draft programmes onto a public
+  // page (their cards would render but 404 on click).
   const siblingRows = dbProg.categoryId
-    ? await getPrograms({ categoryId: dbProg.categoryId })
+    ? await getPrograms({ categoryId: dbProg.categoryId, status: "PUBLISHED" })
     : []
-  const fillerRows = await getPrograms()
-  const related = [...siblingRows, ...fillerRows]
+  const fillerRows = await getPrograms({ status: "PUBLISHED" })
+  const relatedPool = [...siblingRows, ...fillerRows]
     .filter((p) => p.slug !== slug)
     .filter((p, i, arr) => arr.findIndex((q) => q.slug === p.slug) === i)
-    .slice(0, 4)
-    .map((p) => ({ slug: p.slug, title: p.title, duration: p.duration ?? "Self-Paced" }))
+  const toRelated = (p: (typeof relatedPool)[number]): RelatedProgram => ({
+    slug: p.slug, title: p.title, duration: p.duration ?? "Self-Paced",
+    thumbnail: p.thumbnail, price: p.price, rating: p.rating,
+    categoryLabel: catMetaFor(p.category?.name).label,
+  })
+  const related = shuffle(relatedPool).slice(0, 4).map(toRelated)
+
+  // Other published programmes by the same instructor (real data — no synthetic
+  // "instructor stats" like Udemy's review/course counts, since this app doesn't
+  // track those in aggregate). Full list kept for an accurate count; only the
+  // first 3 are shown as cards.
+  const instructorRows = (await getPrograms({ instructorId: dbProg.instructorId, status: "PUBLISHED" }))
+    .filter((p) => p.slug !== slug)
+  const moreByInstructor = instructorRows.slice(0, 3).map(toRelated)
+
+  // Instructor profile modal — real aggregates from every published programme
+  // they teach (this one included), not synthetic Udemy-style stats.
+  const levelLabel = (lvl: string) => lvl.charAt(0) + lvl.slice(1).toLowerCase()
+  const instructorPrograms: InstructorProgramStat[] = [dbProg, ...instructorRows].map((p) => ({
+    slug:  p.slug,
+    title: p.title,
+    meta:  `${p.duration ?? "Self-Paced"} · ${levelLabel(p.level)}`,
+    price: p.price > 0 ? `$${p.price.toLocaleString()}` : "Free",
+    rating:      p.rating,
+    reviewCount: p.reviewCount,
+  }))
+  const ratedInstructorPrograms = instructorPrograms.filter((p) => p.rating != null && p.reviewCount != null)
+  const instructorTotalReviews = ratedInstructorPrograms.reduce((sum, p) => sum + (p.reviewCount ?? 0), 0)
+  const instructorAvgRating = instructorTotalReviews > 0
+    ? (ratedInstructorPrograms.reduce((sum, p) => sum + (p.rating ?? 0) * (p.reviewCount ?? 0), 0) / instructorTotalReviews).toFixed(1)
+    : null
+
+  // Modal only shows the top 5 by rating (unrated programmes sort last, tied
+  // ratings broken by review count) — "View more" is disabled until the
+  // /programs sidebar gets a facilitator filter to link out to.
+  const topInstructorPrograms = [...instructorPrograms].sort((a, b) => {
+    if (a.rating == null && b.rating == null) return (b.reviewCount ?? 0) - (a.reviewCount ?? 0)
+    if (a.rating == null) return 1
+    if (b.rating == null) return -1
+    if (b.rating !== a.rating) return b.rating - a.rating
+    return (b.reviewCount ?? 0) - (a.reviewCount ?? 0)
+  }).slice(0, 5)
 
   return {
     id:             dbProg.id,
     title:          dbProg.title,
     slug:           dbProg.slug,
+    thumbnail:      dbProg.thumbnail,
     description:    dbProg.excerpt,
     price:          dbProg.price,
     level:          dbProg.level.charAt(0) + dbProg.level.slice(1).toLowerCase(),
@@ -159,6 +335,11 @@ async function resolveProgram(slug: string): Promise<PageProgram | null> {
     instructor:     pickFirstFacilitator(dbProg.facilitators),
     cat,
     related,
+    moreByInstructor,
+    instructorProgramCount: instructorRows.length + 1, // +1 for this programme itself
+    instructorPrograms: topInstructorPrograms,
+    instructorAvgRating,
+    instructorTotalReviews,
   }
 }
 
@@ -187,505 +368,256 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
   const prog = await resolveProgram(slug)
   if (!prog) notFound()
 
-  const { cat } = prog
   const priceLabel = prog.price > 0 ? `$${prog.price.toLocaleString()}` : "Free"
+  const totalLessonCount = prog.modules.reduce((sum, m) => sum + (m.topics?.length ?? 0), 0)
 
   const quickFacts = [
     { label: "Duration",    value: prog.duration },
     { label: "Level",       value: prog.level },
     { label: "Format",      value: prog.format ?? "Online" },
     { label: "Language",    value: "English" },
-    prog.nextIntake ? { label: "Next Intake", value: prog.nextIntake, accent: true } : null,
     { label: "Certificate", value: "Verified Digital" },
-  ].filter((x): x is { label: string; value: string; accent?: boolean } => x !== null)
-
-  const enrolDetails = [
-    { icon: Clock,    value: prog.duration },
-    prog.nextIntake ? { icon: Calendar, value: `Next intake: ${prog.nextIntake}` } : null,
-    prog.cohortSize != null ? { icon: Users, value: `Cohort of ${prog.cohortSize} participants` } : null,
-    prog.format ? { icon: Monitor, value: prog.format } : null,
-    { icon: Award, value: "Verified digital certificate" },
-  ].filter((x): x is { icon: typeof Clock; value: string } => x !== null)
+  ]
 
   return (
-    <>
-      {/* ════ BREADCRUMB ════ */}
-      <nav className="w-full bg-[#F7F3ED]/95 border-b border-[#C8A96E]/25 px-6 md:px-20 py-3.5 flex flex-wrap items-center gap-2 font-body text-[0.75rem] text-[#718096]">
-        <Link href="/" className="text-[#C8A96E] hover:text-[#0D1B2A] transition-colors no-underline">Home</Link>
-        <span className="text-[#718096]/50">›</span>
-        <Link href="/programs" className="text-[#C8A96E] hover:text-[#0D1B2A] transition-colors no-underline">Programs</Link>
-        <span className="text-[#718096]/50">›</span>
-        <Link href={`/programs#${cat.id}`} className="text-[#C8A96E] hover:text-[#0D1B2A] transition-colors no-underline">{cat.label}</Link>
-        <span className="text-[#718096]/50">›</span>
-        <span className="text-[#718096]">{prog.title}</span>
-      </nav>
+    <div className="w-full overflow-x-clip">
+      <div className="w-full max-w-[1240px] mx-auto px-7 max-[760px]:px-5 grid grid-cols-1 min-[901px]:grid-cols-[minmax(0,1fr)_minmax(320px,372px)] min-[901px]:gap-x-14 items-start">
 
-      {/* ════ HERO BANNER ════ */}
-      <section className="relative w-full overflow-hidden bg-[#060D14] border-b border-[#C8A96E]/[.12] px-6 md:px-20 py-16 md:py-18 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 lg:gap-20 items-center">
-        {/* grid texture */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(13,148,136,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(13,148,136,0.03) 1px, transparent 1px)",
-            backgroundSize: "50px 50px",
-          }}
-        />
-        {/* glow */}
-        <div className="absolute -top-20 right-[250px] w-100 h-100 rounded-full pointer-events-none bg-[radial-gradient(ellipse,rgba(13,148,136,0.07)_0%,transparent_70%)]" />
+        {/* ════ HERO — text column ════ */}
+        <div className="relative min-[901px]:col-start-1 min-[901px]:row-start-1 text-white pt-14 pb-14 max-[760px]:pt-9 max-[760px]:pb-11">
+          {/* full-bleed dark background, this column only */}
+          <div className="absolute inset-y-0 -left-[100vw] -right-[100vw] bg-[#0A3D6B] -z-10" aria-hidden />
 
-        {/* Left copy */}
-        <div className="relative z-2">
-          <Link
-            href={`/programs#${cat.id}`}
-            className="inline-flex items-center gap-2 bg-[#0D9488]/15 border border-[#0D9488]/25 text-[#5EEAD4] font-body text-[0.65rem] tracking-[0.12em] uppercase font-medium px-3.5 py-[5px] rounded-full mb-[1.4rem] no-underline"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#5EEAD4] inline-block" />
-            {cat.label}
-          </Link>
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/12 border border-white/18 font-body text-[11px] tracking-[0.14em] uppercase text-[#BFE0D6]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#3FBE9C]" />
+              {prog.cat.label}
+            </div>
 
-          <h1 className="font-heading text-[clamp(1.8rem,2.8vw,2.6rem)] tracking-[-0.01em] leading-[1.18] font-bold text-[#F7F3ED] mb-4">
-            {prog.title}
-          </h1>
+            <h1 className="font-heading font-medium text-[clamp(34px,4.2vw,56px)] leading-[1.06] tracking-[-0.02em] mt-5.5 max-w-[16em] text-pretty">
+              {prog.title}
+            </h1>
 
-          <p className="font-body text-[0.96rem] leading-[1.8] font-light text-[#F7F3ED]/50 max-w-135 mb-8">
-            {prog.description}
-          </p>
+            <p className="mt-5 max-w-[34em] font-body text-[17px] leading-[1.6] text-[#C6D6E6] text-pretty">
+              {prog.description}
+            </p>
 
-          {/* CTAs */}
-          <div className="flex gap-3 flex-wrap mb-8">
-            <EnrollCTA programId={prog.id} programSlug={prog.slug} className="font-body text-[0.82rem] tracking-[0.08em] uppercase font-medium bg-[#0D9488] hover:bg-[#0F766E] text-white px-7 rounded">
-              Enrol Now
-            </EnrollCTA>
-            <Button variant="outline" className="font-body text-[0.82rem] tracking-[0.06em] uppercase font-normal border-white/15 text-white/70 hover:text-[#F7F3ED] hover:border-white/40 bg-transparent rounded">
-              Request Group Quote
-            </Button>
-          </div>
-
-          {/* Social proof */}
-          {(prog.rating != null || prog.enrolledCount != null || prog.countriesCount != null) && (
-            <div className="flex items-center gap-[1.8rem] flex-wrap pt-[1.8rem] border-t border-[#0D9488]/15">
-              {prog.rating != null && (
-                <div>
-                  <div className="flex gap-0.5 items-center">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <svg key={i} viewBox="0 0 24 24" className="w-3.25 h-3.25 fill-[#C8A96E]">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                      </svg>
-                    ))}
-                    <span className="font-heading text-[1rem] text-[#E8D5A8] ml-1.5">{prog.rating}</span>
-                  </div>
-                  {prog.reviewCount != null && (
-                    <div className="font-body text-[0.75rem] text-[#F7F3ED]/35 mt-[3px]">
-                      from {prog.reviewCount.toLocaleString()} participant reviews
+            {(prog.rating != null || prog.enrolledCount != null || prog.countriesCount != null) && (
+              <div className="flex flex-wrap gap-y-5 items-start mt-10">
+                {prog.rating != null && (
+                  <div className="pr-7">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#F0B429] text-[15px] tracking-[2px]">★★★★★</span>
+                      <span className="font-heading text-[20px] leading-none">{prog.rating}</span>
                     </div>
-                  )}
-                </div>
-              )}
-
-              {prog.rating != null && prog.enrolledCount != null && (
-                <div className="w-px h-5.5 bg-[#F7F3ED]/10" />
-              )}
-
-              {prog.enrolledCount != null && (
-                <div>
-                  <span className="font-heading text-[1rem] text-[#F7F3ED] block leading-none mb-0.5">
-                    {prog.enrolledCount.toLocaleString()}+
-                  </span>
-                  <span className="font-body text-[0.67rem] tracking-[0.08em] uppercase text-[#F7F3ED]/35">
-                    Enrolled to date
-                  </span>
-                </div>
-              )}
-
-              {prog.enrolledCount != null && prog.countriesCount != null && (
-                <div className="w-px h-5.5 bg-[#F7F3ED]/10" />
-              )}
-
-              {prog.countriesCount != null && (
-                <div>
-                  <span className="font-heading text-[1rem] text-[#F7F3ED] block leading-none mb-0.5">
-                    {prog.countriesCount}+
-                  </span>
-                  <span className="font-body text-[0.67rem] tracking-[0.08em] uppercase text-[#F7F3ED]/35">
-                    Countries
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Right feature card */}
-        <div className="relative z-2 hidden lg:block">
-          <div className="bg-[#F7F3ED]/4 border border-[#0D9488]/20 rounded-[10px] p-[1.8rem]">
-            <div className="flex items-center gap-3 mb-[1.4rem] pb-[1.2rem] border-b border-[#F7F3ED]/[.07]">
-              <div className="w-11 h-11 rounded-[10px] bg-[#0D9488]/15 flex items-center justify-center shrink-0">
-                <BookOpen className="w-5.5 h-5.5 stroke-[#5EEAD4]" strokeWidth={1.6} />
-              </div>
-              <div>
-                <p className="font-body text-[0.62rem] tracking-[0.12em] uppercase text-[#F7F3ED]/30 mb-0.5">
-                  Programme
-                </p>
-                <p className="font-heading text-[0.92rem] leading-[1.3] text-[#F7F3ED]">{cat.label}</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-[0.65rem]">
-              {[
-                { icon: Clock,    label: "Duration",      value: prog.duration },
-                { icon: BookOpen, label: "Modules",       value: prog.modules.length > 0 ? `${prog.modules.length} Modules` : null, hide: prog.modules.length === 0 },
-                { icon: Monitor,  label: "Format",        value: prog.format, hide: !prog.format },
-                { icon: Award,    label: "Certificate",   value: "Verified Digital" },
-                { icon: Calendar, label: "Next Intake",   value: prog.nextIntake, hide: !prog.nextIntake, accent: true },
-                { icon: DollarSign, label: "Programme Fee", value: priceLabel, gold: true },
-              ]
-                .filter((r) => !r.hide && r.value)
-                .map(({ icon: Icon, label, value, accent, gold }) => (
-                  <div key={label} className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-[6px] bg-[#F7F3ED]/5 flex items-center justify-center shrink-0">
-                      <Icon className="w-3.25 h-3.25 stroke-[#F7F3ED]/35" strokeWidth={1.6} />
-                    </div>
-                    <span className="font-body text-[0.77rem] text-[#F7F3ED]/45 flex-1">{label}</span>
-                    <span
-                      className={`font-body text-[0.75rem] whitespace-nowrap ${
-                        accent ? "text-[#5EEAD4]" : gold ? "text-[#E8D5A8]" : "text-[#F7F3ED]/65"
-                      }`}
-                    >
-                      {value}
-                    </span>
+                    {prog.reviewCount != null && (
+                      <div className="mt-1.5 font-body text-[12.5px] text-[#9FB6CC]">
+                        from {prog.reviewCount.toLocaleString()} participant reviews
+                      </div>
+                    )}
                   </div>
-                ))}
-            </div>
-          </div>
-        </div>
-      </section>
+                )}
+                {prog.enrolledCount != null && (
+                  <div className="px-7 border-l border-white/16 max-[980px]:pl-0 max-[980px]:pr-7 max-[980px]:border-l-0">
+                    <div className="font-heading text-[20px] leading-none">{prog.enrolledCount.toLocaleString()}+</div>
+                    <div className="mt-1.5 font-body text-[11px] tracking-[0.14em] uppercase text-[#9FB6CC]">Enrolled to date</div>
+                  </div>
+                )}
+                {prog.countriesCount != null && (
+                  <div className="px-7 border-l border-white/16 max-[980px]:pl-0 max-[980px]:pr-7 max-[980px]:border-l-0">
+                    <div className="font-heading text-[20px] leading-none">{prog.countriesCount}+</div>
+                    <div className="mt-1.5 font-body text-[11px] tracking-[0.14em] uppercase text-[#9FB6CC]">Countries</div>
+                  </div>
+                )}
+              </div>
+            )}
 
-      {/* ════ MOBILE STICKY ENROL BAR ════ */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-150 bg-[#0D1B2A] border-t border-[#C8A96E]/20 px-6 py-4 flex items-center justify-between gap-4 shadow-[0_-8px_30px_rgba(0,0,0,0.3)]">
-        <div>
-          <div className="font-heading text-[1.4rem] text-[#E8D5A8]">{priceLabel}</div>
-          {prog.nextIntake && <div className="font-body text-[0.7rem] text-[#F7F3ED]/35">{prog.duration} · {prog.nextIntake}</div>}
-        </div>
-        <EnrollCTA programId={prog.id} programSlug={prog.slug} className="font-body text-[0.82rem] tracking-[0.08em] uppercase font-medium bg-[#0D9488] hover:bg-[#0F766E] text-white rounded shrink-0">
-          Enrol Now
-        </EnrollCTA>
-      </div>
-
-      {/* ════ TWO-COLUMN PAGE ════ */}
-      <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_340px] max-w-350 mx-auto bg-[#FDFAF6] items-start">
-        {/* ── MAIN CONTENT ── */}
-        <main className="px-6 py-12 md:py-16 lg:pr-16 lg:pl-20 border-b lg:border-b-0 lg:border-r border-[#C8A96E]/25">
-          {/* Program header — quick facts */}
-          <div className="mb-12 pb-12 border-b border-[#C8A96E]/25">
-            <div className="flex flex-col sm:flex-row flex-wrap rounded-[2px] overflow-hidden border border-[#C8A96E]/25">
-              {quickFacts.map((f) => (
-                <div
-                  key={f.label}
-                  className="flex-1 min-w-30 py-4 px-[1.2rem] bg-[#F7F3ED] border-b sm:border-b-0 sm:border-r border-[#C8A96E]/25 last:border-0"
-                >
-                  <p className="font-body text-[0.62rem] tracking-[0.12em] uppercase text-[#718096] mb-1">
-                    {f.label}
-                  </p>
-                  <p className={`font-heading text-[1rem] ${f.accent ? "text-[#0D9488]" : "text-[#0D1B2A]"}`}>
-                    {f.value}
-                  </p>
+            <div className="mt-11 grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] border-t border-white/16">
+              {quickFacts.map((f, i) => (
+                <div key={f.label} className={`pt-4.5 pr-5 ${i > 0 ? "border-l border-white/14 pl-5 max-[760px]:pl-0 max-[760px]:pr-3 max-[760px]:border-l-0" : ""}`}>
+                  <div className="font-body text-[10.5px] tracking-[0.16em] uppercase text-[#8FA9C2]">{f.label}</div>
+                  <div className="mt-1.5 font-heading text-[17px]">{f.value}</div>
                 </div>
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Overview */}
-          {(prog.overview || prog.objectives.length > 0 || prog.audience.length > 0) && (
-            <section className="mb-14 pb-14 border-b border-[#C8A96E]/25">
-              <p className="flex items-center gap-2.5 font-body text-[0.65rem] tracking-[0.18em] uppercase text-[#0D9488] mb-3 before:content-[''] before:w-5 before:h-px before:bg-[#0D9488]">
-                Overview
-              </p>
-              <h2 className="font-heading text-[1.5rem] leading-[1.3] text-[#0D1B2A] mb-5">What You Will Learn</h2>
+        {/* ════ RAIL — spans hero + main via CSS grid row-span, so it overlaps
+              the hero's bottom edge regardless of how tall the hero renders
+              (title length varies per programme — a fixed pixel offset would
+              only work for one specific height). Sticky within that span. ════ */}
+        <div className="min-[901px]:col-start-2 min-[901px]:row-start-1 min-[901px]:row-span-2 min-[901px]:sticky min-[901px]:top-22 pt-6 pb-10 max-[760px]:pb-7">
+          <PurchaseCard prog={prog} />
+
+          <div className="mt-4 bg-[#0B2239] rounded-[4px] px-6 py-5.5 text-white flex gap-4 items-start">
+            <div className="w-8.5 h-8.5 rounded-full border border-[#F0B429]/50 text-[#F0B429] flex items-center justify-center text-[15px] shrink-0">♛</div>
+            <div>
+              <div className="font-heading text-[16px]">ARPS Institute Certificate</div>
+              <div className="mt-1.5 font-body text-[13px] leading-[1.5] text-[#A9BACB]">
+                Upon completion you will receive a digitally signed, QR-verified certificate – shareable on LinkedIn and recognised globally.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ════ MAIN CONTENT ════ */}
+        <div className="min-[901px]:col-start-1 min-[901px]:row-start-2 max-w-[44em] pt-18 pb-22 max-[760px]:pt-11 max-[760px]:pb-14">
+
+          {(prog.overview || prog.objectives.length > 0) && (
+            <section>
+              <Kicker>Overview</Kicker>
+              <div className="mt-3.5 mb-4.5"><SectionHeading>What You Will Learn</SectionHeading></div>
               {prog.overview && (
-                <p className="font-body text-[0.94rem] leading-[1.85] font-light text-[#4A5568] whitespace-pre-line">
-                  {prog.overview}
-                </p>
+                <p className="font-body text-[16.5px] leading-[1.68] text-[#3E4A59] text-pretty">{prog.overview}</p>
               )}
-
               {prog.objectives.length > 0 && (
-                <div className="mt-6 flex flex-col gap-[0.7rem]">
+                <div className="grid gap-px mt-7.5 bg-[#EAE5DC] border-y border-[#EAE5DC]">
                   {prog.objectives.map((obj) => (
-                    <div key={obj} className="flex items-start gap-3 font-body text-[0.9rem] leading-[1.65] font-light text-[#4A5568]">
-                      <span className="w-5 h-5 rounded-full bg-[#CCFBF1] flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="w-2.75 h-2.75 stroke-[#0D9488]" strokeWidth={2.5} />
-                      </span>
-                      {obj}
+                    <div key={obj} className="bg-[#FFFDFA] py-4 flex gap-3.5 items-start">
+                      <span className="w-5 h-5 rounded-full bg-[#E8F5F0] text-[#128C6E] text-[11px] flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                      <span className="font-body text-[15.5px] leading-[1.55] text-[#2A3441]">{obj}</span>
                     </div>
                   ))}
                 </div>
               )}
+            </section>
+          )}
 
-              {prog.audience.length > 0 && (
+          {prog.audience.length > 0 && (
+            <section className="mt-16">
+              <Kicker>Who this programme is for</Kicker>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3 mt-5">
+                {prog.audience.map((a) => (
+                  <div key={a} className="bg-[#FAF6EF] border border-[#EFE9DE] rounded-[3px] px-5 py-4.5 font-body text-[15px] leading-[1.5] text-[#2A3441]">
+                    {a}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {prog.included.length > 0 && (
+            <section className="mt-16">
+              <Kicker>Included</Kicker>
+              <div className="mt-3.5 mb-5.5"><SectionHeading>This Programme Includes</SectionHeading></div>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-x-8 gap-y-3.5">
+                {prog.included.map((item) => (
+                  <div key={item} className="flex gap-3 items-start">
+                    <span className="text-[#128C6E] text-[13px] mt-0.75 shrink-0">◆</span>
+                    <span className="font-body text-[15px] leading-[1.55] text-[#2A3441]">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {prog.modules.length > 0 && (
+            <section className="mt-18 pt-14 border-t border-[#EAE5DC] max-[760px]:mt-12 max-[760px]:pt-10">
+              <Kicker>Curriculum</Kicker>
+              <div className="flex flex-wrap items-baseline justify-between gap-3 mt-3.5">
+                <SectionHeading>Programme Outline</SectionHeading>
+                <div className="font-body text-[13px] text-[#6B7684] tracking-[0.02em]">
+                  {prog.modules.length} {prog.modules.length === 1 ? "module" : "modules"}
+                  {totalLessonCount > 0 && <> · {totalLessonCount} {totalLessonCount === 1 ? "lesson" : "lessons"}</>}
+                  {" "}· {prog.duration}
+                </div>
+              </div>
+              <p className="mt-4 max-w-[40em] font-body text-[16px] leading-[1.66] text-[#3E4A59] text-pretty">
+                The programme is structured across {prog.modules.length} modules, each covering one stage of learning with live sessions, self-paced content, and a practical assignment.
+              </p>
+              <CurriculumAccordion modules={prog.modules} />
+            </section>
+          )}
+
+          {prog.instructor.name && (
+            <section className="mt-18 pt-14 border-t border-[#EAE5DC] max-[760px]:mt-12 max-[760px]:pt-10">
+              <Kicker>Programme facilitator</Kicker>
+              <div className="mt-3.5 mb-6"><SectionHeading>Meet Your Instructor</SectionHeading></div>
+
+              <div className="flex gap-5.5 items-center flex-wrap">
+                <div className="w-19 h-19 rounded-full bg-[#0B2239] text-white flex items-center justify-center font-heading text-[20px] tracking-[0.04em] shrink-0">
+                  {prog.instructor.initials}
+                </div>
+                <div className="flex-1 min-w-55">
+                  <div className="font-heading text-[22px] text-[#0B2239]">{prog.instructor.name}</div>
+                  {prog.instructor.title && (
+                    <div className="mt-1.25 font-body text-[11px] tracking-[0.16em] uppercase text-[#0B6FC4]">{prog.instructor.title}</div>
+                  )}
+                  <div className="mt-2.5 font-body text-[14.5px] text-[#6B7684]">
+                    {prog.instructorProgramCount} {prog.instructorProgramCount === 1 ? "programme" : "programmes"} on ARPS Institute · {prog.cat.label}
+                  </div>
+                </div>
+                <InstructorProfileModal
+                  name={prog.instructor.name}
+                  title={prog.instructor.title}
+                  categoryLabel={prog.cat.label}
+                  initials={prog.instructor.initials}
+                  bio={prog.instructor.bio}
+                  avgRating={prog.instructorAvgRating}
+                  totalReviews={prog.instructorTotalReviews}
+                  programmeCount={prog.instructorProgramCount}
+                  programs={prog.instructorPrograms}
+                />
+              </div>
+
+              {prog.moreByInstructor.length > 0 && (
                 <>
-                  <p className="flex items-center gap-2.5 font-body text-[0.65rem] tracking-[0.18em] uppercase text-[#0D9488] mt-10 mb-3 before:content-[''] before:w-5 before:h-px before:bg-[#0D9488]">
-                    Who This Programme Is For
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {prog.audience.map((a) => (
-                      <div
-                        key={a}
-                        className="bg-[#F7F3ED] border border-[#C8A96E]/25 rounded-[2px] py-4 px-[1.2rem] flex items-center gap-2.5 font-body text-[0.84rem] font-light text-[#4A5568]"
-                      >
-                        <span className="w-[7px] h-[7px] rounded-full bg-[#0D9488] shrink-0" />
-                        {a}
-                      </div>
-                    ))}
+                  <div className="mt-9 font-body text-[11px] tracking-[0.16em] uppercase text-[#5A6675]">
+                    More by {prog.instructor.name}
+                  </div>
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-4.5 mt-4">
+                    {prog.moreByInstructor.map((r) => <ProgramMiniCard key={r.slug} program={r} />)}
                   </div>
                 </>
               )}
             </section>
           )}
 
-          {/* Curriculum */}
-          {prog.modules.length > 0 && (
-            <section className="mb-14 pb-14 border-b border-[#C8A96E]/25">
-              <p className="flex items-center gap-2.5 font-body text-[0.65rem] tracking-[0.18em] uppercase text-[#0D9488] mb-3 before:content-[''] before:w-5 before:h-px before:bg-[#0D9488]">
-                Curriculum
-              </p>
-              <h2 className="font-heading text-[1.5rem] leading-[1.3] text-[#0D1B2A] mb-4">Programme Outline</h2>
-              <p className="font-body text-[0.94rem] leading-[1.85] font-light text-[#4A5568] mb-6">
-                The programme is structured across {prog.modules.length} modules, each covering one stage of learning with live sessions, self-paced content, and a practical assignment.
-              </p>
-
-              {/* Week stepper */}
-              <div
-                className="hidden sm:grid gap-1 mb-8 relative"
-                style={{ gridTemplateColumns: `repeat(${prog.modules.length}, minmax(0, 1fr))` }}
-              >
-                <div className="absolute top-4 left-0 right-0 h-0.5 bg-[#C8A96E]/25 z-0" />
-                <div
-                  className="absolute top-4 left-0 h-0.5 bg-[#0D9488] z-1"
-                  style={{ width: `${100 / prog.modules.length}%` }}
-                />
-                {prog.modules.map((mod, i) => (
-                  <div key={i} className="flex flex-col items-center gap-1.5 relative z-2">
-                    <div
-                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-heading text-[0.72rem] ${
-                        i === 0
-                          ? "bg-[#0D9488] border-[#0D9488] text-white"
-                          : "bg-[#FDFAF6] border-[#C8A96E]/25 text-[#718096]"
-                      }`}
-                    >
-                      {i + 1}
-                    </div>
-                    <span className={`text-[0.6rem] text-center leading-[1.3] ${i === 0 ? "text-[#0D9488]" : "text-[#718096]"}`}>
-                      {stepLabel(mod.title)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <Accordion type="single" collapsible defaultValue="mod-0" className="flex flex-col gap-2">
-                {prog.modules.map((mod, i) => (
-                  <AccordionItem
-                    key={i}
-                    value={`mod-${i}`}
-                    className="border border-[#C8A96E]/25 rounded-[2px] overflow-hidden"
-                  >
-                    <AccordionTrigger className="group hover:no-underline px-5 py-[1.1rem] bg-[#FDFAF6] hover:bg-[#F7F3ED] data-[state=open]:bg-[#0D1B2A] transition-colors">
-                      <div className="flex items-center gap-3.5 text-left flex-1">
-                        <span className="font-heading text-[0.75rem] text-[#0D9488] bg-[#CCFBF1] px-2.5 py-[3px] rounded-[10px] shrink-0 whitespace-nowrap group-data-[state=open]:bg-[#0D9488]/20 group-data-[state=open]:text-[#5EEAD4]">
-                          {mod.week ?? `Week ${i + 1}`}
-                        </span>
-                        <span className="font-heading text-[0.98rem] leading-[1.3] text-[#0D1B2A] group-data-[state=open]:text-[#F7F3ED]">
-                          {mod.title}
-                        </span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-5 py-[1.2rem] bg-[#F7F3ED] border-t border-[#C8A96E]/25">
-                      {mod.desc && (
-                        <p className="font-body text-[0.85rem] leading-[1.75] font-light text-[#4A5568] mb-4">
-                          {mod.desc}
-                        </p>
-                      )}
-                      {mod.topics && mod.topics.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {mod.topics.map((t) => (
-                            <span key={t} className="font-body text-[0.72rem] text-[#0F766E] bg-[#CCFBF1] px-3 py-1 rounded-[10px]">
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </section>
-          )}
-
-          {/* Instructor */}
-          {prog.instructor.name && (
-            <section className="mb-14 pb-14 border-b border-[#C8A96E]/25">
-              <p className="flex items-center gap-2.5 font-body text-[0.65rem] tracking-[0.18em] uppercase text-[#0D9488] mb-3 before:content-[''] before:w-5 before:h-px before:bg-[#0D9488]">
-                Programme Facilitator
-              </p>
-              <h2 className="font-heading text-[1.5rem] leading-[1.3] text-[#0D1B2A] mb-2">Meet Your Instructor</h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-6 items-start bg-[#F7F3ED] border border-[#C8A96E]/25 rounded-[2px] p-8 mt-6">
-                <div className="w-20 h-20 rounded-full bg-[#0D1B2A] border-[3px] border-[#CCFBF1] flex items-center justify-center font-heading text-[1.4rem] text-[#E8D5A8] shrink-0">
-                  {prog.instructor.initials ?? prog.instructor.name.slice(0, 2).toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-heading text-[1.2rem] leading-[1.3] text-[#0D1B2A] mb-0.5">{prog.instructor.name}</p>
-                  {prog.instructor.title && (
-                    <p className="font-body text-[0.78rem] tracking-[0.06em] uppercase text-[#0D9488] mb-3">
-                      {prog.instructor.title}
-                    </p>
-                  )}
-                  {prog.instructor.bio && (
-                    <p className="font-body text-[0.86rem] leading-[1.75] font-light text-[#4A5568] mb-4 whitespace-pre-line">
-                      {prog.instructor.bio}
-                    </p>
-                  )}
-                  {prog.instructor.credentials.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {prog.instructor.credentials.map((c) => (
-                        <span key={c} className="font-body text-[0.72rem] text-[#4A5568] bg-[#FDFAF6] border border-[#C8A96E]/25 px-3 py-1 rounded-[10px]">
-                          {c}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* FAQs */}
           {prog.faqs.length > 0 && (
-            <section>
-              <p className="flex items-center gap-2.5 font-body text-[0.65rem] tracking-[0.18em] uppercase text-[#0D9488] mb-3 before:content-[''] before:w-5 before:h-px before:bg-[#0D9488]">
-                FAQs
-              </p>
-              <h2 className="font-heading text-[1.5rem] leading-[1.3] text-[#0D1B2A] mb-2">Frequently Asked Questions</h2>
-
-              <Accordion type="single" collapsible className="mt-6 border-t border-[#C8A96E]/25">
-                {prog.faqs.map((faq, i) => (
-                  <AccordionItem key={i} value={`faq-${i}`} className="border-b border-[#C8A96E]/25">
-                    <AccordionTrigger className="hover:no-underline py-[1.2rem] text-left font-heading text-[0.98rem] leading-[1.35] text-[#0D1B2A] data-[state=open]:text-[#0D9488]">
-                      {faq.q}
-                    </AccordionTrigger>
-                    <AccordionContent className="pb-[1.2rem] font-body text-[0.88rem] leading-[1.85] font-light text-[#4A5568]">
-                      {faq.a}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
+            <section className="mt-18 pt-14 border-t border-[#EAE5DC] max-[760px]:mt-12 max-[760px]:pt-10">
+              <Kicker>FAQs</Kicker>
+              <div className="mt-3.5 mb-5"><SectionHeading>Frequently Asked Questions</SectionHeading></div>
+              <FaqAccordion faqs={prog.faqs} />
             </section>
           )}
-        </main>
+        </div>
+      </div>
 
-        {/* ── SIDEBAR ── */}
-        <aside className="px-6 py-12 lg:p-12 lg:sticky lg:top-[68px] flex flex-col gap-6">
-          {/* Enrol card */}
-          <div className="bg-[#0D1B2A] rounded-[8px] overflow-hidden">
-            <div className="p-8 border-b border-[#C8A96E]/[.12]">
-              <span className="font-heading text-[2.4rem] text-[#E8D5A8] leading-none block mb-1">{priceLabel}</span>
-              <span className="font-body text-[0.75rem] text-[#F7F3ED]/35">
-                {prog.price > 0 ? "Full programme fee · One-time payment" : "No payment required"}
-              </span>
-            </div>
-            <div className="px-8 py-6">
-              <div className="flex flex-col gap-[0.7rem] mb-6">
-                {enrolDetails.map(({ icon: Icon, value }) => (
-                  <div key={value} className="flex items-center gap-2.5 font-body text-[0.82rem] font-light text-[#F7F3ED]/55">
-                    <Icon className="w-3.75 h-3.75 stroke-[#0D9488] shrink-0" strokeWidth={1.6} />
-                    {value}
-                  </div>
-                ))}
-              </div>
-              <EnrollCTA programId={prog.id} programSlug={prog.slug} className="w-full mb-2.5 font-body text-[0.82rem] tracking-[0.08em] uppercase font-medium bg-[#0D9488] hover:bg-[#0F766E] text-white rounded">
-                Enrol Now
-              </EnrollCTA>
-              <Button variant="outline" className="w-full font-body text-[0.82rem] tracking-[0.06em] uppercase font-normal bg-transparent border-white/15 text-[#F7F3ED]/60 hover:text-[#F7F3ED] hover:border-white/40 rounded">
-                Request Group Quote
-              </Button>
-              {prog.price > 0 && (
-                <p className="font-body text-[0.72rem] text-[#F7F3ED]/28 text-center mt-4 leading-[1.5]">
-                  ✓ 14-day money-back guarantee · Instalment plans available
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* What's included */}
-          {prog.included.length > 0 && (
-            <div className="bg-[#F7F3ED] border border-[#C8A96E]/25 rounded-[2px] p-6">
-              <div className="font-heading text-[0.95rem] text-[#0D1B2A] mb-4">What&apos;s Included</div>
-              <div className="flex flex-col gap-[0.6rem]">
-                {prog.included.map((item) => (
-                  <div key={item} className="flex items-center gap-2.5 font-body text-[0.82rem] font-light text-[#4A5568]">
-                    <Check className="w-3.5 h-3.5 stroke-[#0D9488] shrink-0" strokeWidth={2} />
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Certificate preview */}
-          <div className="relative overflow-hidden bg-[#060D14] border border-[#C8A96E]/[.12] rounded-[8px] p-7 text-center">
-            <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full pointer-events-none bg-[radial-gradient(ellipse,rgba(200,169,110,0.06)_0%,transparent_70%)]" />
-            <div className="relative w-14 h-14 rounded-full bg-[#C8A96E]/10 border border-[#C8A96E]/25 flex items-center justify-center mx-auto mb-4">
-              <Award className="w-6.5 h-6.5 stroke-[#C8A96E]" strokeWidth={1.5} />
-            </div>
-            <div className="relative font-heading text-[0.95rem] text-[#F7F3ED] mb-1.5">ARPS Institute Certificate</div>
-            <div className="relative font-body text-[0.76rem] leading-[1.55] font-light text-[#F7F3ED]/38">
-              Upon completion you will receive a digitally signed, QR-verified certificate — shareable on LinkedIn and recognised globally.
-            </div>
-          </div>
-        </aside>
+      {/* ════ MOBILE STICKY ENROL BAR ════ */}
+      <div className="hidden max-[900px]:flex fixed bottom-0 left-0 right-0 z-40 bg-[#0B2239] border-t border-white/10 px-5 py-3.5 items-center justify-between gap-4 shadow-[0_-8px_30px_rgba(0,0,0,0.3)]">
+        <div>
+          <div className="font-heading text-[20px] leading-none text-white">{priceLabel}</div>
+        </div>
+        <EnrollCTA
+          programId={prog.id}
+          programSlug={prog.slug}
+          className="h-11 px-6 rounded-[3px] bg-[#0B6FC4] hover:bg-[#0A5CA5] text-white font-body text-[13px] font-semibold tracking-[0.14em] uppercase transition-colors duration-200 shrink-0"
+        >
+          Enrol Now
+        </EnrollCTA>
       </div>
 
       {/* ════ YOU MAY ALSO LIKE ════ */}
       {prog.related.length > 0 && (
-        <section className="w-full bg-[#EDF2FB] border-t border-[#C8A96E]/[.12] px-6 md:px-20 py-16 md:py-20">
-          <div className="flex items-end justify-between gap-8 flex-wrap mb-12">
-            <div>
-              <p className="font-body text-[0.68rem] tracking-[0.18em] uppercase text-[#C8A96E] mb-3">Continue Learning</p>
-              <h2 className="font-heading text-[clamp(1.5rem,2.5vw,2rem)] leading-[1.2] text-[#F7F3ED]">You May Also Like</h2>
-            </div>
-            <Link
-              href={`/programs#${cat.id}`}
-              className="font-body text-[0.78rem] tracking-[0.08em] uppercase text-[#F7F3ED]/45 hover:text-[#E8D5A8] border-b border-[#F7F3ED]/15 hover:border-[#C8A96E] pb-0.5 whitespace-nowrap transition-colors no-underline"
-            >
-              Browse All Programs →
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {prog.related.map((r) => (
-              <Link
-                key={r.slug}
-                href={`/programs/${r.slug}`}
-                className="flex flex-col gap-3 sm:gap-4 group bg-white/90 border border-[#0474C4]/25 rounded p-5 sm:p-6 hover:border-[#0474C4]/55 hover:-translate-y-0.5 transition-all no-underline"
-              >
-                <span className="font-body text-[0.62rem] tracking-widest font-medium bg-[#0474C4]/10 text-[#0474C4] px-2.5 py-[3px] rounded-[10px] w-fit mb-4">
-                  {cat.label}
-                </span>
-                <div className="font-heading line-clamp-2 text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#262B40] group-hover:text-[#0474C4] transition-colors">{r.title}</div>
-                <div className="flex items-center justify-between pt-4 border-t border-[#C8A96E]/10">
-                  <span className="flex items-center gap-1.5 font-body text-[0.72rem] font-light text-[#F7F3ED]/35">
-                    <Clock className="w-2.75 h-2.75 stroke-[#F7F3ED]/30" strokeWidth={1.5} />
-                    {r.duration}
-                  </span>
-                  <span className="flex items-center gap-1 font-body text-[0.72rem] text-[#0D9488]/60 group-hover:text-[#5EEAD4] transition-all">
-                    Enrol <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                  </span>
-                </div>
+        <section className="w-full bg-[#EDF2FB] border-t border-[#E1E8F4]">
+          <div className="w-full max-w-[1240px] mx-auto px-7 max-[760px]:px-5 pt-16 pb-18 max-[760px]:pt-12 max-[760px]:pb-13">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <div className="font-body text-[10.5px] tracking-[0.18em] uppercase text-[#0B6FC4]">Programs</div>
+                <h2 className="font-heading font-medium text-[34px] tracking-[-0.015em] mt-3 text-[#0B2239]">You May Also Like</h2>
+              </div>
+              <Link href="/programs" className="font-body text-[11px] tracking-[0.16em] uppercase text-[#0B6FC4] hover:text-[#0A3D6B] transition-colors duration-200">
+                Browse all programs →
               </Link>
-            ))}
+            </div>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-5 mt-8">
+              {prog.related.map((r) => <ProgramMiniCard key={r.slug} program={r} />)}
+            </div>
           </div>
         </section>
       )}
-    </>
+    </div>
   )
 }
 
