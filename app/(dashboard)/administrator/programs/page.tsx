@@ -1520,49 +1520,92 @@ function AiCourseBuilderModal({
   const [provider, setProvider]     = useState<"anthropic" | "openai">("anthropic")
   const [loading, setLoading]       = useState(false)
   const [error, setError]           = useState("")
+  const [progress, setProgress]     = useState<{ message: string; done?: number; total?: number } | null>(null)
+
+  function applyDraft(draft: AiDraftResponse) {
+    onGenerated({
+      title:              draft.title,
+      excerpt:            draft.excerpt,
+      tagline:            draft.tagline,
+      overview:           draft.overview,
+      learningObjectives: draft.learningObjectives,
+      targetAudience:     draft.targetAudience,
+      whatIsIncluded:     draft.whatIsIncluded,
+      curriculum: draft.curriculum.map(chapter => ({
+        id:    chapter.id,
+        title: chapter.title,
+        desc:  chapter.desc,
+        lessons: chapter.lessons.map(lesson => ({
+          id:          lesson.id,
+          title:       lesson.title,
+          description: lesson.description,
+          blocks:      lesson.blocks ?? [],
+        })),
+      })),
+      faqs:       draft.faqs,
+      categoryId: draft.categoryId,
+      level:      draft.level,
+    })
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!topic.trim() || !categoryId) return
     setLoading(true)
     setError("")
+    setProgress(null)
     try {
       const res = await fetch("/api/programs/ai-generate", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ topic: topic.trim(), categoryId, level, notes: notes.trim() || undefined, provider }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? "Failed to generate a draft.")
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? "Failed to generate a draft.")
+      }
+      if (!res.body) throw new Error("Failed to generate a draft.")
 
-      const draft = data.draft as AiDraftResponse
-      onGenerated({
-        title:              draft.title,
-        excerpt:            draft.excerpt,
-        tagline:            draft.tagline,
-        overview:           draft.overview,
-        learningObjectives: draft.learningObjectives,
-        targetAudience:     draft.targetAudience,
-        whatIsIncluded:     draft.whatIsIncluded,
-        curriculum: draft.curriculum.map(chapter => ({
-          id:    chapter.id,
-          title: chapter.title,
-          desc:  chapter.desc,
-          lessons: chapter.lessons.map(lesson => ({
-            id:          lesson.id,
-            title:       lesson.title,
-            description: lesson.description,
-            blocks:      lesson.blocks ?? [],
-          })),
-        })),
-        faqs:       draft.faqs,
-        categoryId: draft.categoryId,
-        level:      draft.level,
-      })
+      // The route streams progress as Server-Sent Events, one JSON object per
+      // "data: " line, ending in a "done" (carries the draft) or "error" event.
+      const reader  = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer   = ""
+      let settled  = false
+
+      while (!settled) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+
+        let sepIndex: number
+        while ((sepIndex = buffer.indexOf("\n\n")) !== -1) {
+          const rawEvent = buffer.slice(0, sepIndex)
+          buffer = buffer.slice(sepIndex + 2)
+          const line = rawEvent.split("\n").find(l => l.startsWith("data:"))
+          if (!line) continue
+
+          const event = JSON.parse(line.slice(5).trim()) as
+            | { type: "progress"; message: string; done?: number; total?: number }
+            | { type: "done"; draft: AiDraftResponse }
+            | { type: "error"; error: string }
+
+          if (event.type === "progress") {
+            setProgress({ message: event.message, done: event.done, total: event.total })
+          } else if (event.type === "error") {
+            throw new Error(event.error)
+          } else {
+            settled = true
+            applyDraft(event.draft)
+            break
+          }
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.")
     } finally {
       setLoading(false)
+      setProgress(null)
     }
   }
 
@@ -1583,62 +1626,84 @@ function AiCourseBuilderModal({
         </div>
         <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
           {error && <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
-          <Field label="AI Model">
-            <div className="grid grid-cols-2 gap-2">
-              {([
-                ["anthropic", "Anthropic Claude"],
-                ["openai",    "GPT-4.1 mini"],
-              ] as const).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setProvider(value)}
-                  className={`px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${
-                    provider === value
-                      ? "bg-[#0474C4] border-[#0474C4] text-white"
-                      : "bg-white border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4]"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+
+          {loading ? (
+            <div className="py-6 flex flex-col items-center text-center gap-3">
+              <div className="w-8 h-8 border-2 border-[#0474C4]/25 border-t-[#0474C4] rounded-full animate-spin" />
+              <p className="text-[13px] font-medium text-[#1A1916] min-h-[18px]">{progress?.message ?? "Starting…"}</p>
+              {progress?.total ? (
+                <div className="w-full max-w-[240px]">
+                  <div className="h-1.5 rounded-full bg-[#F0EEE9] overflow-hidden">
+                    <div
+                      className="h-full bg-[#0474C4] transition-all duration-300"
+                      style={{ width: `${Math.round(((progress.done ?? 0) / progress.total) * 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-[#A8A39C] mt-1.5">{progress.done ?? 0} / {progress.total} lessons written</p>
+                </div>
+              ) : null}
             </div>
-          </Field>
-          <Field label="Course Topic" required hint="what should this programme teach?">
-            <textarea
-              autoFocus
-              value={topic}
-              onChange={e => setTopic(e.target.value)}
-              rows={3}
-              className={inputCls}
-              placeholder="e.g. Monitoring and Evaluation (M&E) fundamentals for public sector analysts"
-              required
-            />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Category" required>
-              <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={inputCls} required>
-                {categories.length === 0 && <option value="">— No categories —</option>}
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </Field>
-            <Field label="Level">
-              <select value={level} onChange={e => setLevel(e.target.value as CourseLevel)} className={inputCls}>
-                <option value="BEGINNER">Beginner</option>
-                <option value="INTERMEDIATE">Intermediate</option>
-                <option value="ADVANCED">Advanced</option>
-              </select>
-            </Field>
-          </div>
-          <Field label="Notes" hint="optional">
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              rows={2}
-              className={inputCls}
-              placeholder="e.g. focus on results-based frameworks, keep it self-paced"
-            />
-          </Field>
+          ) : (
+            <>
+              <Field label="AI Model">
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    ["anthropic", "Anthropic Claude"],
+                    ["openai",    "GPT-4.1 mini"],
+                  ] as const).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setProvider(value)}
+                      className={`px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${
+                        provider === value
+                          ? "bg-[#0474C4] border-[#0474C4] text-white"
+                          : "bg-white border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4]"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+              <Field label="Course Topic" required hint="what should this programme teach?">
+                <textarea
+                  autoFocus
+                  value={topic}
+                  onChange={e => setTopic(e.target.value)}
+                  rows={3}
+                  className={inputCls}
+                  placeholder="e.g. Monitoring and Evaluation (M&E) fundamentals for public sector analysts"
+                  required
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Category" required>
+                  <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={inputCls} required>
+                    {categories.length === 0 && <option value="">— No categories —</option>}
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Level">
+                  <select value={level} onChange={e => setLevel(e.target.value as CourseLevel)} className={inputCls}>
+                    <option value="BEGINNER">Beginner</option>
+                    <option value="INTERMEDIATE">Intermediate</option>
+                    <option value="ADVANCED">Advanced</option>
+                  </select>
+                </Field>
+              </div>
+              <Field label="Notes" hint="optional">
+                <textarea
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  rows={2}
+                  className={inputCls}
+                  placeholder="e.g. focus on results-based frameworks, keep it self-paced"
+                />
+              </Field>
+            </>
+          )}
+
           <div className="flex gap-2 justify-end pt-1">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
             <button type="submit" disabled={loading || !topic.trim() || !categoryId} className="flex items-center gap-1.5 px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
