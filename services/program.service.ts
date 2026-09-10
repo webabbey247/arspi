@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { revalidateTag } from "next/cache"
+import { revalidateTag, revalidatePath } from "next/cache"
 import { CourseLevel, CourseStatus } from "@prisma/client"
 
 export type { CourseLevel, CourseStatus }
@@ -9,6 +9,16 @@ export const PROGRAMS_PUBLIC_TAG = "programs:public"
 
 export function bumpProgramsPublicCache() {
   revalidateTag(PROGRAMS_PUBLIC_TAG, "max")
+}
+
+/** The public program detail page reads straight from Prisma (no tagged
+ *  fetch), so it's untouched by bumpProgramsPublicCache() above — without
+ *  this, a path that was ever rendered as "not found" (e.g. visited before
+ *  the program was created/published) stays cached as a 404 indefinitely,
+ *  since the page has no revalidate window of its own. Call this with the
+ *  program's slug on create/update/delete so the change is visible immediately. */
+export function bumpProgramDetailCache(slug: string) {
+  revalidatePath(`/programs/${slug}`)
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -391,6 +401,7 @@ export async function createProgram(
     include: programInclude,
   })
   bumpProgramsPublicCache()
+  bumpProgramDetailCache(row.slug)
   return { success: true, data: row as unknown as ProgramRow }
 }
 
@@ -448,6 +459,10 @@ export async function updateProgram(
     include: programInclude,
   })
   bumpProgramsPublicCache()
+  bumpProgramDetailCache(row.slug)
+  // Slug changed — the old path would otherwise keep serving its last cached
+  // render (stale content, or worse, staying "found" after it should 404).
+  if (input.slug !== undefined && input.slug !== existing.slug) bumpProgramDetailCache(existing.slug)
   return { success: true, data: row as unknown as ProgramRow }
 }
 
@@ -468,6 +483,7 @@ export async function deleteProgram(id: string): Promise<ProgramServiceResult<nu
 
   await db.course.delete({ where: { id } })
   bumpProgramsPublicCache()
+  bumpProgramDetailCache(existing.slug)
   return { success: true, data: null }
 }
 

@@ -11,6 +11,13 @@ import CurriculumAccordion from "./CurriculumAccordion"
 import FaqAccordion from "./FaqAccordion"
 import InstructorProfileModal, { type InstructorProgramStat } from "./InstructorProfileModal"
 
+// Belt-and-braces cache safety net: program create/update/delete already call
+// bumpProgramDetailCache() to invalidate this exact path immediately, but this
+// bounds how stale any path can ever get (including a path a bot/preview hit
+// as "not found" before the program was published) to 5 minutes, even if some
+// future write path forgets to invalidate explicitly.
+export const revalidate = 300
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type CatMeta = { id: string; label: string; color: string; bg: string }
