@@ -10,6 +10,8 @@ import ShareButton from "./ShareButton"
 import CurriculumAccordion from "./CurriculumAccordion"
 import FaqAccordion from "./FaqAccordion"
 import InstructorProfileModal, { type InstructorProgramStat } from "./InstructorProfileModal"
+import JsonLd from "@/components/seo/JsonLd"
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, absoluteUrl, metaDescription } from "@/lib/seo"
 
 // Belt-and-braces cache safety net: program create/update/delete already call
 // bumpProgramDetailCache() to invalidate this exact path immediately, but this
@@ -365,7 +367,21 @@ export async function generateMetadata({
   const { slug } = await params
   const prog = await resolveProgram(slug)
   if (!prog) return {}
-  return { title: `${prog.title} — ARPS Institute` }
+
+  const title       = `${prog.title} — ARPS Institute`
+  const description = metaDescription(prog.description) ?? metaDescription(prog.overview) ?? SITE_DESCRIPTION
+  const url         = `${SITE_URL}/programs/${prog.slug}`
+  // Falls through to the site-wide app/opengraph-image.tsx when a programme
+  // has no cover image of its own.
+  const images      = prog.thumbnail ? [{ url: absoluteUrl(prog.thumbnail) }] : undefined
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: "website", url, title, description, siteName: SITE_NAME, images },
+    twitter:   { card: "summary_large_image", title, description, images },
+  }
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -386,8 +402,55 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
     { label: "Certificate", value: "Verified Digital" },
   ]
 
+  // Course structured data — makes this page eligible for Google's course
+  // rich results (provider, price and rating shown in the search snippet).
+  // Rating/instructor are only emitted when the real data exists; Google
+  // penalises schema that claims values the page doesn't actually show.
+  const courseJsonLd: Record<string, unknown> = {
+    "@context":  "https://schema.org",
+    "@type":     "Course",
+    name:        prog.title,
+    description: metaDescription(prog.description, 300) ?? metaDescription(prog.overview, 300) ?? SITE_DESCRIPTION,
+    url:         `${SITE_URL}/programs/${prog.slug}`,
+    ...(prog.thumbnail && { image: absoluteUrl(prog.thumbnail) }),
+    provider: {
+      "@type": "EducationalOrganization",
+      name:    SITE_NAME,
+      url:     SITE_URL,
+    },
+    ...(prog.instructor.name && {
+      instructor: {
+        "@type": "Person",
+        name:    prog.instructor.name,
+        ...(prog.instructor.title && { jobTitle: prog.instructor.title }),
+      },
+    }),
+    ...(prog.rating != null && prog.reviewCount != null && prog.reviewCount > 0 && {
+      aggregateRating: {
+        "@type":      "AggregateRating",
+        ratingValue:  prog.rating,
+        reviewCount:  prog.reviewCount,
+        bestRating:   5,
+        worstRating:  1,
+      },
+    }),
+    offers: {
+      "@type":        "Offer",
+      price:          prog.price,
+      priceCurrency:  "USD",
+      availability:   "https://schema.org/InStock",
+      url:            `${SITE_URL}/programs/${prog.slug}`,
+    },
+    hasCourseInstance: {
+      "@type":        "CourseInstance",
+      courseMode:     prog.format ?? "Online",
+      ...(prog.duration && { courseWorkload: prog.duration }),
+    },
+  }
+
   return (
     <div className="w-full overflow-x-clip">
+      <JsonLd data={courseJsonLd} />
       <div className="w-full max-w-[1240px] mx-auto px-7 max-[760px]:px-5 grid grid-cols-1 min-[901px]:grid-cols-[minmax(0,1fr)_minmax(320px,372px)] min-[901px]:gap-x-14 items-start">
 
         {/* ════ HERO — text column ════ */}

@@ -257,6 +257,50 @@ repo). Core model groups:
 - [x] React Compiler lint rules (`react-hooks/purity`, `react-hooks/set-state-in-effect`)
       enforced and clean across the codebase.
 
+## 11. SEO & search indexing
+
+Shared helpers live in `lib/seo.ts` (canonical origin, `absoluteUrl()`,
+`metaDescription()`, Organization schema) and `components/seo/JsonLd.tsx`
+(escapes `<` so DB-authored content can't break out of the `<script>` tag).
+
+- [x] **`metadataBase`** set from `NEXT_PUBLIC_APP_URL` in `app/layout.tsx` — without it
+      Next.js resolves OG images and canonicals against `localhost`.
+- [x] **Canonical origin fixed** — the root layout previously hardcoded
+      `openGraph.url: "https://arpsinstitute.org"`, which is not the domain this site
+      serves from. Everything now derives from `NEXT_PUBLIC_APP_URL`.
+- [x] **`app/robots.ts`** — allows the public site, disallows `/api/`, the three
+      dashboards, `/settings`, all auth routes, `/unauthorized`, `/verify/`, and both
+      checkout-success pages; points to the sitemap.
+- [x] **`app/sitemap.ts`** — 15 static public routes plus every published programme,
+      insight, workshop, research project and career posting pulled from the database,
+      each with `lastModified`. Revalidates hourly, so new content is picked up without
+      a redeploy. A failing query for one content type degrades to an empty list for
+      that type rather than blanking the whole sitemap.
+- [x] **`app/opengraph-image.tsx`** — generated 1200×630 default social card, inherited
+      by any page that doesn't set its own image (previously shared links had no preview
+      image at all). System fonts only, so it can't fail on a webfont fetch.
+- [x] **Per-page metadata** — `programs/[slug]` now emits description, canonical, OG and
+      Twitter tags (it was title-only); `insights/[slug]` gained a server shell
+      (`InsightDetailClient.tsx` holds the original UI) so every article has its own
+      title/description/OG image instead of inheriting the homepage's verbatim, which
+      read to search engines as dozens of duplicate pages.
+- [x] **Structured data (JSON-LD)** — `EducationalOrganization` site-wide,
+      `Course` on programme pages (provider, price, rating, instructor, course instance —
+      eligible for Google course rich results), `Article` on insights (author, publish
+      and modified dates, section).
+- [x] **`noindex`** on the `(dashboard)` and `(auth)` route groups, `/unauthorized`, and
+      `/verify/[token]` (certificate pages name a real individual).
+- [ ] **Google Search Console verification + sitemap submission — PENDING.** Needs the
+      site claimed under a Google account, then either the `google-site-verification`
+      meta tag added to `app/layout.tsx` (`metadata.verification.google`) or the HTML
+      file dropped in `public/`. Until this is done there's no crawl/index visibility,
+      no way to submit the sitemap for prioritised crawling, and no manual
+      "request indexing" for new programmes.
+
+> **Deployment prerequisite:** `NEXT_PUBLIC_APP_URL` must be the real public origin in
+> the production environment. Every canonical, sitemap entry and OG URL is built from
+> it — if it's wrong, those all point at the wrong host.
+
 ---
 
 ## Known gaps / explicitly out of scope
@@ -271,3 +315,10 @@ repo). Core model groups:
 - ~40 older API routes use their original inline `session.role !== "X"` check rather
   than the newer `lib/guard.ts` helpers — functionally identical, not a bug, just not
   de-duplicated.
+- **Google Search Console not yet set up** (§11) — the only outstanding SEO item.
+- Article *body* content on `/insights/[slug]` still renders client-side (the server
+  shell supplies metadata and JSON-LD only). Googlebot does execute JavaScript, so these
+  pages are indexable, but server-rendering the body would index faster and more
+  reliably. Would mean moving the data fetch out of the client component.
+- No per-page OG images for programmes/articles beyond their own cover image — pages
+  without a cover fall back to the site-wide card rather than a generated per-title one.

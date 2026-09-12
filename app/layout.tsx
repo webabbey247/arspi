@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import { Toaster } from "sonner";
+import JsonLd from "@/components/seo/JsonLd";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, organizationJsonLd } from "@/lib/seo";
 import "./globals.css";
 
 
@@ -17,12 +19,15 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  // Required for Next.js to resolve relative OG/Twitter image paths and
+  // canonicals to absolute URLs — without it they silently fall back to
+  // localhost, which then ends up in social previews and search results.
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "ARPS Institute — Professional Education, Research & Leadership",
     template: "%s — ARPS Institute",
   },
-  description:
-    "Global professional certification programs, research training, software solutions, and institutional consulting for scholars and practitioners worldwide.",
+  description: SITE_DESCRIPTION,
   keywords: [
     "ARPS Institute",
     "professional education",
@@ -30,11 +35,21 @@ export const metadata: Metadata = {
     "M&E",
     "certificates",
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://arpsinstitute.org",
-    siteName: "ARPS Institute",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: "ARPS Institute — Professional Education, Research & Leadership",
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ARPS Institute — Professional Education, Research & Leadership",
+    description: SITE_DESCRIPTION,
   },
 };
 
@@ -50,6 +65,7 @@ export default function RootLayout({
       >
        {children}
         <Toaster position="bottom-right" richColors />
+        <JsonLd data={organizationJsonLd()} />
       </body>
     </html>
   );

@@ -8,8 +8,10 @@ type Props = { params: Promise<{ token: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { token } = await params
   const cert = await getCertificateByToken(token)
-  if (!cert) return { title: "Certificate Not Found — ARPS Institute" }
-  return { title: `Certificate — ${displayName(cert.user)} · ARPS Institute` }
+  // Certificate pages carry a named individual's record — never index them.
+  const robots = { index: false, follow: false }
+  if (!cert) return { title: "Certificate Not Found — ARPS Institute", robots }
+  return { title: `Certificate — ${displayName(cert.user)} · ARPS Institute`, robots }
 }
 
 export default async function VerifyPage({ params }: Props) {

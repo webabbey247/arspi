@@ -6,6 +6,7 @@ import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import Image from "next/image"
+import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -45,35 +46,6 @@ function uid() {
   return Math.random().toString(36).slice(2, 10)
 }
 
-/** Calls the block-expansion endpoint. Returns the new HTML content, or
- *  throws with a user-facing message on failure. */
-async function requestAiExpand(opts: {
-  kind:        "lesson" | "assignment"
-  context:     AiExpandContext
-  blockTitle?: string
-  current:     string
-}): Promise<string> {
-  const resp = await fetch("/api/programs/ai-expand-block", {
-    method:  "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      kind:           opts.kind,
-      courseTitle:    opts.context.courseTitle,
-      chapterTitle:   opts.context.chapterTitle,
-      lessonTitle:    opts.context.lessonTitle,
-      lessonSummary:  opts.context.lessonSummary,
-      blockTitle:     opts.blockTitle,
-      currentContent: opts.current,
-    }),
-  })
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}))
-    throw new Error(err.error ?? "AI expand failed. Please try again.")
-  }
-  const data = await resp.json()
-  return data.content as string
-}
-
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
 const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors"
@@ -81,14 +53,14 @@ const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#E5E2DC] 
 // ── Mini rich-text editor ─────────────────────────────────────────────────────
 
 function MiniRTE({
-  value, onChange, placeholder, onAiExpand, aiLoading, aiError,
+  value, onChange, placeholder, onAiExpand,
 }: {
   value:       string
   onChange:    (v: string) => void
   placeholder?: string
+  /** Opens the shared AI builder modal — loading and error state live there,
+   *  not here. */
   onAiExpand?: () => void
-  aiLoading?:  boolean
-  aiError?:    string | null
 }) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -134,16 +106,14 @@ function MiniRTE({
           <button
             type="button"
             onClick={onAiExpand}
-            disabled={aiLoading}
-            className="flex items-center gap-1 px-2 py-1 rounded-[6px] text-[10.5px] font-semibold text-[#0474C4] hover:bg-[#0474C4]/10 disabled:opacity-50 cursor-pointer transition-colors shrink-0"
+            className="flex items-center gap-1 px-2 py-1 rounded-[6px] text-[10.5px] font-semibold text-[#0474C4] hover:bg-[#0474C4]/10 cursor-pointer transition-colors shrink-0"
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
-            {aiLoading ? "Generating…" : value.trim() ? "Expand with AI" : "Write with AI"}
+            {value.trim() ? "Expand with AI" : "Write with AI"}
           </button>
         )}
       </div>
       <EditorContent editor={editor} />
-      {aiError && <p className="px-3 py-1.5 text-[11px] text-red-500 border-t border-red-100 bg-red-50">{aiError}</p>}
     </div>
   )
 }
@@ -157,32 +127,27 @@ function TextBlockEditor({
   onChange:  (b: TextBlock) => void
   aiContext?: AiExpandContext
 }) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
-
-  async function handleAiExpand() {
-    if (!aiContext) return
-    setLoading(true)
-    setError(null)
-    try {
-      const content = await requestAiExpand({ kind: "lesson", context: aiContext, current: block.content })
-      onChange({ ...block, content })
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "AI expand failed. Please try again.")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [aiOpen, setAiOpen] = useState(false)
 
   return (
-    <MiniRTE
-      value={block.content}
-      onChange={content => onChange({ ...block, content })}
-      placeholder="Write rich text content…"
-      onAiExpand={aiContext ? handleAiExpand : undefined}
-      aiLoading={loading}
-      aiError={error}
-    />
+    <>
+      <MiniRTE
+        value={block.content}
+        onChange={content => onChange({ ...block, content })}
+        placeholder="Write rich text content…"
+        onAiExpand={aiContext ? () => setAiOpen(true) : undefined}
+      />
+      {aiOpen && aiContext && (
+        <AiFieldBuilderModal
+          title="AI Builder — Lesson Content"
+          kind="lesson"
+          context={aiContext}
+          currentValue={block.content}
+          onGenerated={content => onChange({ ...block, content })}
+          onClose={() => setAiOpen(false)}
+        />
+      )}
+    </>
   )
 }
 
@@ -364,24 +329,7 @@ function AssignmentBlockEditor({
   onChange:  (b: AssignmentBlock) => void
   aiContext?: AiExpandContext
 }) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
-
-  async function handleAiExpand() {
-    if (!aiContext) return
-    setLoading(true)
-    setError(null)
-    try {
-      const content = await requestAiExpand({
-        kind: "assignment", context: aiContext, blockTitle: block.title, current: block.instructions,
-      })
-      onChange({ ...block, instructions: content })
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "AI expand failed. Please try again.")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [aiOpen, setAiOpen] = useState(false)
 
   return (
     <div className="space-y-2">
@@ -395,10 +343,18 @@ function AssignmentBlockEditor({
         value={block.instructions}
         onChange={instructions => onChange({ ...block, instructions })}
         placeholder="Instructions for this assignment…"
-        onAiExpand={aiContext ? handleAiExpand : undefined}
-        aiLoading={loading}
-        aiError={error}
+        onAiExpand={aiContext ? () => setAiOpen(true) : undefined}
       />
+      {aiOpen && aiContext && (
+        <AiFieldBuilderModal
+          title="AI Builder — Assignment"
+          kind="assignment"
+          context={{ ...aiContext, blockTitle: block.title || undefined }}
+          currentValue={block.instructions}
+          onGenerated={instructions => onChange({ ...block, instructions })}
+          onClose={() => setAiOpen(false)}
+        />
+      )}
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
           <label className="text-[10px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">Submission type</label>

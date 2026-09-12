@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useUploadThing } from "@/lib/uploadthing-client"
-import { useForm, useFieldArray, Controller, useWatch } from "react-hook-form"
+import { useForm, useFieldArray, Controller, useWatch, useController } from "react-hook-form"
 import type { Control, UseFormRegister, FieldErrors } from "react-hook-form"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
@@ -13,6 +13,7 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import ContentBlockEditor from "@/components/forms/ContentBlockEditor"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
+import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -167,15 +168,31 @@ function facilitatorSummary(p: Program): string {
 
 const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors resize-none"
 
-function Field({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, hint, required, action, children }: { label: string; hint?: string; required?: boolean; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-        {hint && <span className="ml-1 text-[10px] font-normal normal-case text-[#A8A39C]">({hint})</span>}
-      </label>
+      <div className="flex items-center justify-between gap-2">
+        <label className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">
+          {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+          {hint && <span className="ml-1 text-[10px] font-normal normal-case text-[#A8A39C]">({hint})</span>}
+        </label>
+        {action}
+      </div>
       {children}
     </div>
+  )
+}
+
+function AiBuilderTrigger({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-1 text-[10.5px] font-bold text-[#0474C4] hover:text-[#06457F] uppercase tracking-[0.4px] cursor-pointer"
+    >
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
+      AI Builder
+    </button>
   )
 }
 
@@ -443,7 +460,7 @@ const programSchema = yup.object({
   // Step 3
   curriculum: yup.array(yup.object({
     id:    yup.string(),
-    title: yup.string().required("Chapter title is required"),
+    title: yup.string().required("Module title is required"),
     desc:  yup.string(),
     lessons: yup.array(yup.object({
       id:          yup.string(),
@@ -721,8 +738,13 @@ function LessonItem({
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lessonTitle = useWatch({ control, name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.title` as any }) as string | undefined
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const lessonSummary = useWatch({ control, name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.description` as any }) as string | undefined
+  const { field: descriptionField } = useController({
+    control,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.description` as any,
+  })
+  const lessonSummary = descriptionField.value as string | undefined
+  const [aiOpen, setAiOpen] = useState(false)
 
   return (
     <div className="border border-[#E5E2DC] rounded-[10px] bg-white overflow-hidden">
@@ -739,20 +761,23 @@ function LessonItem({
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           <FieldError msg={(errors.curriculum?.[moduleIndex] as any)?.lessons?.[lessonIndex]?.title?.message} />
         </Field>
-        <Field label="Short Description">
-          <Controller
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            name={`curriculum.${moduleIndex}.lessons.${lessonIndex}.description` as any}
-            control={control}
-            render={({ field }) => (
-              <RichTextEditor
-                value={(field.value as string) ?? ""}
-                onChange={field.onChange}
-                placeholder="Brief description of this lesson…"
-              />
-            )}
+        <Field label="Short Description" action={<AiBuilderTrigger onClick={() => setAiOpen(true)} />}>
+          <RichTextEditor
+            value={(lessonSummary as string) ?? ""}
+            onChange={descriptionField.onChange}
+            placeholder="Brief description of this lesson…"
           />
         </Field>
+        {aiOpen && (
+          <AiFieldBuilderModal
+            title="AI Builder — Lesson Description"
+            kind="lesson-summary"
+            context={{ courseTitle, chapterTitle, lessonTitle: lessonTitle || undefined }}
+            currentValue={lessonSummary ?? ""}
+            onGenerated={html => descriptionField.onChange(html)}
+            onClose={() => setAiOpen(false)}
+          />
+        )}
         <Field label="Embedded Content">
           <Controller
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -833,10 +858,19 @@ function CurriculumModuleCard({
   index:    number
   onRemove: () => void
 }) {
+  const courseTitle = (useWatch({ control, name: "title" }) as string | undefined) ?? ""
+  const moduleTitle = (useWatch({ control, name: `curriculum.${index}.title` }) as string | undefined) ?? ""
+  const { field: descField } = useController({
+    control,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    name: `curriculum.${index}.desc` as any,
+  })
+  const [aiOpen, setAiOpen] = useState(false)
+
   return (
     <div className="border border-[#E5E2DC] rounded-[12px] overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-b border-[#E5E2DC]">
-        <span className="text-[11px] font-bold text-[#0474C4] uppercase tracking-wide">Chapter {index + 1}</span>
+        <span className="text-[11px] font-bold text-[#0474C4] uppercase tracking-wide">Module {index + 1}</span>
         <button type="button" onClick={onRemove} className="w-6 h-6 flex items-center justify-center rounded-full text-[#A8A39C] hover:bg-red-50 hover:text-red-500 cursor-pointer">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -846,20 +880,23 @@ function CurriculumModuleCard({
           <input {...register(`curriculum.${index}.title`)} className={inputCls} placeholder="e.g. Foundations of M&E" />
           <FieldError msg={errors.curriculum?.[index]?.title?.message} />
         </Field>
-        <Field label="Description">
-          <Controller
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            name={`curriculum.${index}.desc` as any}
-            control={control}
-            render={({ field }) => (
-              <RichTextEditor
-                value={(field.value as string) ?? ""}
-                onChange={field.onChange}
-                placeholder="Brief overview of this chapter…"
-              />
-            )}
+        <Field label="Description" action={<AiBuilderTrigger onClick={() => setAiOpen(true)} />}>
+          <RichTextEditor
+            value={(descField.value as string) ?? ""}
+            onChange={descField.onChange}
+            placeholder="Brief overview of this module…"
           />
         </Field>
+        {aiOpen && (
+          <AiFieldBuilderModal
+            title="AI Builder — Module Description"
+            kind="module"
+            context={{ courseTitle, chapterTitle: moduleTitle || undefined }}
+            currentValue={(descField.value as string) ?? ""}
+            onGenerated={html => descField.onChange(html)}
+            onClose={() => setAiOpen(false)}
+          />
+        )}
         <LessonsEditor control={control} register={register} errors={errors} moduleIndex={index} />
       </div>
     </div>
@@ -894,7 +931,7 @@ function CurriculumEditor({
         className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Chapter
+        Add Module
       </button>
     </div>
   )
@@ -1427,7 +1464,7 @@ function ProgramModal({
           {/* Step 3 — Curriculum */}
           {step === 3 && <>
             <p className="text-[13px] text-[#6B6560] leading-relaxed">
-              Build the programme outline. Each chapter appears as an accordion on the public page.
+              Build the programme outline. Each module appears as an accordion on the public page.
             </p>
             <CurriculumEditor control={control} register={register} errors={errors} />
           </>}

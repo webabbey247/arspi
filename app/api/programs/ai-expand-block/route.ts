@@ -8,7 +8,7 @@ import { z } from "zod"
 
 const requestSchema = z.object({
   provider:       z.enum(["anthropic", "openai"]).default("anthropic"),
-  kind:           z.enum(["lesson", "assignment"]).default("lesson"),
+  kind:           z.enum(["lesson", "assignment", "module", "lesson-summary"]).default("lesson"),
   courseTitle:    z.string().min(1).max(255),
   chapterTitle:   z.string().max(255).optional(),
   lessonTitle:    z.string().max(255).optional(),
@@ -32,19 +32,31 @@ function buildPrompt(input: z.infer<typeof requestSchema>): { system: string; us
 
   const context = [
     `Course: "${input.courseTitle}"`,
-    input.chapterTitle && `Chapter: "${input.chapterTitle}"`,
-    input.kind === "lesson" ? input.lessonTitle && `Lesson: "${input.lessonTitle}"` : input.blockTitle && `Assignment: "${input.blockTitle}"`,
-    input.lessonSummary && `Lesson summary: ${stripHtml(input.lessonSummary)}`,
+    input.chapterTitle && `Module: "${input.chapterTitle}"`,
+    (input.kind === "lesson" || input.kind === "lesson-summary") ? input.lessonTitle && `Lesson: "${input.lessonTitle}"`
+      : input.kind === "assignment" ? input.blockTitle && `Assignment: "${input.blockTitle}"`
+      : null,
+    // Only relevant for the content-block cases, where the lesson's own short
+    // description is extra context distinct from what's being generated —
+    // for "lesson-summary" itself, currentContent already covers that.
+    (input.kind === "lesson" || input.kind === "assignment") && input.lessonSummary
+      && `Lesson summary: ${stripHtml(input.lessonSummary)}`,
   ].filter(Boolean).join("\n")
 
   const existing = input.currentContent ? stripHtml(input.currentContent) : ""
   const goal = input.kind === "lesson"
     ? "Write the full lesson body a student would actually read to learn this material — thorough, " +
       "well-structured, and specific to the topic (aim for roughly 200-400 words)."
-    : "Write clear, actionable assignment instructions for a student — what to do, what to submit, and " +
+    : input.kind === "assignment"
+    ? "Write clear, actionable assignment instructions for a student — what to do, what to submit, and " +
       "how it will be assessed (aim for roughly 100-250 words). The assignment's title is shown separately " +
       "in the UI, so do not repeat it as an opening line or use section headers like 'Task'/'Submit' as " +
       "their own paragraph — write it as flowing instructions instead."
+    : input.kind === "module"
+    ? "Write a short, engaging overview of this module for the programme outline — 1-2 sentences " +
+      "(roughly 20-40 words). This is shown as the module's own summary, not the full lesson content."
+    : "Write a single clear sentence summarising what this lesson covers, shown as a brief description " +
+      "beneath the lesson title (roughly 15-25 words). Do not repeat the lesson title verbatim."
 
   const user =
     `${context}\n\n` +
@@ -58,8 +70,10 @@ function buildPrompt(input: z.infer<typeof requestSchema>): { system: string; us
   return { system, user }
 }
 
-/** POST /api/programs/ai-expand-block — expand a single lesson/assignment
- *  content block in place (ADMIN or INSTRUCTOR). Stateless: takes the current
+/** POST /api/programs/ai-expand-block — generate or expand a single piece of
+ *  programme text in place (a lesson/assignment content block, a module
+ *  description, or a lesson's short description) (ADMIN or INSTRUCTOR).
+ *  Stateless: takes the current
  *  content + surrounding context, returns richer HTML; nothing is persisted
  *  here, the author reviews it in the block editor before saving the course. */
 export async function POST(req: NextRequest) {
