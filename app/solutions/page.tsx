@@ -13,7 +13,7 @@ const SolutionsPage = () => {
           <PageHero
             tagline="Our Software Solutions"
             captionTextOne="Digital Tools Built for "
-            highlightText="Research &amp; Learnin"
+            highlightText="Research &amp; Learning"
             description="ARPS Institute develops and commercialises specialised software platforms designed to support researchers, institutions, and learning professionals with smarter digital tools — purpose-built for the modern knowledge environment."
             pageType="solutions"
             imageUrl="/images/about-arps.webp"

@@ -33,7 +33,15 @@ export default function PageHero({
       <div className="absolute -top-24 right-0 w-125 h-125 rounded-full bg-[#0474C4]/8 blur-[100px] pointer-events-none" />
 
       {/* Left — copy */}
-      <div className={`relative z-10 gap-4 flex flex-col justify-start items-start mx-auto ${pageType === "programs" || pageType === "research" ||  pageType === "solutions" ? "max-w-200": "max-w-lg"}`}>
+      {/* The wide variant's 800px block nearly fills its own grid cell at common
+          desktop widths (808px at a 1680px viewport), so mx-auto left no margin
+          and the copy sat against the viewport edge — it only looked padded on
+          very wide screens. lg:pl-16 xl:pl-20 gives it real padding, matching
+          the page sections below so the hero aligns with them. It lives on this
+          column rather than the <section> so the right-hand image stays
+          full-bleed. The narrow variant is unaffected — max-w-lg already leaves
+          plenty of margin. */}
+      <div className={`relative z-10 gap-4 flex flex-col justify-start items-start mx-auto ${pageType === "programs" || pageType === "research" ||  pageType === "solutions" ? "max-w-200 lg:pl-16 xl:pl-20": "max-w-lg"}`}>
         <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC] inline-flex items-center gap-2">
           <span className="block w-8 h-px bg-[#EBF3FC]" />
           {tagline}
@@ -62,6 +70,15 @@ export default function PageHero({
         <div>
           <span className="font-heading text-[0.95rem] text-[#EBF3FC] font-normal">MentorTrack</span>
           <div className="text-[0.68rem] text-[#EBF3FC] tracking-[0.08em] uppercase">Mentorship &amp; Learning Platform</div>
+        </div>
+      </Link>
+      <Link href="#uppms" className="flex items-center gap-2.5 border border-[rgba(200,169,110,0.2)] rounded px-5 py-2.5 no-underline transition-all duration-250 bg-[rgba(247,243,237,0.04)] hover:border-[#C8A96E] hover:bg-[rgba(200,169,110,0.08)]">
+        {/* Lightened tint of UPPMS's brand green (#0D5A42) — the true brand
+            colour is too dark to read as a dot on this navy hero. */}
+        <span className="w-2 h-2 rounded-full shrink-0 bg-[#4FA98A]" />
+        <div>
+          <span className="font-heading text-[0.95rem] text-[#EBF3FC] font-normal">UPPMS</span>
+          <div className="text-[0.68rem] text-[#EBF3FC] tracking-[0.08em] uppercase">Publication Payment Management</div>
         </div>
       </Link>
     </div>
