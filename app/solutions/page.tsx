@@ -54,8 +54,163 @@ const SolutionsPage = () => {
   </div>
 </section> */}
 
-<section id="resolverite" className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F9F9FB] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 lg:gap-24 items-center">
+<section id="uppms" className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F9F9FB] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 lg:gap-24 items-center">
   <div>
+    <div className="flex items-center gap-3 sm:gap-3.5 mb-5 sm:mb-6 md:mb-7">
+      <div className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-xl bg-[#EEF5F1] flex items-center justify-center shrink-0">
+        <svg className="w-5.5 h-5.5 sm:w-6 sm:h-6 md:w-6.5 md:h-6.5" viewBox="0 0 24 24" fill="none" stroke="#0D5A42" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="12 2 20 7 4 7"/>
+          <line x1="6" y1="11" x2="6" y2="18"/>
+          <line x1="10" y1="11" x2="10" y2="18"/>
+          <line x1="14" y1="11" x2="14" y2="18"/>
+          <line x1="18" y1="11" x2="18" y2="18"/>
+          <line x1="3" y1="22" x2="21" y2="22"/>
+        </svg>
+      </div>
+      <div className="min-w-0">
+        <div className="font-heading text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0D5A42]">
+          UPPMS
+        </div>
+        <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium mt-0.5 block text-[#94A3B8]">
+          University Publication Payment Management System
+        </span>
+      </div>
+    </div>
+
+    <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0D5A42] mb-3 sm:mb-4">
+      About the Platform
+    </p>
+
+    <h2 className="font-heading text-[1.5rem] sm:text-[1.625rem] md:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639] mb-4 sm:mb-5">
+      From Accepted Publication to Accounted-For Payment
+    </h2>
+
+    <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-[#64748B]">
+      UPPMS is a publication-payment platform built for universities. Academics
+      submit article processing charges with invoices, acceptance letters and
+      subsidy declarations in one guided application, which is then screened,
+      approved and paid through a workflow that mirrors the institution&apos;s
+      own approval structure.
+      <br /><br />
+      It replaces emails, spreadsheets and unclear hand-offs with a single
+      controlled record — configurable per faculty, department, centre or
+      institute, with live budget, commitment and payment visibility, and a
+      timestamped audit trail behind every decision and document.
+    </p>
+
+    <div className="flex gap-3 sm:gap-3.5 flex-wrap mt-8 sm:mt-10">
+      {/* Plain anchors rather than <Button asChild>: the Button's default
+          variant carries `[a]:hover:bg-primary/80`, and that extra element
+          qualifier outranks a plain `hover:bg-*`, repainting these grey on
+          hover instead of using the colours below. */}
+      {/* The product's own site — this one leaves ARPS. */}
+      <a
+        href="https://uppms.app"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="rounded font-body inline-flex items-center justify-center h-11 sm:h-12 text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium px-5 sm:px-7 cursor-pointer transition-all duration-250 no-underline bg-[#0D5A42] text-white hover:bg-[#0A4633]"
+      >
+        Request a Demo
+      </a>
+      <Link
+        href="/solutions/uppms"
+        className="font-body inline-flex items-center justify-center text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium px-5 sm:px-7 rounded cursor-pointer transition-all h-11 sm:h-12 duration-250 no-underline bg-transparent border border-[rgba(13,90,66,0.35)] text-[#0D5A42] hover:bg-[#d8af46]"
+      >
+        Learn More
+      </Link>
+    </div>
+  </div>
+
+  {/* App mockup */}
+  <div className="bg-[#071639] rounded-xl overflow-hidden border border-[rgba(200,169,110,0.12)] shadow-[0_24px_60px_rgba(6,13,20,0.3)]">
+
+    {/* Browser chrome */}
+    <div className="px-3 sm:px-3.5 py-2 sm:py-2.5 flex items-center gap-1.5 sm:gap-2 border-b border-[rgba(247,243,237,0.06)]">
+      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FF5F57] shrink-0" />
+      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FEBC2E] shrink-0" />
+      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#28C840] shrink-0" />
+      <div className="flex-1 min-w-0 bg-[rgba(247,243,237,0.06)] rounded h-5 mx-1.5 sm:mx-2 flex items-center px-2 font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.3)] truncate">
+        app.uppms.io/expenditure
+      </div>
+    </div>
+
+    <div className="p-4 sm:p-5 md:p-6">
+      <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mb-2.5">
+        Publication Expenditure — 2026 Cycle
+      </div>
+
+      {/* Budget spotlight */}
+      <div className="bg-[rgba(247,243,237,0.05)] rounded-lg p-3 sm:p-3.5 mb-3">
+        <div className="flex justify-between items-baseline mb-1.5">
+          <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.4)]">
+            Available Balance
+          </span>
+          <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-medium text-[#6EE7B7]">
+            74%
+          </span>
+        </div>
+        <div className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.625rem] tracking-[-0.005em] leading-[1.1] font-semibold text-[#F7F3ED] mb-1">
+          R 4,370,000
+        </div>
+        <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.35)] mb-2.5">
+          of R 5,000,000 allocated
+        </div>
+        <div className="h-1.25 bg-[rgba(247,243,237,0.08)] rounded-[3px]">
+          <div className="h-full rounded-[3px] bg-[#0D9488]" style={{ width: "74%" }} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {[
+          { value: "R410k", label: "Committed",  color: "#F7F3ED" },
+          { value: "R220k", label: "Paid",       color: "#86EFAC" },
+          { value: "12",    label: "In Review",  color: "#FEBC2E" },
+        ].map(({ value, label, color }) => (
+          <div key={label} className="bg-[rgba(247,243,237,0.05)] rounded-lg p-2.5 sm:p-3 flex flex-col gap-1">
+            <span className="font-heading text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.1] font-semibold" style={{ color }}>
+              {value}
+            </span>
+            <span className="font-body text-[0.5625rem] sm:text-[0.625rem] md:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.4)]">
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mb-2">
+        Recent Applications
+      </div>
+
+      <div className="flex flex-col gap-1.5 sm:gap-2">
+        {[
+          { dot: "#93C5FD", text: "APC — Faculty of Health Sciences",      status: "Screening", statusBg: "rgba(147,197,253,0.1)", statusColor: "#93C5FD" },
+          { dot: "#FEBC2E", text: "APC — Dept. of Environmental Science",  status: "Director",  statusBg: "rgba(254,188,46,0.1)",  statusColor: "#FEBC2E" },
+          { dot: "#C4B5FD", text: "APC — Centre for Data Innovation",      status: "Finance",   statusBg: "rgba(196,181,253,0.1)", statusColor: "#C4B5FD" },
+          { dot: "#86EFAC", text: "APC — School of Education",             status: "Paid",      statusBg: "rgba(134,239,172,0.1)", statusColor: "#86EFAC" },
+        ].map(({ dot, text, status, statusBg, statusColor }) => (
+          <div key={text} className="flex items-center gap-2 bg-[rgba(247,243,237,0.03)] rounded px-2.5 sm:px-3 py-2">
+            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: dot }} />
+            <div className="flex-1 min-w-0 font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.7)] truncate">
+              {text}
+            </div>
+            <div
+              className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] uppercase font-medium px-1.5 sm:px-2 py-0.5 rounded shrink-0"
+              style={{ background: statusBg, color: statusColor }}
+            >
+              {status}
+            </div>
+          </div>
+        ))}
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="resolverite" className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F7F3ED] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 lg:gap-24 items-center">
+  {/* Copy is first in the DOM so it leads on mobile; on lg it moves right so
+      the mockup sits left, alternating against the sections either side. */}
+  <div className="order-1 lg:order-2">
     <div className="flex items-center gap-3 sm:gap-3.5 mb-5 sm:mb-6 md:mb-7">
       <div className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-xl bg-[#EFF6FF] flex items-center justify-center shrink-0">
         <svg className="w-5.5 h-5.5 sm:w-6 sm:h-6 md:w-6.5 md:h-6.5" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -112,7 +267,7 @@ const SolutionsPage = () => {
   </div>
 
   {/* App mockup */}
-  <div className="bg-[#071639] rounded-xl overflow-hidden border border-[rgba(200,169,110,0.12)] shadow-[0_24px_60px_rgba(6,13,20,0.3)]">
+  <div className="order-2 lg:order-1 bg-[#071639] rounded-xl overflow-hidden border border-[rgba(200,169,110,0.12)] shadow-[0_24px_60px_rgba(6,13,20,0.3)]">
     <div className="px-3 sm:px-3.5 py-2 sm:py-2.5 flex items-center gap-1.5 sm:gap-2 border-b border-[rgba(247,243,237,0.06)]">
       <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FF5F57] shrink-0" />
       <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FEBC2E] shrink-0" />
@@ -174,10 +329,9 @@ const SolutionsPage = () => {
   </div>
 </section>
 
-
-<section id="mentortrack" className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F7F3ED] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 lg:gap-24 items-center">
+<section id="mentortrack" className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F9F9FB] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 lg:gap-24 items-center">
   {/* App mockup */}
-  <div className="bg-[#071639] rounded-xl overflow-hidden border border-[rgba(200,169,110,0.12)] shadow-[0_24px_60px_rgba(6,13,20,0.3)] order-2 lg:order-1">
+  <div className="bg-[#071639] rounded-xl overflow-hidden border border-[rgba(200,169,110,0.12)] shadow-[0_24px_60px_rgba(6,13,20,0.3)] order-2">
 
     {/* Browser chrome */}
     <div className="px-3 sm:px-3.5 py-2 sm:py-2.5 flex items-center gap-1.5 sm:gap-2 border-b border-[rgba(247,243,237,0.06)]">
@@ -267,7 +421,7 @@ const SolutionsPage = () => {
   </div>
 
   {/* Right column */}
-  <div className="order-1 lg:order-2">
+  <div className="order-1">
     <div className="flex items-center gap-3 sm:gap-3.5 mb-5 sm:mb-6 md:mb-7">
       <div className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-xl bg-[#F0FDFA] flex items-center justify-center shrink-0">
         <svg className="w-5.5 h-5.5 sm:w-6 sm:h-6 md:w-6.5 md:h-6.5" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -319,147 +473,6 @@ const SolutionsPage = () => {
     </div>
   </div>
 
-</section>
-
-
-<section id="uppms" className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F9F9FB] grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 md:gap-10 lg:gap-24 items-center">
-  <div>
-    <div className="flex items-center gap-3 sm:gap-3.5 mb-5 sm:mb-6 md:mb-7">
-      <div className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 rounded-xl bg-[#EEF5F1] flex items-center justify-center shrink-0">
-        <svg className="w-5.5 h-5.5 sm:w-6 sm:h-6 md:w-6.5 md:h-6.5" viewBox="0 0 24 24" fill="none" stroke="#0D5A42" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="12 2 20 7 4 7"/>
-          <line x1="6" y1="11" x2="6" y2="18"/>
-          <line x1="10" y1="11" x2="10" y2="18"/>
-          <line x1="14" y1="11" x2="14" y2="18"/>
-          <line x1="18" y1="11" x2="18" y2="18"/>
-          <line x1="3" y1="22" x2="21" y2="22"/>
-        </svg>
-      </div>
-      <div className="min-w-0">
-        <div className="font-heading text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.3] font-medium text-[#0D5A42]">
-          UPPMS
-        </div>
-        <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium mt-0.5 block text-[#94A3B8]">
-          University Publication Payment Management System
-        </span>
-      </div>
-    </div>
-
-    <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0D5A42] mb-3 sm:mb-4">
-      About the Platform
-    </p>
-
-    <h2 className="font-heading text-[1.5rem] sm:text-[1.625rem] md:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639] mb-4 sm:mb-5">
-      From Accepted Publication to Accounted-For Payment
-    </h2>
-
-    <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-[#64748B]">
-      UPPMS is a publication-payment platform built for universities. Academics
-      submit article processing charges with invoices, acceptance letters and
-      subsidy declarations in one guided application, which is then screened,
-      approved and paid through a workflow that mirrors the institution&apos;s
-      own approval structure.
-      <br /><br />
-      It replaces emails, spreadsheets and unclear hand-offs with a single
-      controlled record — configurable per faculty, department, centre or
-      institute, with live budget, commitment and payment visibility, and a
-      timestamped audit trail behind every decision and document.
-    </p>
-
-    <div className="flex gap-3 sm:gap-3.5 flex-wrap mt-8 sm:mt-10">
-      <Button className="rounded font-body h-11 sm:h-12 text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3 sm:py-3.25 px-5 sm:px-7 cursor-pointer transition-all duration-250 no-underline inline-block bg-[#0D5A42] text-white hover:bg-[#0A4633]">
-        Request a Demo
-      </Button>
-      <Button className="font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3 sm:py-3.25 px-5 sm:px-7 rounded cursor-pointer transition-all h-11 sm:h-12 duration-250 no-underline inline-block bg-transparent border border-[rgba(13,90,66,0.35)] text-[#0D5A42] hover:bg-[#EEF5F1]">
-        Learn More
-      </Button>
-    </div>
-  </div>
-
-  {/* App mockup */}
-  <div className="bg-[#071639] rounded-xl overflow-hidden border border-[rgba(200,169,110,0.12)] shadow-[0_24px_60px_rgba(6,13,20,0.3)]">
-
-    {/* Browser chrome */}
-    <div className="px-3 sm:px-3.5 py-2 sm:py-2.5 flex items-center gap-1.5 sm:gap-2 border-b border-[rgba(247,243,237,0.06)]">
-      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FF5F57] shrink-0" />
-      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FEBC2E] shrink-0" />
-      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#28C840] shrink-0" />
-      <div className="flex-1 min-w-0 bg-[rgba(247,243,237,0.06)] rounded h-5 mx-1.5 sm:mx-2 flex items-center px-2 font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.3)] truncate">
-        app.uppms.io/expenditure
-      </div>
-    </div>
-
-    <div className="p-4 sm:p-5 md:p-6">
-      <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mb-2.5">
-        Publication Expenditure — 2026 Cycle
-      </div>
-
-      {/* Budget spotlight */}
-      <div className="bg-[rgba(247,243,237,0.05)] rounded-lg p-3 sm:p-3.5 mb-3">
-        <div className="flex justify-between items-baseline mb-1.5">
-          <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.4)]">
-            Available Balance
-          </span>
-          <span className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-medium text-[#6EE7B7]">
-            74%
-          </span>
-        </div>
-        <div className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.625rem] tracking-[-0.005em] leading-[1.1] font-semibold text-[#F7F3ED] mb-1">
-          R 4,370,000
-        </div>
-        <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.35)] mb-2.5">
-          of R 5,000,000 allocated
-        </div>
-        <div className="h-1.25 bg-[rgba(247,243,237,0.08)] rounded-[3px]">
-          <div className="h-full rounded-[3px] bg-[#0D9488]" style={{ width: "74%" }} />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        {[
-          { value: "R410k", label: "Committed",  color: "#F7F3ED" },
-          { value: "R220k", label: "Paid",       color: "#86EFAC" },
-          { value: "12",    label: "In Review",  color: "#FEBC2E" },
-        ].map(({ value, label, color }) => (
-          <div key={label} className="bg-[rgba(247,243,237,0.05)] rounded-lg p-2.5 sm:p-3 flex flex-col gap-1">
-            <span className="font-heading text-[1.125rem] sm:text-[1.25rem] md:text-[1.375rem] tracking-[-0.005em] leading-[1.1] font-semibold" style={{ color }}>
-              {value}
-            </span>
-            <span className="font-body text-[0.5625rem] sm:text-[0.625rem] md:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.4)]">
-              {label}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[rgba(247,243,237,0.3)] mb-2">
-        Recent Applications
-      </div>
-
-      <div className="flex flex-col gap-1.5 sm:gap-2">
-        {[
-          { dot: "#93C5FD", text: "APC — Faculty of Health Sciences",      status: "Screening", statusBg: "rgba(147,197,253,0.1)", statusColor: "#93C5FD" },
-          { dot: "#FEBC2E", text: "APC — Dept. of Environmental Science",  status: "Director",  statusBg: "rgba(254,188,46,0.1)",  statusColor: "#FEBC2E" },
-          { dot: "#C4B5FD", text: "APC — Centre for Data Innovation",      status: "Finance",   statusBg: "rgba(196,181,253,0.1)", statusColor: "#C4B5FD" },
-          { dot: "#86EFAC", text: "APC — School of Education",             status: "Paid",      statusBg: "rgba(134,239,172,0.1)", statusColor: "#86EFAC" },
-        ].map(({ dot, text, status, statusBg, statusColor }) => (
-          <div key={text} className="flex items-center gap-2 bg-[rgba(247,243,237,0.03)] rounded px-2.5 sm:px-3 py-2">
-            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: dot }} />
-            <div className="flex-1 min-w-0 font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0em] font-normal text-[rgba(247,243,237,0.7)] truncate">
-              {text}
-            </div>
-            <div
-              className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.05em] uppercase font-medium px-1.5 sm:px-2 py-0.5 rounded shrink-0"
-              style={{ background: statusBg, color: statusColor }}
-            >
-              {status}
-            </div>
-          </div>
-        ))}
-      </div>
-
-    </div>
-  </div>
 </section>
 
     </>
