@@ -14,6 +14,8 @@ import * as yup from "yup"
 import ContentBlockEditor from "@/components/forms/ContentBlockEditor"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
+import { toast } from "sonner"
+import { buildCourse, regenerateLesson, type Progress } from "@/lib/ai-course-client"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -271,11 +273,20 @@ function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: s
 
 // ── Program modal (multi-step) ────────────────────────────────────────────────
 
+type LessonFocus = "teach" | "practice" | "assess" | "reflect"
+
 type Lesson = {
   id:          string
   title:       string
   description: string
   blocks:      ContentBlock[]
+  /** Planning metadata from the chapter agent. Persisted with the lesson so
+   *  "regenerate this lesson" still has the anti-overlap context after a save;
+   *  absent on lessons an admin added by hand, which regenerate fine without it. */
+  focus?:        LessonFocus
+  brief?:        string
+  mustCover?:    string[]
+  mustNotCover?: string[]
 }
 type CurriculumItem = {
   id:      string
@@ -467,6 +478,10 @@ const programSchema = yup.object({
       title:       yup.string().required("Lesson title is required"),
       description: yup.string(),
       blocks:      yup.array(yup.mixed()).default([]),
+      focus:        yup.string(),
+      brief:        yup.string(),
+      mustCover:    yup.array(yup.string()),
+      mustNotCover: yup.array(yup.string()),
     })),
   })),
 
@@ -724,6 +739,79 @@ function FacilitatorAvatarUpload({ value, onChange }: { value: string; onChange:
 
 // ── Lessons editor (nested within a chapter) ──────────────────────────────────
 
+/** Rewrites one lesson through the same agent that wrote it during the build.
+ *
+ *  Two-step rather than one-click: this replaces the lesson's content outright,
+ *  and by review time the admin may well have edited it by hand. */
+function RegenerateLessonButton({
+  courseTitle, chapterTitle, levelLabel, lesson, onRegenerated,
+}: {
+  courseTitle:  string
+  chapterTitle: string
+  levelLabel:   string
+  lesson: {
+    title: string; description?: string; focus?: LessonFocus
+    brief?: string; mustCover?: string[]; mustNotCover?: string[]
+  }
+  onRegenerated: (blocks: ContentBlock[]) => void
+}) {
+  const [confirming, setConfirming] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  async function run() {
+    setBusy(true)
+    setConfirming(false)
+    try {
+      const blocks = await regenerateLesson({
+        provider: "anthropic",
+        courseTitle, chapterTitle, levelLabel,
+        // The glossary only exists during a build. A lesson regenerated after a
+        // save loses that shared vocabulary, but keeps its brief and
+        // mustCover/mustNotCover, which is what prevents overlap.
+        glossary: [],
+        lesson,
+      })
+      onRegenerated(blocks)
+      toast.success("Lesson regenerated.")
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not regenerate this lesson.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (busy) {
+    return <span className="text-[10.5px] font-bold text-[#A8A39C] uppercase tracking-[0.4px]">Regenerating…</span>
+  }
+
+  if (confirming) {
+    return (
+      <span className="flex items-center gap-2">
+        <button type="button" onClick={run}
+          className="text-[10.5px] font-bold text-red-600 hover:text-red-700 uppercase tracking-[0.4px] cursor-pointer">
+          Replace
+        </button>
+        <button type="button" onClick={() => setConfirming(false)}
+          className="text-[10.5px] font-bold text-[#A8A39C] hover:text-[#6B6560] uppercase tracking-[0.4px] cursor-pointer">
+          Cancel
+        </button>
+      </span>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setConfirming(true)}
+      disabled={!lesson.title.trim()}
+      className="flex items-center gap-1 text-[10.5px] font-bold text-[#0474C4] hover:text-[#06457F] uppercase tracking-[0.4px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+    >
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+      Regenerate
+    </button>
+  )
+}
+
 function LessonItem({
   control, register, errors, moduleIndex, lessonIndex, onRemove, courseTitle, chapterTitle,
 }: {
@@ -744,6 +832,17 @@ function LessonItem({
     name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.description` as any,
   })
   const lessonSummary = descriptionField.value as string | undefined
+  const { field: blocksField } = useController({
+    control,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.blocks` as any,
+  })
+  // Planning metadata from the chapter agent, if this lesson was AI-planned —
+  // it's what lets a regenerate stay inside the lesson's original remit.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const plan = useWatch({ control, name: `curriculum.${moduleIndex}.lessons.${lessonIndex}` as any }) as Lesson | undefined
+  const level = (useWatch({ control, name: "level" }) as CourseLevel | undefined) ?? "BEGINNER"
+  const levelLabel = level.charAt(0) + level.slice(1).toLowerCase()
   const [aiOpen, setAiOpen] = useState(false)
 
   return (
@@ -778,23 +877,34 @@ function LessonItem({
             onClose={() => setAiOpen(false)}
           />
         )}
-        <Field label="Embedded Content">
-          <Controller
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            name={`curriculum.${moduleIndex}.lessons.${lessonIndex}.blocks` as any}
-            control={control}
-            render={({ field }) => (
-              <ContentBlockEditor
-                blocks={(field.value as ContentBlock[]) ?? []}
-                onChange={field.onChange}
-                aiContext={{
-                  courseTitle,
-                  chapterTitle,
-                  lessonTitle:   lessonTitle || undefined,
-                  lessonSummary: lessonSummary || undefined,
-                }}
-              />
-            )}
+        <Field
+          label="Embedded Content"
+          action={
+            <RegenerateLessonButton
+              courseTitle={courseTitle}
+              chapterTitle={chapterTitle}
+              levelLabel={levelLabel}
+              lesson={{
+                title:        lessonTitle || "",
+                description:  lessonSummary || undefined,
+                focus:        plan?.focus,
+                brief:        plan?.brief,
+                mustCover:    plan?.mustCover,
+                mustNotCover: plan?.mustNotCover,
+              }}
+              onRegenerated={blocks => blocksField.onChange(blocks)}
+            />
+          }
+        >
+          <ContentBlockEditor
+            blocks={(blocksField.value as ContentBlock[]) ?? []}
+            onChange={blocksField.onChange}
+            aiContext={{
+              courseTitle,
+              chapterTitle,
+              lessonTitle:   lessonTitle || undefined,
+              lessonSummary: lessonSummary || undefined,
+            }}
           />
         </Field>
       </div>
@@ -1144,6 +1254,12 @@ function ProgramModal({
                 title:       String(l.title       ?? ""),
                 description: String(l.description ?? ""),
                 blocks:      Array.isArray(l.blocks) ? l.blocks as ContentBlock[] : [],
+                // Planning metadata, present only on AI-planned lessons —
+                // read back so regeneration still works after a reload.
+                focus:        typeof l.focus === "string" ? l.focus as LessonFocus : undefined,
+                brief:        typeof l.brief === "string" ? l.brief : undefined,
+                mustCover:    Array.isArray(l.mustCover)    ? l.mustCover    as string[] : undefined,
+                mustNotCover: Array.isArray(l.mustNotCover) ? l.mustNotCover as string[] : undefined,
               }))
             : [],
         }))
@@ -1529,20 +1645,6 @@ function ProgramModal({
 
 // ── AI Course Builder modal ───────────────────────────────────────────────────
 
-type AiDraftResponse = {
-  title:               string
-  excerpt:             string
-  tagline:             string
-  overview:            string
-  learningObjectives:  string[]
-  targetAudience:      string[]
-  whatIsIncluded:      string[]
-  curriculum:          { id: string; title: string; desc: string; lessons: { id: string; title: string; description: string; blocks: ContentBlock[] }[] }[]
-  faqs:                { q: string; a: string }[]
-  categoryId:          string
-  level:               CourseLevel
-}
-
 function AiCourseBuilderModal({
   categories, onGenerated, onClose,
 }: {
@@ -1555,35 +1657,10 @@ function AiCourseBuilderModal({
   const [level, setLevel]           = useState<CourseLevel>("BEGINNER")
   const [notes, setNotes]           = useState("")
   const [provider, setProvider]     = useState<"anthropic" | "openai">("anthropic")
+  const [withCover, setWithCover]   = useState(true)
   const [loading, setLoading]       = useState(false)
   const [error, setError]           = useState("")
-  const [progress, setProgress]     = useState<{ message: string; done?: number; total?: number } | null>(null)
-
-  function applyDraft(draft: AiDraftResponse) {
-    onGenerated({
-      title:              draft.title,
-      excerpt:            draft.excerpt,
-      tagline:            draft.tagline,
-      overview:           draft.overview,
-      learningObjectives: draft.learningObjectives,
-      targetAudience:     draft.targetAudience,
-      whatIsIncluded:     draft.whatIsIncluded,
-      curriculum: draft.curriculum.map(chapter => ({
-        id:    chapter.id,
-        title: chapter.title,
-        desc:  chapter.desc,
-        lessons: chapter.lessons.map(lesson => ({
-          id:          lesson.id,
-          title:       lesson.title,
-          description: lesson.description,
-          blocks:      lesson.blocks ?? [],
-        })),
-      })),
-      faqs:       draft.faqs,
-      categoryId: draft.categoryId,
-      level:      draft.level,
-    })
-  }
+  const [progress, setProgress]     = useState<Progress | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -1592,52 +1669,45 @@ function AiCourseBuilderModal({
     setError("")
     setProgress(null)
     try {
-      const res = await fetch("/api/programs/ai-generate", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ topic: topic.trim(), categoryId, level, notes: notes.trim() || undefined, provider }),
+      const { outline, chapters, thumbnail } = await buildCourse(
+        {
+          topic: topic.trim(), categoryId, level,
+          notes: notes.trim() || undefined, provider,
+          withCoverImage: withCover,
+        },
+        setProgress,
+      )
+
+      onGenerated({
+        title:              outline.title,
+        excerpt:            outline.excerpt,
+        tagline:            outline.tagline,
+        overview:           outline.overview,
+        learningObjectives: outline.learningObjectives,
+        targetAudience:     outline.targetAudience,
+        whatIsIncluded:     outline.whatIsIncluded,
+        faqs:               outline.faqs,
+        categoryId:         outline.categoryId,
+        level:              outline.level as CourseLevel,
+        // Satisfies the form's required cover image when one was generated;
+        // the admin can still replace it in review.
+        ...(thumbnail ? { thumbnail } : {}),
+        curriculum: chapters.map(chapter => ({
+          id:    chapter.id,
+          title: chapter.title,
+          desc:  chapter.desc,
+          lessons: chapter.lessons.map(lesson => ({
+            id:           lesson.id,
+            title:        lesson.title,
+            description:  lesson.description,
+            blocks:       lesson.blocks ?? [],
+            focus:        lesson.focus,
+            brief:        lesson.brief,
+            mustCover:    lesson.mustCover,
+            mustNotCover: lesson.mustNotCover,
+          })),
+        })),
       })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error ?? "Failed to generate a draft.")
-      }
-      if (!res.body) throw new Error("Failed to generate a draft.")
-
-      // The route streams progress as Server-Sent Events, one JSON object per
-      // "data: " line, ending in a "done" (carries the draft) or "error" event.
-      const reader  = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer   = ""
-      let settled  = false
-
-      while (!settled) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-
-        let sepIndex: number
-        while ((sepIndex = buffer.indexOf("\n\n")) !== -1) {
-          const rawEvent = buffer.slice(0, sepIndex)
-          buffer = buffer.slice(sepIndex + 2)
-          const line = rawEvent.split("\n").find(l => l.startsWith("data:"))
-          if (!line) continue
-
-          const event = JSON.parse(line.slice(5).trim()) as
-            | { type: "progress"; message: string; done?: number; total?: number }
-            | { type: "done"; draft: AiDraftResponse }
-            | { type: "error"; error: string }
-
-          if (event.type === "progress") {
-            setProgress({ message: event.message, done: event.done, total: event.total })
-          } else if (event.type === "error") {
-            throw new Error(event.error)
-          } else {
-            settled = true
-            applyDraft(event.draft)
-            break
-          }
-        }
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.")
     } finally {
@@ -1738,6 +1808,15 @@ function AiCourseBuilderModal({
                   placeholder="e.g. focus on results-based frameworks, keep it self-paced"
                 />
               </Field>
+              <div className="flex items-start justify-between gap-3 pt-1">
+                <div className="min-w-0">
+                  <p className="text-[12.5px] font-semibold text-[#1A1916]">Generate a cover image</p>
+                  <p className="text-[11.5px] text-[#A8A39C] mt-0.5">
+                    A cover is required before the programme can be saved — you can replace it in review.
+                  </p>
+                </div>
+                <Toggle label="" checked={withCover} onChange={setWithCover} />
+              </div>
             </>
           )}
 
@@ -2158,6 +2237,10 @@ export default function AdminProgramsPage() {
             title:       l.title,
             description: l.description || null,
             blocks:      l.blocks ?? [],
+            ...(l.focus        && { focus:        l.focus }),
+            ...(l.brief        && { brief:        l.brief }),
+            ...(l.mustCover?.length    && { mustCover:    l.mustCover }),
+            ...(l.mustNotCover?.length && { mustNotCover: l.mustNotCover }),
           })),
       }))
 

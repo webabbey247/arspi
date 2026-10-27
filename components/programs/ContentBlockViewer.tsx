@@ -4,6 +4,7 @@ import { useState } from "react"
 import Image from "next/image"
 import { sanitizeHtml } from "@/lib/sanitize"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
+import MermaidDiagram from "@/components/ui/MermaidDiagram"
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -43,6 +44,20 @@ function VideoBlockView({ block }: { block: Extract<ContentBlock, { type: "video
         )}
       </div>
       {block.caption && <p className="px-4 py-2.5 text-[12px] text-[#6B6560]">{block.caption}</p>}
+    </div>
+  )
+}
+
+function DiagramBlockView({ block }: { block: Extract<ContentBlock, { type: "diagram" }> }) {
+  if (!block.code.trim()) return null
+  return (
+    <div className={panelCls}>
+      <div className="px-4 py-4">
+        {/* showSource stays off for students — a parser error is an authoring
+            bug, not something a learner can act on. */}
+        <MermaidDiagram code={block.code} />
+      </div>
+      {block.caption && <p className="px-4 pb-2.5 text-[12px] text-[#6B6560]">{block.caption}</p>}
     </div>
   )
 }
@@ -217,6 +232,7 @@ export function ContentBlockViewer({
           case "text":  return <TextBlockView key={block.id} block={block} />
           case "video": return <VideoBlockView key={block.id} block={block} />
           case "image": return <ImageBlockView key={block.id} block={block} />
+          case "diagram": return <DiagramBlockView key={block.id} block={block} />
           case "document":
             return block.url ? (
               <FileLinkView key={block.id} href={block.url} title={block.title || "Document"} icon={docIcon} />

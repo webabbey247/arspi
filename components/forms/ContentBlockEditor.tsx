@@ -7,6 +7,7 @@ import Placeholder from "@tiptap/extension-placeholder"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import Image from "next/image"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
+import MermaidDiagram from "@/components/ui/MermaidDiagram"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,10 @@ export type AssignmentBlock   = { id: string; type: "assignment";    title: stri
 export type DocumentBlock     = { id: string; type: "document";      url: string; title: string }
 export type PdfBlock          = { id: string; type: "pdf";           url: string; title: string; fileName: string; fileSize: string }
 export type SurveyBlock       = { id: string; type: "survey";        url: string; title: string }
+/** Mermaid source rather than a rendered image — diagrams stay accurate,
+ *  editable and themeable, which raster image models can't manage for
+ *  labelled process flows. */
+export type DiagramBlock      = { id: string; type: "diagram";       code: string; caption: string }
 
 export type ContentBlock =
   | TextBlock
@@ -30,6 +35,7 @@ export type ContentBlock =
   | DocumentBlock
   | PdfBlock
   | SurveyBlock
+  | DiagramBlock
 
 /** Surrounding course context threaded down from the program form so the
  *  "Expand with AI" action (on text/assignment blocks) can prompt with
@@ -165,6 +171,56 @@ function VideoBlockEditor({ block, onChange }: { block: VideoBlock; onChange: (b
         onChange={e => onChange({ ...block, caption: e.target.value })}
         className={inputCls}
         placeholder="Caption (optional)"
+      />
+    </div>
+  )
+}
+
+const DIAGRAM_PLACEHOLDER = `flowchart TD
+  A[Applicant submits] --> B[Officer screens]
+  B --> C{Above threshold?}
+  C -- Yes --> D[Dean approves]
+  C -- No --> E[Finance pays]
+  D --> E`
+
+function DiagramBlockEditor({ block, onChange }: { block: DiagramBlock; onChange: (b: DiagramBlock) => void }) {
+  const [showPreview, setShowPreview] = useState(true)
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <label className="text-[10px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">
+          Mermaid source
+        </label>
+        <button
+          type="button"
+          onClick={() => setShowPreview(v => !v)}
+          className="text-[10.5px] font-semibold text-[#0474C4] hover:text-[#06457F] uppercase tracking-[0.4px] cursor-pointer"
+        >
+          {showPreview ? "Hide preview" : "Show preview"}
+        </button>
+      </div>
+
+      <textarea
+        value={block.code}
+        onChange={e => onChange({ ...block, code: e.target.value })}
+        rows={7}
+        spellCheck={false}
+        className={`${inputCls} font-mono text-[12px] leading-[1.55] resize-y`}
+        placeholder={DIAGRAM_PLACEHOLDER}
+      />
+
+      {showPreview && block.code.trim() && (
+        <div className="rounded-[10px] border border-[#E5E2DC] bg-white p-3">
+          <MermaidDiagram code={block.code} showSource />
+        </div>
+      )}
+
+      <input
+        value={block.caption}
+        onChange={e => onChange({ ...block, caption: e.target.value })}
+        className={inputCls}
+        placeholder="Caption — also used as the diagram's description for screen readers"
       />
     </div>
   )
@@ -545,6 +601,12 @@ const BLOCK_TYPES: {
     create: () => ({ id: uid(), type: "image", url: "", caption: "" }),
   },
   {
+    type:  "diagram",
+    label: "Diagram",
+    icon:  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="5" rx="1"/><rect x="14" y="16" width="7" height="5" rx="1"/><path d="M6.5 8v5a3 3 0 0 0 3 3h4.5"/></svg>,
+    create: () => ({ id: uid(), type: "diagram", code: "", caption: "" }),
+  },
+  {
     type:  "document",
     label: "Document",
     icon:  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
@@ -586,6 +648,7 @@ const TYPE_LABELS: Record<ContentBlock["type"], string> = {
   text:          "Text",
   video:         "Video",
   image:         "Image",
+  diagram:       "Diagram",
   document:      "Document",
   pdf:           "PDF",
   quiz:          "Quiz",
@@ -598,6 +661,7 @@ const TYPE_COLORS: Record<ContentBlock["type"], string> = {
   text:          "bg-blue-50 text-blue-600 border-blue-200",
   video:         "bg-purple-50 text-purple-600 border-purple-200",
   image:         "bg-green-50 text-green-600 border-green-200",
+  diagram:       "bg-cyan-50 text-cyan-600 border-cyan-200",
   document:      "bg-sky-50 text-sky-600 border-sky-200",
   pdf:           "bg-red-50 text-red-500 border-red-200",
   quiz:          "bg-amber-50 text-amber-600 border-amber-200",
@@ -714,6 +778,7 @@ function BlockCard({
           {block.type === "text"          && <TextBlockEditor          block={block} onChange={b => onChange(b)} aiContext={aiContext} />}
           {block.type === "video"         && <VideoBlockEditor         block={block} onChange={b => onChange(b)} />}
           {block.type === "image"         && <ImageBlockEditor         block={block} onChange={b => onChange(b)} />}
+          {block.type === "diagram"       && <DiagramBlockEditor       block={block} onChange={b => onChange(b)} />}
           {block.type === "document"      && <DocumentBlockEditor      block={block} onChange={b => onChange(b)} />}
           {block.type === "pdf"           && <PdfBlockEditor           block={block} onChange={b => onChange(b)} />}
           {block.type === "quiz"          && <QuizBlockEditor          block={block} onChange={b => onChange(b)} />}
