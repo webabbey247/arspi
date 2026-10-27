@@ -4,7 +4,6 @@ import { useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { CheckCircle } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
 import ResetPasswordForm from "@/components/forms/ResetPasswordForm"
 
 export default function ResetPasswordPage() {
@@ -21,31 +20,26 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-sky-pale px-6 py-12">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <Link href="/">
-            <Image
-              src="/images/arps-institute-logo.webp"
-              alt="ARPS Institute"
-              width={148}
-              height={29}
-              className="h-8 w-auto"
-            />
-          </Link>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F6FB] px-4 sm:px-6 py-12">
+      <div className="w-full max-w-130">
+        {/* Brand */}
+        <Link href="/" className="flex items-center justify-center gap-3 no-underline mb-8">
+          <span className="grid place-items-center w-[42px] h-[42px] rounded-[12px] bg-[linear-gradient(145deg,#2C2368,#6655DF)] text-white text-[15px] font-extrabold">
+            AI
+          </span>
+          <b className="text-[19px] leading-[1.1] text-[#171C35]">ARPS Institute</b>
+        </Link>
 
-        <div className="bg-white border border-[#0474C4]/15 rounded-lg p-8 shadow-sm">
+        <div className="bg-white border border-[#DFE2ED] rounded-[16px] p-6 sm:p-9">
           {done ? (
             <div className="text-center py-4">
               <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="h-6 w-6 text-emerald-600" />
               </div>
-              <h1 className="font-heading text-[1.375rem] font-semibold text-[#071639] mb-2">
+              <h1 className="text-[28px] tracking-[-0.035em] font-extrabold text-[#171C35] mb-2">
                 Password updated
               </h1>
-              <p className="font-body text-[0.875rem] text-slate-500">
+              <p className="text-[15px] text-[#69708A]">
                 Your password has been changed. Redirecting you to sign in…
               </p>
             </div>

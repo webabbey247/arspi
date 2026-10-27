@@ -33,7 +33,7 @@ type Tone    = "emerald" | "amber" | "slate"
 
 const SECTION_CONFIG: Record<Section, { label: string; href: string; color: string; bg: string; icon: React.ReactNode }> = {
   insights: {
-    label: "Insights", href: "/administrator/insights", color: "#0474C4", bg: "#EEF6FF",
+    label: "Insights", href: "/administrator/insights", color: "#6655DF", bg: "#EEECFF",
     icon: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></>,
   },
   workshops: {
@@ -53,7 +53,7 @@ const SECTION_CONFIG: Record<Section, { label: string; href: string; color: stri
 const TONE_CLASSES: Record<Tone, string> = {
   emerald: "bg-emerald-50 text-emerald-700",
   amber:   "bg-amber-50 text-amber-700",
-  slate:   "bg-[#F0EEE9] text-[#6B6560]",
+  slate:   "bg-[#F0EFFA] text-[#69708A]",
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -107,21 +107,21 @@ function StatCard({
   return (
     <Link
       href={cfg.href}
-      className="group flex flex-col gap-3 p-4 rounded-[14px] border border-[#E5E2DC] bg-white hover:border-[#0474C4] hover:shadow-sm transition-all"
+      className="group flex flex-col gap-3 p-4 rounded-[16px] border border-[#DFE2ED] bg-white hover:border-[#6655DF] hover:shadow-sm transition-all"
     >
       <div className="flex items-center justify-between">
         <div className="w-9 h-9 rounded-[10px] flex items-center justify-center" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
           <Icon className="w-4.5 h-4.5">{cfg.icon}</Icon>
         </div>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#A8A39C] group-hover:text-[#0474C4] group-hover:translate-x-0.5 transition-all">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#8A90A6] group-hover:text-[#6655DF] group-hover:translate-x-0.5 transition-all">
           <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
         </svg>
       </div>
       <div>
-        <p className="text-[24px] font-extrabold text-[#1A1916] leading-none">
+        <p className="text-[24px] font-extrabold text-[#171C35] leading-none">
           {loading ? <Skeleton className="inline-block w-10 h-6" /> : total.toLocaleString()}
         </p>
-        <p className="text-[13px] font-semibold text-[#6B6560] mt-1.5">{cfg.label}</p>
+        <p className="text-[13px] font-semibold text-[#69708A] mt-1.5">{cfg.label}</p>
       </div>
       {loading ? (
         <div className="flex flex-wrap gap-1.5">
@@ -153,15 +153,15 @@ function RecentPanel({
 }) {
   const cfg = SECTION_CONFIG[section]
   return (
-    <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
+    <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden flex flex-col">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-[7px] flex items-center justify-center" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
             <Icon className="w-3 h-3">{cfg.icon}</Icon>
           </div>
-          <h2 className="text-[13px] font-bold text-[#1A1916]">{section === "workshops" ? "Upcoming Workshops" : `Recent ${cfg.label}`}</h2>
+          <h2 className="text-[13px] font-bold text-[#171C35]">{section === "workshops" ? "Upcoming Workshops" : `Recent ${cfg.label}`}</h2>
         </div>
-        <Link href={cfg.href} className="text-[11px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors">View all</Link>
+        <Link href={cfg.href} className="text-[11px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors">View all</Link>
       </div>
       <div className="flex-1">
         {loading ? (
@@ -177,17 +177,17 @@ function RecentPanel({
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="px-4 py-8 text-center text-[#A8A39C] text-[12px]">{emptyLabel}</div>
+          <div className="px-4 py-8 text-center text-[#8A90A6] text-[12px]">{emptyLabel}</div>
         ) : (
           items.map((item, i) => (
             <Link
               key={i}
               href={cfg.href}
-              className="flex items-center gap-2 px-4 py-2.5 border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-[12.5px] font-semibold text-[#1A1916] truncate">{item.title}</p>
-                <p className="text-[11px] text-[#A8A39C] mt-0.5">{item.meta}</p>
+                <p className="text-[12.5px] font-semibold text-[#171C35] truncate">{item.title}</p>
+                <p className="text-[11px] text-[#8A90A6] mt-0.5">{item.meta}</p>
               </div>
               <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${TONE_CLASSES[item.statusTone]}`}>
                 {item.statusLabel}
@@ -275,8 +275,9 @@ const AdministratorDashboardPage = () => {
   return (
     <div className="max-w-350 mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div className="mb-6">
-        <h1 className="text-[18px] font-extrabold text-[#1A1916]">Dashboard</h1>
-        <p className="text-[#A8A39C] text-[13px] mt-0.5">An overview of your platform&apos;s content</p>
+        <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
+        <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Dashboard</h1>
+        <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">An overview of your platform&apos;s content</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">

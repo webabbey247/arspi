@@ -54,10 +54,10 @@ const StepThreeRegisterForm = ({
 
   return (
     <div>
-      <h1 className="font-heading text-[2rem] tracking-[-0.015em] leading-[1.2] font-bold text-ink mb-1.5 text-[#071639]">
+      <h1 className="text-[clamp(30px,4vw,38px)] tracking-[-0.035em] leading-[1.1] font-extrabold text-[#171C35] mb-2">
         Learning Interests
       </h1>
-      <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-slate-600 mb-8">
+      <p className="text-[15px] leading-[1.55] text-[#69708A] mb-7">
         Select the areas you&apos;d like to explore — we&apos;ll personalise your dashboard.
       </p>
 
@@ -69,8 +69,8 @@ const StepThreeRegisterForm = ({
             className={cn(
               "px-3 py-2.5 rounded-sm border font-body text-[0.875rem] tracking-[0em] font-normal transition-all text-left cursor-pointer",
               selected.includes(id)
-                ? "bg-[#0474C4]/10 text-[#0474C4] border-[#0474C4]/25"
-                : "bg-transparent border-[#0474C4]/25 hover:border-[#0474C4] text-slate-400",
+                ? "bg-[#6655DF]/10 text-[#6655DF] border-[#6655DF]/25"
+                : "bg-transparent border-[#6655DF]/25 hover:border-[#6655DF] text-[#69708A]",
             )}
           >
             {label}
@@ -80,11 +80,11 @@ const StepThreeRegisterForm = ({
 
       <div className="flex flex-col gap-3.5">
         <div className="flex flex-col gap-1.5">
-          <label className="font-body text-[0.75rem] tracking-[0.07em] capitalize font-normal text-slate-400">
+          <label className="text-[14px] font-extrabold text-[#171C35]">
             How did you hear about us?
           </label>
           <Select onValueChange={setReferralSource}>
-            <SelectTrigger className="w-full font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal bg-transparent border border-[#0474C4]/25 rounded-sm px-3 py-2 text-ink outline-none focus:border-[#0474C4]">
+            <SelectTrigger className="w-full text-[15px] leading-[1.5] bg-white border border-[#DFE2ED] rounded-[10px] px-[13px] py-[11px] text-[#171C35] outline-none transition-shadow focus:border-[#6655DF] focus:ring-3 focus:ring-[#6655DF]/15">
               <SelectValue placeholder={visibilityOptions[0].label} />
             </SelectTrigger>
             <SelectContent>
@@ -102,22 +102,22 @@ const StepThreeRegisterForm = ({
             type="checkbox"
             checked={emailOptIn}
             onChange={(e) => setEmailOptIn(e.target.checked)}
-            className="accent-sapphire mt-0.5 shrink-0"
+            className="accent-[#6655DF] mt-0.5 shrink-0"
           />
-          <span className="font-body text-[0.8125rem] tracking-[0em] leading-[1.6] font-normal text-slate-400">
+          <span className="text-[13px] leading-[1.6] text-[#69708A]">
             Send me updates about new programmes, free workshops, and research resources.
           </span>
         </label>
 
         {apiError && (
-          <p className="font-body text-[0.6875rem] text-red-500">{apiError}</p>
+          <p className="text-[12px] font-bold text-red-600">{apiError}</p>
         )}
 
         <div className="flex gap-2.5 pt-1">
           <Button
             type="button"
             variant="outline"
-            className="bg-transparent min-w-40 h-12 text-[#0474C4] inline-flex border-[#0474C4] py-3.5 px-8 justify-center items-center font-body text-[0.82rem] font-medium tracking-widest uppercase cursor-pointer rounded transition-all duration-250 hover:bg-[#06457F] hover:border-[#06457F] hover:text-white"
+            className="bg-white min-w-40 h-12 text-[#171C35] inline-flex gap-2 border border-[#DFE2ED] py-[11px] px-4 justify-center items-center text-[15px] font-extrabold cursor-pointer rounded-[10px] transition-colors hover:bg-[#F5F6FB]"
             onClick={() => setStep(2)}
           >
             <ChevronLeft className="h-4 w-4" /> Back
@@ -125,16 +125,16 @@ const StepThreeRegisterForm = ({
           <Button
             type="button"
             disabled={isLoading}
-            className="bg-[#0474C4] min-w-40 h-12 text-white inline-flex border-none py-3.5 px-8 justify-center items-center font-body text-[0.82rem] font-medium tracking-widest uppercase cursor-pointer rounded transition-all duration-250 hover:bg-[#06457F] hover:border-[#06457F] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="bg-[#6655DF] min-w-40 h-12 text-white inline-flex gap-2 border border-[#6655DF] py-[11px] px-4 justify-center items-center text-[15px] font-extrabold cursor-pointer rounded-[10px] transition-colors hover:bg-[#2C2368] hover:border-[#2C2368] disabled:opacity-60 disabled:cursor-not-allowed"
             onClick={onSubmit}
           >
             {isLoading ? "Saving…" : <>Create Account <CheckCircle className="h-4 w-4" /></>}
           </Button>
         </div>
 
-        <p className="text-center font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-400">
+        <p className="text-center text-[12px] text-[#8A90A6]">
           Your data is handled in accordance with our{" "}
-          <Link href="#" className="text-sapphire">Privacy Policy</Link>.
+          <Link href="#" className="text-[#6655DF]">Privacy Policy</Link>.
         </p>
       </div>
     </div>

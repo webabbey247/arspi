@@ -72,49 +72,49 @@ const StepTwoRegisterForm = ({
 
   return (
     <div>
-      <h1 className="font-heading text-[2rem] tracking-[-0.015em] leading-[1.2] font-bold text-ink mb-1.5 text-[#071639]">
+      <h1 className="text-[clamp(30px,4vw,38px)] tracking-[-0.035em] leading-[1.1] font-extrabold text-[#171C35] mb-2">
         Your Profile
       </h1>
-      <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-slate-600 mb-8">
+      <p className="text-[15px] leading-[1.55] text-[#69708A] mb-7">
         Help us personalise your learning experience.
       </p>
 
       <form className="flex flex-col gap-3.5" onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="font-body text-[0.75rem] tracking-[0.07em] capitalize font-normal text-slate-400">
+            <label className="text-[14px] font-extrabold text-[#171C35]">
               First Name
             </label>
             <Input
               placeholder="e.g. Amara"
               {...register("firstName")}
-              className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal bg-sky-light border border-[#0474C4]/25 rounded-sm px-3 py-2 text-ink outline-none focus:border-[#0474C4] placeholder:text-slate-400 placeholder:font-light"
+              className="text-[15px] leading-[1.5] bg-white border border-[#DFE2ED] rounded-[10px] px-[13px] py-[11px] text-[#171C35] outline-none transition-shadow focus:border-[#6655DF] focus:ring-3 focus:ring-[#6655DF]/15 placeholder:text-[#8A90A6]"
             />
             {errors.firstName && (
-              <span className="font-body text-[0.6875rem] text-red-500">{errors.firstName.message}</span>
+              <span className="text-[12px] font-bold text-red-600">{errors.firstName.message}</span>
             )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="font-body text-[0.75rem] tracking-[0.07em] capitalize font-normal text-slate-400">
+            <label className="text-[14px] font-extrabold text-[#171C35]">
               Last Name
             </label>
             <Input
               placeholder="e.g. Diallo"
               {...register("lastName")}
-              className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal bg-sky-light border border-[#0474C4]/25 rounded-sm px-3 py-2 text-ink outline-none focus:border-[#0474C4] placeholder:text-slate-400 placeholder:font-light"
+              className="text-[15px] leading-[1.5] bg-white border border-[#DFE2ED] rounded-[10px] px-[13px] py-[11px] text-[#171C35] outline-none transition-shadow focus:border-[#6655DF] focus:ring-3 focus:ring-[#6655DF]/15 placeholder:text-[#8A90A6]"
             />
             {errors.lastName && (
-              <span className="font-body text-[0.6875rem] text-red-500">{errors.lastName.message}</span>
+              <span className="text-[12px] font-bold text-red-600">{errors.lastName.message}</span>
             )}
           </div>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="font-body text-[0.75rem] tracking-[0.07em] capitalize font-normal text-slate-400">
+          <label className="text-[14px] font-extrabold text-[#171C35]">
             Country of Residence
           </label>
           <Select onValueChange={setCountry}>
-            <SelectTrigger className="w-full font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal bg-sky-light border border-[#0474C4]/25 rounded-sm px-3 py-2 text-ink outline-none focus:border-[#0474C4]">
+            <SelectTrigger className="w-full text-[15px] leading-[1.5] bg-white border border-[#DFE2ED] rounded-[10px] px-[13px] py-[11px] text-[#171C35] outline-none transition-shadow focus:border-[#6655DF] focus:ring-3 focus:ring-[#6655DF]/15">
               <SelectValue placeholder="Select your country..." />
             </SelectTrigger>
             <SelectContent>
@@ -128,35 +128,35 @@ const StepTwoRegisterForm = ({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="font-body text-[0.75rem] tracking-[0.07em] capitalize font-normal text-slate-400">
+          <label className="text-[14px] font-extrabold text-[#171C35]">
             Current Role / Job Title
           </label>
           <Input
             placeholder="e.g. M&E Officer, Researcher, Lecturer"
             value={jobTitle}
             onChange={(e) => setJobTitle(e.target.value)}
-            className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal bg-sky-light border border-[#0474C4]/25 rounded-sm px-3 py-2 text-ink outline-none focus:border-[#0474C4] placeholder:text-slate-400 placeholder:font-light"
+            className="text-[15px] leading-[1.5] bg-white border border-[#DFE2ED] rounded-[10px] px-[13px] py-[11px] text-[#171C35] outline-none transition-shadow focus:border-[#6655DF] focus:ring-3 focus:ring-[#6655DF]/15 placeholder:text-[#8A90A6]"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="font-body text-[0.75rem] tracking-[0.07em] capitalize font-normal text-slate-400">
+          <label className="text-[14px] font-extrabold text-[#171C35]">
             Organisation / Institution
           </label>
           <Input
             placeholder="e.g. UN Women, University of Ghana"
             value={organisation}
             onChange={(e) => setOrganisation(e.target.value)}
-            className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal bg-sky-light border border-[#0474C4]/25 rounded-sm px-3 py-2 text-ink outline-none focus:border-[#0474C4] placeholder:text-slate-400 placeholder:font-light"
+            className="text-[15px] leading-[1.5] bg-white border border-[#DFE2ED] rounded-[10px] px-[13px] py-[11px] text-[#171C35] outline-none transition-shadow focus:border-[#6655DF] focus:ring-3 focus:ring-[#6655DF]/15 placeholder:text-[#8A90A6]"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="font-body text-[0.75rem] tracking-[0.07em] capitalize font-normal text-slate-400">
+          <label className="text-[14px] font-extrabold text-[#171C35]">
             I am primarily a...
           </label>
           <Select onValueChange={setRoleType}>
-            <SelectTrigger className="w-full font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal bg-sky-light border border-[#0474C4]/25 rounded-sm px-3 py-2 text-ink outline-none focus:border-[#0474C4]">
+            <SelectTrigger className="w-full text-[15px] leading-[1.5] bg-white border border-[#DFE2ED] rounded-[10px] px-[13px] py-[11px] text-[#171C35] outline-none transition-shadow focus:border-[#6655DF] focus:ring-3 focus:ring-[#6655DF]/15">
               <SelectValue placeholder={roleOptions[0].label} />
             </SelectTrigger>
             <SelectContent>
@@ -170,14 +170,14 @@ const StepTwoRegisterForm = ({
         </div>
 
         {apiError && (
-          <p className="font-body text-[0.6875rem] text-red-500">{apiError}</p>
+          <p className="text-[12px] font-bold text-red-600">{apiError}</p>
         )}
 
         <div className="flex gap-2.5 justify-between pt-1">
           <Button
             type="button"
             variant="outline"
-            className="bg-transparent min-w-40 h-12 text-[#0474C4] inline-flex border-[#0474C4] py-3.5 px-8 justify-center items-center font-body text-[0.82rem] font-medium tracking-widest uppercase cursor-pointer rounded transition-all duration-250 hover:bg-[#06457F] hover:border-[#06457F] hover:text-white"
+            className="bg-white min-w-40 h-12 text-[#171C35] inline-flex gap-2 border border-[#DFE2ED] py-[11px] px-4 justify-center items-center text-[15px] font-extrabold cursor-pointer rounded-[10px] transition-colors hover:bg-[#F5F6FB]"
             onClick={() => setStep(1)}
           >
             <ChevronLeft className="h-4 w-4" /> Back
@@ -185,7 +185,7 @@ const StepTwoRegisterForm = ({
           <Button
             type="submit"
             disabled={isLoading}
-            className="bg-[#0474C4] min-w-40 h-12 text-white inline-flex border-none py-3.5 px-8 justify-center items-center font-body text-[0.82rem] font-medium tracking-widest uppercase cursor-pointer rounded transition-all duration-250 hover:bg-[#06457F] hover:border-[#06457F] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="bg-[#6655DF] min-w-40 h-12 text-white inline-flex gap-2 border border-[#6655DF] py-[11px] px-4 justify-center items-center text-[15px] font-extrabold cursor-pointer rounded-[10px] transition-colors hover:bg-[#2C2368] hover:border-[#2C2368] disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isLoading ? "Saving…" : <>Continue <ChevronRight className="h-4 w-4" /></>}
           </Button>

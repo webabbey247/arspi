@@ -86,14 +86,14 @@ function asArr(val: unknown): string[] {
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
 
-const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors resize-none"
+const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors resize-none"
 
 function Field({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">
+      <label className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px]">
         {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-        {hint && <span className="ml-1 text-[10px] font-normal normal-case text-[#A8A39C]">({hint})</span>}
+        {hint && <span className="ml-1 text-[10px] font-normal normal-case text-[#8A90A6]">({hint})</span>}
       </label>
       {children}
     </div>
@@ -103,21 +103,21 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button type="button" onClick={() => onChange(!checked)} className="flex items-center gap-2 cursor-pointer">
-      <span className={`relative w-9 h-5 rounded-full transition-colors ${checked ? "bg-[#0474C4]" : "bg-[#D9D6D0]"}`}>
+      <span className={`relative w-9 h-5 rounded-full transition-colors ${checked ? "bg-[#6655DF]" : "bg-[#D8DAE5]"}`}>
         <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0"}`} />
       </span>
-      <span className="text-[13px] font-medium text-[#1A1916]">{label}</span>
+      <span className="text-[13px] font-medium text-[#171C35]">{label}</span>
     </button>
   )
 }
 
 function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171C35]/40">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
-        <p className="text-[14px] text-[#1A1916] mb-5">{message}</p>
+        <p className="text-[14px] text-[#171C35] mb-5">{message}</p>
         <div className="flex gap-2 justify-end">
-          <button onClick={onCancel} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
+          <button onClick={onCancel} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
           <button onClick={onConfirm} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-red-600 text-white hover:bg-red-700 cursor-pointer">Confirm</button>
         </div>
       </div>
@@ -147,14 +147,14 @@ function TagListInput({ value, onChange, placeholder }: { value: string[]; onCha
           placeholder={placeholder}
           className={inputCls}
         />
-        <button type="button" onClick={add} className="px-3 py-2 rounded-[10px] text-[12px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] cursor-pointer">Add</button>
+        <button type="button" onClick={add} className="px-3 py-2 rounded-[10px] text-[12px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] cursor-pointer">Add</button>
       </div>
       {value.length > 0 && (
         <ul className="space-y-1">
           {value.map((item, i) => (
-            <li key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-[8px] bg-[#F5F4F1] text-[12px] text-[#1A1916]">
+            <li key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-[8px] bg-[#F5F6FB] text-[12px] text-[#171C35]">
               <span className="flex-1">{item}</span>
-              <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} className="text-[#A8A39C] hover:text-red-500 cursor-pointer">
+              <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} className="text-[#8A90A6] hover:text-red-500 cursor-pointer">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </li>
@@ -267,9 +267,9 @@ function DepartmentModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-[#EBF3FC] rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
-        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171C35]/40">
+      <div className="bg-[#EEECFF] rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] p-5 flex items-start justify-between gap-4">
           <div>
             <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-300">
               {department ? "Edit Department" : "New Department"}
@@ -278,7 +278,7 @@ function DepartmentModal({
               {department ? "Update the department name." : "Add a new career department."}
             </div>
           </div>
-          <button type="button" onClick={onClose} className="text-white/35 hover:text-white shrink-0 bg-[#EDF2FB]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors cursor-pointer">
+          <button type="button" onClick={onClose} className="text-white/35 hover:text-white shrink-0 bg-[#EEECFF]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -295,8 +295,8 @@ function DepartmentModal({
             required
           />
           <div className="flex gap-2 justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
-            <button type="submit" disabled={saving || !name.trim()} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
+            <button type="submit" disabled={saving || !name.trim()} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer">
               {saving ? "Saving…" : department ? "Save" : "Create"}
             </button>
           </div>
@@ -364,11 +364,11 @@ function CareerDrawer({
   }
 
   return (
-    <div className="fixed inset-0 z-120 flex items-start justify-end bg-black/40">
+    <div className="fixed inset-0 z-120 flex items-start justify-end bg-[#171C35]/40">
       <div className="bg-white h-full w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header — blue, matches workshop modal */}
-        <div className="bg-[#0474C4] px-6 py-5 shrink-0 relative">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] px-6 py-5 shrink-0 relative">
           <button type="button" onClick={onClose} className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -520,9 +520,9 @@ function CareerDrawer({
                       <PopoverTrigger asChild>
                         <button
                           type="button"
-                          className={cn(inputCls, "flex items-center gap-2 text-left w-full", !field.value && "text-[#A8A39C]")}
+                          className={cn(inputCls, "flex items-center gap-2 text-left w-full", !field.value && "text-[#8A90A6]")}
                         >
-                          <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-[#A8A39C]" />
+                          <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-[#8A90A6]" />
                           {selected ? format(selected, "dd MMM yyyy") : "Pick a date"}
                         </button>
                       </PopoverTrigger>
@@ -544,9 +544,9 @@ function CareerDrawer({
           </div>
         </form>
 
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#E5E2DC] shrink-0">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
-          <button form="career-form" type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#DFE2ED] shrink-0">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
+          <button form="career-form" type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer">
             {isSubmitting ? "Saving…" : career ? "Save Changes" : "Create Posting"}
           </button>
         </div>
@@ -589,19 +589,19 @@ function FilterDropdown({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${active ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"}`}
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${active ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
       >
         {icon}
         {label}
-        {active && <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{activeLabel}</span>}
+        {active && <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{activeLabel}</span>}
       </button>
       {open && (
-        <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#E5E2DC] rounded-xl shadow-lg py-1.5 min-w-44 max-h-72 overflow-y-auto">
+        <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-44 max-h-72 overflow-y-auto">
           {options.map(o => (
             <button
               key={o.value}
               onClick={() => { onChange(o.value); setOpen(false) }}
-              className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${value === o.value ? "bg-[#FEF3C7] text-[#0474C4]" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
+              className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${value === o.value ? "bg-[#FEF3C7] text-[#6655DF]" : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"}`}
             >
               {o.label}
               {value === o.value && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
@@ -780,12 +780,13 @@ export default function AdminCareersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-[18px] font-extrabold text-[#1A1916]">Careers</h1>
-          <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage open roles and departments</p>
+          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
+          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Careers</h1>
+          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage open roles and departments</p>
         </div>
         <button
           onClick={() => tab === "jobs" ? setDrawer("create") : setDeptModal("create")}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer w-fit"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer w-fit"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           {tab === "jobs" ? "New Posting" : "New Department"}
@@ -793,15 +794,15 @@ export default function AdminCareersPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 w-fit">
+      <div className="flex gap-1 mb-5 bg-[#F5F6FB] rounded-[12px] p-1 w-fit">
         {(["jobs", "departments"] as Tab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}
+            className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#171C35] shadow-sm" : "text-[#69708A] hover:text-[#171C35]"}`}
           >
             {t}
-            <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tab === t ? "bg-[#F5F4F1] text-[#6B6560]" : "bg-[#E5E2DC] text-[#A8A39C]"}`}>
+            <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tab === t ? "bg-[#F5F6FB] text-[#69708A]" : "bg-[#DFE2ED] text-[#8A90A6]"}`}>
               {t === "jobs" ? careers.length : departments.length}
             </span>
           </button>
@@ -810,12 +811,12 @@ export default function AdminCareersPage() {
 
       {/* ── JOBS TAB ──────────────────────────────────────────────────────────── */}
       {tab === "jobs" && (
-        <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
+        <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
           {/* Toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
             <div className="relative w-full sm:w-64">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search postings…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search postings…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors" />
             </div>
             <div className="sm:ml-auto flex flex-wrap items-center gap-2">
               <FilterDropdown
@@ -849,9 +850,9 @@ export default function AdminCareersPage() {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
                   {["Posting", "Department", "Type", "Level", "Location", "Status", ""].map((col, i) => (
-                    <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                    <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -859,14 +860,14 @@ export default function AdminCareersPage() {
                 {loading ? (
                   <TableSkeletonRows colSpan={7} />
                 ) : filtered.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No career postings found.</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No career postings found.</td></tr>
                 ) : paginated.map(career => (
-                  <tr key={career.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                  <tr key={career.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
                     <td className="px-4 py-3">
-                      <p className="font-semibold text-[#1A1916] leading-tight line-clamp-1">{career.title}</p>
-                      <p className="text-[11px] text-[#A8A39C] mt-0.5">{career.applications} application{career.applications === 1 ? "" : "s"} · {career.views} views</p>
+                      <p className="font-semibold text-[#171C35] leading-tight line-clamp-1">{career.title}</p>
+                      <p className="text-[11px] text-[#8A90A6] mt-0.5">{career.applications} application{career.applications === 1 ? "" : "s"} · {career.views} views</p>
                     </td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{career.department}</td>
+                    <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{career.department}</td>
                     <td className="px-4 py-3">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700">
                         {TYPE_LABELS[career.type]}
@@ -877,8 +878,8 @@ export default function AdminCareersPage() {
                         {LEVEL_LABELS[career.experienceLevel]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">
-                      {career.location}{career.remote && <span className="ml-1 text-[10px] text-[#0474C4] font-semibold">· Remote</span>}
+                    <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">
+                      {career.location}{career.remote && <span className="ml-1 text-[10px] text-[#6655DF] font-semibold">· Remote</span>}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${career.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
@@ -888,7 +889,7 @@ export default function AdminCareersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button onClick={() => setDrawer(career)} title="Edit" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+                        <button onClick={() => setDrawer(career)} title="Edit" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         <button onClick={() => handleToggleStatus(career)} disabled={togglingIds.has(career.id)} title={career.status === "PUBLISHED" ? "Archive" : "Publish"} className={`w-7 h-7 flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer disabled:opacity-50 ${career.status === "PUBLISHED" ? "border-amber-200 bg-amber-50 text-amber-600 hover:border-amber-300" : "border-emerald-200 bg-emerald-50 text-emerald-600 hover:border-emerald-300"}`}>
@@ -898,7 +899,7 @@ export default function AdminCareersPage() {
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
                           )}
                         </button>
-                        <Link href={`/administrator/careers/${career.id}`} title="View analytics" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+                        <Link href={`/administrator/careers/${career.id}`} title="View analytics" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                         </Link>
                         <button onClick={() => setToDelete(career)} title="Delete" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer">
@@ -917,13 +918,13 @@ export default function AdminCareersPage() {
             {loading ? (
               <SkeletonCardList />
             ) : filtered.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No career postings found.</div>
+              <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No career postings found.</div>
             ) : paginated.map(career => (
-              <div key={career.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <div key={career.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight line-clamp-2">{career.title}</p>
-                    <p className="text-[12px] text-[#A8A39C] mt-0.5">{career.applications} application{career.applications === 1 ? "" : "s"} · {career.views} views</p>
+                    <p className="font-semibold text-[#171C35] text-[14px] leading-tight line-clamp-2">{career.title}</p>
+                    <p className="text-[12px] text-[#8A90A6] mt-0.5">{career.applications} application{career.applications === 1 ? "" : "s"} · {career.views} views</p>
                   </div>
                 </div>
 
@@ -942,19 +943,19 @@ export default function AdminCareersPage() {
 
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Department</dt>
-                    <dd className="text-[#1A1916] font-medium">{career.department}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Department</dt>
+                    <dd className="text-[#171C35] font-medium">{career.department}</dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Location</dt>
-                    <dd className="text-[#1A1916] font-medium">
-                      {career.location}{career.remote && <span className="ml-1 text-[10px] text-[#0474C4] font-semibold">· Remote</span>}
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Location</dt>
+                    <dd className="text-[#171C35] font-medium">
+                      {career.location}{career.remote && <span className="ml-1 text-[10px] text-[#6655DF] font-semibold">· Remote</span>}
                     </dd>
                   </div>
                 </dl>
 
                 <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <button onClick={() => setDrawer(career)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+                  <button onClick={() => setDrawer(career)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button onClick={() => handleToggleStatus(career)} disabled={togglingIds.has(career.id)} aria-label={career.status === "PUBLISHED" ? "Archive" : "Publish"} className={`w-8 h-8 flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer disabled:opacity-50 ${career.status === "PUBLISHED" ? "border-amber-200 bg-amber-50 text-amber-600 hover:border-amber-300" : "border-emerald-200 bg-emerald-50 text-emerald-600 hover:border-emerald-300"}`}>
@@ -964,7 +965,7 @@ export default function AdminCareersPage() {
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
                     )}
                   </button>
-                  <Link href={`/administrator/careers/${career.id}`} aria-label="View analytics" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+                  <Link href={`/administrator/careers/${career.id}`} aria-label="View analytics" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                   </Link>
                   <button onClick={() => setToDelete(career)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer">
@@ -976,19 +977,19 @@ export default function AdminCareersPage() {
           </div>
 
           {/* Footer */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+            <p className="text-[11px] text-[#8A90A6]">
               {filtered.length === 0 ? (
-                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{careers.length}</span> {careers.length === 1 ? "posting" : "postings"}</>
+                <>Showing <span className="font-semibold text-[#69708A]">0</span> of <span className="font-semibold text-[#69708A]">{careers.length}</span> {careers.length === 1 ? "posting" : "postings"}</>
               ) : (
-                <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-semibold text-[#6B6560]">{filtered.length}</span> {filtered.length === 1 ? "posting" : "postings"}</>
+                <>Showing <span className="font-semibold text-[#69708A]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#69708A]">{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-semibold text-[#69708A]">{filtered.length}</span> {filtered.length === 1 ? "posting" : "postings"}</>
               )}
             </p>
             {filtered.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
-                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#69708A] px-2">{page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
               </div>
             )}
           </div>
@@ -997,12 +998,12 @@ export default function AdminCareersPage() {
 
       {/* ── DEPARTMENTS TAB ───────────────────────────────────────────────────── */}
       {tab === "departments" && (
-        <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
+        <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
           {/* Toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
             <div className="relative w-full sm:w-64">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input value={deptSearch} onChange={e => { setDeptSearch(e.target.value); setDeptPage(1) }} placeholder="Search departments…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input value={deptSearch} onChange={e => { setDeptSearch(e.target.value); setDeptPage(1) }} placeholder="Search departments…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors" />
             </div>
           </div>
 
@@ -1010,9 +1011,9 @@ export default function AdminCareersPage() {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
                   {["Department", "Created", ""].map((col, i) => (
-                    <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                    <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -1020,16 +1021,16 @@ export default function AdminCareersPage() {
                 {deptLoading ? (
                   <TableSkeletonRows colSpan={3} />
                 ) : filteredDepts.length === 0 ? (
-                  <tr><td colSpan={3} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No departments found. Create one to get started.</td></tr>
+                  <tr><td colSpan={3} className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No departments found. Create one to get started.</td></tr>
                 ) : paginatedDepts.map(dept => (
-                  <tr key={dept.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
-                    <td className="px-4 py-3 font-semibold text-[#1A1916]">{dept.name}</td>
-                    <td className="px-4 py-3 text-[#A8A39C] text-[12px]">
+                  <tr key={dept.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
+                    <td className="px-4 py-3 font-semibold text-[#171C35]">{dept.name}</td>
+                    <td className="px-4 py-3 text-[#8A90A6] text-[12px]">
                       {new Date(dept.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button onClick={() => setDeptModal(dept)} title="Edit" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+                        <button onClick={() => setDeptModal(dept)} title="Edit" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         <button onClick={() => setDeptToDelete(dept)} title="Delete" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer">
@@ -1048,26 +1049,26 @@ export default function AdminCareersPage() {
             {deptLoading ? (
               <SkeletonCardList />
             ) : filteredDepts.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No departments found. Create one to get started.</div>
+              <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No departments found. Create one to get started.</div>
             ) : paginatedDepts.map(dept => (
-              <div key={dept.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <div key={dept.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{dept.name}</p>
+                    <p className="font-semibold text-[#171C35] text-[14px] leading-tight">{dept.name}</p>
                   </div>
                 </div>
 
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Created</dt>
-                    <dd className="text-[#1A1916] font-medium">
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Created</dt>
+                    <dd className="text-[#171C35] font-medium">
                       {new Date(dept.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                     </dd>
                   </div>
                 </dl>
 
                 <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <button onClick={() => setDeptModal(dept)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+                  <button onClick={() => setDeptModal(dept)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button onClick={() => setDeptToDelete(dept)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer">
@@ -1079,15 +1080,15 @@ export default function AdminCareersPage() {
           </div>
 
           {/* Footer */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]">
-              <span className="font-semibold text-[#6B6560]">{filteredDepts.length}</span> {filteredDepts.length === 1 ? "department" : "departments"}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+            <p className="text-[11px] text-[#8A90A6]">
+              <span className="font-semibold text-[#69708A]">{filteredDepts.length}</span> {filteredDepts.length === 1 ? "department" : "departments"}
             </p>
             {filteredDepts.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <button onClick={() => setDeptPage(p => Math.max(1, p - 1))} disabled={deptPage === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
-                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{deptPage} / {deptTotalPages}</span>
-                <button onClick={() => setDeptPage(p => Math.min(deptTotalPages, p + 1))} disabled={deptPage >= deptTotalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+                <button onClick={() => setDeptPage(p => Math.max(1, p - 1))} disabled={deptPage === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#69708A] px-2">{deptPage} / {deptTotalPages}</span>
+                <button onClick={() => setDeptPage(p => Math.min(deptTotalPages, p + 1))} disabled={deptPage >= deptTotalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
               </div>
             )}
           </div>

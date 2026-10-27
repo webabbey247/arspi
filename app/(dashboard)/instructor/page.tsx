@@ -4,29 +4,31 @@ export default async function InstructorPage() {
   const session = await requireRole("INSTRUCTOR")
 
   return (
-    <div>
-      <h1 className="font-heading text-[1.75rem] tracking-[-0.01em] font-semibold text-[#071639] mb-1">
-        Instructor Dashboard
-      </h1>
-      <p className="font-body text-[0.875rem] text-slate-500 mb-8">
-        Welcome back, {session.firstName ?? session.email}.
-      </p>
+    <div className="max-w-350 mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="mb-7">
+        <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Instructor</span>
+        <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">
+          Good day, {session.firstName ?? session.email}.
+        </h1>
+        <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">
+          Create, review and deliver your programmes and workshops from one workspace.
+        </p>
+      </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: "My Courses",      value: "—" },
-          { label: "Total Students",  value: "—" },
-          { label: "Avg. Completion", value: "—" },
-        ].map(({ label, value }) => (
-          <div
+          { label: "My Courses",      value: "—", note: "Programmes you teach" },
+          { label: "Total Students",  value: "—", note: "Across all programmes" },
+          { label: "Avg. Completion", value: "—", note: "Learner progress" },
+        ].map(({ label, value, note }) => (
+          <article
             key={label}
-            className="bg-white border border-[#0474C4]/15 rounded-md p-4 sm:px-5 sm:py-4"
+            className="grid bg-white border border-[#DFE2ED] rounded-[16px] p-5"
           >
-            <p className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400 mb-1">
-              {label}
-            </p>
-            <p className="font-heading text-[1.5rem] font-semibold text-[#071639]">{value}</p>
-          </div>
+            <span className="text-[#69708A]">{label}</span>
+            <b className="text-[31px] text-[#171C35] my-1">{value}</b>
+            <small className="text-[#69708A]">{note}</small>
+          </article>
         ))}
       </div>
     </div>

@@ -53,42 +53,36 @@ export default function RegisterPage() {
   ];
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      {/* ── Left panel ── */}
-      <div className="bg-[#06457F] hidden lg:flex flex-col p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
-        <div className="absolute -top-24 -left-24 w-112.5 h-112.5 rounded-full bg-[#06457F]/8 blur-[100px] pointer-events-none" />
-        <div className="absolute -bottom-20 -right-20 w-90 h-90 rounded-full bg-[#06457F]/6 blur-[100px] pointer-events-none" />
-
-         <Link href="/" className="flex justify-start gap-2.5 shrink-0 no-underline w-50">
-          <div className="flex flex-wrap justify-start items-center gap-2.5 px-[1.2rem] shrink-0">
-            <div className="w-8 h-8 border-[1.5px] border-white rounded-full flex items-center justify-center font-heading text-lg font-medium text-white shrink-0">
-              A
-            </div>
-            <span className="font-heading text-xl tracking-[-0.005em] leading-[1.3] font-medium text-white">
-              ARPS Institute
-            </span>
-          </div>
+    <div className="min-h-screen grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] bg-[#F5F6FB]">
+      {/* ── Left panel — LMS programme-hero treatment ── */}
+      <div className="bg-[#17172F] text-white hidden lg:flex flex-col p-12 relative overflow-hidden">
+        <Link href="/" className="flex items-center gap-3 no-underline w-fit">
+          <span className="grid place-items-center w-[42px] h-[42px] rounded-[12px] bg-[linear-gradient(145deg,#2C2368,#6655DF)] text-white text-[15px] font-extrabold shrink-0">
+            AI
+          </span>
+          <b className="text-[19px] leading-[1.1] text-white">
+            ARPS Institute
+            <small className="block text-[10px] tracking-[0.12em] text-[#D6A84C] mt-1 uppercase">
+              Learning management system
+            </small>
+          </b>
         </Link>
 
-        <div className="relative z-10 flex-1 flex flex-col justify-center py-12">
-          <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-slate-300 flex items-center gap-3 mb-5">
-            <span className="block w-6 h-px bg-slate-300" />
+        <div className="flex-1 flex flex-col justify-center py-12">
+          <span className="text-[13px] tracking-[0.14em] uppercase font-black text-[#D6A84C]">
             Join ARPS Institute
-          </p>
+          </span>
 
-          <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-white mb-4">
-            Start Your
-            <br />
-            <em className="italic text-sky">Professional Journey</em>
+          <h2 className="mt-3 mb-5 text-[clamp(34px,3.6vw,50px)] leading-[1.04] tracking-[-0.045em] font-extrabold text-white max-w-md">
+            Start your professional journey
           </h2>
 
-          <p className="font-body text-[0.9375rem] tracking-[0em] leading-[1.7] font-normal text-slate-300 mb-8 max-w-xs">
+          <p className="text-[17px] leading-[1.6] text-[#DEDDEB] max-w-md mb-8">
             Create your free account and get instant access to 40+ certificate
             programmes, live workshops, and a global community of practitioners.
           </p>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 max-w-md">
             {[
               "Free to join — no payment required to create an account",
               "40+ certificate programmes across 6 discipline areas",
@@ -97,10 +91,10 @@ export default function RegisterPage() {
               "Global cohort network — connect with learners in 120+ countries",
             ].map((b) => (
               <div key={b} className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-transparent border border-slate-300 flex items-center justify-center shrink-0 mt-0.5">
-                  <Check className="h-3 w-3 text-white" />
+                <div className="w-6 h-6 rounded-full bg-[#6655DF] flex items-center justify-center shrink-0 mt-0.5">
+                  <Check className="h-3.5 w-3.5 text-white" />
                 </div>
-                <span className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-slate-300">
+                <span className="text-[15px] leading-[1.55] font-bold text-white">
                   {b}
                 </span>
               </div>
@@ -108,8 +102,8 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div className="relative z-10 border-t border-white/20 pt-5">
-          <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-300 mb-3">
+        <div className="border-t border-white/20 pt-5">
+          <div className="text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#D6A84C] mb-3">
             Trusted by professionals from
           </div>
           <div className="flex gap-5 flex-wrap">
@@ -117,7 +111,7 @@ export default function RegisterPage() {
               (org) => (
                 <span
                   key={org}
-                  className="font-body text-[0.75rem] tracking-[0em] font-normal text-slate-300"
+                  className="text-[14px] font-bold text-[#D8D7E3]"
                 >
                   {org}
                 </span>
@@ -128,15 +122,21 @@ export default function RegisterPage() {
 
         <Link
           href="/"
-          className="relative z-10 font-body text-[0.75rem] tracking-[0em] font-normal text-slate-300 hover:text-sky transition-colors mt-5"
+          className="text-[14px] font-bold text-[#D8D4FF] hover:text-white transition-colors mt-5 w-fit"
         >
           ← Back to ARPS Institute
         </Link>
       </div>
 
-      {/* ── Right panel ── */}
-      <div className="flex flex-col items-center justify-start px-8 py-12 bg-sky-pale overflow-y-auto relative">
-        <div className="w-full max-w-105 mt-8">
+      {/* ── Right panel — LMS auth card ── */}
+      <div className="flex flex-col items-center justify-start px-4 sm:px-8 py-10 sm:py-12 overflow-y-auto">
+        <Link href="/" className="lg:hidden flex items-center gap-3 no-underline mb-8">
+          <span className="grid place-items-center w-[42px] h-[42px] rounded-[12px] bg-[linear-gradient(145deg,#2C2368,#6655DF)] text-white text-[15px] font-extrabold">
+            AI
+          </span>
+          <b className="text-[19px] leading-[1.1] text-[#171C35]">ARPS Institute</b>
+        </Link>
+        <div className="w-full max-w-130 bg-white border border-[#DFE2ED] rounded-[16px] p-6 sm:p-9 lg:mt-6">
           {!done ? (
             <>
               {/* Step indicator */}
@@ -147,11 +147,11 @@ export default function RegisterPage() {
                 <>
                   {/* <SocialLoginButtons />
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="flex-1 h-px bg-sapphire/20" />
-                    <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400">
+                    <div className="flex-1 h-px bg-[#DFE2ED]" />
+                    <span className="text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6]">
                       or sign up with email
                     </span>
-                    <div className="flex-1 h-px bg-sapphire/20" />
+                    <div className="flex-1 h-px bg-[#DFE2ED]" />
                   </div> */}
                   <StepOneRegisterForm
                     showPw={showPw}
@@ -184,11 +184,11 @@ export default function RegisterPage() {
           )}
 
           {!done && (
-            <p className="text-center font-body text-[0.875rem] tracking-[0em] font-normal text-slate-600 mt-6">
+            <p className="text-center text-[14px] text-[#69708A] mt-6">
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="text-[#0474C4] hover:text-[#06457F] transition-colors font-medium"
+                className="text-[#6655DF] hover:text-[#2C2368] transition-colors font-extrabold"
               >
                 Sign in instead
               </Link>

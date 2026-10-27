@@ -9,9 +9,10 @@ export const metadata: Metadata = {
 }
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  // Ensures no unauthenticated request reaches any dashboard route.
+  // Ensures no unauthenticated request reaches any dashboard route; the
+  // wrapper scopes the LMS theme (app/lms-theme.css) to every dashboard page.
   // Role-specific layouts do a finer-grained check with requireRole().
   await requireAuth()
 
-  return <>{children}</>
+  return <div className="lms-theme">{children}</div>
 }

@@ -35,10 +35,10 @@ const LoginPage = () => {
   return (
     <Fragment>
       <div className="w-full max-w-100">
-        <h1 className="font-heading text-[2rem] tracking-[-0.015em] leading-[1.2] font-bold text-ink mb-1.5 text-[#071639]">
+        <h1 className="text-[clamp(30px,4vw,38px)] tracking-[-0.035em] leading-[1.1] font-extrabold text-[#171C35] mb-2">
           Sign In
         </h1>
-        <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-slate-600 mb-8">
+        <p className="text-[15px] leading-[1.55] text-[#69708A] mb-7">
           Access your ARPS Institute account to continue learning.
         </p>
 
@@ -46,11 +46,11 @@ const LoginPage = () => {
 
         {/* Divider */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="flex-1 h-px bg-sapphire/20" />
-          <span className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-400">
+          <div className="flex-1 h-px bg-[#DFE2ED]" />
+          <span className="text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6]">
             or sign in with email
           </span>
-          <div className="flex-1 h-px bg-sapphire/20" />
+          <div className="flex-1 h-px bg-[#DFE2ED]" />
         </div>
 
         <LoginForm
@@ -59,11 +59,11 @@ const LoginPage = () => {
           setForgotOpen={setForgotOpen}
         />
 
-        <p className="text-center font-body text-[0.875rem] tracking-[0em] font-normal text-slate-600 mt-6">
+        <p className="text-center text-[14px] text-[#69708A] mt-6">
           New to ARPS Institute?{" "}
           <Link
             href="/register"
-            className="text-[#0474C4] hover:text-[#06457F] transition-colors font-medium"
+            className="text-[#6655DF] hover:text-[#2C2368] transition-colors font-extrabold"
           >
             Sign Up
           </Link>

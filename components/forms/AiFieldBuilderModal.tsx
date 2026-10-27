@@ -64,9 +64,9 @@ export default function AiFieldBuilderModal({ title, kind, context, currentValue
   }
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-[#171C35]/40">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] p-5 flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-1.5 text-white font-extrabold text-[16px]">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
@@ -83,15 +83,15 @@ export default function AiFieldBuilderModal({ title, kind, context, currentValue
 
           {loading ? (
             <div className="py-6 flex flex-col items-center text-center gap-3">
-              <div className="w-8 h-8 border-2 border-[#0474C4]/25 border-t-[#0474C4] rounded-full animate-spin" />
-              <p className="text-[13px] font-medium text-[#1A1916]">
+              <div className="w-8 h-8 border-2 border-[#6655DF]/25 border-t-[#6655DF] rounded-full animate-spin" />
+              <p className="text-[13px] font-medium text-[#171C35]">
                 {currentValue ? "Improving your description…" : "Generating…"}
               </p>
             </div>
           ) : (
             <>
               <div>
-                <label className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">AI Model</label>
+                <label className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px]">AI Model</label>
                 <div className="grid grid-cols-2 gap-2 mt-1">
                   {([
                     ["anthropic", "Anthropic Claude"],
@@ -103,8 +103,8 @@ export default function AiFieldBuilderModal({ title, kind, context, currentValue
                       onClick={() => setProvider(value)}
                       className={`px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${
                         provider === value
-                          ? "bg-[#0474C4] border-[#0474C4] text-white"
-                          : "bg-white border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4]"
+                          ? "bg-[#6655DF] border-[#6655DF] text-white"
+                          : "bg-white border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF]"
                       }`}
                     >
                       {label}
@@ -113,15 +113,15 @@ export default function AiFieldBuilderModal({ title, kind, context, currentValue
                 </div>
               </div>
               <div>
-                <label className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">
-                  Prompt<span className="ml-1 text-[10px] font-normal normal-case text-[#A8A39C]">(optional)</span>
+                <label className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px]">
+                  Prompt<span className="ml-1 text-[10px] font-normal normal-case text-[#8A90A6]">(optional)</span>
                 </label>
                 <textarea
                   autoFocus
                   value={prompt}
                   onChange={e => setPrompt(e.target.value)}
                   rows={3}
-                  className="mt-1 w-full rounded-[10px] border border-[#E5E2DC] px-3 py-2 text-[13px] text-[#1A1916] placeholder:text-[#A8A39C] focus:outline-none focus:ring-2 focus:ring-[#0474C4]/30 focus:border-[#0474C4]"
+                  className="mt-1 w-full rounded-[10px] border border-[#DFE2ED] px-3 py-2 text-[13px] text-[#171C35] placeholder:text-[#8A90A6] focus:outline-none focus:ring-2 focus:ring-[#6655DF]/30 focus:border-[#6655DF]"
                   placeholder="e.g. Focus on practical case studies, keep it upbeat"
                 />
               </div>
@@ -129,8 +129,8 @@ export default function AiFieldBuilderModal({ title, kind, context, currentValue
           )}
 
           <div className="flex gap-2 justify-end pt-1">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
-            <button type="submit" disabled={loading} className="flex items-center gap-1.5 px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
+            <button type="submit" disabled={loading} className="flex items-center gap-1.5 px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer">
               {loading ? "Generating…" : "Generate"}
             </button>
           </div>

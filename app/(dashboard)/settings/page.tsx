@@ -22,7 +22,7 @@ const ROLE_LABELS: Record<Role, string> = {
 const ROLE_COLORS: Record<Role, string> = {
   ADMIN:      "bg-blue-50 text-blue-700",
   INSTRUCTOR: "bg-purple-50 text-purple-700",
-  USER:       "bg-[#F5F4F1] text-[#6B6560]",
+  USER:       "bg-[#F5F6FB] text-[#69708A]",
 }
 
 const ROLE_ICONS: Record<Role, React.ReactNode> = {
@@ -34,11 +34,11 @@ const ROLE_ICONS: Record<Role, React.ReactNode> = {
 // ── Shared input classes ──────────────────────────────────────────────────────
 
 const inputCls =
-  "w-full px-3 py-2.5 rounded-[10px] border border-[#E5E2DC] text-[13px] text-[#1A1916] bg-white " +
-  "focus:outline-none focus:ring-2 focus:ring-[#0474C4]/20 focus:border-[#0474C4] transition-colors " +
-  "placeholder:text-[#A8A39C] disabled:bg-[#F5F4F1] disabled:text-[#A8A39C] " +
-  "read-only:bg-[#F5F4F1] read-only:text-[#A8A39C] read-only:cursor-not-allowed read-only:focus:ring-0 read-only:focus:border-[#E5E2DC]"
-const labelCls = "block text-[11px] font-semibold text-[#6B6560] mb-1.5 uppercase tracking-[0.5px]"
+  "w-full px-3 py-2.5 rounded-[10px] border border-[#DFE2ED] text-[13px] text-[#171C35] bg-white " +
+  "focus:outline-none focus:ring-2 focus:ring-[#6655DF]/20 focus:border-[#6655DF] transition-colors " +
+  "placeholder:text-[#8A90A6] disabled:bg-[#F5F6FB] disabled:text-[#8A90A6] " +
+  "read-only:bg-[#F5F6FB] read-only:text-[#8A90A6] read-only:cursor-not-allowed read-only:focus:ring-0 read-only:focus:border-[#DFE2ED]"
+const labelCls = "block text-[11px] font-semibold text-[#69708A] mb-1.5 uppercase tracking-[0.5px]"
 
 // ── Profile form ──────────────────────────────────────────────────────────────
 
@@ -492,12 +492,13 @@ export default function SettingsPage() {
 
       {/* Page header */}
       <div className="mb-6">
-        <h1 className="text-[18px] font-extrabold text-[#1A1916]">Settings</h1>
-        <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage your profile, security and account preferences</p>
+        <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Account</span>
+        <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Settings</h1>
+        <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage your profile, security and account preferences</p>
       </div>
 
       {/* Identity header */}
-      <section className="rounded-[14px] border border-[#E5E2DC] bg-white px-4 sm:px-5 py-4 mb-6 flex items-center gap-3 sm:gap-4 flex-wrap">
+      <section className="rounded-[16px] border border-[#DFE2ED] bg-white px-4 sm:px-5 py-4 mb-6 flex items-center gap-3 sm:gap-4 flex-wrap">
         {loading ? (
           <>
             <Skeleton className="w-14 h-14 sm:w-16 sm:h-16 rounded-full shrink-0" />
@@ -509,22 +510,22 @@ export default function SettingsPage() {
           </>
         ) : (
           <>
-            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border border-[#E5E2DC] bg-[#F5F4F1] shrink-0">
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border border-[#DFE2ED] bg-[#F5F6FB] shrink-0">
               {avatar ? (
                 <Image src={avatar} alt="Avatar" fill className="object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center font-heading text-[1.125rem] font-semibold text-[#0474C4]">
+                <div className="w-full h-full flex items-center justify-center font-heading text-[1.125rem] font-semibold text-[#6655DF]">
                   {initials}
                 </div>
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-[15px] text-[#1A1916] truncate">
+              <p className="font-semibold text-[15px] text-[#171C35] truncate">
                 {profile
                   ? [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.email.split("@")[0]
                   : "—"}
               </p>
-              <p className="text-[12px] text-[#A8A39C] truncate">{profile?.email ?? ""}</p>
+              <p className="text-[12px] text-[#8A90A6] truncate">{profile?.email ?? ""}</p>
             </div>
             <span className={cn(
               "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0",
@@ -538,8 +539,8 @@ export default function SettingsPage() {
       </section>
 
       {/* Tabs section */}
-      <section className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden mb-6">
-        <div className="border-b border-[#E5E2DC] bg-[#FAFAF9] overflow-x-auto">
+      <section className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden mb-6">
+        <div className="border-b border-[#DFE2ED] bg-[#FAFAFF] overflow-x-auto">
           <div className="flex gap-1 px-2 sm:px-3 pt-2 min-w-fit">
             {TABS.map(t => (
               <button
@@ -549,8 +550,8 @@ export default function SettingsPage() {
                 className={cn(
                   "shrink-0 whitespace-nowrap px-4 py-2.5 text-[13px] font-semibold border-b-2 -mb-px transition-colors cursor-pointer",
                   activeTab === t.id
-                    ? "border-[#0474C4] text-[#0474C4]"
-                    : "border-transparent text-[#6B6560] hover:text-[#1A1916]",
+                    ? "border-[#6655DF] text-[#6655DF]"
+                    : "border-transparent text-[#69708A] hover:text-[#171C35]",
                 )}
               >
                 {t.label}
@@ -564,12 +565,12 @@ export default function SettingsPage() {
           {activeTab === "profile" && (
             <div className="space-y-5">
               {/* Avatar */}
-              <div className="flex items-center gap-4 flex-wrap pb-4 border-b border-[#F0EEE9]">
-                <div className="relative w-20 h-20 rounded-full overflow-hidden border border-[#E5E2DC] bg-[#F5F4F1] shrink-0">
+              <div className="flex items-center gap-4 flex-wrap pb-4 border-b border-[#F0EFFA]">
+                <div className="relative w-20 h-20 rounded-full overflow-hidden border border-[#DFE2ED] bg-[#F5F6FB] shrink-0">
                   {avatar ? (
                     <Image src={avatar} alt="Avatar" fill className="object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center font-heading text-[1.25rem] font-semibold text-[#0474C4]">
+                    <div className="w-full h-full flex items-center justify-center font-heading text-[1.25rem] font-semibold text-[#6655DF]">
                       {initials}
                     </div>
                   )}
@@ -580,7 +581,7 @@ export default function SettingsPage() {
                       type="button"
                       onClick={() => avatarInputRef.current?.click()}
                       disabled={uploading}
-                      className="px-3 py-1.5 rounded-[10px] text-[12px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer transition-colors"
+                      className="px-3 py-1.5 rounded-[10px] text-[12px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
                     >
                       {uploading ? "Uploading…" : avatar ? "Replace photo" : "Upload photo"}
                     </button>
@@ -588,13 +589,13 @@ export default function SettingsPage() {
                       <button
                         type="button"
                         onClick={handleRemoveAvatar}
-                        className="px-3 py-1.5 rounded-[10px] text-[12px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:border-red-300 hover:text-red-600 cursor-pointer transition-colors"
+                        className="px-3 py-1.5 rounded-[10px] text-[12px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:border-red-300 hover:text-red-600 cursor-pointer transition-colors"
                       >
                         Remove
                       </button>
                     )}
                   </div>
-                  <p className="text-[11px] text-[#A8A39C]">JPG, PNG or WEBP. Max 4 MB.</p>
+                  <p className="text-[11px] text-[#8A90A6]">JPG, PNG or WEBP. Max 4 MB.</p>
                   <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                 </div>
               </div>
@@ -624,7 +625,7 @@ export default function SettingsPage() {
                       <select
                         {...profileForm.register("phoneCountryCode")}
                         disabled={loading}
-                        className="px-2 py-2.5 rounded-l-[10px] border border-r-0 border-[#E5E2DC] text-[13px] text-[#1A1916] bg-[#FAFAF9] focus:outline-none focus:ring-2 focus:ring-[#0474C4]/20 focus:border-[#0474C4] transition-colors disabled:opacity-50 cursor-pointer"
+                        className="px-2 py-2.5 rounded-l-[10px] border border-r-0 border-[#DFE2ED] text-[13px] text-[#171C35] bg-[#FAFAFF] focus:outline-none focus:ring-2 focus:ring-[#6655DF]/20 focus:border-[#6655DF] transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {COUNTRY_CODES.map(c => (
                           <option key={c.code} value={c.code}>
@@ -682,7 +683,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={profileForm.formState.isSubmitting || loading}
-                    className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer transition-colors"
+                    className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
                   >
                     {profileForm.formState.isSubmitting ? "Saving…" : "Save changes"}
                   </button>
@@ -695,8 +696,8 @@ export default function SettingsPage() {
             <div className="space-y-5">
               <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
                 <div>
-                  <h3 className="font-semibold text-[13px] text-[#1A1916]">Change password</h3>
-                  <p className="text-[12px] text-[#A8A39C] mt-0.5">Use at least 8 characters with an uppercase letter and a number.</p>
+                  <h3 className="font-semibold text-[13px] text-[#171C35]">Change password</h3>
+                  <p className="text-[12px] text-[#8A90A6] mt-0.5">Use at least 8 characters with an uppercase letter and a number.</p>
                 </div>
 
                 <div>
@@ -743,7 +744,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={passwordForm.formState.isSubmitting}
-                    className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer transition-colors"
+                    className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
                   >
                     {passwordForm.formState.isSubmitting ? "Updating…" : "Update password"}
                   </button>
@@ -780,7 +781,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={contactInfoForm.formState.isSubmitting || loading}
-                  className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer transition-colors"
+                  className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
                 >
                   {contactInfoForm.formState.isSubmitting ? "Saving…" : "Save changes"}
                 </button>
@@ -811,10 +812,10 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#F0EEE9]">
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#F0EFFA]">
                 <div className="min-w-0">
-                  <p className="font-semibold text-[13px] text-[#1A1916]">Email notifications</p>
-                  <p className="text-[12px] text-[#A8A39C] mt-0.5">Receive product updates, course announcements and research highlights.</p>
+                  <p className="font-semibold text-[13px] text-[#171C35]">Email notifications</p>
+                  <p className="text-[12px] text-[#8A90A6] mt-0.5">Receive product updates, course announcements and research highlights.</p>
                 </div>
                 <Controller
                   name="emailOptIn"
@@ -828,7 +829,7 @@ export default function SettingsPage() {
                       disabled={loading}
                       className={cn(
                         "relative w-10 h-5 rounded-full transition-colors cursor-pointer shrink-0 disabled:opacity-50",
-                        field.value ? "bg-[#0474C4]" : "bg-[#E5E2DC]",
+                        field.value ? "bg-[#6655DF]" : "bg-[#DFE2ED]",
                       )}
                     >
                       <span
@@ -846,7 +847,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={configForm.formState.isSubmitting || loading}
-                  className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer transition-colors"
+                  className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
                 >
                   {configForm.formState.isSubmitting ? "Saving…" : "Save changes"}
                 </button>
@@ -856,15 +857,15 @@ export default function SettingsPage() {
 
           {activeTab === "billings" && (
             <div className="flex flex-col items-center text-center py-10 px-4">
-              <div className="w-14 h-14 rounded-full bg-[#F5F4F1] flex items-center justify-center mb-3">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#A8A39C" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <div className="w-14 h-14 rounded-full bg-[#F5F6FB] flex items-center justify-center mb-3">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A90A6" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="6" width="20" height="14" rx="2"/>
                   <line x1="2" y1="10" x2="22" y2="10"/>
                   <line x1="6" y1="15" x2="10" y2="15"/>
                 </svg>
               </div>
-              <h3 className="font-heading text-[14px] font-semibold text-[#1A1916]">No billing on file</h3>
-              <p className="text-[12px] text-[#A8A39C] mt-1 max-w-sm">
+              <h3 className="font-heading text-[14px] font-semibold text-[#171C35]">No billing on file</h3>
+              <p className="text-[12px] text-[#8A90A6] mt-1 max-w-sm">
                 When you purchase a program or workshop, your receipts and payment methods will appear here.
               </p>
             </div>
@@ -873,22 +874,22 @@ export default function SettingsPage() {
       </section>
 
       {/* Danger zone */}
-      <section className="rounded-[14px] border border-red-200 bg-white overflow-hidden">
+      <section className="rounded-[16px] border border-red-200 bg-white overflow-hidden">
         <header className="px-4 sm:px-5 py-4 border-b border-red-100 bg-red-50/60">
           <h2 className="font-heading text-[14px] font-semibold text-red-700">Danger zone</h2>
           <p className="text-[12px] text-red-500/80 mt-0.5">Sensitive actions that affect access to your account.</p>
         </header>
 
         <div className="p-4 sm:p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-[#F0EEE9]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-[#F0EFFA]">
             <div className="min-w-0">
-              <p className="font-semibold text-[13px] text-[#1A1916]">Sign out</p>
-              <p className="text-[12px] text-[#A8A39C] mt-0.5">End the current session and return to the login page.</p>
+              <p className="font-semibold text-[13px] text-[#171C35]">Sign out</p>
+              <p className="text-[12px] text-[#8A90A6] mt-0.5">End the current session and return to the login page.</p>
             </div>
             <button
               type="button"
               onClick={handleSignOutAll}
-              className="self-start sm:self-auto px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] cursor-pointer transition-colors"
+              className="self-start sm:self-auto px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] cursor-pointer transition-colors"
             >
               Sign out
             </button>
@@ -896,8 +897,8 @@ export default function SettingsPage() {
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-semibold text-[13px] text-[#1A1916]">Delete account</p>
-              <p className="text-[12px] text-[#A8A39C] mt-0.5">Disables your account immediately. Contact support to restore access.</p>
+              <p className="font-semibold text-[13px] text-[#171C35]">Delete account</p>
+              <p className="text-[12px] text-[#8A90A6] mt-0.5">Disables your account immediately. Contact support to restore access.</p>
             </div>
             <button
               type="button"
@@ -913,7 +914,7 @@ export default function SettingsPage() {
       {/* Delete confirm modal */}
       {confirmDelete && (
         <div
-          className="fixed inset-0 z-200 flex items-center justify-center bg-black/50 backdrop-blur-[2px] px-4"
+          className="fixed inset-0 z-200 flex items-center justify-center bg-[#171C35]/50 backdrop-blur-[2px] px-4"
           onClick={e => { if (e.target === e.currentTarget) setConfirmDelete(false) }}
         >
           <div className="bg-white rounded-2xl w-full max-w-sm mx-4 shadow-2xl overflow-hidden">
@@ -934,7 +935,7 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setConfirmDelete(false)}
-                className="w-full px-4 py-2 text-[13px] font-medium text-[#6B6560] hover:text-[#1A1916] cursor-pointer"
+                className="w-full px-4 py-2 text-[13px] font-medium text-[#69708A] hover:text-[#171C35] cursor-pointer"
               >
                 Cancel
               </button>

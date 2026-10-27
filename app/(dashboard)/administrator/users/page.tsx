@@ -44,7 +44,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
 const ROLE_COLORS: Record<UserRole, string> = {
   ADMIN:      "bg-blue-50 text-blue-700",
   INSTRUCTOR: "bg-purple-50 text-purple-700",
-  USER:       "bg-[#F5F4F1] text-[#6B6560]",
+  USER:       "bg-[#F5F6FB] text-[#69708A]",
 }
 
 const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
@@ -127,10 +127,10 @@ const passwordSchema = yup.object({
 }) as yup.ObjectSchema<PasswordValues>
 
 const inputCls =
-  "w-full px-3 py-2.5 rounded-lg border border-[#E5E2DC] text-sm text-[#1A1916] bg-white " +
-  "focus:outline-none focus:ring-2 focus:ring-[#0474C4]/30 focus:border-[#0474C4] transition-colors"
+  "w-full px-3 py-2.5 rounded-lg border border-[#DFE2ED] text-sm text-[#171C35] bg-white " +
+  "focus:outline-none focus:ring-2 focus:ring-[#6655DF]/30 focus:border-[#6655DF] transition-colors"
 
-const labelCls = "block text-xs font-medium text-[#6B6760] mb-1.5 uppercase tracking-wide"
+const labelCls = "block text-xs font-medium text-[#69708A] mb-1.5 uppercase tracking-wide"
 
 // ── SetPasswordDialog ─────────────────────────────────────────────────────────
 
@@ -147,11 +147,11 @@ function SetPasswordDialog({
 
   return (
     <div
-      className="fixed inset-0 z-60 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-60 flex items-center justify-center bg-[#171C35]/50"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="w-full max-w-sm bg-white rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] p-5 flex items-start justify-between gap-4">
           <div>
             <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-300">
               Set New Password
@@ -160,14 +160,14 @@ function SetPasswordDialog({
               Update the user&apos;s login password.
             </div>
           </div>
-          <button type="button" onClick={onClose} className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EDF2FB]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+          <button type="button" onClick={onClose} className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EEECFF]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
         <form onSubmit={handleSubmit(onSave)} className="px-5 py-5 space-y-4">
-          <p className="text-xs text-[#6B6760]">
-            Setting a new password for <span className="font-medium text-[#1A1916]">{user.email}</span>
+          <p className="text-xs text-[#69708A]">
+            Setting a new password for <span className="font-medium text-[#171C35]">{user.email}</span>
           </p>
           <div>
             <label className={labelCls}>New Password</label>
@@ -180,10 +180,10 @@ function SetPasswordDialog({
             {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword.message}</p>}
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 rounded-lg border border-[#E5E2DC] text-sm font-medium text-[#6B6760] hover:bg-[#F5F4F1] transition-colors">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 rounded-lg border border-[#DFE2ED] text-sm font-medium text-[#69708A] hover:bg-[#F5F6FB] transition-colors">
               Cancel
             </button>
-            <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 rounded-lg bg-[#0474C4] text-white text-sm font-medium hover:bg-[#06457F] disabled:opacity-50 transition-colors">
+            <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 rounded-lg bg-[#6655DF] text-white text-sm font-medium hover:bg-[#2C2368] disabled:opacity-50 transition-colors">
               {isSubmitting ? "Updating…" : "Update Password"}
             </button>
           </div>
@@ -311,26 +311,27 @@ export default function UsersPage() {
       {/* Page header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-[18px] font-extrabold text-[#1A1916]">Users</h1>
-          <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage registered accounts and access levels</p>
+          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
+          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Users</h1>
+          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage registered accounts and access levels</p>
         </div>
       </div>
 
       {/* Table card */}
-      <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
+      <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
 
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
           {/* Search */}
           <div className="relative w-full sm:w-64">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search users…"
-              className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors"
+              className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors"
             />
           </div>
 
@@ -343,8 +344,8 @@ export default function UsersPage() {
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors",
                   roleFilter !== "ALL"
-                    ? "bg-[#0474C4] text-white border-[#0474C4]"
-                    : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"
+                    ? "bg-[#6655DF] text-white border-[#6655DF]"
+                    : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"
                 )}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -352,13 +353,13 @@ export default function UsersPage() {
                 </svg>
                 Role
                 {roleFilter !== "ALL" && (
-                  <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                  <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
                     {ROLE_LABELS[roleFilter]}
                   </span>
                 )}
               </button>
               {roleOpen && (
-                <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#E5E2DC] rounded-xl shadow-lg py-1.5 min-w-36">
+                <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-36">
                   {(["ALL", "ADMIN", "INSTRUCTOR", "USER"] as const).map(r => (
                     <button
                       key={r}
@@ -366,8 +367,8 @@ export default function UsersPage() {
                       className={cn(
                         "w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors",
                         roleFilter === r
-                          ? "bg-[#EBF3FC] text-[#0474C4]"
-                          : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"
+                          ? "bg-[#EEECFF] text-[#6655DF]"
+                          : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"
                       )}
                     >
                       {r === "ALL" ? "All Roles" : ROLE_LABELS[r]}
@@ -389,8 +390,8 @@ export default function UsersPage() {
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors",
                   statusFilter !== "ALL"
-                    ? "bg-[#0474C4] text-white border-[#0474C4]"
-                    : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"
+                    ? "bg-[#6655DF] text-white border-[#6655DF]"
+                    : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"
                 )}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -398,13 +399,13 @@ export default function UsersPage() {
                 </svg>
                 Status
                 {statusFilter !== "ALL" && (
-                  <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                  <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
                     {statusFilter === "ACTIVE" ? "Active" : "Disabled"}
                   </span>
                 )}
               </button>
               {statusOpen && (
-                <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#E5E2DC] rounded-xl shadow-lg py-1.5 min-w-36">
+                <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-36">
                   {(["ALL", "ACTIVE", "DISABLED"] as const).map(s => (
                     <button
                       key={s}
@@ -412,8 +413,8 @@ export default function UsersPage() {
                       className={cn(
                         "w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors",
                         statusFilter === s
-                          ? "bg-[#EBF3FC] text-[#0474C4]"
-                          : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"
+                          ? "bg-[#EEECFF] text-[#6655DF]"
+                          : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"
                       )}
                     >
                       {s === "ALL" ? "All Status" : s === "ACTIVE" ? "Active" : "Disabled"}
@@ -431,7 +432,7 @@ export default function UsersPage() {
             {/* Export CSV */}
             <button
               onClick={() => exportCSV(users)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] cursor-pointer transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] cursor-pointer transition-colors"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -447,9 +448,9 @@ export default function UsersPage() {
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+              <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
                 {["User", "Role", "Status", "Verified", "Enrolled", "Joined", ""].map((col, i) => (
-                  <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">
+                  <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">
                     {col}
                   </th>
                 ))}
@@ -460,12 +461,12 @@ export default function UsersPage() {
                 <TableSkeletonRows colSpan={7} />
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">
+                  <td colSpan={7} className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">
                     No users found.
                   </td>
                 </tr>
               ) : paginated.map(user => (
-                <tr key={user.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                <tr key={user.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
 
                   {/* User */}
                   <td className="px-4 py-3">
@@ -478,8 +479,8 @@ export default function UsersPage() {
                         </div>
                       )}
                       <div className="min-w-0">
-                        <p className="font-semibold text-[#1A1916] leading-tight truncate">{fullName(user.profile, user.email)}</p>
-                        <p className="text-[11px] text-[#A8A39C] mt-0.5 truncate">{user.email}</p>
+                        <p className="font-semibold text-[#171C35] leading-tight truncate">{fullName(user.profile, user.email)}</p>
+                        <p className="text-[11px] text-[#8A90A6] mt-0.5 truncate">{user.email}</p>
                       </div>
                     </div>
                   </td>
@@ -510,12 +511,12 @@ export default function UsersPage() {
                   </td>
 
                   {/* Enrollments */}
-                  <td className="px-4 py-3 text-[#6B6560]">
+                  <td className="px-4 py-3 text-[#69708A]">
                     {user._count.enrollments}
                   </td>
 
                   {/* Joined */}
-                  <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">
+                  <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">
                     {fmtDate(user.createdAt)}
                   </td>
 
@@ -525,7 +526,7 @@ export default function UsersPage() {
                       <button
                         onClick={() => router.push(`/administrator/users/${user.id}`)}
                         title="View"
-                        className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -535,7 +536,7 @@ export default function UsersPage() {
                       <button
                         onClick={() => setPwdUser(user)}
                         title="Set Password"
-                        className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -575,9 +576,9 @@ export default function UsersPage() {
           {loading ? (
             <SkeletonCardList />
           ) : users.length === 0 ? (
-            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No users found.</div>
+            <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No users found.</div>
           ) : paginated.map(user => (
-            <div key={user.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+            <div key={user.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
               <div className="flex items-start gap-3">
                 {user.profile?.avatar ? (
                   <Image src={user.profile.avatar} alt="" width={40} height={40} className="rounded-full object-cover shrink-0" />
@@ -587,8 +588,8 @@ export default function UsersPage() {
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-[#1A1916] text-[14px] leading-tight truncate">{fullName(user.profile, user.email)}</p>
-                  <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{user.email}</p>
+                  <p className="font-semibold text-[#171C35] text-[14px] leading-tight truncate">{fullName(user.profile, user.email)}</p>
+                  <p className="text-[12px] text-[#8A90A6] mt-0.5 truncate">{user.email}</p>
                 </div>
               </div>
 
@@ -610,12 +611,12 @@ export default function UsersPage() {
 
               <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
                 <div>
-                  <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Enrolled</dt>
-                  <dd className="text-[#1A1916] font-medium">{user._count.enrollments}</dd>
+                  <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Enrolled</dt>
+                  <dd className="text-[#171C35] font-medium">{user._count.enrollments}</dd>
                 </div>
                 <div>
-                  <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Joined</dt>
-                  <dd className="text-[#1A1916] font-medium">{fmtDate(user.createdAt)}</dd>
+                  <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Joined</dt>
+                  <dd className="text-[#171C35] font-medium">{fmtDate(user.createdAt)}</dd>
                 </div>
               </dl>
 
@@ -623,7 +624,7 @@ export default function UsersPage() {
                 <button
                   onClick={() => router.push(`/administrator/users/${user.id}`)}
                   aria-label="View"
-                  className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -633,7 +634,7 @@ export default function UsersPage() {
                 <button
                   onClick={() => setPwdUser(user)}
                   aria-label="Set password"
-                  className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -666,12 +667,12 @@ export default function UsersPage() {
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-          <p className="text-[11px] text-[#A8A39C]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+          <p className="text-[11px] text-[#8A90A6]">
             {users.length === 0 ? (
-              <>Showing <span className="font-semibold text-[#6B6560]">0</span> users</>
+              <>Showing <span className="font-semibold text-[#69708A]">0</span> users</>
             ) : (
-              <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, users.length)}</span> of <span className="font-semibold text-[#6B6560]">{users.length}</span> {users.length === 1 ? "user" : "users"}</>
+              <>Showing <span className="font-semibold text-[#69708A]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#69708A]">{Math.min(page * PAGE_SIZE, users.length)}</span> of <span className="font-semibold text-[#69708A]">{users.length}</span> {users.length === 1 ? "user" : "users"}</>
             )}
           </p>
           {users.length > 0 && (
@@ -679,15 +680,15 @@ export default function UsersPage() {
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
                 Prev
               </button>
-              <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
+              <span className="text-[11px] font-semibold text-[#69708A] px-2">{page} / {totalPages}</span>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
                 Next
               </button>

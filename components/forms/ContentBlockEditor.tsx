@@ -54,7 +54,7 @@ function uid() {
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
-const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors"
+const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors"
 
 // ── Mini rich-text editor ─────────────────────────────────────────────────────
 
@@ -78,7 +78,7 @@ function MiniRTE({
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
       attributes: {
-        class: "px-3 py-2.5 min-h-[100px] text-[13px] text-[#1A1916] outline-none [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_p]:leading-relaxed",
+        class: "px-3 py-2.5 min-h-[100px] text-[13px] text-[#171C35] outline-none [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_p]:leading-relaxed",
       },
     },
   })
@@ -91,15 +91,15 @@ function MiniRTE({
 
   function tb(active: boolean, label: React.ReactNode, action: () => void) {
     return (
-      <button type="button" onClick={action} className={`w-6 h-6 flex items-center justify-center rounded text-[11px] transition-colors cursor-pointer ${active ? "bg-[#0474C4] text-white" : "text-[#6B6560] hover:bg-[#E5E2DC]"}`}>
+      <button type="button" onClick={action} className={`w-6 h-6 flex items-center justify-center rounded text-[11px] transition-colors cursor-pointer ${active ? "bg-[#6655DF] text-white" : "text-[#69708A] hover:bg-[#DFE2ED]"}`}>
         {label}
       </button>
     )
   }
 
   return (
-    <div className="border border-[#E5E2DC] rounded-[10px] overflow-hidden focus-within:border-[#0474C4] transition-colors">
-      <div className="flex items-center justify-between gap-1 px-2 py-1 border-b border-[#E5E2DC] bg-[#FAFAF9]">
+    <div className="border border-[#DFE2ED] rounded-[10px] overflow-hidden focus-within:border-[#6655DF] transition-colors">
+      <div className="flex items-center justify-between gap-1 px-2 py-1 border-b border-[#DFE2ED] bg-[#FAFAFF]">
         <div className="flex items-center gap-0.5">
           {tb(!!editor?.isActive("bold"),   <b>B</b>,   () => editor?.chain().focus().toggleBold().run())}
           {tb(!!editor?.isActive("italic"), <em>I</em>, () => editor?.chain().focus().toggleItalic().run())}
@@ -112,7 +112,7 @@ function MiniRTE({
           <button
             type="button"
             onClick={onAiExpand}
-            className="flex items-center gap-1 px-2 py-1 rounded-[6px] text-[10.5px] font-semibold text-[#0474C4] hover:bg-[#0474C4]/10 cursor-pointer transition-colors shrink-0"
+            className="flex items-center gap-1 px-2 py-1 rounded-[6px] text-[10.5px] font-semibold text-[#6655DF] hover:bg-[#6655DF]/10 cursor-pointer transition-colors shrink-0"
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
             {value.trim() ? "Expand with AI" : "Write with AI"}
@@ -189,13 +189,13 @@ function DiagramBlockEditor({ block, onChange }: { block: DiagramBlock; onChange
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <label className="text-[10px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">
+        <label className="text-[10px] font-bold text-[#69708A] uppercase tracking-[0.4px]">
           Mermaid source
         </label>
         <button
           type="button"
           onClick={() => setShowPreview(v => !v)}
-          className="text-[10.5px] font-semibold text-[#0474C4] hover:text-[#06457F] uppercase tracking-[0.4px] cursor-pointer"
+          className="text-[10.5px] font-semibold text-[#6655DF] hover:text-[#2C2368] uppercase tracking-[0.4px] cursor-pointer"
         >
           {showPreview ? "Hide preview" : "Show preview"}
         </button>
@@ -211,7 +211,7 @@ function DiagramBlockEditor({ block, onChange }: { block: DiagramBlock; onChange
       />
 
       {showPreview && block.code.trim() && (
-        <div className="rounded-[10px] border border-[#E5E2DC] bg-white p-3">
+        <div className="rounded-[10px] border border-[#DFE2ED] bg-white p-3">
           <MermaidDiagram code={block.code} showSource />
         </div>
       )}
@@ -247,7 +247,7 @@ function ImageBlockEditor({ block, onChange }: { block: ImageBlock; onChange: (b
   return (
     <div className="space-y-2">
       {block.url ? (
-        <div className="relative w-full h-36 rounded-[10px] overflow-hidden border border-[#E5E2DC] bg-[#F5F4F1]">
+        <div className="relative w-full h-36 rounded-[10px] overflow-hidden border border-[#DFE2ED] bg-[#F5F6FB]">
           <Image src={block.url} alt="block" fill className="object-cover" />
           <button
             type="button"
@@ -262,7 +262,7 @@ function ImageBlockEditor({ block, onChange }: { block: ImageBlock; onChange: (b
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer"
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 transition-colors cursor-pointer"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           {uploading ? "Uploading…" : "Upload image"}
@@ -308,7 +308,7 @@ function QuizBlockEditor({ block, onChange }: { block: QuizBlock; onChange: (b: 
             <button
               type="button"
               onClick={() => onChange({ ...block, correctIndex: i })}
-              className={`w-5 h-5 rounded-full border-2 shrink-0 transition-colors cursor-pointer flex items-center justify-center ${block.correctIndex === i ? "border-[#0474C4] bg-[#0474C4]" : "border-[#D9D6D0]"}`}
+              className={`w-5 h-5 rounded-full border-2 shrink-0 transition-colors cursor-pointer flex items-center justify-center ${block.correctIndex === i ? "border-[#6655DF] bg-[#6655DF]" : "border-[#D8DAE5]"}`}
             >
               {block.correctIndex === i && <span className="w-2 h-2 rounded-full bg-white block" />}
             </button>
@@ -326,11 +326,11 @@ function QuizBlockEditor({ block, onChange }: { block: QuizBlock; onChange: (b: 
           </div>
         ))}
       </div>
-      <button type="button" onClick={addOption} className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer mt-1">
+      <button type="button" onClick={addOption} className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer mt-1">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add option
       </button>
-      <p className="text-[11px] text-[#A8A39C]">Click the circle next to the correct answer.</p>
+      <p className="text-[11px] text-[#8A90A6]">Click the circle next to the correct answer.</p>
     </div>
   )
 }
@@ -370,7 +370,7 @@ function QuestionnaireBlockEditor({ block, onChange }: { block: QuestionnaireBlo
           </div>
         ))}
       </div>
-      <button type="button" onClick={() => onChange({ ...block, questions: [...block.questions, ""] })} className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer mt-1">
+      <button type="button" onClick={() => onChange({ ...block, questions: [...block.questions, ""] })} className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer mt-1">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add question
       </button>
@@ -413,7 +413,7 @@ function AssignmentBlockEditor({
       )}
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">Submission type</label>
+          <label className="text-[10px] font-bold text-[#69708A] uppercase tracking-[0.4px]">Submission type</label>
           <select
             value={block.submissionType}
             onChange={e => onChange({ ...block, submissionType: e.target.value as AssignmentBlock["submissionType"] })}
@@ -426,7 +426,7 @@ function AssignmentBlockEditor({
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">Points (optional)</label>
+          <label className="text-[10px] font-bold text-[#69708A] uppercase tracking-[0.4px]">Points (optional)</label>
           <input
             type="number"
             min="0"
@@ -438,7 +438,7 @@ function AssignmentBlockEditor({
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-[10px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">Due (days after lesson — optional)</label>
+        <label className="text-[10px] font-bold text-[#69708A] uppercase tracking-[0.4px]">Due (days after lesson — optional)</label>
         <input
           type="number"
           min="0"
@@ -467,7 +467,7 @@ function DocumentBlockEditor({ block, onChange }: { block: DocumentBlock; onChan
         className={inputCls}
         placeholder="https://docs.google.com/... or https://dropbox.com/..."
       />
-      <p className="text-[11px] text-[#A8A39C]">Supports Google Docs, Google Sheets, Dropbox, OneDrive and similar sharing links.</p>
+      <p className="text-[11px] text-[#8A90A6]">Supports Google Docs, Google Sheets, Dropbox, OneDrive and similar sharing links.</p>
     </div>
   )
 }
@@ -518,20 +518,20 @@ function PdfBlockEditor({ block, onChange }: { block: PdfBlock; onChange: (b: Pd
       />
 
       {block.url ? (
-        <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-[10px] border border-[#E5E2DC] bg-[#FAFAF9]">
+        <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-[10px] border border-[#DFE2ED] bg-[#FAFAFF]">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-[8px] bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </div>
             <div className="min-w-0">
-              <p className="text-[12px] font-semibold text-[#1A1916] truncate">{block.fileName || "PDF File"}</p>
-              {block.fileSize && <p className="text-[11px] text-[#A8A39C]">{block.fileSize}</p>}
+              <p className="text-[12px] font-semibold text-[#171C35] truncate">{block.fileName || "PDF File"}</p>
+              {block.fileSize && <p className="text-[11px] text-[#8A90A6]">{block.fileSize}</p>}
             </div>
           </div>
           <button
             type="button"
             onClick={() => onChange({ ...block, url: "", fileName: "", fileSize: "" })}
-            className="w-6 h-6 rounded-full flex items-center justify-center text-[#A8A39C] hover:bg-red-50 hover:text-red-500 shrink-0 cursor-pointer transition-colors"
+            className="w-6 h-6 rounded-full flex items-center justify-center text-[#8A90A6] hover:bg-red-50 hover:text-red-500 shrink-0 cursor-pointer transition-colors"
           >
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -541,7 +541,7 @@ function PdfBlockEditor({ block, onChange }: { block: PdfBlock; onChange: (b: Pd
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer"
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 transition-colors cursor-pointer"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           {uploading ? "Uploading…" : "Upload PDF (max 25 MB)"}
@@ -569,7 +569,7 @@ function SurveyBlockEditor({ block, onChange }: { block: SurveyBlock; onChange: 
         className={inputCls}
         placeholder="https://forms.google.com/... or https://typeform.com/..."
       />
-      <p className="text-[11px] text-[#A8A39C]">Supports Google Forms, Typeform, SurveyMonkey and any embeddable form link.</p>
+      <p className="text-[11px] text-[#8A90A6]">Supports Google Forms, Typeform, SurveyMonkey and any embeddable form link.</p>
     </div>
   )
 }
@@ -686,16 +686,16 @@ function BlockPicker({ onPick, onClose }: { onPick: (b: ContentBlock) => void; o
   return (
     <div
       ref={ref}
-      className="absolute left-0 bottom-full mb-2 z-50 bg-white border border-[#E5E2DC] rounded-xl shadow-xl p-3 w-80"
+      className="absolute left-0 bottom-full mb-2 z-50 bg-white border border-[#DFE2ED] rounded-xl shadow-xl p-3 w-80"
     >
-      <p className="text-[10px] font-bold text-[#A8A39C] uppercase tracking-widest mb-2.5 px-1">Add Content Block</p>
+      <p className="text-[10px] font-bold text-[#8A90A6] uppercase tracking-widest mb-2.5 px-1">Add Content Block</p>
       <div className="flex flex-wrap gap-1.5">
         {BLOCK_TYPES.map(bt => (
           <button
             key={bt.type}
             type="button"
             onClick={() => { onPick(bt.create()); onClose() }}
-            className="flex items-center gap-2 px-2.5 py-1.5 rounded-[8px] text-[12px] text-[#1A1916] hover:bg-[#F5F4F1] transition-colors cursor-pointer border border-[#E5E2DC] hover:border-[#0474C4]"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-[8px] text-[12px] text-[#171C35] hover:bg-[#F5F6FB] transition-colors cursor-pointer border border-[#DFE2ED] hover:border-[#6655DF]"
           >
             <span className={`w-5 h-5 rounded-[5px] flex items-center justify-center border ${TYPE_COLORS[bt.type]}`}>
               {bt.icon && <span className="scale-[0.75] flex">{bt.icon}</span>}
@@ -731,20 +731,20 @@ function BlockCard({
   const meta = BLOCK_TYPES.find(bt => bt.type === block.type)!
 
   return (
-    <div className="border border-[#E5E2DC] rounded-[10px] bg-white overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-2 bg-[#FAFAF9] border-b border-[#E5E2DC]">
+    <div className="border border-[#DFE2ED] rounded-[10px] bg-white overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2 bg-[#FAFAFF] border-b border-[#DFE2ED]">
         <div className="flex items-center gap-2">
           <span className={`w-6 h-6 rounded-[6px] flex items-center justify-center border text-[10px] ${TYPE_COLORS[block.type]}`}>
             {meta.icon}
           </span>
-          <span className="text-[11px] font-bold text-[#6B6560] uppercase tracking-wide">{TYPE_LABELS[block.type]}</span>
+          <span className="text-[11px] font-bold text-[#69708A] uppercase tracking-wide">{TYPE_LABELS[block.type]}</span>
         </div>
         <div className="flex items-center gap-1">
           <button
             type="button"
             disabled={index === 0}
             onClick={() => onMove(-1)}
-            className="w-6 h-6 flex items-center justify-center rounded text-[#A8A39C] hover:bg-[#E5E2DC] disabled:opacity-30 cursor-pointer disabled:cursor-default transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded text-[#8A90A6] hover:bg-[#DFE2ED] disabled:opacity-30 cursor-pointer disabled:cursor-default transition-colors"
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="18 15 12 9 6 15"/></svg>
           </button>
@@ -752,21 +752,21 @@ function BlockCard({
             type="button"
             disabled={index === total - 1}
             onClick={() => onMove(1)}
-            className="w-6 h-6 flex items-center justify-center rounded text-[#A8A39C] hover:bg-[#E5E2DC] disabled:opacity-30 cursor-pointer disabled:cursor-default transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded text-[#8A90A6] hover:bg-[#DFE2ED] disabled:opacity-30 cursor-pointer disabled:cursor-default transition-colors"
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <button
             type="button"
             onClick={() => setCollapsed(c => !c)}
-            className="w-6 h-6 flex items-center justify-center rounded text-[#A8A39C] hover:bg-[#E5E2DC] cursor-pointer transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded text-[#8A90A6] hover:bg-[#DFE2ED] cursor-pointer transition-colors"
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ transform: collapsed ? "rotate(-90deg)" : undefined, transition: "transform 0.15s" }}><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <button
             type="button"
             onClick={onRemove}
-            className="w-6 h-6 flex items-center justify-center rounded text-[#A8A39C] hover:bg-red-50 hover:text-red-500 cursor-pointer transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded text-[#8A90A6] hover:bg-red-50 hover:text-red-500 cursor-pointer transition-colors"
           >
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -849,7 +849,7 @@ export default function ContentBlockEditor({
         <button
           type="button"
           onClick={() => setPickerOpen(o => !o)}
-          className="flex items-center gap-2 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer mt-1"
+          className="flex items-center gap-2 text-[12px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer mt-1"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add content block

@@ -15,7 +15,7 @@ const navItemBase =
   "flex items-center gap-[10px] py-[10px] px-6 cursor-pointer transition-all duration-200 border-l-[3px] border-l-transparent no-underline text-[0.84rem] text-[rgba(247,243,237,0.5)] font-light relative hover:bg-[rgba(247,243,237,0.04)] hover:text-[rgba(247,243,237,0.85)]";
 
 const navItemActive =
-  "flex items-center gap-[10px] py-[10px] px-6 cursor-pointer transition-all duration-200 border-l-[3px] border-l-[var(--gold)] no-underline text-[0.84rem] text-[var(--gold-light)] font-light relative bg-[rgba(200,169,110,0.08)]";
+  "flex items-center gap-[10px] py-[10px] px-6 cursor-pointer transition-all duration-200 border-l-[3px] border-l-[var(--gold)] no-underline text-[0.84rem] text-[var(--gold-light)] font-light relative bg-[rgba(102,85,223,0.08)]";
 
 const svgProps = {
   viewBox: "0 0 24 24" as const,
@@ -26,10 +26,10 @@ const svgProps = {
 };
 
 const sectionLabel =
-  "text-[0.6rem] tracking-[0.18em] uppercase text-[rgba(200,169,110,0.4)] px-6 mb-2";
+  "text-[0.6rem] tracking-[0.18em] uppercase text-[rgba(102,85,223,0.4)] px-6 mb-2";
 
 const badge =
-  "ml-auto bg-[rgba(200,169,110,0.15)] text-[var(--gold)] text-[0.6rem] font-medium py-[2px] px-[7px] rounded-[10px]";
+  "ml-auto bg-[rgba(102,85,223,0.15)] text-[var(--gold)] text-[0.6rem] font-medium py-[2px] px-[7px] rounded-[10px]";
 
 const badgeRed =
   "ml-auto bg-[rgba(239,68,68,0.15)] text-[#FCA5A5] text-[0.6rem] font-medium py-[2px] px-[7px] rounded-[10px]";
@@ -42,7 +42,7 @@ export default function StudentSidebar({ user }: { user: SessionPayload }) {
       .join("") || user.email[0].toUpperCase();
 
   return (
-    <aside className="col-start-1 row-start-2 bg-[#06457F] border-r border-[rgba(200,169,110,0.1)] py-6 flex flex-col sticky top-[var(--header-h)] h-[calc(100vh-var(--header-h))] overflow-y-auto">
+    <aside className="col-start-1 row-start-2 bg-[#2C2368] border-r border-[rgba(102,85,223,0.1)] py-6 flex flex-col sticky top-[var(--header-h)] h-[calc(100vh-var(--header-h))] overflow-y-auto">
       <span className={`${sectionLabel} mt-0`}>Main</span>
       <div className={navItemActive}>
         <svg {...svgProps}>
@@ -134,14 +134,14 @@ export default function StudentSidebar({ user }: { user: SessionPayload }) {
         Help &amp; Support
       </a>
 
-      <div className="mt-auto py-[1.2rem] px-6 border-t border-[rgba(200,169,110,0.08)]">
+      <div className="mt-auto py-[1.2rem] px-6 border-t border-[rgba(102,85,223,0.08)]">
         <NavUser user={{
           name: [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email,
           email: user.email,
           avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=0D8ABC&color=fff&size=128&font-size=0.33`
         }} />
         {/* <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-[rgba(200,169,110,0.15)] border-[1.5px] border-[rgba(200,169,110,0.25)] flex items-center justify-center font-serif text-[0.78rem] text-[var(--gold-light)] shrink-0">
+          <div className="w-9 h-9 rounded-full bg-[rgba(102,85,223,0.15)] border-[1.5px] border-[rgba(102,85,223,0.25)] flex items-center justify-center font-serif text-[0.78rem] text-[var(--gold-light)] shrink-0">
             {initials}
           </div>
           <div>

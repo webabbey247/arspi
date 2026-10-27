@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import DashboardSidebar from "./DashboardSidebar";
-import DashboardHeader from "./DashboardHeader";
+import DashboardHeader, { LogoutConfirm } from "./DashboardHeader";
 import type { SessionPayload } from "@/types/session";
 
 export default function DashboardShell({
@@ -14,6 +14,7 @@ export default function DashboardShell({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const pathname = usePathname();
 
   // Close the mobile sidebar on route change — adjusted during render (not an
@@ -34,17 +35,25 @@ export default function DashboardShell({
     }
   }, [sidebarOpen]);
 
+  // LMS app shell: full-height 250px sidebar beside a scrolling main column.
+  // The header is a mobile-only bar (the sidebar becomes a drawer below `lg`).
   return (
-    <div className="flex flex-col h-screen bg-[#F5F4F1] overflow-hidden">
-      <DashboardHeader user={user} onMenuClick={() => setSidebarOpen(true)} />
-      <div className="flex flex-1 overflow-hidden relative">
-        <DashboardSidebar
-          userRole={user.role}
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
+    <div className="flex h-screen bg-[#F5F6FB] overflow-hidden">
+      <DashboardSidebar
+        user={user}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onLogout={() => setConfirmLogout(true)}
+      />
+      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+        <DashboardHeader
+          user={user}
+          onMenuClick={() => setSidebarOpen(true)}
+          onLogout={() => setConfirmLogout(true)}
         />
         <main className="flex-1 overflow-y-auto w-full">{children}</main>
       </div>
+      {confirmLogout && <LogoutConfirm onCancel={() => setConfirmLogout(false)} />}
     </div>
   );
 }

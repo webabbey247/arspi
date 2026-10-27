@@ -58,27 +58,27 @@ const ResendEmailVerificationForm = ({
 
   return (
     <div
-      className="fixed inset-0 bg-[#181C2C]/70 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-[#171C35]/70 z-50 flex items-center justify-center p-4"
       onClick={handleClose}
     >
       <div
-        className="bg-[#EBF3FC] rounded-lg w-full max-w-md overflow-hidden shadow-2xl"
+        className="bg-white rounded-[16px] w-full max-w-md overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] p-5 flex items-start justify-between gap-4">
           <div>
-            <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-300">
+            <div className="text-[20px] tracking-[-0.02em] leading-[1.25] font-extrabold text-white">
               Resend Verification Email
             </div>
-            <div className="font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-300 mt-0.5">
+            <div className="text-[13px] text-white/80 mt-0.5">
               Enter your email below to receive a new verification link.
             </div>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EDF2FB]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+            className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EEECFF]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -91,24 +91,24 @@ const ResendEmailVerificationForm = ({
             className="flex flex-col gap-4"
           >
             <div className="flex flex-col gap-1.5">
-              <label className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-slate-400">
+              <label className="text-[14px] font-extrabold text-[#171C35]">
                 Email Address
               </label>
               <Input
                 type="email"
                 placeholder="your@email.com"
                 {...register("email")}
-                className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal bg-sky-light border border-[#0474C4]/25 rounded-sm px-3 py-2 text-ink outline-none focus:border-[#0474C4] placeholder:text-slate-400 placeholder:font-light"
+                className="text-[15px] leading-[1.5] bg-white border border-[#DFE2ED] rounded-[10px] px-[13px] py-[11px] text-[#171C35] outline-none transition-shadow focus:border-[#6655DF] focus:ring-3 focus:ring-[#6655DF]/15 placeholder:text-[#8A90A6]"
               />
               {errors.email && (
-                <span className="font-body text-[0.6875rem] text-red-500">
+                <span className="text-[12px] font-bold text-red-600">
                   {errors.email.message}
                 </span>
               )}
             </div>
 
             {apiError && (
-              <p className="font-body text-[0.6875rem] text-red-500">
+              <p className="text-[12px] font-bold text-red-600">
                 {apiError}
               </p>
             )}
@@ -116,7 +116,7 @@ const ResendEmailVerificationForm = ({
             <Button
               type="submit"
               disabled={isLoading}
-              className="h-12 rounded-[32px] py-2.5 px-5 font-body text-[0.875rem] tracking-[0.02em] font-medium text-[#EBF3FC] bg-[#0474C4] hover:bg-[#06457f] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              className="h-12 rounded-[10px] py-[11px] px-4 text-[15px] font-extrabold text-white bg-[#6655DF] hover:bg-[#2C2368] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? (
                 "Sending…"

@@ -45,7 +45,7 @@ function StarRow({ value, onRate }: { value: number | null; onRate: (n: number) 
           className="p-0 leading-none cursor-pointer"
           aria-label={`Rate ${n} star${n > 1 ? "s" : ""}`}
         >
-          <Star className={cn("w-3 h-3 transition-colors", n <= shown ? "fill-amber-400 text-amber-400" : "fill-none text-[#D8D4CC]")} />
+          <Star className={cn("w-3 h-3 transition-colors", n <= shown ? "fill-amber-400 text-amber-400" : "fill-none text-[#D8DAE5]")} />
         </button>
       ))}
     </div>
@@ -77,7 +77,7 @@ function CardMenu({
     return () => document.removeEventListener("mousedown", onDocClick)
   }, [open])
 
-  const itemCls = "w-full flex items-center gap-2 px-3 py-2 text-[12.5px] text-[#1A1916] hover:bg-[#F5F4F1] transition-colors cursor-pointer text-left"
+  const itemCls = "w-full flex items-center gap-2 px-3 py-2 text-[12.5px] text-[#171C35] hover:bg-[#F5F6FB] transition-colors cursor-pointer text-left"
 
   return (
     <div ref={ref} className="absolute top-2 right-2 z-10">
@@ -87,28 +87,28 @@ function CardMenu({
         className="w-7 h-7 rounded-full bg-white/95 shadow-sm border border-black/5 flex items-center justify-center hover:bg-white transition-colors cursor-pointer"
         aria-label="Program actions"
       >
-        <MoreVertical className="w-3.5 h-3.5 text-[#6B6560]" />
+        <MoreVertical className="w-3.5 h-3.5 text-[#69708A]" />
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-1.5 w-48 rounded-[10px] border border-[#E5E2DC] bg-white shadow-lg py-1 overflow-hidden">
+        <div className="absolute right-0 mt-1.5 w-48 rounded-[10px] border border-[#DFE2ED] bg-white shadow-lg py-1 overflow-hidden">
           <Link href={`/student/programs/${slug}`} className={itemCls} onClick={() => setOpen(false)}>
-            <Play className="w-3.5 h-3.5 text-[#6B6560]" /> Continue
+            <Play className="w-3.5 h-3.5 text-[#69708A]" /> Continue
           </Link>
           {certificateCode && (
             <a href={`/verify/${certificateCode}`} target="_blank" rel="noopener noreferrer" className={itemCls} onClick={() => setOpen(false)}>
-              <Award className="w-3.5 h-3.5 text-[#6B6560]" /> View certificate
+              <Award className="w-3.5 h-3.5 text-[#69708A]" /> View certificate
             </a>
           )}
           <button type="button" className={itemCls} onClick={e => { e.preventDefault(); e.stopPropagation(); onShare(); setOpen(false) }}>
-            <Share2 className="w-3.5 h-3.5 text-[#6B6560]" /> Share
+            <Share2 className="w-3.5 h-3.5 text-[#69708A]" /> Share
           </button>
           <button type="button" className={itemCls} onClick={e => { e.preventDefault(); e.stopPropagation(); onToggleFavorite(); setOpen(false) }}>
-            <Heart className={cn("w-3.5 h-3.5", favorited ? "fill-red-500 text-red-500" : "text-[#6B6560]")} />
+            <Heart className={cn("w-3.5 h-3.5", favorited ? "fill-red-500 text-red-500" : "text-[#69708A]")} />
             {favorited ? "Unfavorite" : "Favorite"}
           </button>
           <button type="button" className={itemCls} onClick={e => { e.preventDefault(); e.stopPropagation(); onToggleArchive(); setOpen(false) }}>
-            {archived ? <ArchiveRestore className="w-3.5 h-3.5 text-[#6B6560]" /> : <Archive className="w-3.5 h-3.5 text-[#6B6560]" />}
+            {archived ? <ArchiveRestore className="w-3.5 h-3.5 text-[#69708A]" /> : <Archive className="w-3.5 h-3.5 text-[#69708A]" />}
             {archived ? "Unarchive" : "Archive"}
           </button>
         </div>
@@ -132,13 +132,13 @@ function ProgramCard({
   const pct = completed ? 100 : p.totalLessons > 0 ? Math.round((p.completedLessons / p.totalLessons) * 100) : 0
 
   return (
-    <div className="group relative rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden hover:border-[#0474C4] hover:shadow-sm transition-all flex flex-col">
+    <div className="group relative rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden hover:border-[#6655DF] hover:shadow-sm transition-all flex flex-col">
       <Link href={`/student/programs/${p.course.slug}`} className="flex flex-col">
-        <div className="relative w-full aspect-video bg-[#F5F4F1] shrink-0">
+        <div className="relative w-full aspect-video bg-[#F5F6FB] shrink-0">
           {p.course.thumbnail ? (
             <Image src={p.course.thumbnail} alt={p.course.title} fill className="object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-[#A8A39C]">
+            <div className="w-full h-full flex items-center justify-center text-[#8A90A6]">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
             </div>
           )}
@@ -150,20 +150,20 @@ function ProgramCard({
           )}
         </div>
         <div className="px-4 pt-4 flex flex-col gap-1.5">
-          <p className="text-[14px] font-bold text-[#1A1916] leading-tight line-clamp-2 group-hover:text-[#0474C4] transition-colors">{p.course.title}</p>
-          <p className="text-[11px] text-[#A8A39C]">{p.course.instructor.name}</p>
+          <p className="text-[14px] font-bold text-[#171C35] leading-tight line-clamp-2 group-hover:text-[#6655DF] transition-colors">{p.course.title}</p>
+          <p className="text-[11px] text-[#8A90A6]">{p.course.instructor.name}</p>
         </div>
       </Link>
 
       <div className="px-4 pb-4 pt-3 mt-auto">
-        <div className="h-1.5 rounded-full bg-[#F0EEE9] overflow-hidden">
-          <div className={cn("h-full rounded-full transition-all", completed ? "bg-emerald-600" : "bg-[#0474C4]")} style={{ width: `${pct}%` }} />
+        <div className="h-1.5 rounded-full bg-[#F0EFFA] overflow-hidden">
+          <div className={cn("h-full rounded-full transition-all", completed ? "bg-emerald-600" : "bg-[#6655DF]")} style={{ width: `${pct}%` }} />
         </div>
         <div className="flex items-end justify-between mt-1.5">
-          <span className="text-[11px] text-[#6B6560]">{pct}% complete</span>
+          <span className="text-[11px] text-[#69708A]">{pct}% complete</span>
           <div className="flex flex-col items-end gap-0.5">
             <StarRow value={p.studentRating} onRate={onRate} />
-            <span className="text-[10px] text-[#A8A39C]">Your rating</span>
+            <span className="text-[10px] text-[#8A90A6]">Your rating</span>
           </div>
         </div>
       </div>
@@ -282,8 +282,9 @@ const StudentProgramsPage = () => {
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[18px] font-extrabold text-[#1A1916]">My Programs</h1>
-          <p className="text-[#A8A39C] text-[13px] mt-0.5">Your enrolled programmes and progress</p>
+          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Learner</span>
+          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">My Programs</h1>
+          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Your enrolled programmes and progress</p>
         </div>
         <div className="flex items-center gap-2">
           {FILTERS.map(f => (
@@ -294,8 +295,8 @@ const StudentProgramsPage = () => {
               className={cn(
                 "px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-colors cursor-pointer",
                 filter === f.id
-                  ? "bg-[#0474C4] text-white border-[#0474C4]"
-                  : "border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4]",
+                  ? "bg-[#6655DF] text-white border-[#6655DF]"
+                  : "border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF]",
               )}
             >
               {f.label}
@@ -306,13 +307,13 @@ const StudentProgramsPage = () => {
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-64 rounded-[14px]" />)}
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-64 rounded-[16px]" />)}
         </div>
       ) : visible.length === 0 ? (
-        <div className="rounded-[14px] border border-[#E5E2DC] bg-white px-4 py-16 text-center">
-          <p className="text-[13px] text-[#A8A39C] mb-3">{emptyCopy[filter]}</p>
+        <div className="rounded-[16px] border border-[#DFE2ED] bg-white px-4 py-16 text-center">
+          <p className="text-[13px] text-[#8A90A6] mb-3">{emptyCopy[filter]}</p>
           {filter === "all" && (
-            <Link href="/programs" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors">
+            <Link href="/programs" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors">
               Browse programmes
             </Link>
           )}

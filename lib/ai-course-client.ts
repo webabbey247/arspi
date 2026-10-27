@@ -121,7 +121,30 @@ export type BuildInput = {
   /** Generate a cover image. The form requires a thumbnail, so without this the
    *  admin has to supply one by hand before the draft can be saved. */
   withCoverImage: boolean
+  /** Render each chapter's lesson text to a downloadable PDF handout. */
+  withHandouts: boolean
 }
+
+/** react-pdf renders primitives, not markup, so lesson HTML is flattened to
+ *  plain text with paragraph breaks preserved before it reaches the handout. */
+function blocksToPlainText(blocks: ContentBlock[]): string {
+  return blocks
+    .filter(b => b.type === "text")
+    .map(b => (b as Extract<ContentBlock, { type: "text" }>).content
+      .replace(/<\/(p|div|h[1-6]|li)>/gi, "\n\n")
+      .replace(/<li[^>]*>/gi, "- ")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim())
+    .filter(Boolean)
+    .join("\n\n")
+}
+
+type RefMap = Record<string, { title: string; url: string }[]>
 
 export type BuildResult = {
   outline:   OutlineResult
@@ -244,8 +267,66 @@ export async function buildCourse(
     lessons: lessons.map(() => written[cursor++]),
   }))
 
-  onProgress({ phase: "media", message: "Finishing the cover image…" })
-  const thumbnail = await coverPromise
+  // ── Phase 4 — enrichment: real URLs, chapter handouts, cover ─────────────
+  // Everything here is additive. A failure costs the course an attachment, not
+  // the course, so each branch swallows its own errors.
+  onProgress({ phase: "media", message: "Finding reference links and building handouts…" })
+
+  const allLessonTitles = chapters.flatMap(c => c.lessons.map(l => l.title))
+
+  const referencesPromise = allLessonTitles.length > 0
+    ? postJson<{ references: Record<string, { title: string; url: string }[]> }>(
+        "/api/programs/ai-generate/references",
+        {
+          provider: input.provider, topic: input.topic,
+          categoryName: outline.categoryName, levelLabel: outline.levelLabel,
+          lessonTitles: allLessonTitles,
+        },
+        signal
+      ).then(r => r.references).catch((): RefMap => ({}))
+    : Promise.resolve<RefMap>({})
+
+  const handoutsPromise = input.withHandouts
+    ? mapWithConcurrency(chapters, 3, async chapter => {
+        const lessons = chapter.lessons
+          .map(l => ({ title: l.title, body: blocksToPlainText(l.blocks) }))
+          .filter(l => l.body.trim().length > 0)
+        if (lessons.length === 0) return null
+        try {
+          return await postJson<{ url: string; title: string; fileName: string; fileSize: string }>(
+            "/api/programs/ai-generate/handout",
+            { courseTitle: outline.title, chapterTitle: chapter.title, lessons },
+            signal
+          )
+        } catch {
+          return null
+        }
+      })
+    : Promise.resolve(chapters.map(() => null))
+
+  const [references, handouts, thumbnail] = await Promise.all([
+    referencesPromise, handoutsPromise, coverPromise,
+  ])
+
+  // Attach: reference links onto their lesson, the handout onto the chapter's
+  // first lesson so it sits at the top of the chapter's material.
+  chapters.forEach((chapter, ci) => {
+    chapter.lessons.forEach(lesson => {
+      for (const ref of references[lesson.title] ?? []) {
+        lesson.blocks.push({
+          id: crypto.randomUUID(), type: "document", url: ref.url, title: ref.title,
+        })
+      }
+    })
+    const handout = handouts[ci]
+    if (handout && chapter.lessons[0]) {
+      chapter.lessons[0].blocks.push({
+        id: crypto.randomUUID(), type: "pdf",
+        url: handout.url, title: handout.title,
+        fileName: handout.fileName, fileSize: handout.fileSize,
+      })
+    }
+  })
 
   onProgress({ phase: "done", message: "Done" })
   return { outline, chapters, thumbnail }

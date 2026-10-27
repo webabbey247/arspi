@@ -27,7 +27,7 @@ function ToolbarBtn({
       className={`p-1.5 rounded-[6px] transition-colors cursor-pointer ${
         active
           ? "bg-[#C07C0A] text-white"
-          : "text-[#6B6560] hover:bg-[#F5F4F1] hover:text-[#1A1916]"
+          : "text-[#69708A] hover:bg-[#F5F6FB] hover:text-[#171C35]"
       }`}
     >
       {children}
@@ -63,12 +63,12 @@ export default function RichTextEditor({
     extensions: [
       StarterKit.configure({ link: false }),
       Placeholder.configure({ placeholder }),
-      Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-[#0474C4] underline" } }),
+      Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-[#6655DF] underline" } }),
     ],
     content: value || "",
     editorProps: {
       attributes: {
-        class: "outline-none prose prose-sm max-w-none text-[#1A1916] text-[13px] leading-relaxed",
+        class: "outline-none prose prose-sm max-w-none text-[#171C35] text-[13px] leading-relaxed",
       },
     },
     onUpdate: ({ editor }) => {
@@ -88,9 +88,9 @@ export default function RichTextEditor({
   if (!editor) return null
 
   return (
-    <div className="border border-[#E5E2DC] rounded-[10px] overflow-hidden focus-within:border-[#C07C0A] transition-colors">
+    <div className="border border-[#DFE2ED] rounded-[10px] overflow-hidden focus-within:border-[#C07C0A] transition-colors">
       {/* Toolbar */}
-      <div className="flex items-center gap-0.5 flex-wrap px-2 py-1.5 border-b border-[#E5E2DC] bg-[#FAFAF9]">
+      <div className="flex items-center gap-0.5 flex-wrap px-2 py-1.5 border-b border-[#DFE2ED] bg-[#FAFAFF]">
         {/* Headings */}
         <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive("heading", { level: 1 })} title="Heading 1">
           <span className="text-[11px] font-bold leading-none">H1</span>
@@ -102,7 +102,7 @@ export default function RichTextEditor({
           <span className="text-[11px] font-bold leading-none">H3</span>
         </ToolbarBtn>
 
-        <span className="w-px h-4 bg-[#E5E2DC] mx-1" />
+        <span className="w-px h-4 bg-[#DFE2ED] mx-1" />
 
         {/* Marks */}
         <ToolbarBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
@@ -124,7 +124,7 @@ export default function RichTextEditor({
           </svg>
         </ToolbarBtn>
 
-        <span className="w-px h-4 bg-[#E5E2DC] mx-1" />
+        <span className="w-px h-4 bg-[#DFE2ED] mx-1" />
 
         {/* Lists */}
         <ToolbarBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet list">
@@ -150,7 +150,7 @@ export default function RichTextEditor({
           </svg>
         </ToolbarBtn>
 
-        <span className="w-px h-4 bg-[#E5E2DC] mx-1" />
+        <span className="w-px h-4 bg-[#DFE2ED] mx-1" />
 
         {/* Extras */}
         <ToolbarBtn onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal rule">
@@ -168,7 +168,7 @@ export default function RichTextEditor({
       <EditorContent
         editor={editor}
         style={{ minHeight }}
-        className="px-4 py-3 [&_.tiptap]:outline-none [&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.tiptap_p.is-editor-empty:first-child::before]:text-[#A8A39C] [&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none [&_.tiptap_p.is-editor-empty:first-child::before]:float-left [&_.tiptap_p.is-editor-empty:first-child::before]:h-0"
+        className="px-4 py-3 [&_.tiptap]:outline-none [&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.tiptap_p.is-editor-empty:first-child::before]:text-[#8A90A6] [&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none [&_.tiptap_p.is-editor-empty:first-child::before]:float-left [&_.tiptap_p.is-editor-empty:first-child::before]:h-0"
       />
     </div>
   )

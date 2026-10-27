@@ -168,15 +168,15 @@ function facilitatorSummary(p: Program): string {
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
 
-const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors resize-none"
+const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors resize-none"
 
 function Field({ label, hint, required, action, children }: { label: string; hint?: string; required?: boolean; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-2">
-        <label className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">
+        <label className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px]">
           {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-          {hint && <span className="ml-1 text-[10px] font-normal normal-case text-[#A8A39C]">({hint})</span>}
+          {hint && <span className="ml-1 text-[10px] font-normal normal-case text-[#8A90A6]">({hint})</span>}
         </label>
         {action}
       </div>
@@ -190,7 +190,7 @@ function AiBuilderTrigger({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-1 text-[10.5px] font-bold text-[#0474C4] hover:text-[#06457F] uppercase tracking-[0.4px] cursor-pointer"
+      className="flex items-center gap-1 text-[10.5px] font-bold text-[#6655DF] hover:text-[#2C2368] uppercase tracking-[0.4px] cursor-pointer"
     >
       <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
       AI Builder
@@ -201,21 +201,21 @@ function AiBuilderTrigger({ onClick }: { onClick: () => void }) {
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button type="button" onClick={() => onChange(!checked)} className="flex items-center gap-2 cursor-pointer">
-      <span className={`relative w-9 h-5 rounded-full transition-colors ${checked ? "bg-[#0474C4]" : "bg-[#D9D6D0]"}`}>
+      <span className={`relative w-9 h-5 rounded-full transition-colors ${checked ? "bg-[#6655DF]" : "bg-[#D8DAE5]"}`}>
         <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0"}`} />
       </span>
-      <span className="text-[13px] font-medium text-[#1A1916]">{label}</span>
+      <span className="text-[13px] font-medium text-[#171C35]">{label}</span>
     </button>
   )
 }
 
 function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171C35]/40">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
-        <p className="text-[14px] text-[#1A1916] mb-5">{message}</p>
+        <p className="text-[14px] text-[#171C35] mb-5">{message}</p>
         <div className="flex gap-2 justify-end">
-          <button onClick={onCancel} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
+          <button onClick={onCancel} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
           <button onClick={onConfirm} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-red-600 text-white hover:bg-red-700 cursor-pointer">Delete</button>
         </div>
       </div>
@@ -246,7 +246,7 @@ function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: s
   return (
     <div className="flex flex-col gap-2">
       {value && (
-        <div className="relative w-full h-32 rounded-[10px] overflow-hidden border border-[#E5E2DC]">
+        <div className="relative w-full h-32 rounded-[10px] overflow-hidden border border-[#DFE2ED]">
           <Image src={value} alt="Thumbnail" fill className="object-cover" />
           <button
             type="button"
@@ -261,7 +261,7 @@ function ThumbnailUpload({ value, onChange }: { value: string; onChange: (url: s
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer"
+        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 transition-colors cursor-pointer"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         {uploading ? "Uploading…" : value ? "Replace thumbnail" : "Upload thumbnail"}
@@ -523,7 +523,7 @@ function FieldError({ msg }: { msg?: string }) {
 
 function StepIndicator({ current, onJump }: { current: number; onJump?: (n: number) => void }) {
   return (
-    <div className="flex items-start px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9] shrink-0 overflow-x-auto">
+    <div className="flex items-start px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF] shrink-0 overflow-x-auto">
       {STEPS.map((s, i) => {
         const n = i + 1
         const done   = n < current
@@ -532,7 +532,7 @@ function StepIndicator({ current, onJump }: { current: number; onJump?: (n: numb
           <div key={i} className="flex items-start">
             {i > 0 && (
               <div className="flex items-center pt-2.75 shrink-0">
-                <div className={`h-px w-5 ${done ? "bg-[#0474C4]" : "bg-[#E5E2DC]"}`} />
+                <div className={`h-px w-5 ${done ? "bg-[#6655DF]" : "bg-[#DFE2ED]"}`} />
               </div>
             )}
             <button
@@ -541,16 +541,16 @@ function StepIndicator({ current, onJump }: { current: number; onJump?: (n: numb
               className="flex flex-col items-center gap-1 shrink-0 cursor-pointer group px-1"
             >
               <span className={`w-5.5 h-5.5 rounded-full text-[10px] font-bold flex items-center justify-center transition-all ${
-                done   ? "bg-[#0474C4] text-white" :
-                active ? "bg-[#0474C4] text-white shadow-sm shadow-[#0474C4]/30" :
-                         "bg-[#E5E2DC] text-[#A8A39C] group-hover:bg-[#C8E4F8] group-hover:text-[#0474C4]"
+                done   ? "bg-[#6655DF] text-white" :
+                active ? "bg-[#6655DF] text-white shadow-sm shadow-[#6655DF]/30" :
+                         "bg-[#DFE2ED] text-[#8A90A6] group-hover:bg-[#DDD9F4] group-hover:text-[#6655DF]"
               }`}>
                 {done
                   ? <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><polyline points="20 6 9 17 4 12"/></svg>
                   : n}
               </span>
               <span className={`text-[9px] font-semibold tracking-wide whitespace-nowrap ${
-                active ? "text-[#0474C4]" : done ? "text-[#0474C4]/60" : "text-[#A8A39C]"
+                active ? "text-[#6655DF]" : done ? "text-[#6655DF]/60" : "text-[#8A90A6]"
               }`}>{s.label}</span>
             </button>
           </div>
@@ -592,7 +592,7 @@ function StringListEditor({
       <button
         type="button"
         onClick={() => onChange([...items, ""])}
-        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer mt-1"
+        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer mt-1"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         {addLabel}
@@ -618,7 +618,7 @@ function RichTextEditor({ value, onChange, placeholder }: {
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
       attributes: {
-        class: "px-3 py-2.5 min-h-[140px] text-[13px] text-[#1A1916] outline-none [&_ul]:list-disc [&_ul]:ml-4 [&_ul]:space-y-1 [&_ol]:list-decimal [&_ol]:ml-4 [&_ol]:space-y-1 [&_p]:leading-relaxed",
+        class: "px-3 py-2.5 min-h-[140px] text-[13px] text-[#171C35] outline-none [&_ul]:list-disc [&_ul]:ml-4 [&_ul]:space-y-1 [&_ol]:list-decimal [&_ol]:ml-4 [&_ol]:space-y-1 [&_p]:leading-relaxed",
       },
     },
   })
@@ -635,7 +635,7 @@ function RichTextEditor({ value, onChange, placeholder }: {
         type="button"
         onClick={action}
         className={`w-7 h-7 flex items-center justify-center rounded text-[12px] transition-colors cursor-pointer ${
-          active ? "bg-[#0474C4] text-white" : "text-[#6B6560] hover:bg-[#E5E2DC]"
+          active ? "bg-[#6655DF] text-white" : "text-[#69708A] hover:bg-[#DFE2ED]"
         }`}
       >
         {label}
@@ -644,8 +644,8 @@ function RichTextEditor({ value, onChange, placeholder }: {
   }
 
   return (
-    <div className="border border-[#E5E2DC] rounded-[10px] overflow-hidden focus-within:border-[#0474C4] transition-colors">
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-[#E5E2DC] bg-[#FAFAF9]">
+    <div className="border border-[#DFE2ED] rounded-[10px] overflow-hidden focus-within:border-[#6655DF] transition-colors">
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-[#DFE2ED] bg-[#FAFAFF]">
         {tb(!!editor?.isActive("bold"),        <b>B</b>,  () => editor?.chain().focus().toggleBold().run())}
         {tb(!!editor?.isActive("italic"),      <em>I</em>, () => editor?.chain().focus().toggleItalic().run())}
         {tb(!!editor?.isActive("bulletList"),
@@ -673,14 +673,14 @@ function StarRating({ value, onChange }: { value: string; onChange: (v: string) 
           key={n}
           type="button"
           onClick={() => onChange(current === n ? "" : String(n))}
-          className={`cursor-pointer transition-colors ${n <= current ? "text-amber-400" : "text-[#D9D6CF] hover:text-amber-300"}`}
+          className={`cursor-pointer transition-colors ${n <= current ? "text-amber-400" : "text-[#D8DAE5] hover:text-amber-300"}`}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill={n <= current ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
         </button>
       ))}
-      {current > 0 && <span className="text-[12px] text-[#6B6560] ml-0.5">{current} / 5</span>}
+      {current > 0 && <span className="text-[12px] text-[#69708A] ml-0.5">{current} / 5</span>}
     </div>
   )
 }
@@ -708,18 +708,18 @@ function FacilitatorAvatarUpload({ value, onChange }: { value: string; onChange:
   return (
     <div className="flex items-center gap-3">
       {value ? (
-        <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-[#E5E2DC] shrink-0 group">
+        <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-[#DFE2ED] shrink-0 group">
           <Image src={value} alt="Facilitator" fill className="object-cover" />
           <button
             type="button"
             onClick={() => onChange("")}
-            className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer"
+            className="absolute inset-0 bg-[#171C35]/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer"
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
       ) : (
-        <div className="w-14 h-14 rounded-full border-2 border-dashed border-[#E5E2DC] flex items-center justify-center shrink-0 text-[#A8A39C]">
+        <div className="w-14 h-14 rounded-full border-2 border-dashed border-[#DFE2ED] flex items-center justify-center shrink-0 text-[#8A90A6]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         </div>
       )}
@@ -727,7 +727,7 @@ function FacilitatorAvatarUpload({ value, onChange }: { value: string; onChange:
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border border-[#E5E2DC] rounded-[8px] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border border-[#DFE2ED] rounded-[8px] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 transition-colors cursor-pointer"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         {uploading ? "Uploading…" : value ? "Change photo" : "Upload photo"}
@@ -781,7 +781,7 @@ function RegenerateLessonButton({
   }
 
   if (busy) {
-    return <span className="text-[10.5px] font-bold text-[#A8A39C] uppercase tracking-[0.4px]">Regenerating…</span>
+    return <span className="text-[10.5px] font-bold text-[#8A90A6] uppercase tracking-[0.4px]">Regenerating…</span>
   }
 
   if (confirming) {
@@ -792,7 +792,7 @@ function RegenerateLessonButton({
           Replace
         </button>
         <button type="button" onClick={() => setConfirming(false)}
-          className="text-[10.5px] font-bold text-[#A8A39C] hover:text-[#6B6560] uppercase tracking-[0.4px] cursor-pointer">
+          className="text-[10.5px] font-bold text-[#8A90A6] hover:text-[#69708A] uppercase tracking-[0.4px] cursor-pointer">
           Cancel
         </button>
       </span>
@@ -804,7 +804,7 @@ function RegenerateLessonButton({
       type="button"
       onClick={() => setConfirming(true)}
       disabled={!lesson.title.trim()}
-      className="flex items-center gap-1 text-[10.5px] font-bold text-[#0474C4] hover:text-[#06457F] uppercase tracking-[0.4px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+      className="flex items-center gap-1 text-[10.5px] font-bold text-[#6655DF] hover:text-[#2C2368] uppercase tracking-[0.4px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
     >
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
       Regenerate
@@ -846,10 +846,10 @@ function LessonItem({
   const [aiOpen, setAiOpen] = useState(false)
 
   return (
-    <div className="border border-[#E5E2DC] rounded-[10px] bg-white overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-2 bg-[#F5F4F1] border-b border-[#E5E2DC]">
-        <span className="text-[10px] font-bold text-[#6B6560] uppercase tracking-wide">Lesson {lessonIndex + 1}</span>
-        <button type="button" onClick={onRemove} className="w-5 h-5 flex items-center justify-center rounded-full text-[#A8A39C] hover:bg-red-50 hover:text-red-500 cursor-pointer">
+    <div className="border border-[#DFE2ED] rounded-[10px] bg-white overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2 bg-[#F5F6FB] border-b border-[#DFE2ED]">
+        <span className="text-[10px] font-bold text-[#69708A] uppercase tracking-wide">Lesson {lessonIndex + 1}</span>
+        <button type="button" onClick={onRemove} className="w-5 h-5 flex items-center justify-center rounded-full text-[#8A90A6] hover:bg-red-50 hover:text-red-500 cursor-pointer">
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -931,7 +931,7 @@ function LessonsEditor({
 
   return (
     <div className="space-y-3">
-      <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">Lessons</p>
+      <p className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px]">Lessons</p>
       {fields.map((field, j) => (
         <LessonItem
           key={field.id}
@@ -948,7 +948,7 @@ function LessonsEditor({
       <button
         type="button"
         onClick={() => append({ id: crypto.randomUUID(), title: "", description: "", blocks: [] } as never)}
-        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
+        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer"
       >
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add Lesson
@@ -978,10 +978,10 @@ function CurriculumModuleCard({
   const [aiOpen, setAiOpen] = useState(false)
 
   return (
-    <div className="border border-[#E5E2DC] rounded-[12px] overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-b border-[#E5E2DC]">
-        <span className="text-[11px] font-bold text-[#0474C4] uppercase tracking-wide">Module {index + 1}</span>
-        <button type="button" onClick={onRemove} className="w-6 h-6 flex items-center justify-center rounded-full text-[#A8A39C] hover:bg-red-50 hover:text-red-500 cursor-pointer">
+    <div className="border border-[#DFE2ED] rounded-[12px] overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAFF] border-b border-[#DFE2ED]">
+        <span className="text-[11px] font-bold text-[#6655DF] uppercase tracking-wide">Module {index + 1}</span>
+        <button type="button" onClick={onRemove} className="w-6 h-6 flex items-center justify-center rounded-full text-[#8A90A6] hover:bg-red-50 hover:text-red-500 cursor-pointer">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -1038,7 +1038,7 @@ function CurriculumEditor({
       <button
         type="button"
         onClick={() => append({ id: crypto.randomUUID(), title: "", desc: "", lessons: [] })}
-        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
+        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add Module
@@ -1060,13 +1060,13 @@ function FacilitatorsEditor({
   return (
     <div className="space-y-4">
       {fields.length === 0 && (
-        <p className="text-[12px] text-[#A8A39C] italic">No facilitators added yet.</p>
+        <p className="text-[12px] text-[#8A90A6] italic">No facilitators added yet.</p>
       )}
       {fields.map((field, i) => (
-        <div key={field.id} className="border border-[#E5E2DC] rounded-[12px] overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-b border-[#E5E2DC]">
-            <span className="text-[11px] font-bold text-[#0474C4] uppercase tracking-wide">Facilitator {i + 1}</span>
-            <button type="button" onClick={() => remove(i)} className="w-6 h-6 flex items-center justify-center rounded-full text-[#A8A39C] hover:bg-red-50 hover:text-red-500 cursor-pointer">
+        <div key={field.id} className="border border-[#DFE2ED] rounded-[12px] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAFF] border-b border-[#DFE2ED]">
+            <span className="text-[11px] font-bold text-[#6655DF] uppercase tracking-wide">Facilitator {i + 1}</span>
+            <button type="button" onClick={() => remove(i)} className="w-6 h-6 flex items-center justify-center rounded-full text-[#8A90A6] hover:bg-red-50 hover:text-red-500 cursor-pointer">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
@@ -1134,7 +1134,7 @@ function FacilitatorsEditor({
       <button
         type="button"
         onClick={() => append({ name: "", imageUrl: "", title: "", bio: "", credentials: "" })}
-        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
+        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add Facilitator
@@ -1156,13 +1156,13 @@ function FaqEditor({
   return (
     <div className="space-y-3">
       {fields.map((field, i) => (
-        <div key={field.id} className="border border-[#E5E2DC] rounded-[12px] overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAF9] border-b border-[#E5E2DC]">
-            <span className="text-[11px] font-bold text-[#6B6560] uppercase tracking-wide">FAQ {i + 1}</span>
+        <div key={field.id} className="border border-[#DFE2ED] rounded-[12px] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAFF] border-b border-[#DFE2ED]">
+            <span className="text-[11px] font-bold text-[#69708A] uppercase tracking-wide">FAQ {i + 1}</span>
             <button
               type="button"
               onClick={() => remove(i)}
-              className="w-6 h-6 flex items-center justify-center rounded-full text-[#A8A39C] hover:bg-red-50 hover:text-red-500 cursor-pointer"
+              className="w-6 h-6 flex items-center justify-center rounded-full text-[#8A90A6] hover:bg-red-50 hover:text-red-500 cursor-pointer"
             >
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -1186,7 +1186,7 @@ function FaqEditor({
       <button
         type="button"
         onClick={() => append({ q: "", a: "" })}
-        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
+        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add FAQ
@@ -1349,11 +1349,11 @@ function ProgramModal({
   const isLast = step === STEPS.length
 
   return (
-    <div className="fixed inset-0 z-100 flex items-start justify-end bg-black/40">
+    <div className="fixed inset-0 z-100 flex items-start justify-end bg-[#171C35]/40">
       <div className="bg-white h-full w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="bg-[#0474C4] px-6 py-5 shrink-0 relative">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] px-6 py-5 shrink-0 relative">
           <button type="button" onClick={onClose} className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -1409,7 +1409,7 @@ function ProgramModal({
               <input
                 {...register("slug")}
                 readOnly
-                className={`${inputCls} bg-[#FAFAF9] text-[#6B6560] cursor-default`}
+                className={`${inputCls} bg-[#FAFAFF] text-[#69708A] cursor-default`}
               />
               <FieldError msg={errors.slug?.message} />
             </Field>
@@ -1482,8 +1482,8 @@ function ProgramModal({
 
             {watchedPredefinedAnalytics && <>
               {/* Metrics (admin-only) */}
-              <div className="border-t border-[#E5E2DC] pt-4">
-                <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px] mb-3">Metrics</p>
+              <div className="border-t border-[#DFE2ED] pt-4">
+                <p className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px] mb-3">Metrics</p>
                 <div className="grid grid-cols-3 gap-3">
                   <Field label="Reviews">
                     <input type="number" min="0" {...register("reviewCount")} className={inputCls} placeholder="e.g. 312" />
@@ -1498,8 +1498,8 @@ function ProgramModal({
               </div>
 
               {/* Social Proof (admin-only) */}
-              <div className="border-t border-[#E5E2DC] pt-4">
-                <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px] mb-3">Social Proof</p>
+              <div className="border-t border-[#DFE2ED] pt-4">
+                <p className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px] mb-3">Social Proof</p>
                 <Field label="Rating">
                   <Controller
                     name="rating"
@@ -1579,7 +1579,7 @@ function ProgramModal({
 
           {/* Step 3 — Curriculum */}
           {step === 3 && <>
-            <p className="text-[13px] text-[#6B6560] leading-relaxed">
+            <p className="text-[13px] text-[#69708A] leading-relaxed">
               Build the programme outline. Each module appears as an accordion on the public page.
             </p>
             <CurriculumEditor control={control} register={register} errors={errors} />
@@ -1588,7 +1588,7 @@ function ProgramModal({
           {/* Step 4 — Facilitators */}
           {step === 4 && <>
             {formatCfg.facilitatorRequired && (
-              <p className="text-[12px] text-[#0474C4] bg-[#EBF3FC] rounded-[10px] px-3 py-2">
+              <p className="text-[12px] text-[#6655DF] bg-[#EEECFF] rounded-[10px] px-3 py-2">
                 At least one facilitator is required for <strong>{watchedFormat}</strong> programmes.
               </p>
             )}
@@ -1597,7 +1597,7 @@ function ProgramModal({
 
           {/* Step 5 — FAQs */}
           {step === 5 && <>
-            <p className="text-[13px] text-[#6B6560] leading-relaxed">
+            <p className="text-[13px] text-[#69708A] leading-relaxed">
               Add frequently asked questions shown in an accordion on the programme page. At least one FAQ is required.
             </p>
             <FaqEditor control={control} register={register} errors={errors} />
@@ -1605,15 +1605,15 @@ function ProgramModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-[#E5E2DC] bg-[#FAFAF9] shrink-0">
-          <span className="text-[12px] text-[#A8A39C] font-medium">
-            Step <span className="text-[#1A1916] font-bold">{step}</span> of {STEPS.length}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-[#DFE2ED] bg-[#FAFAFF] shrink-0">
+          <span className="text-[12px] text-[#8A90A6] font-medium">
+            Step <span className="text-[#171C35] font-bold">{step}</span> of {STEPS.length}
           </span>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={step === 1 ? onClose : handleBack}
-              className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer"
+              className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer"
             >
               {step === 1 ? "Cancel" : "Back"}
             </button>
@@ -1622,7 +1622,7 @@ function ProgramModal({
                 type="button"
                 onClick={handleSubmit(onSubmit)}
                 disabled={saving}
-                className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer"
+                className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer"
               >
                 {saving ? "Saving…" : program ? "Save Changes" : aiGenerated ? "Save as Draft" : "Create Program"}
               </button>
@@ -1630,7 +1630,7 @@ function ProgramModal({
               <button
                 type="button"
                 onClick={handleNext}
-                className="flex items-center gap-1.5 px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] cursor-pointer"
+                className="flex items-center gap-1.5 px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] cursor-pointer"
               >
                 Next
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
@@ -1658,6 +1658,7 @@ function AiCourseBuilderModal({
   const [notes, setNotes]           = useState("")
   const [provider, setProvider]     = useState<"anthropic" | "openai">("anthropic")
   const [withCover, setWithCover]   = useState(true)
+  const [withHandouts, setWithHandouts] = useState(true)
   const [loading, setLoading]       = useState(false)
   const [error, setError]           = useState("")
   const [progress, setProgress]     = useState<Progress | null>(null)
@@ -1674,6 +1675,7 @@ function AiCourseBuilderModal({
           topic: topic.trim(), categoryId, level,
           notes: notes.trim() || undefined, provider,
           withCoverImage: withCover,
+          withHandouts:   withHandouts,
         },
         setProgress,
       )
@@ -1717,9 +1719,9 @@ function AiCourseBuilderModal({
   }
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-[#171C35]/40">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] p-5 flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-1.5 text-white font-extrabold text-[16px]">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
@@ -1736,17 +1738,17 @@ function AiCourseBuilderModal({
 
           {loading ? (
             <div className="py-6 flex flex-col items-center text-center gap-3">
-              <div className="w-8 h-8 border-2 border-[#0474C4]/25 border-t-[#0474C4] rounded-full animate-spin" />
-              <p className="text-[13px] font-medium text-[#1A1916] min-h-[18px]">{progress?.message ?? "Starting…"}</p>
+              <div className="w-8 h-8 border-2 border-[#6655DF]/25 border-t-[#6655DF] rounded-full animate-spin" />
+              <p className="text-[13px] font-medium text-[#171C35] min-h-[18px]">{progress?.message ?? "Starting…"}</p>
               {progress?.total ? (
                 <div className="w-full max-w-[240px]">
-                  <div className="h-1.5 rounded-full bg-[#F0EEE9] overflow-hidden">
+                  <div className="h-1.5 rounded-full bg-[#F0EFFA] overflow-hidden">
                     <div
-                      className="h-full bg-[#0474C4] transition-all duration-300"
+                      className="h-full bg-[#6655DF] transition-all duration-300"
                       style={{ width: `${Math.round(((progress.done ?? 0) / progress.total) * 100)}%` }}
                     />
                   </div>
-                  <p className="text-[11px] text-[#A8A39C] mt-1.5">{progress.done ?? 0} / {progress.total} lessons written</p>
+                  <p className="text-[11px] text-[#8A90A6] mt-1.5">{progress.done ?? 0} / {progress.total} lessons written</p>
                 </div>
               ) : null}
             </div>
@@ -1764,8 +1766,8 @@ function AiCourseBuilderModal({
                       onClick={() => setProvider(value)}
                       className={`px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${
                         provider === value
-                          ? "bg-[#0474C4] border-[#0474C4] text-white"
-                          : "bg-white border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4]"
+                          ? "bg-[#6655DF] border-[#6655DF] text-white"
+                          : "bg-white border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF]"
                       }`}
                     >
                       {label}
@@ -1810,19 +1812,28 @@ function AiCourseBuilderModal({
               </Field>
               <div className="flex items-start justify-between gap-3 pt-1">
                 <div className="min-w-0">
-                  <p className="text-[12.5px] font-semibold text-[#1A1916]">Generate a cover image</p>
-                  <p className="text-[11.5px] text-[#A8A39C] mt-0.5">
+                  <p className="text-[12.5px] font-semibold text-[#171C35]">Generate a cover image</p>
+                  <p className="text-[11.5px] text-[#8A90A6] mt-0.5">
                     A cover is required before the programme can be saved — you can replace it in review.
                   </p>
                 </div>
                 <Toggle label="" checked={withCover} onChange={setWithCover} />
               </div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[12.5px] font-semibold text-[#171C35]">Build chapter handouts</p>
+                  <p className="text-[11.5px] text-[#8A90A6] mt-0.5">
+                    Renders each chapter&apos;s lesson text to a downloadable PDF resource.
+                  </p>
+                </div>
+                <Toggle label="" checked={withHandouts} onChange={setWithHandouts} />
+              </div>
             </>
           )}
 
           <div className="flex gap-2 justify-end pt-1">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
-            <button type="submit" disabled={loading || !topic.trim() || !categoryId} className="flex items-center gap-1.5 px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
+            <button type="submit" disabled={loading || !topic.trim() || !categoryId} className="flex items-center gap-1.5 px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer">
               {loading ? "Generating…" : "Generate Draft"}
             </button>
           </div>
@@ -1850,9 +1861,9 @@ function CategoryModal({ category, onSave, onClose }: { category: Category | nul
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171C35]/40">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
-        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] p-5 flex items-start justify-between gap-4">
           <div>
             <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-300">
               {category ? "Edit Category" : "New Category"}
@@ -1861,7 +1872,7 @@ function CategoryModal({ category, onSave, onClose }: { category: Category | nul
               {category ? "Update the category name." : "Create a new program category."}
             </div>
           </div>
-          <button type="button" onClick={onClose} className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EDF2FB]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+          <button type="button" onClick={onClose} className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EEECFF]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -1869,8 +1880,8 @@ function CategoryModal({ category, onSave, onClose }: { category: Category | nul
           {error && <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
           <input autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Policy Research" className={inputCls} required />
           <div className="flex gap-2 justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
-            <button type="submit" disabled={saving || !name.trim()} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
+            <button type="submit" disabled={saving || !name.trim()} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer">
               {saving ? "Saving…" : category ? "Save" : "Create"}
             </button>
           </div>
@@ -1906,9 +1917,9 @@ function LookupModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171C35]/40">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
-        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] p-5 flex items-start justify-between gap-4">
           <div>
             <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-300">
               {item ? `Edit ${meta.singular}` : `New ${meta.singular}`}
@@ -1917,7 +1928,7 @@ function LookupModal({
               {item ? `Update the ${meta.singular.toLowerCase()} name.` : meta.description}
             </div>
           </div>
-          <button type="button" onClick={onClose} className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EDF2FB]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+          <button type="button" onClick={onClose} className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EEECFF]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -1925,8 +1936,8 @@ function LookupModal({
           {error && <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
           <input autoFocus value={name} onChange={e => setName(e.target.value)} placeholder={meta.placeholder} className={inputCls} required />
           <div className="flex gap-2 justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
-            <button type="submit" disabled={saving || !name.trim()} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
+            <button type="submit" disabled={saving || !name.trim()} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer">
               {saving ? "Saving…" : item ? "Save" : "Create"}
             </button>
           </div>
@@ -1958,20 +1969,20 @@ function LookupTab({
   const meta = LOOKUP_LABEL[kind]
   const PAGE_SIZE = 20
   return (
-    <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+    <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
         <div className="relative w-full sm:w-64">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${meta.plural.toLowerCase()}…`} className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${meta.plural.toLowerCase()}…`} className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors" />
         </div>
       </div>
 
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-[13px]">
           <thead>
-            <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+            <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
               {["Name", "Slug", "Programs", "Created", ""].map(col => (
-                <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
               ))}
             </tr>
           </thead>
@@ -1979,20 +1990,20 @@ function LookupTab({
             {loading ? (
               <TableSkeletonRows colSpan={5} />
             ) : paginated.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No {meta.plural.toLowerCase()} yet.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-10 text-center text-[#8A90A6]">No {meta.plural.toLowerCase()} yet.</td></tr>
             ) : paginated.map(item => (
-              <tr key={item.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
-                <td className="px-4 py-3 font-semibold text-[#1A1916] whitespace-nowrap">{item.name}</td>
-                <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{item.slug}</td>
+              <tr key={item.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
+                <td className="px-4 py-3 font-semibold text-[#171C35] whitespace-nowrap">{item.name}</td>
+                <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{item.slug}</td>
                 <td className="px-4 py-3 whitespace-nowrap">
-                  <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">{item._count.courses}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A] text-[11px] font-semibold">{item._count.courses}</span>
                 </td>
-                <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">
+                <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">
                   {new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-1">
-                    <button onClick={() => onEdit(item)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                    <button onClick={() => onEdit(item)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
                     <button onClick={() => onDelete(item)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -2011,25 +2022,25 @@ function LookupTab({
         {loading ? (
           <SkeletonCardList />
         ) : paginated.length === 0 ? (
-          <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No {meta.plural.toLowerCase()} yet.</div>
+          <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No {meta.plural.toLowerCase()} yet.</div>
         ) : paginated.map(item => (
-          <div key={item.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
-            <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{item.name}</p>
+          <div key={item.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
+            <p className="font-semibold text-[#171C35] text-[14px] leading-tight">{item.name}</p>
 
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">
+              <span className="px-2 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A] text-[11px] font-semibold">
                 {item._count.courses} {item._count.courses === 1 ? "program" : "programs"}
               </span>
             </div>
 
             <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
               <div>
-                <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Slug</dt>
-                <dd className="text-[#1A1916] font-medium truncate">{item.slug}</dd>
+                <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Slug</dt>
+                <dd className="text-[#171C35] font-medium truncate">{item.slug}</dd>
               </div>
               <div>
-                <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Created</dt>
-                <dd className="text-[#1A1916] font-medium">{new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</dd>
+                <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Created</dt>
+                <dd className="text-[#171C35] font-medium">{new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</dd>
               </div>
             </dl>
 
@@ -2037,7 +2048,7 @@ function LookupTab({
               <button
                 onClick={() => onEdit(item)}
                 aria-label="Edit"
-                className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
@@ -2053,19 +2064,19 @@ function LookupTab({
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-        <p className="text-[11px] text-[#A8A39C]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+        <p className="text-[11px] text-[#8A90A6]">
           {paginated.length === 0 ? (
-            <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{items.length}</span> {meta.plural.toLowerCase()}</>
+            <>Showing <span className="font-semibold text-[#69708A]">0</span> of <span className="font-semibold text-[#69708A]">{items.length}</span> {meta.plural.toLowerCase()}</>
           ) : (
-            <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, items.length)}</span> of <span className="font-semibold text-[#6B6560]">{items.length}</span> {meta.plural.toLowerCase()}</>
+            <>Showing <span className="font-semibold text-[#69708A]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#69708A]">{Math.min(page * PAGE_SIZE, items.length)}</span> of <span className="font-semibold text-[#69708A]">{items.length}</span> {meta.plural.toLowerCase()}</>
           )}
         </p>
         {paginated.length > 0 && (
           <div className="flex items-center gap-1.5">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
-            <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+            <span className="text-[11px] font-semibold text-[#69708A] px-2">{page} / {totalPages}</span>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
           </div>
         )}
       </div>
@@ -2454,14 +2465,15 @@ export default function AdminProgramsPage() {
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-[18px] font-extrabold text-[#1A1916]">Programs</h1>
-          <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage learning programs and categories</p>
+          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
+          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Programs</h1>
+          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage learning programs and categories</p>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
           {tab === "programs" && (
             <button
               onClick={() => setAiBuilderOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#0474C4] text-[#0474C4] bg-white hover:bg-[#EEF6FF] transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#6655DF] text-[#6655DF] bg-white hover:bg-[#EEECFF] transition-colors cursor-pointer"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
               AI Program Builder
@@ -2475,7 +2487,7 @@ export default function AdminProgramsPage() {
               else if (tab === "formats")    setFormatModal("create")
               else                           setPricingModal("create")
             }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             {tab === "programs"   ? "New Program"
@@ -2488,7 +2500,7 @@ export default function AdminProgramsPage() {
       </div>
 
       {/* Tabs — formats / pricing intentionally hidden until those features ship */}
-      <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 overflow-x-auto sm:overflow-x-visible sm:w-fit sm:flex-wrap">
+      <div className="flex gap-1 mb-5 bg-[#F5F6FB] rounded-[12px] p-1 overflow-x-auto sm:overflow-x-visible sm:w-fit sm:flex-wrap">
         {(["programs", "categories", "levels"] as Tab[]).map(t => {
           const count =
             t === "programs"   ? programs.length :
@@ -2497,9 +2509,9 @@ export default function AdminProgramsPage() {
             t === "formats"    ? formats.length :
                                  pricingList.length
           return (
-            <button key={t} onClick={() => setTab(t)} className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}>
+            <button key={t} onClick={() => setTab(t)} className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#171C35] shadow-sm" : "text-[#69708A] hover:text-[#171C35]"}`}>
               {t}
-              <span className="ml-1 font-normal text-[#A8A39C]">({count})</span>
+              <span className="ml-1 font-normal text-[#8A90A6]">({count})</span>
             </button>
           )
         })}
@@ -2507,13 +2519,13 @@ export default function AdminProgramsPage() {
 
       {/* ── PROGRAMS TAB ──────────────────────────────────────────────────────── */}
       {tab === "programs" && (
-        <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
+        <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
 
           {/* Toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
             <div className="relative w-full sm:w-64">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search programs…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search programs…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors" />
             </div>
 
             <div className="sm:ml-auto flex flex-wrap items-center gap-2">
@@ -2521,14 +2533,14 @@ export default function AdminProgramsPage() {
               <div ref={statusRef} className="relative">
                 <button
                   onClick={() => setStatusOpen(o => !o)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${pricingFilter !== "All" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"}`}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${pricingFilter !== "All" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                   Pricing
-                  {pricingFilter !== "All" && <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{pricingFilter}</span>}
+                  {pricingFilter !== "All" && <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{pricingFilter}</span>}
                 </button>
                 {statusOpen && (
-                  <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#E5E2DC] rounded-xl shadow-lg py-1.5 min-w-36">
+                  <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-36">
                     {([
                       ["All",      counts.all],
                       ["Free",     counts.free],
@@ -2536,10 +2548,10 @@ export default function AdminProgramsPage() {
                       ["Featured", counts.featured],
                     ] as const).map(([label, count]) => (
                       <button key={label} onClick={() => { setPricingFilter(label as typeof pricingFilter); setStatusOpen(false) }}
-                        className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${pricingFilter === label ? "bg-[#EEF6FF] text-[#0474C4]" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
+                        className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${pricingFilter === label ? "bg-[#EEECFF] text-[#6655DF]" : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"}`}
                       >
                         <span>{label === "All" ? "All Programs" : label}</span>
-                        <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560]">{count}</span>
+                        <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A]">{count}</span>
                       </button>
                     ))}
                   </div>
@@ -2550,17 +2562,17 @@ export default function AdminProgramsPage() {
               <div ref={filterRef} className="relative">
                 <button
                   onClick={() => setFilterOpen(o => !o)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${levelFilter !== "All" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"}`}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${levelFilter !== "All" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                   Level
-                  {levelFilter !== "All" && <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{LEVEL_LABELS[levelFilter]}</span>}
+                  {levelFilter !== "All" && <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{LEVEL_LABELS[levelFilter]}</span>}
                 </button>
                 {filterOpen && (
-                  <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#E5E2DC] rounded-xl shadow-lg py-1.5 min-w-36">
+                  <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-36">
                     {(["All", "BEGINNER", "INTERMEDIATE", "ADVANCED"] as const).map(l => (
                       <button key={l} onClick={() => { setLevelFilter(l); setFilterOpen(false) }}
-                        className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${levelFilter === l ? "bg-[#FEF3C7] text-[#0474C4]" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
+                        className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${levelFilter === l ? "bg-[#FEF3C7] text-[#6655DF]" : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"}`}
                       >
                         {l === "All" ? "All Levels" : LEVEL_LABELS[l]}
                         {levelFilter === l && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
@@ -2571,7 +2583,7 @@ export default function AdminProgramsPage() {
               </div>
 
               {/* Export CSV */}
-              <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] bg-white hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+              <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] bg-white hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Export CSV
               </button>
@@ -2582,9 +2594,9 @@ export default function AdminProgramsPage() {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
                   {["Program", "Category", "Level", "Pricing", "Instructors", "Enrolled", ""].map((col, i) => (
-                    <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                    <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -2592,20 +2604,20 @@ export default function AdminProgramsPage() {
                 {programsLoading ? (
                   <TableSkeletonRows colSpan={7} />
                 ) : filteredPrograms.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">No programs found.</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#8A90A6]">No programs found.</td></tr>
                 ) : paginatedPrograms.map(p => (
-                  <tr key={p.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                  <tr key={p.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
 
                     {/* Program info */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {p.thumbnail ? (
-                          <div className="relative w-9 h-9 rounded-[8px] overflow-hidden shrink-0 border border-[#E5E2DC]">
+                          <div className="relative w-9 h-9 rounded-[8px] overflow-hidden shrink-0 border border-[#DFE2ED]">
                             <Image src={p.thumbnail} alt={p.title} fill className="object-cover" />
                           </div>
                         ) : (
-                          <div className="w-9 h-9 rounded-[8px] bg-[#EEF6FF] flex items-center justify-center shrink-0">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0474C4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <div className="w-9 h-9 rounded-[8px] bg-[#EEECFF] flex items-center justify-center shrink-0">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6655DF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
                               <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
                             </svg>
@@ -2613,14 +2625,14 @@ export default function AdminProgramsPage() {
                         )}
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <p className="font-semibold text-[#1A1916] leading-tight line-clamp-1">{p.title}</p>
+                            <p className="font-semibold text-[#171C35] leading-tight line-clamp-1">{p.title}</p>
                             {p.status === "DRAFT" && (
                               <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Draft</span>
                             )}
                           </div>
-                          <p className="text-[11px] text-[#A8A39C] mt-0.5">{instructorName(p)}</p>
+                          <p className="text-[11px] text-[#8A90A6] mt-0.5">{instructorName(p)}</p>
                           {p.featured && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#0474C4] mt-0.5">
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#6655DF] mt-0.5">
                               <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                               Featured
                             </span>
@@ -2632,8 +2644,8 @@ export default function AdminProgramsPage() {
                     {/* Category */}
                     <td className="px-4 py-3 whitespace-nowrap">
                       {p.category
-                        ? <span className="px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-[11px] font-semibold">{p.category.name}</span>
-                        : <span className="text-[#A8A39C]">—</span>}
+                        ? <span className="px-2 py-0.5 rounded-full bg-[#EEECFF] text-[#5143AD] text-[11px] font-semibold">{p.category.name}</span>
+                        : <span className="text-[#8A90A6]">—</span>}
                     </td>
 
                     {/* Level */}
@@ -2645,33 +2657,33 @@ export default function AdminProgramsPage() {
 
                     {/* Pricing */}
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`text-[12px] font-semibold ${p.pricing === "free" ? "text-emerald-600" : "text-[#1A1916]"}`}>
+                      <span className={`text-[12px] font-semibold ${p.pricing === "free" ? "text-emerald-600" : "text-[#171C35]"}`}>
                         {fmtPrice(p.price, p.pricing)}
                       </span>
                       {p.pricing === "paid" && p.paymentType && (
-                        <p className="text-[10px] text-[#A8A39C] capitalize mt-0.5">{p.paymentType.replace(/-/g, " ")}</p>
+                        <p className="text-[10px] text-[#8A90A6] capitalize mt-0.5">{p.paymentType.replace(/-/g, " ")}</p>
                       )}
                     </td>
 
                     {/* Instructors / Facilitators */}
                     <td className="px-4 py-3 whitespace-nowrap">
                       {facilitatorSummary(p)
-                        ? <span className="text-[12px] text-[#1A1916]">{facilitatorSummary(p)}</span>
-                        : <span className="text-[#A8A39C]">—</span>}
+                        ? <span className="text-[12px] text-[#171C35]">{facilitatorSummary(p)}</span>
+                        : <span className="text-[#8A90A6]">—</span>}
                     </td>
 
                     {/* Enrolled */}
-                    <td className="px-4 py-3 whitespace-nowrap text-[#6B6560]">
+                    <td className="px-4 py-3 whitespace-nowrap text-[#69708A]">
                       {p._count.enrollments}
                     </td>
 
                     {/* Actions */}
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-1">
-                        <Link href={`/administrator/programs/${p.slug}`} title="Analytics &amp; details" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-blue-50 transition-colors">
+                        <Link href={`/administrator/programs/${p.slug}`} title="Analytics &amp; details" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-blue-50 transition-colors">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                         </Link>
-                        <Link href={`/programs/${p.slug}`} target="_blank" title="View public page" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+                        <Link href={`/programs/${p.slug}`} target="_blank" title="View public page" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                         </Link>
                         {p.status === "DRAFT" && (
@@ -2679,7 +2691,7 @@ export default function AdminProgramsPage() {
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                           </button>
                         )}
-                        <button onClick={() => setProgramModal(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                        <button onClick={() => setProgramModal(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         <button onClick={() => setDeleteProgram(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -2698,17 +2710,17 @@ export default function AdminProgramsPage() {
             {programsLoading ? (
               <SkeletonCardList />
             ) : filteredPrograms.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No programs found.</div>
+              <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No programs found.</div>
             ) : paginatedPrograms.map(p => (
-              <div key={p.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <div key={p.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                 <div className="flex items-start gap-3">
                   {p.thumbnail ? (
-                    <div className="relative w-10 h-10 rounded-[8px] overflow-hidden shrink-0 border border-[#E5E2DC]">
+                    <div className="relative w-10 h-10 rounded-[8px] overflow-hidden shrink-0 border border-[#DFE2ED]">
                       <Image src={p.thumbnail} alt={p.title} fill className="object-cover" />
                     </div>
                   ) : (
-                    <div className="w-10 h-10 rounded-[8px] bg-[#EEF6FF] flex items-center justify-center shrink-0">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0474C4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="w-10 h-10 rounded-[8px] bg-[#EEECFF] flex items-center justify-center shrink-0">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6655DF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
                         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
                       </svg>
@@ -2716,14 +2728,14 @@ export default function AdminProgramsPage() {
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <p className="font-semibold text-[#1A1916] text-[14px] leading-tight line-clamp-2">{p.title}</p>
+                      <p className="font-semibold text-[#171C35] text-[14px] leading-tight line-clamp-2">{p.title}</p>
                       {p.status === "DRAFT" && (
                         <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Draft</span>
                       )}
                     </div>
-                    <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{instructorName(p)}</p>
+                    <p className="text-[12px] text-[#8A90A6] mt-0.5 truncate">{instructorName(p)}</p>
                     {p.featured && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#0474C4] mt-0.5">
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#6655DF] mt-0.5">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                         Featured
                       </span>
@@ -2733,7 +2745,7 @@ export default function AdminProgramsPage() {
 
                 <div className="flex flex-wrap items-center gap-1.5">
                   {p.category && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-[11px] font-semibold">{p.category.name}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-[#EEECFF] text-[#5143AD] text-[11px] font-semibold">{p.category.name}</span>
                   )}
                   <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${LEVEL_COLORS[p.level]}`}>
                     {LEVEL_LABELS[p.level]}
@@ -2745,17 +2757,17 @@ export default function AdminProgramsPage() {
 
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Instructors</dt>
-                    <dd className="text-[#1A1916] font-medium truncate">{facilitatorSummary(p) || "—"}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Instructors</dt>
+                    <dd className="text-[#171C35] font-medium truncate">{facilitatorSummary(p) || "—"}</dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Enrolled</dt>
-                    <dd className="text-[#1A1916] font-medium">{p._count.enrollments}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Enrolled</dt>
+                    <dd className="text-[#171C35] font-medium">{p._count.enrollments}</dd>
                   </div>
                   {p.pricing === "paid" && p.paymentType && (
                     <div className="col-span-2">
-                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Payment</dt>
-                      <dd className="text-[#1A1916] font-medium capitalize">{p.paymentType.replace(/-/g, " ")}</dd>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Payment</dt>
+                      <dd className="text-[#171C35] font-medium capitalize">{p.paymentType.replace(/-/g, " ")}</dd>
                     </div>
                   )}
                 </dl>
@@ -2764,7 +2776,7 @@ export default function AdminProgramsPage() {
                   <Link
                     href={`/administrator/programs/${p.slug}`}
                     aria-label="Analytics & details"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-blue-50 transition-colors"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-blue-50 transition-colors"
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                   </Link>
@@ -2772,7 +2784,7 @@ export default function AdminProgramsPage() {
                     href={`/programs/${p.slug}`}
                     target="_blank"
                     aria-label="View public page"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                   </Link>
@@ -2788,7 +2800,7 @@ export default function AdminProgramsPage() {
                   <button
                     onClick={() => setProgramModal(p)}
                     aria-label="Edit"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors"
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
@@ -2804,19 +2816,19 @@ export default function AdminProgramsPage() {
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+            <p className="text-[11px] text-[#8A90A6]">
               {filteredPrograms.length === 0 ? (
-                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{programs.length}</span> programs</>
+                <>Showing <span className="font-semibold text-[#69708A]">0</span> of <span className="font-semibold text-[#69708A]">{programs.length}</span> programs</>
               ) : (
-                <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, filteredPrograms.length)}</span> of <span className="font-semibold text-[#6B6560]">{filteredPrograms.length}</span> {filteredPrograms.length === 1 ? "program" : "programs"}</>
+                <>Showing <span className="font-semibold text-[#69708A]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#69708A]">{Math.min(page * PAGE_SIZE, filteredPrograms.length)}</span> of <span className="font-semibold text-[#69708A]">{filteredPrograms.length}</span> {filteredPrograms.length === 1 ? "program" : "programs"}</>
               )}
             </p>
             {filteredPrograms.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
-                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#69708A] px-2">{page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
               </div>
             )}
           </div>
@@ -2825,20 +2837,20 @@ export default function AdminProgramsPage() {
 
       {/* ── CATEGORIES TAB ────────────────────────────────────────────────────── */}
       {tab === "categories" && (
-        <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+        <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
             <div className="relative w-full sm:w-64">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input value={categorySearch} onChange={e => setCategorySearch(e.target.value)} placeholder="Search categories…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input value={categorySearch} onChange={e => setCategorySearch(e.target.value)} placeholder="Search categories…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors" />
             </div>
           </div>
 
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
                   {["Name", "Slug", "Programs", "Created", ""].map(col => (
-                    <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                    <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -2846,16 +2858,16 @@ export default function AdminProgramsPage() {
                 {categoriesLoading ? (
                   <TableSkeletonRows colSpan={5} />
                 ) : filteredCategories.length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No categories yet.</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-10 text-center text-[#8A90A6]">No categories yet.</td></tr>
                 ) : paginatedCategories.map(cat => (
-                  <tr key={cat.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
-                    <td className="px-4 py-3 font-semibold text-[#1A1916] whitespace-nowrap">{cat.name}</td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{cat.slug}</td>
-                    <td className="px-4 py-3 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">{cat._count.courses}</span></td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(cat.createdAt)}</td>
+                  <tr key={cat.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
+                    <td className="px-4 py-3 font-semibold text-[#171C35] whitespace-nowrap">{cat.name}</td>
+                    <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{cat.slug}</td>
+                    <td className="px-4 py-3 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A] text-[11px] font-semibold">{cat._count.courses}</span></td>
+                    <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDate(cat.createdAt)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-1">
-                        <button onClick={() => setCategoryModal(cat)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                        <button onClick={() => setCategoryModal(cat)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         <button onClick={() => setDeleteCategory(cat)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -2874,25 +2886,25 @@ export default function AdminProgramsPage() {
             {categoriesLoading ? (
               <SkeletonCardList />
             ) : filteredCategories.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No categories yet.</div>
+              <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No categories yet.</div>
             ) : paginatedCategories.map(cat => (
-              <div key={cat.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
-                <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{cat.name}</p>
+              <div key={cat.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
+                <p className="font-semibold text-[#171C35] text-[14px] leading-tight">{cat.name}</p>
 
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">
+                  <span className="px-2 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A] text-[11px] font-semibold">
                     {cat._count.courses} {cat._count.courses === 1 ? "program" : "programs"}
                   </span>
                 </div>
 
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Slug</dt>
-                    <dd className="text-[#1A1916] font-medium truncate">{cat.slug}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Slug</dt>
+                    <dd className="text-[#171C35] font-medium truncate">{cat.slug}</dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Created</dt>
-                    <dd className="text-[#1A1916] font-medium">{fmtDate(cat.createdAt)}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Created</dt>
+                    <dd className="text-[#171C35] font-medium">{fmtDate(cat.createdAt)}</dd>
                   </div>
                 </dl>
 
@@ -2900,7 +2912,7 @@ export default function AdminProgramsPage() {
                   <button
                     onClick={() => setCategoryModal(cat)}
                     aria-label="Edit"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors"
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
@@ -2916,19 +2928,19 @@ export default function AdminProgramsPage() {
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+            <p className="text-[11px] text-[#8A90A6]">
               {filteredCategories.length === 0 ? (
-                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{categories.length}</span> categories</>
+                <>Showing <span className="font-semibold text-[#69708A]">0</span> of <span className="font-semibold text-[#69708A]">{categories.length}</span> categories</>
               ) : (
-                <>Showing <span className="font-semibold text-[#6B6560]">{(categoriesPage - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(categoriesPage * PAGE_SIZE, filteredCategories.length)}</span> of <span className="font-semibold text-[#6B6560]">{filteredCategories.length}</span> {filteredCategories.length === 1 ? "category" : "categories"}</>
+                <>Showing <span className="font-semibold text-[#69708A]">{(categoriesPage - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#69708A]">{Math.min(categoriesPage * PAGE_SIZE, filteredCategories.length)}</span> of <span className="font-semibold text-[#69708A]">{filteredCategories.length}</span> {filteredCategories.length === 1 ? "category" : "categories"}</>
               )}
             </p>
             {filteredCategories.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <button onClick={() => setCategoriesPage(p => Math.max(1, p - 1))} disabled={categoriesPage === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
-                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{categoriesPage} / {totalCategoryPages}</span>
-                <button onClick={() => setCategoriesPage(p => Math.min(totalCategoryPages, p + 1))} disabled={categoriesPage >= totalCategoryPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+                <button onClick={() => setCategoriesPage(p => Math.max(1, p - 1))} disabled={categoriesPage === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#69708A] px-2">{categoriesPage} / {totalCategoryPages}</span>
+                <button onClick={() => setCategoriesPage(p => Math.min(totalCategoryPages, p + 1))} disabled={categoriesPage >= totalCategoryPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
               </div>
             )}
           </div>

@@ -16,8 +16,8 @@ function toEmbedUrl(url: string): string | null {
   return null
 }
 
-const panelCls = "rounded-[12px] border border-[#E5E2DC] bg-white overflow-hidden"
-const labelCls = "px-4 py-2 text-[10px] font-bold uppercase tracking-[0.5px] text-[#A8A39C] bg-[#FAFAF9] border-b border-[#E5E2DC]"
+const panelCls = "rounded-[12px] border border-[#DFE2ED] bg-white overflow-hidden"
+const labelCls = "px-4 py-2 text-[10px] font-bold uppercase tracking-[0.5px] text-[#8A90A6] bg-[#FAFAFF] border-b border-[#DFE2ED]"
 
 // ── Blocks ───────────────────────────────────────────────────────────────────
 
@@ -25,7 +25,7 @@ function TextBlockView({ block }: { block: Extract<ContentBlock, { type: "text" 
   if (!block.content?.trim()) return null
   return (
     <div
-      className="text-[14px] text-[#1A1916] leading-relaxed [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_p]:mb-2 last:[&_p]:mb-0"
+      className="text-[14px] text-[#171C35] leading-relaxed [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_p]:mb-2 last:[&_p]:mb-0"
       dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.content) }}
     />
   )
@@ -43,7 +43,7 @@ function VideoBlockView({ block }: { block: Extract<ContentBlock, { type: "video
           <video controls src={block.url} className="w-full h-full" />
         )}
       </div>
-      {block.caption && <p className="px-4 py-2.5 text-[12px] text-[#6B6560]">{block.caption}</p>}
+      {block.caption && <p className="px-4 py-2.5 text-[12px] text-[#69708A]">{block.caption}</p>}
     </div>
   )
 }
@@ -57,7 +57,7 @@ function DiagramBlockView({ block }: { block: Extract<ContentBlock, { type: "dia
             bug, not something a learner can act on. */}
         <MermaidDiagram code={block.code} />
       </div>
-      {block.caption && <p className="px-4 pb-2.5 text-[12px] text-[#6B6560]">{block.caption}</p>}
+      {block.caption && <p className="px-4 pb-2.5 text-[12px] text-[#69708A]">{block.caption}</p>}
     </div>
   )
 }
@@ -66,10 +66,10 @@ function ImageBlockView({ block }: { block: Extract<ContentBlock, { type: "image
   if (!block.url) return null
   return (
     <div className={panelCls}>
-      <div className="relative w-full aspect-video bg-[#F5F4F1]">
+      <div className="relative w-full aspect-video bg-[#F5F6FB]">
         <Image src={block.url} alt={block.caption || "Lesson image"} fill className="object-cover" />
       </div>
-      {block.caption && <p className="px-4 py-2.5 text-[12px] text-[#6B6560]">{block.caption}</p>}
+      {block.caption && <p className="px-4 py-2.5 text-[12px] text-[#69708A]">{block.caption}</p>}
     </div>
   )
 }
@@ -80,14 +80,14 @@ function FileLinkView({
   return (
     <a
       href={href} target="_blank" rel="noopener noreferrer"
-      className="flex items-center gap-3 px-4 py-3 rounded-[12px] border border-[#E5E2DC] bg-white hover:border-[#0474C4] transition-colors"
+      className="flex items-center gap-3 px-4 py-3 rounded-[12px] border border-[#DFE2ED] bg-white hover:border-[#6655DF] transition-colors"
     >
-      <div className="w-9 h-9 rounded-[9px] bg-[#EEF6FF] text-[#0474C4] flex items-center justify-center shrink-0">{icon}</div>
+      <div className="w-9 h-9 rounded-[9px] bg-[#EEECFF] text-[#6655DF] flex items-center justify-center shrink-0">{icon}</div>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold text-[#1A1916] truncate">{title}</p>
-        {sub && <p className="text-[11px] text-[#A8A39C]">{sub}</p>}
+        <p className="text-[13px] font-semibold text-[#171C35] truncate">{title}</p>
+        {sub && <p className="text-[11px] text-[#8A90A6]">{sub}</p>}
       </div>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#A8A39C] shrink-0">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#8A90A6] shrink-0">
         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
       </svg>
     </a>
@@ -116,7 +116,7 @@ function QuizBlockView({
       <div className={panelCls}>
         <div className={labelCls}>Quiz</div>
         <div className="px-4 py-3 space-y-1.5">
-          <p className="text-[13.5px] font-semibold text-[#1A1916]">{block.question}</p>
+          <p className="text-[13.5px] font-semibold text-[#171C35]">{block.question}</p>
           <p className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-700">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
             Answered correctly
@@ -142,14 +142,14 @@ function QuizBlockView({
     <div className={panelCls}>
       <div className={labelCls}>Quiz{onAnswer ? " — required to continue" : ""}</div>
       <div className="px-4 py-3 space-y-2.5">
-        <p className="text-[13.5px] font-semibold text-[#1A1916]">{block.question}</p>
+        <p className="text-[13.5px] font-semibold text-[#171C35]">{block.question}</p>
         <div className="space-y-1.5">
           {(block.options ?? []).map((opt, i) => (
             <label
               key={i}
               className={`flex items-center gap-2.5 px-3 py-2 rounded-[9px] border text-[13px] transition-colors ${
                 onAnswer ? "cursor-pointer" : "cursor-default opacity-70"
-              } ${selected === i ? "border-[#0474C4] bg-[#EEF6FF]" : "border-[#E5E2DC]"}`}
+              } ${selected === i ? "border-[#6655DF] bg-[#EEECFF]" : "border-[#DFE2ED]"}`}
             >
               <input
                 type="radio"
@@ -157,7 +157,7 @@ function QuizBlockView({
                 checked={selected === i}
                 onChange={() => onAnswer && setSelected(i)}
                 disabled={!onAnswer}
-                className="accent-[#0474C4]"
+                className="accent-[#6655DF]"
               />
               {opt}
             </label>
@@ -169,7 +169,7 @@ function QuizBlockView({
             type="button"
             onClick={submit}
             disabled={selected === null || submitting}
-            className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
           >
             {submitting ? "Checking…" : "Submit answer"}
           </button>
@@ -185,10 +185,10 @@ function QuestionSetView({ title, kicker, items }: { title: string; kicker: stri
     <div className={panelCls}>
       <div className={labelCls}>{kicker}</div>
       <div className="px-4 py-3 space-y-2">
-        {title && <p className="text-[13.5px] font-semibold text-[#1A1916]">{title}</p>}
+        {title && <p className="text-[13.5px] font-semibold text-[#171C35]">{title}</p>}
         {items.length > 0 && (
           <ol className="space-y-1.5 list-decimal ml-5">
-            {items.map((q, i) => <li key={i} className="text-[13px] text-[#1A1916]">{q}</li>)}
+            {items.map((q, i) => <li key={i} className="text-[13px] text-[#171C35]">{q}</li>)}
           </ol>
         )}
       </div>
@@ -201,8 +201,8 @@ function AssignmentBlockView({ block }: { block: Extract<ContentBlock, { type: "
     <div className={panelCls}>
       <div className={labelCls}>Assignment{block.dueInDays ? ` · due in ${block.dueInDays} day${block.dueInDays === "1" ? "" : "s"}` : ""}{block.points ? ` · ${block.points} pts` : ""}</div>
       <div className="px-4 py-3 space-y-1.5">
-        {block.title && <p className="text-[13.5px] font-semibold text-[#1A1916]">{block.title}</p>}
-        {block.instructions && <p className="text-[13px] text-[#6B6560] leading-relaxed whitespace-pre-line">{block.instructions}</p>}
+        {block.title && <p className="text-[13.5px] font-semibold text-[#171C35]">{block.title}</p>}
+        {block.instructions && <p className="text-[13px] text-[#69708A] leading-relaxed whitespace-pre-line">{block.instructions}</p>}
       </div>
     </div>
   )

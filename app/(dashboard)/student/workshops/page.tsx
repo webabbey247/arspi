@@ -102,11 +102,11 @@ function WorkshopViewModal({ registration, onClose }: { registration: Registrati
   const w = registration.workshop
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-end bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-start justify-end bg-[#171C35]/40">
       <div className="bg-white h-full w-full max-w-xl shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="bg-[#0474C4] px-6 py-5 shrink-0 relative">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] px-6 py-5 shrink-0 relative">
           <button type="button" onClick={onClose} className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -141,19 +141,19 @@ function WorkshopViewModal({ registration, onClose }: { registration: Registrati
 
           {/* Cover image */}
           {w?.coverImage && (
-            <div className="relative w-full h-40 rounded-[12px] overflow-hidden border border-[#E5E2DC]">
+            <div className="relative w-full h-40 rounded-[12px] overflow-hidden border border-[#DFE2ED]">
               <Image src={w.coverImage} alt={w.title} fill className="object-cover" />
             </div>
           )}
 
           {/* Registration status */}
-          <div className="flex items-center gap-2 px-3 py-2.5 rounded-[10px] bg-[#F5F4F1]">
-            <span className="text-[12px] font-semibold text-[#6B6560]">Registration status:</span>
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-[10px] bg-[#F5F6FB]">
+            <span className="text-[12px] font-semibold text-[#69708A]">Registration status:</span>
             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_COLORS[registration.status]}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${registration.status === "CONFIRMED" ? "bg-emerald-500" : registration.status === "PENDING" ? "bg-amber-400" : "bg-red-400"}`} />
               {registration.status.charAt(0) + registration.status.slice(1).toLowerCase()}
             </span>
-            <span className="ml-auto text-[12px] text-[#A8A39C]">Fee: <span className="font-semibold text-[#1A1916]">{fmtFee(registration.fee)}</span></span>
+            <span className="ml-auto text-[12px] text-[#8A90A6]">Fee: <span className="font-semibold text-[#171C35]">{fmtFee(registration.fee)}</span></span>
           </div>
 
           {/* Date & time */}
@@ -171,7 +171,7 @@ function WorkshopViewModal({ registration, onClose }: { registration: Registrati
               {w.medium === "ONLINE" && w.onlinePlatform && <Row label="Platform" value={w.onlinePlatform} />}
               {w.medium === "ONLINE" && w.onlineLink && (
                 <Row label="Link" value={
-                  <a href={w.onlineLink} target="_blank" rel="noopener noreferrer" className="text-[#0474C4] underline underline-offset-2 break-all">
+                  <a href={w.onlineLink} target="_blank" rel="noopener noreferrer" className="text-[#6655DF] underline underline-offset-2 break-all">
                     {w.onlineLink}
                   </a>
                 } />
@@ -187,7 +187,7 @@ function WorkshopViewModal({ registration, onClose }: { registration: Registrati
             <Section title="Facilitators">
               <ul className="flex flex-wrap gap-1.5 pt-0.5">
                 {facilitatorsList(w).map(name => (
-                  <li key={name} className="px-2.5 py-1 bg-[#EBF5FF] rounded-full text-[12px] font-medium text-[#0474C4]">
+                  <li key={name} className="px-2.5 py-1 bg-[#EEECFF] rounded-full text-[12px] font-medium text-[#6655DF]">
                     {name}
                   </li>
                 ))}
@@ -207,7 +207,7 @@ function WorkshopViewModal({ registration, onClose }: { registration: Registrati
           {w?.description && (
             <Section title="About this Workshop">
               <div
-                className="text-[13px] text-[#6B6560] leading-relaxed prose prose-sm max-w-none"
+                className="text-[13px] text-[#69708A] leading-relaxed prose prose-sm max-w-none"
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(w.description) }}
               />
             </Section>
@@ -215,8 +215,8 @@ function WorkshopViewModal({ registration, onClose }: { registration: Registrati
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end px-6 py-4 border-t border-[#E5E2DC] shrink-0">
-          <button onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">
+        <div className="flex items-center justify-end px-6 py-4 border-t border-[#DFE2ED] shrink-0">
+          <button onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">
             Close
           </button>
         </div>
@@ -228,7 +228,7 @@ function WorkshopViewModal({ registration, onClose }: { registration: Registrati
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-[0.4px] mb-2">{title}</p>
+      <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-[0.4px] mb-2">{title}</p>
       <div className="space-y-1.5">{children}</div>
     </div>
   )
@@ -237,8 +237,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex gap-2 text-[13px]">
-      <span className="text-[#A8A39C] w-24 shrink-0">{label}</span>
-      <span className="text-[#1A1916] font-medium">{value || "—"}</span>
+      <span className="text-[#8A90A6] w-24 shrink-0">{label}</span>
+      <span className="text-[#171C35] font-medium">{value || "—"}</span>
     </div>
   )
 }
@@ -292,24 +292,25 @@ export default function StudentWorkshopsPage() {
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
       {/* Page header */}
       <div className="mb-6">
-        <h1 className="text-[18px] font-extrabold text-[#1A1916]">My Workshops</h1>
-        <p className="text-[#A8A39C] text-[13px] mt-0.5">Workshops you have registered for</p>
+        <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Learner</span>
+        <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">My Workshops</h1>
+        <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Workshops you have registered for</p>
       </div>
 
       {/* Table card */}
-      <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
+      <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
 
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
           <div className="relative w-full sm:w-64">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search workshops…"
-              className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#C07C0A] transition-colors"
+              className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#C07C0A] transition-colors"
             />
           </div>
 
@@ -318,7 +319,7 @@ export default function StudentWorkshopsPage() {
             <div ref={filterRef} className="relative">
               <button
                 onClick={() => { setFilterOpen(o => !o); setCatOpen(false) }}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${statusFilter !== "All" ? "bg-[#C07C0A] text-white border-[#C07C0A]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#C07C0A] hover:text-[#C07C0A]"}`}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${statusFilter !== "All" ? "bg-[#C07C0A] text-white border-[#C07C0A]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#C07C0A] hover:text-[#C07C0A]"}`}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -327,10 +328,10 @@ export default function StudentWorkshopsPage() {
                 {statusFilter !== "All" && <span className="ml-1 bg-white text-[#C07C0A] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{statusFilter}</span>}
               </button>
               {filterOpen && (
-                <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#E5E2DC] rounded-xl shadow-lg py-1.5 min-w-36">
+                <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-36">
                   {ALL_STATUSES.map(f => (
                     <button key={f} onClick={() => { setStatusFilter(f); setFilterOpen(false) }}
-                      className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${statusFilter === f ? "bg-[#FEF3C7] text-[#C07C0A]" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
+                      className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${statusFilter === f ? "bg-[#FEF3C7] text-[#C07C0A]" : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"}`}
                     >
                       {f}
                       {statusFilter === f && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
@@ -344,17 +345,17 @@ export default function StudentWorkshopsPage() {
             <div ref={catRef} className="relative">
               <button
                 onClick={() => { setCatOpen(o => !o); setFilterOpen(false) }}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${catFilter !== "All" ? "bg-[#C07C0A] text-white border-[#C07C0A]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#C07C0A] hover:text-[#C07C0A]"}`}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${catFilter !== "All" ? "bg-[#C07C0A] text-white border-[#C07C0A]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#C07C0A] hover:text-[#C07C0A]"}`}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                 Category
                 {catFilter !== "All" && <span className="ml-1 bg-white text-[#C07C0A] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{catFilter}</span>}
               </button>
               {catOpen && (
-                <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#E5E2DC] rounded-xl shadow-lg py-1.5 min-w-40">
+                <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-40">
                   {ALL_CATEGORIES.map(f => (
                     <button key={f} onClick={() => { setCatFilter(f); setCatOpen(false) }}
-                      className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${catFilter === f ? "bg-[#FEF3C7] text-[#C07C0A]" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
+                      className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${catFilter === f ? "bg-[#FEF3C7] text-[#C07C0A]" : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"}`}
                     >
                       {f}
                       {catFilter === f && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
@@ -370,9 +371,9 @@ export default function StudentWorkshopsPage() {
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+              <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
                 {["Workshop", "Category", "Date", "Status", ""].map((col, i) => (
-                  <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                  <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
                 ))}
               </tr>
             </thead>
@@ -380,28 +381,28 @@ export default function StudentWorkshopsPage() {
               {loading ? (
                 <TableSkeletonRows colSpan={5} />
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No workshops found.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No workshops found.</td></tr>
               ) : filtered.map(reg => (
-                <tr key={reg.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                <tr key={reg.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
 
                   {/* Workshop */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {reg.workshop?.coverImage ? (
-                        <div className="relative w-9 h-9 rounded-[8px] overflow-hidden shrink-0 border border-[#E5E2DC]">
+                        <div className="relative w-9 h-9 rounded-[8px] overflow-hidden shrink-0 border border-[#DFE2ED]">
                           <Image src={reg.workshop.coverImage} alt={reg.workshopTitle} fill className="object-cover" />
                         </div>
                       ) : (
-                        <div className="w-9 h-9 rounded-[8px] bg-[#F5F4F1] flex items-center justify-center shrink-0">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A39C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <div className="w-9 h-9 rounded-[8px] bg-[#F5F6FB] flex items-center justify-center shrink-0">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A90A6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                           </svg>
                         </div>
                       )}
                       <div>
-                        <p className="font-semibold text-[#1A1916] leading-tight line-clamp-1">{reg.workshopTitle}</p>
+                        <p className="font-semibold text-[#171C35] leading-tight line-clamp-1">{reg.workshopTitle}</p>
                         {reg.workshop && facilitatorsList(reg.workshop).length > 0 && (
-                          <p className="text-[11px] text-[#A8A39C] mt-0.5">{facilitatorsList(reg.workshop).join(", ")}</p>
+                          <p className="text-[11px] text-[#8A90A6] mt-0.5">{facilitatorsList(reg.workshop).join(", ")}</p>
                         )}
                       </div>
                     </div>
@@ -414,12 +415,12 @@ export default function StudentWorkshopsPage() {
                         {CATEGORY_LABELS[reg.workshop.category]}
                       </span>
                     ) : (
-                      <span className="text-[#A8A39C]">—</span>
+                      <span className="text-[#8A90A6]">—</span>
                     )}
                   </td>
 
                   {/* Date */}
-                  <td className="px-4 py-3 text-[#6B6560]">
+                  <td className="px-4 py-3 text-[#69708A]">
                     {reg.workshop ? fmtDate(reg.workshop.date) : reg.workshopDate}
                   </td>
 
@@ -437,7 +438,7 @@ export default function StudentWorkshopsPage() {
                       <button
                         onClick={() => setViewReg(reg)}
                         title="View details"
-                        className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#C07C0A] hover:text-[#C07C0A] transition-colors cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#C07C0A] hover:text-[#C07C0A] transition-colors cursor-pointer"
                       >
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -458,25 +459,25 @@ export default function StudentWorkshopsPage() {
           {loading ? (
             <SkeletonCardList />
           ) : filtered.length === 0 ? (
-            <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No workshops found.</div>
+            <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No workshops found.</div>
           ) : filtered.map(reg => (
-            <div key={reg.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+            <div key={reg.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
               <div className="flex items-start gap-3">
                 {reg.workshop?.coverImage ? (
-                  <div className="relative w-10 h-10 rounded-[8px] overflow-hidden shrink-0 border border-[#E5E2DC]">
+                  <div className="relative w-10 h-10 rounded-[8px] overflow-hidden shrink-0 border border-[#DFE2ED]">
                     <Image src={reg.workshop.coverImage} alt={reg.workshopTitle} fill className="object-cover" />
                   </div>
                 ) : (
-                  <div className="w-10 h-10 rounded-[8px] bg-[#F5F4F1] flex items-center justify-center shrink-0">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A39C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="w-10 h-10 rounded-[8px] bg-[#F5F6FB] flex items-center justify-center shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A90A6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                     </svg>
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{reg.workshopTitle}</p>
+                  <p className="font-semibold text-[#171C35] text-[14px] leading-tight">{reg.workshopTitle}</p>
                   {reg.workshop && facilitatorsList(reg.workshop).length > 0 && (
-                    <p className="text-[12px] text-[#A8A39C] mt-0.5 line-clamp-1">{facilitatorsList(reg.workshop).join(", ")}</p>
+                    <p className="text-[12px] text-[#8A90A6] mt-0.5 line-clamp-1">{facilitatorsList(reg.workshop).join(", ")}</p>
                   )}
                 </div>
               </div>
@@ -495,12 +496,12 @@ export default function StudentWorkshopsPage() {
 
               <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
                 <div>
-                  <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Date</dt>
-                  <dd className="text-[#1A1916] font-medium">{reg.workshop ? fmtDate(reg.workshop.date) : reg.workshopDate}</dd>
+                  <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Date</dt>
+                  <dd className="text-[#171C35] font-medium">{reg.workshop ? fmtDate(reg.workshop.date) : reg.workshopDate}</dd>
                 </div>
                 <div>
-                  <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Fee</dt>
-                  <dd className="text-[#1A1916] font-medium">{fmtFee(reg.fee)}</dd>
+                  <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Fee</dt>
+                  <dd className="text-[#171C35] font-medium">{fmtFee(reg.fee)}</dd>
                 </div>
               </dl>
 
@@ -508,7 +509,7 @@ export default function StudentWorkshopsPage() {
                 <button
                   onClick={() => setViewReg(reg)}
                   aria-label="View details"
-                  className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#C07C0A] hover:text-[#C07C0A] transition-colors cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#C07C0A] hover:text-[#C07C0A] transition-colors cursor-pointer"
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -521,10 +522,10 @@ export default function StudentWorkshopsPage() {
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-          <p className="text-[11px] text-[#A8A39C]">
-            Showing <span className="font-semibold text-[#6B6560]">{filtered.length}</span> of{" "}
-            <span className="font-semibold text-[#6B6560]">{registrations.length}</span>{" "}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+          <p className="text-[11px] text-[#8A90A6]">
+            Showing <span className="font-semibold text-[#69708A]">{filtered.length}</span> of{" "}
+            <span className="font-semibold text-[#69708A]">{registrations.length}</span>{" "}
             {registrations.length === 1 ? "entry" : "entries"}
           </p>
           {filtered.length < registrations.length && (

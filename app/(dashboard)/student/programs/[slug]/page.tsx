@@ -201,7 +201,7 @@ const StudentCoursePlayerPage = () => {
     return (
       <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
         <p className="text-[13px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error || "Programme not found."}</p>
-        <Link href="/student/programs" className="inline-block mt-4 text-[13px] font-semibold text-[#0474C4] hover:text-[#06457F]">← Back to My Programs</Link>
+        <Link href="/student/programs" className="inline-block mt-4 text-[13px] font-semibold text-[#6655DF] hover:text-[#2C2368]">← Back to My Programs</Link>
       </div>
     )
   }
@@ -233,37 +233,37 @@ const StudentCoursePlayerPage = () => {
 
   return (
     <div className="max-w-350 mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      <Link href="/student/programs" className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#6B6560] hover:text-[#0474C4] transition-colors mb-4">
+      <Link href="/student/programs" className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#69708A] hover:text-[#6655DF] transition-colors mb-4">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
         My Programs
       </Link>
 
       {/* Header */}
-      <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden mb-5">
+      <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden mb-5">
         <div className="flex flex-col sm:flex-row gap-4 p-4 sm:p-5">
-          <div className="relative w-full sm:w-48 aspect-video sm:aspect-square rounded-[10px] overflow-hidden bg-[#F5F4F1] shrink-0">
+          <div className="relative w-full sm:w-48 aspect-video sm:aspect-square rounded-[10px] overflow-hidden bg-[#F5F6FB] shrink-0">
             {program.thumbnail ? (
               <Image src={program.thumbnail} alt={program.title} fill className="object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-[#A8A39C]">
+              <div className="w-full h-full flex items-center justify-center text-[#8A90A6]">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
               </div>
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-[19px] font-extrabold text-[#1A1916] leading-tight">{program.title}</h1>
-            {program.tagline && <p className="text-[13px] text-[#6B6560] mt-1">{program.tagline}</p>}
-            <p className="text-[12px] text-[#A8A39C] mt-1.5">{instructorName(program)}</p>
+            <h1 className="text-[19px] font-extrabold text-[#171C35] leading-tight">{program.title}</h1>
+            {program.tagline && <p className="text-[13px] text-[#69708A] mt-1">{program.tagline}</p>}
+            <p className="text-[12px] text-[#8A90A6] mt-1.5">{instructorName(program)}</p>
 
             <div className="mt-4">
               <div className="flex items-center justify-between text-[12px] mb-1.5">
-                <span className="text-[#6B6560] font-medium">
+                <span className="text-[#69708A] font-medium">
                   {totalLessons > 0 ? `${completedIds.size} of ${totalLessons} lessons complete` : "No trackable lessons in this programme"}
                 </span>
-                <span className="font-bold text-[#1A1916]">{pct}%</span>
+                <span className="font-bold text-[#171C35]">{pct}%</span>
               </div>
-              <div className="h-2 rounded-full bg-[#F0EEE9] overflow-hidden">
-                <div className={`h-full rounded-full transition-all duration-300 ${completed ? "bg-emerald-600" : "bg-[#0474C4]"}`} style={{ width: `${pct}%` }} />
+              <div className="h-2 rounded-full bg-[#F0EFFA] overflow-hidden">
+                <div className={`h-full rounded-full transition-all duration-300 ${completed ? "bg-emerald-600" : "bg-[#6655DF]"}`} style={{ width: `${pct}%` }} />
               </div>
             </div>
           </div>
@@ -291,10 +291,10 @@ const StudentCoursePlayerPage = () => {
 
       {/* Overview */}
       {program.overview && (
-        <div className="rounded-[14px] border border-[#E5E2DC] bg-white p-4 sm:p-5 mb-5">
-          <h2 className="text-[13px] font-bold text-[#1A1916] mb-2">Overview</h2>
+        <div className="rounded-[16px] border border-[#DFE2ED] bg-white p-4 sm:p-5 mb-5">
+          <h2 className="text-[13px] font-bold text-[#171C35] mb-2">Overview</h2>
           <div
-            className="text-[13.5px] text-[#1A1916] leading-relaxed [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_p]:mb-2 last:[&_p]:mb-0"
+            className="text-[13.5px] text-[#171C35] leading-relaxed [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_p]:mb-2 last:[&_p]:mb-0"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(program.overview) }}
           />
         </div>
@@ -302,24 +302,24 @@ const StudentCoursePlayerPage = () => {
 
       {/* Lesson content + Course content navigator */}
       {chapters.length === 0 ? (
-        <div className="rounded-[14px] border border-[#E5E2DC] bg-white p-4 sm:p-5">
-          <p className="text-center text-[13px] text-[#A8A39C] py-6">This programme&apos;s curriculum hasn&apos;t been published yet.</p>
+        <div className="rounded-[16px] border border-[#DFE2ED] bg-white p-4 sm:p-5">
+          <p className="text-center text-[13px] text-[#8A90A6] py-6">This programme&apos;s curriculum hasn&apos;t been published yet.</p>
         </div>
       ) : (
         <div className="flex flex-col lg:flex-row gap-5 items-start">
           {/* Lesson content — middle/main column */}
-          <div className="order-2 lg:order-1 flex-1 min-w-0 w-full rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
+          <div className="order-2 lg:order-1 flex-1 min-w-0 w-full rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
             {selected ? (
               <>
-                <div className="flex items-start justify-between gap-3 px-4 sm:px-5 py-4 border-b border-[#E5E2DC]">
+                <div className="flex items-start justify-between gap-3 px-4 sm:px-5 py-4 border-b border-[#DFE2ED]">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-bold text-[#0474C4] uppercase tracking-[0.5px] mb-1 truncate">{selectedChapter?.title}</p>
-                    <h2 className="text-[15px] font-bold text-[#1A1916] leading-tight">{selected.lesson.title}</h2>
+                    <p className="text-[11px] font-bold text-[#6655DF] uppercase tracking-[0.5px] mb-1 truncate">{selectedChapter?.title}</p>
+                    <h2 className="text-[15px] font-bold text-[#171C35] leading-tight">{selected.lesson.title}</h2>
                   </div>
                   {selectedHasQuiz ? (
                     <span className={cn(
                       "shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold",
-                      selectedDone ? "bg-emerald-50 text-emerald-700" : "bg-[#EEF6FF] text-[#0474C4]",
+                      selectedDone ? "bg-emerald-50 text-emerald-700" : "bg-[#EEECFF] text-[#6655DF]",
                     )}>
                       {selectedDone ? "Quiz passed ✓" : "Quiz required"}
                     </span>
@@ -332,7 +332,7 @@ const StudentCoursePlayerPage = () => {
                         "shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[9px] text-[12px] font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
                         selectedDone
                           ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                          : "bg-[#0474C4] text-white hover:bg-[#06457F]",
+                          : "bg-[#6655DF] text-white hover:bg-[#2C2368]",
                       )}
                     >
                       {selectedDone && (
@@ -346,7 +346,7 @@ const StudentCoursePlayerPage = () => {
                 <div className="p-4 sm:p-5 space-y-4">
                   {selected.lesson.description && (
                     <div
-                      className="text-[13.5px] text-[#1A1916] leading-relaxed [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_p]:mb-2 last:[&_p]:mb-0"
+                      className="text-[13.5px] text-[#171C35] leading-relaxed [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_p]:mb-2 last:[&_p]:mb-0"
                       dangerouslySetInnerHTML={{ __html: sanitizeHtml(selected.lesson.description) }}
                     />
                   )}
@@ -358,16 +358,16 @@ const StudentCoursePlayerPage = () => {
                     />
                   )}
                   {!selectedHasContent && (
-                    <p className="text-[13px] text-[#A8A39C] py-6 text-center">No content in this lesson yet.</p>
+                    <p className="text-[13px] text-[#8A90A6] py-6 text-center">No content in this lesson yet.</p>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between gap-2 px-4 sm:px-5 py-3 border-t border-[#E5E2DC] bg-[#FAFAF9]">
+                <div className="flex items-center justify-between gap-2 px-4 sm:px-5 py-3 border-t border-[#DFE2ED] bg-[#FAFAFF]">
                   <button
                     type="button"
                     disabled={!prevEntry}
                     onClick={() => prevEntry && selectLesson(prevEntry.ci, prevEntry.lesson.id)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[9px] text-[12px] font-semibold text-[#6B6560] hover:text-[#0474C4] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[9px] text-[12px] font-semibold text-[#69708A] hover:text-[#6655DF] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
                     Previous
@@ -376,7 +376,7 @@ const StudentCoursePlayerPage = () => {
                     type="button"
                     disabled={!nextEntry}
                     onClick={() => nextEntry && selectLesson(nextEntry.ci, nextEntry.lesson.id)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[9px] text-[12px] font-semibold text-[#6B6560] hover:text-[#0474C4] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[9px] text-[12px] font-semibold text-[#69708A] hover:text-[#6655DF] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
                   >
                     Next
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
@@ -384,15 +384,15 @@ const StudentCoursePlayerPage = () => {
                 </div>
               </>
             ) : (
-              <p className="text-center text-[13px] text-[#A8A39C] py-16 px-4">Select a lesson from Course content to get started.</p>
+              <p className="text-center text-[13px] text-[#8A90A6] py-16 px-4">Select a lesson from Course content to get started.</p>
             )}
           </div>
 
           {/* Course content — right-hand navigator */}
-          <div className="order-1 lg:order-2 w-full lg:w-[340px] shrink-0 rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-            <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-              <h2 className="text-[13px] font-bold text-[#1A1916]">Course content</h2>
-              <span className="text-[11px] font-semibold text-[#6B6560] shrink-0">{completedIds.size}/{totalLessons}</span>
+          <div className="order-1 lg:order-2 w-full lg:w-[340px] shrink-0 rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+            <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+              <h2 className="text-[13px] font-bold text-[#171C35]">Course content</h2>
+              <span className="text-[11px] font-semibold text-[#69708A] shrink-0">{completedIds.size}/{totalLessons}</span>
             </div>
             <div className="max-h-[70vh] overflow-y-auto">
               {chapters.map((chapter, ci) => {
@@ -401,21 +401,21 @@ const StudentCoursePlayerPage = () => {
                 const lessons  = chapter.lessons ?? []
                 const doneCount = lessons.filter(isLessonDone).length
                 return (
-                  <div key={ci} className="border-b border-[#F0EEE9] last:border-none">
+                  <div key={ci} className="border-b border-[#F0EFFA] last:border-none">
                     <button
                       type="button"
                       disabled={!unlocked}
                       onClick={() => toggleChapter(ci)}
                       className={cn(
                         "w-full flex items-start justify-between gap-2 px-4 py-3 text-left transition-colors",
-                        unlocked ? "cursor-pointer hover:bg-[#FAFAF9]" : "cursor-not-allowed opacity-50",
+                        unlocked ? "cursor-pointer hover:bg-[#FAFAFF]" : "cursor-not-allowed opacity-50",
                       )}
                     >
-                      <span className="flex items-center gap-2 min-w-0 text-[12.5px] font-bold text-[#1A1916]">
-                        {!unlocked && <LockIcon className="text-[#A8A39C] shrink-0" />}
+                      <span className="flex items-center gap-2 min-w-0 text-[12.5px] font-bold text-[#171C35]">
+                        {!unlocked && <LockIcon className="text-[#8A90A6] shrink-0" />}
                         <span className="truncate">{chapter.title}</span>
                       </span>
-                      <span className="flex items-center gap-1.5 shrink-0 text-[11px] text-[#A8A39C] font-semibold">
+                      <span className="flex items-center gap-1.5 shrink-0 text-[11px] text-[#8A90A6] font-semibold">
                         {doneCount}/{lessons.length}
                         {unlocked && (
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={cn("transition-transform", open ? "rotate-180" : "")}><polyline points="6 9 12 15 18 9" /></svg>
@@ -423,10 +423,10 @@ const StudentCoursePlayerPage = () => {
                       </span>
                     </button>
                     {!unlocked && (
-                      <p className="text-[11px] text-[#A8A39C] px-4 pb-2.5 -mt-1.5">Complete the previous chapter to unlock</p>
+                      <p className="text-[11px] text-[#8A90A6] px-4 pb-2.5 -mt-1.5">Complete the previous chapter to unlock</p>
                     )}
                     {unlocked && open && (
-                      <div className="border-t border-[#F0EEE9]">
+                      <div className="border-t border-[#F0EFFA]">
                         {lessons.map((lesson, li) => {
                           const done   = isLessonDone(lesson)
                           const active = !!lesson.id && lesson.id === selectedLessonId
@@ -438,25 +438,25 @@ const StudentCoursePlayerPage = () => {
                               disabled={!lesson.id}
                               onClick={() => lesson.id && selectLesson(ci, lesson.id)}
                               className={cn(
-                                "w-full flex items-center gap-2.5 px-4 py-2.5 text-left border-t border-[#F5F4F1] first:border-t-0 transition-colors",
+                                "w-full flex items-center gap-2.5 px-4 py-2.5 text-left border-t border-[#F5F6FB] first:border-t-0 transition-colors",
                                 lesson.id ? "cursor-pointer" : "cursor-default",
-                                active ? "bg-[#EEF6FF]" : "hover:bg-[#FAFAF9]",
+                                active ? "bg-[#EEECFF]" : "hover:bg-[#FAFAFF]",
                               )}
                             >
                               <span className={cn(
                                 "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0",
-                                done ? "bg-emerald-600 border-emerald-600 text-white" : "border-[#D9D6D0] text-transparent",
+                                done ? "bg-emerald-600 border-emerald-600 text-white" : "border-[#D8DAE5] text-transparent",
                               )}>
                                 <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><polyline points="20 6 9 17 4 12" /></svg>
                               </span>
                               <span className={cn(
                                 "flex-1 min-w-0 text-[12.5px] truncate",
-                                done ? "text-[#A8A39C] line-through" : active ? "text-[#0474C4] font-semibold" : "text-[#1A1916]",
+                                done ? "text-[#8A90A6] line-through" : active ? "text-[#6655DF] font-semibold" : "text-[#171C35]",
                               )}>
                                 {lesson.title}
                               </span>
                               {hasQuiz && !done && (
-                                <span className="shrink-0 text-[9.5px] font-bold uppercase tracking-wide text-[#0474C4] bg-[#EEF6FF] px-1.5 py-0.5 rounded-full">Quiz</span>
+                                <span className="shrink-0 text-[9.5px] font-bold uppercase tracking-wide text-[#6655DF] bg-[#EEECFF] px-1.5 py-0.5 rounded-full">Quiz</span>
                               )}
                             </button>
                           )

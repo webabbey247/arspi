@@ -101,14 +101,14 @@ function fmtDate(iso: string) {
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
 
-const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors resize-none"
+const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors resize-none"
 
 function Field({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">
+      <label className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px]">
         {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-        {hint && <span className="ml-1 text-[10px] font-normal normal-case text-[#A8A39C]">({hint})</span>}
+        {hint && <span className="ml-1 text-[10px] font-normal normal-case text-[#8A90A6]">({hint})</span>}
       </label>
       {children}
     </div>
@@ -122,11 +122,11 @@ function FieldError({ msg }: { msg?: string }) {
 
 function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171C35]/40">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
-        <p className="text-[14px] text-[#1A1916] mb-5">{message}</p>
+        <p className="text-[14px] text-[#171C35] mb-5">{message}</p>
         <div className="flex gap-2 justify-end">
-          <button onClick={onCancel} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
+          <button onClick={onCancel} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
           <button onClick={onConfirm} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-red-600 text-white hover:bg-red-700 cursor-pointer">Delete</button>
         </div>
       </div>
@@ -157,14 +157,14 @@ function ImageUpload({ value, onChange, label }: { value: string; onChange: (url
   return (
     <div className="flex flex-col gap-2">
       {value && (
-        <div className="relative w-full h-32 rounded-[10px] overflow-hidden border border-[#E5E2DC]">
+        <div className="relative w-full h-32 rounded-[10px] overflow-hidden border border-[#DFE2ED]">
           <Image src={value} alt={label ?? "Image"} fill className="object-cover" />
           <button type="button" onClick={() => onChange("")} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 cursor-pointer">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
       )}
-      <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer">
+      <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 transition-colors cursor-pointer">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         {uploading ? "Uploading…" : value ? "Replace" : "Upload"}
       </button>
@@ -196,19 +196,19 @@ function RichTextEditor({ value, onChange, placeholder }: {
     editorProps: {
       attributes: {
         class:
-          "px-3 py-2.5 min-h-[220px] text-[13px] text-[#1A1916] outline-none " +
+          "px-3 py-2.5 min-h-[220px] text-[13px] text-[#171C35] outline-none " +
           "[&_h1]:text-[1.5rem] [&_h1]:font-semibold [&_h1]:mt-3 [&_h1]:mb-2 " +
           "[&_h2]:text-[1.25rem] [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-2 " +
           "[&_h3]:text-[1.05rem] [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1.5 " +
           "[&_ul]:list-disc [&_ul]:ml-4 [&_ul]:space-y-1 " +
           "[&_ol]:list-decimal [&_ol]:ml-4 [&_ol]:space-y-1 " +
           "[&_p]:leading-relaxed [&_p]:mb-2 " +
-          "[&_blockquote]:border-l-2 [&_blockquote]:border-[#0474C4] [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-[#6B6560] " +
-          "[&_code]:bg-[#F5F4F1] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[12px] [&_code]:font-mono " +
-          "[&_pre]:bg-[#1A1916] [&_pre]:text-white [&_pre]:p-3 [&_pre]:rounded-[8px] [&_pre]:font-mono [&_pre]:text-[12px] [&_pre]:overflow-x-auto " +
+          "[&_blockquote]:border-l-2 [&_blockquote]:border-[#6655DF] [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-[#69708A] " +
+          "[&_code]:bg-[#F5F6FB] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[12px] [&_code]:font-mono " +
+          "[&_pre]:bg-[#171C35] [&_pre]:text-white [&_pre]:p-3 [&_pre]:rounded-[8px] [&_pre]:font-mono [&_pre]:text-[12px] [&_pre]:overflow-x-auto " +
           "[&_pre_code]:bg-transparent [&_pre_code]:text-white [&_pre_code]:p-0 " +
-          "[&_a]:text-[#0474C4] [&_a]:underline " +
-          "[&_hr]:my-3 [&_hr]:border-t [&_hr]:border-[#E5E2DC]",
+          "[&_a]:text-[#6655DF] [&_a]:underline " +
+          "[&_hr]:my-3 [&_hr]:border-t [&_hr]:border-[#DFE2ED]",
       },
     },
   })
@@ -227,8 +227,8 @@ function RichTextEditor({ value, onChange, placeholder }: {
         onClick={action}
         disabled={disabled}
         className={`min-w-7 h-7 px-1.5 flex items-center justify-center rounded text-[12px] font-semibold transition-colors cursor-pointer ${
-          active ? "bg-[#0474C4] text-white"
-                 : "text-[#6B6560] hover:bg-[#E5E2DC] disabled:opacity-30 disabled:cursor-not-allowed"
+          active ? "bg-[#6655DF] text-white"
+                 : "text-[#69708A] hover:bg-[#DFE2ED] disabled:opacity-30 disabled:cursor-not-allowed"
         }`}
       >
         {children}
@@ -252,15 +252,15 @@ function RichTextEditor({ value, onChange, placeholder }: {
   if (!editor) return null
 
   return (
-    <div className="border border-[#E5E2DC] rounded-[10px] overflow-hidden focus-within:border-[#0474C4] transition-colors bg-white">
-      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-[#E5E2DC] bg-[#FAFAF9]">
+    <div className="border border-[#DFE2ED] rounded-[10px] overflow-hidden focus-within:border-[#6655DF] transition-colors bg-white">
+      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-[#DFE2ED] bg-[#FAFAFF]">
         {/* Headings */}
         {btn(editor.isActive("heading", { level: 1 }), () => editor.chain().focus().toggleHeading({ level: 1 }).run(), "Heading 1", "H1")}
         {btn(editor.isActive("heading", { level: 2 }), () => editor.chain().focus().toggleHeading({ level: 2 }).run(), "Heading 2", "H2")}
         {btn(editor.isActive("heading", { level: 3 }), () => editor.chain().focus().toggleHeading({ level: 3 }).run(), "Heading 3", "H3")}
         {btn(editor.isActive("paragraph"),             () => editor.chain().focus().setParagraph().run(),               "Paragraph", "P")}
 
-        <span className="w-px h-4 bg-[#E5E2DC] mx-1" />
+        <span className="w-px h-4 bg-[#DFE2ED] mx-1" />
 
         {/* Inline marks */}
         {btn(editor.isActive("bold"),   () => editor.chain().focus().toggleBold().run(),   "Bold",   <b>B</b>)}
@@ -273,7 +273,7 @@ function RichTextEditor({ value, onChange, placeholder }: {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         )}
 
-        <span className="w-px h-4 bg-[#E5E2DC] mx-1" />
+        <span className="w-px h-4 bg-[#DFE2ED] mx-1" />
 
         {/* Lists & blocks */}
         {btn(editor.isActive("bulletList"), () => editor.chain().focus().toggleBulletList().run(), "Bullet list",
@@ -292,7 +292,7 @@ function RichTextEditor({ value, onChange, placeholder }: {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="3" y1="12" x2="21" y2="12"/></svg>
         )}
 
-        <span className="w-px h-4 bg-[#E5E2DC] mx-1" />
+        <span className="w-px h-4 bg-[#DFE2ED] mx-1" />
 
         {/* History */}
         {btn(false, () => editor.chain().focus().undo().run(), "Undo",
@@ -324,7 +324,7 @@ function MultiChipSelect({
     else onChange([...selected, id])
   }
   if (options.length === 0) {
-    return <p className="text-[12px] text-[#A8A39C] italic py-2">{emptyLabel}</p>
+    return <p className="text-[12px] text-[#8A90A6] italic py-2">{emptyLabel}</p>
   }
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -337,8 +337,8 @@ function MultiChipSelect({
             onClick={() => toggle(o.id)}
             className={`px-2.5 py-1 rounded-full text-[12px] font-medium border transition-colors cursor-pointer ${
               isOn
-                ? "bg-[#0474C4] text-white border-[#0474C4]"
-                : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"
+                ? "bg-[#6655DF] text-white border-[#6655DF]"
+                : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"
             }`}
           >
             {o.name}
@@ -372,20 +372,20 @@ function PersonAvatarUpload({ value, onChange }: { value: string; onChange: (url
   return (
     <div className="flex items-center gap-3">
       {value ? (
-        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[#E5E2DC] shrink-0 group">
+        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[#DFE2ED] shrink-0 group">
           <Image src={value} alt="Photo" fill className="object-cover" />
           <button type="button" onClick={() => onChange("")}
-            className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer">
+            className="absolute inset-0 bg-[#171C35]/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
       ) : (
-        <div className="w-12 h-12 rounded-full border-2 border-dashed border-[#E5E2DC] flex items-center justify-center shrink-0 text-[#A8A39C]">
+        <div className="w-12 h-12 rounded-full border-2 border-dashed border-[#DFE2ED] flex items-center justify-center shrink-0 text-[#8A90A6]">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         </div>
       )}
       <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading}
-        className="px-2.5 py-1 text-[11px] font-semibold border border-[#E5E2DC] rounded-[8px] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer">
+        className="px-2.5 py-1 text-[11px] font-semibold border border-[#DFE2ED] rounded-[8px] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 transition-colors cursor-pointer">
         {uploading ? "Uploading…" : value ? "Change" : "Upload"}
       </button>
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
@@ -413,12 +413,12 @@ function PeopleArrayEditor({
   return (
     <div className="space-y-3">
       {fields.length === 0 && (
-        <p className="text-[12px] text-[#A8A39C] italic">No {name === "investigators" ? "investigators" : "members"} added yet.</p>
+        <p className="text-[12px] text-[#8A90A6] italic">No {name === "investigators" ? "investigators" : "members"} added yet.</p>
       )}
       {fields.map((field, i) => (
-        <div key={field.id} className="border border-[#E5E2DC] rounded-[10px] bg-white p-3 space-y-3">
+        <div key={field.id} className="border border-[#DFE2ED] rounded-[10px] bg-white p-3 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-[#6B6560] uppercase tracking-wide">
+            <span className="text-[10px] font-bold text-[#69708A] uppercase tracking-wide">
               {name === "investigators" ? "Investigator" : "Member"} {i + 1}
             </span>
             <button
@@ -429,7 +429,7 @@ function PeopleArrayEditor({
               }}
               disabled={requireAtLeastOne && fields.length === 1}
               title={requireAtLeastOne && fields.length === 1 ? "At least one is required" : "Remove"}
-              className="w-6 h-6 flex items-center justify-center rounded-full text-[#A8A39C] hover:bg-red-50 hover:text-red-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#A8A39C] disabled:cursor-not-allowed cursor-pointer"
+              className="w-6 h-6 flex items-center justify-center rounded-full text-[#8A90A6] hover:bg-red-50 hover:text-red-500 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#8A90A6] disabled:cursor-not-allowed cursor-pointer"
             >
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -469,7 +469,7 @@ function PeopleArrayEditor({
       <button
         type="button"
         onClick={() => append({ imageUrl: "", name: "", role: "" })}
-        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
+        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add {name === "investigators" ? "Investigator" : "Member"}
@@ -589,9 +589,9 @@ function ProjectDrawer({
   }
 
   return (
-    <div className="fixed inset-0 z-100 flex items-start justify-end bg-black/40">
+    <div className="fixed inset-0 z-100 flex items-start justify-end bg-[#171C35]/40">
       <div className="bg-white h-full w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
-        <div className="bg-[#0474C4] px-6 py-5 shrink-0 relative">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] px-6 py-5 shrink-0 relative">
           <button type="button" onClick={onClose} className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -616,7 +616,7 @@ function ProjectDrawer({
           </Field>
 
           <Field label="Slug" hint="auto-generated — read only">
-            <input {...register("slug")} readOnly className={`${inputCls} bg-[#FAFAF9] text-[#6B6560] cursor-default`} />
+            <input {...register("slug")} readOnly className={`${inputCls} bg-[#FAFAFF] text-[#69708A] cursor-default`} />
           </Field>
 
           <Field label="Excerpt" required hint="Short summary shown on cards">
@@ -676,8 +676,8 @@ function ProjectDrawer({
             />
           </Field>
 
-          <div className="border-t border-[#E5E2DC] pt-4">
-            <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px] mb-3">Project Investigators <span className="text-red-500">*</span></p>
+          <div className="border-t border-[#DFE2ED] pt-4">
+            <p className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px] mb-3">Project Investigators <span className="text-red-500">*</span></p>
             <PeopleArrayEditor
               control={control}
               register={register}
@@ -687,8 +687,8 @@ function ProjectDrawer({
             />
           </div>
 
-          <div className="border-t border-[#E5E2DC] pt-4">
-            <p className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px] mb-3">Project Members <span className="font-normal normal-case text-[10px] text-[#A8A39C]">(optional)</span></p>
+          <div className="border-t border-[#DFE2ED] pt-4">
+            <p className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px] mb-3">Project Members <span className="font-normal normal-case text-[10px] text-[#8A90A6]">(optional)</span></p>
             <PeopleArrayEditor
               control={control}
               register={register}
@@ -717,9 +717,9 @@ function ProjectDrawer({
           </div>
         </form>
 
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#E5E2DC] bg-[#FAFAF9] shrink-0">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
-          <button type="button" onClick={handleSubmit(onSubmit)} disabled={saving} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#DFE2ED] bg-[#FAFAFF] shrink-0">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
+          <button type="button" onClick={handleSubmit(onSubmit)} disabled={saving} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer">
             {saving ? "Saving…" : project ? "Save Changes" : "Create Project"}
           </button>
         </div>
@@ -754,9 +754,9 @@ function TaxonomyModal({
   const Capital = singular.charAt(0).toUpperCase() + singular.slice(1)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171C35]/40">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
-        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] p-5 flex items-start justify-between gap-4">
           <div>
             <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-300">
               {item ? `Edit ${Capital}` : `New ${Capital}`}
@@ -765,7 +765,7 @@ function TaxonomyModal({
               {item ? `Update the ${singular} name.` : `Create a new project ${singular}.`}
             </div>
           </div>
-          <button type="button" onClick={onClose} className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EDF2FB]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+          <button type="button" onClick={onClose} className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EEECFF]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -773,8 +773,8 @@ function TaxonomyModal({
           {error && <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
           <input autoFocus value={name} onChange={e => setName(e.target.value)} placeholder={`e.g. ${Capital} name`} className={inputCls} required />
           <div className="flex gap-2 justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
-            <button type="submit" disabled={saving || !name.trim()} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
+            <button type="submit" disabled={saving || !name.trim()} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer">
               {saving ? "Saving…" : item ? "Save" : "Create"}
             </button>
           </div>
@@ -815,20 +815,20 @@ function TaxonomyTab({
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+    <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
         <div className="relative w-full sm:w-64">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${label.toLowerCase()}…`} className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${label.toLowerCase()}…`} className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors" />
         </div>
       </div>
 
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-[13px]">
           <thead>
-            <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+            <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
               {["Name", "Slug", "Projects", "Created", ""].map(col => (
-                <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
               ))}
             </tr>
           </thead>
@@ -836,16 +836,16 @@ function TaxonomyTab({
             {loading ? (
               <TableSkeletonRows colSpan={5} />
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No {singular + "s"} yet.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-10 text-center text-[#8A90A6]">No {singular + "s"} yet.</td></tr>
             ) : paginated.map(item => (
-              <tr key={item.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
-                <td className="px-4 py-3 font-semibold text-[#1A1916] whitespace-nowrap">{item.name}</td>
-                <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{item.slug}</td>
-                <td className="px-4 py-3 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">{item._count.projects}</span></td>
-                <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(item.createdAt)}</td>
+              <tr key={item.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
+                <td className="px-4 py-3 font-semibold text-[#171C35] whitespace-nowrap">{item.name}</td>
+                <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{item.slug}</td>
+                <td className="px-4 py-3 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A] text-[11px] font-semibold">{item._count.projects}</span></td>
+                <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDate(item.createdAt)}</td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-1">
-                    <button onClick={() => onEdit(item)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                    <button onClick={() => onEdit(item)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
                     <button onClick={() => onDelete(item)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -864,30 +864,30 @@ function TaxonomyTab({
         {loading ? (
           <SkeletonCardList />
         ) : filtered.length === 0 ? (
-          <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No {singular + "s"} yet.</div>
+          <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No {singular + "s"} yet.</div>
         ) : paginated.map(item => (
-          <div key={item.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+          <div key={item.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-[#1A1916] text-[14px] leading-tight truncate">{item.name}</p>
-                <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{item.slug}</p>
+                <p className="font-semibold text-[#171C35] text-[14px] leading-tight truncate">{item.name}</p>
+                <p className="text-[12px] text-[#8A90A6] mt-0.5 truncate">{item.slug}</p>
               </div>
-              <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold shrink-0">{item._count.projects}</span>
+              <span className="px-2 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A] text-[11px] font-semibold shrink-0">{item._count.projects}</span>
             </div>
 
             <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
               <div>
-                <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Projects</dt>
-                <dd className="text-[#1A1916] font-medium">{item._count.projects}</dd>
+                <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Projects</dt>
+                <dd className="text-[#171C35] font-medium">{item._count.projects}</dd>
               </div>
               <div>
-                <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Created</dt>
-                <dd className="text-[#1A1916] font-medium">{fmtDate(item.createdAt)}</dd>
+                <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Created</dt>
+                <dd className="text-[#171C35] font-medium">{fmtDate(item.createdAt)}</dd>
               </div>
             </dl>
 
             <div className="flex items-center justify-end gap-1.5 pt-1">
-              <button onClick={() => onEdit(item)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+              <button onClick={() => onEdit(item)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
               <button onClick={() => onDelete(item)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -898,19 +898,19 @@ function TaxonomyTab({
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-        <p className="text-[11px] text-[#A8A39C]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+        <p className="text-[11px] text-[#8A90A6]">
           {filtered.length === 0 ? (
-            <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{items.length}</span> {label.toLowerCase()}</>
+            <>Showing <span className="font-semibold text-[#69708A]">0</span> of <span className="font-semibold text-[#69708A]">{items.length}</span> {label.toLowerCase()}</>
           ) : (
-            <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-semibold text-[#6B6560]">{filtered.length}</span> {label.toLowerCase()}</>
+            <>Showing <span className="font-semibold text-[#69708A]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#69708A]">{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-semibold text-[#69708A]">{filtered.length}</span> {label.toLowerCase()}</>
           )}
         </p>
         {filtered.length > 0 && (
           <div className="flex items-center gap-1.5">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
-            <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+            <span className="text-[11px] font-semibold text-[#69708A] px-2">{page} / {totalPages}</span>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
           </div>
         )}
       </div>
@@ -1134,12 +1134,13 @@ export default function AdminProjectsPage() {
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-[18px] font-extrabold text-[#1A1916]">Research Projects</h1>
-          <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage projects, divisions, departments and services</p>
+          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
+          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Research Projects</h1>
+          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage projects, divisions, departments and services</p>
         </div>
         <button
           onClick={cta.onClick}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer self-start sm:self-auto"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer self-start sm:self-auto"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           {cta.label}
@@ -1147,11 +1148,11 @@ export default function AdminProjectsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 overflow-x-auto sm:overflow-x-visible sm:w-fit sm:flex-wrap">
+      <div className="flex gap-1 mb-5 bg-[#F5F6FB] rounded-[12px] p-1 overflow-x-auto sm:overflow-x-visible sm:w-fit sm:flex-wrap">
         {(["projects", ...TAXONOMY_TABS] as Tab[]).map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}>
+          <button key={t} onClick={() => setTab(t)} className={`shrink-0 whitespace-nowrap px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#171C35] shadow-sm" : "text-[#69708A] hover:text-[#171C35]"}`}>
             {t}
-            <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tab === t ? "bg-[#F5F4F1] text-[#6B6560]" : "bg-[#E5E2DC] text-[#A8A39C]"}`}>
+            <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tab === t ? "bg-[#F5F6FB] text-[#69708A]" : "bg-[#DFE2ED] text-[#8A90A6]"}`}>
               {tabCount(t)}
             </span>
           </button>
@@ -1160,42 +1161,42 @@ export default function AdminProjectsPage() {
 
       {/* Projects tab */}
       {tab === "projects" && (
-        <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+        <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
             <div className="relative w-full sm:w-64">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search projects…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search projects…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors" />
             </div>
 
             <div className="sm:ml-auto flex flex-wrap items-center gap-2">
               <div ref={statusRef} className="relative">
                 <button
                   onClick={() => setStatusOpen(o => !o)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${statusFilter !== "All" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"}`}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${statusFilter !== "All" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                   Project Status
-                  {statusFilter !== "All" && <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{STATUS_LABELS[statusFilter]}</span>}
+                  {statusFilter !== "All" && <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{STATUS_LABELS[statusFilter]}</span>}
                 </button>
                 {statusOpen && (
-                  <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#E5E2DC] rounded-xl shadow-lg py-1.5 min-w-36">
+                  <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-36">
                     {([
                       ["All",      counts.all],
                       ["ACTIVE",   counts.active],
                       ["COMPLETE", counts.complete],
                     ] as const).map(([label, count]) => (
                       <button key={label} onClick={() => { setStatusFilter(label as typeof statusFilter); setStatusOpen(false) }}
-                        className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${statusFilter === label ? "bg-[#EEF6FF] text-[#0474C4]" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
+                        className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${statusFilter === label ? "bg-[#EEECFF] text-[#6655DF]" : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"}`}
                       >
                         <span>{label === "All" ? "All Statuses" : STATUS_LABELS[label as ProjectStatus]}</span>
-                        <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560]">{count}</span>
+                        <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A]">{count}</span>
                       </button>
                     ))}
                   </div>
                 )}
               </div>
 
-              <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] bg-white hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+              <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] bg-white hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Export CSV
               </button>
@@ -1205,9 +1206,9 @@ export default function AdminProjectsPage() {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
                   {["Project", "Status", "Client", "Division", "Department", "Services", ""].map((col, i) => (
-                    <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                    <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -1215,49 +1216,49 @@ export default function AdminProjectsPage() {
                 {loading ? (
                   <TableSkeletonRows colSpan={7} />
                 ) : filteredProjects.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">No projects found.</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#8A90A6]">No projects found.</td></tr>
                 ) : paginatedProjects.map(p => (
-                  <tr key={p.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                  <tr key={p.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {p.coverImage ? (
-                          <div className="relative w-9 h-9 rounded-[8px] overflow-hidden shrink-0 border border-[#E5E2DC]">
+                          <div className="relative w-9 h-9 rounded-[8px] overflow-hidden shrink-0 border border-[#DFE2ED]">
                             <Image src={p.coverImage} alt={p.title} fill className="object-cover" />
                           </div>
                         ) : (
-                          <div className="w-9 h-9 rounded-[8px] bg-[#EEF6FF] flex items-center justify-center shrink-0">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0474C4" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                          <div className="w-9 h-9 rounded-[8px] bg-[#EEECFF] flex items-center justify-center shrink-0">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6655DF" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
                           </div>
                         )}
-                        <p className="font-semibold text-[#1A1916] leading-tight line-clamp-1">{p.title}</p>
+                        <p className="font-semibold text-[#171C35] leading-tight line-clamp-1">{p.title}</p>
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_COLORS[p.status]}`}>{STATUS_LABELS[p.status]}</span>
                     </td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{p.client}</td>
+                    <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{p.client}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {p.division ? <span className="px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-[11px] font-semibold">{p.division.name}</span> : <span className="text-[#A8A39C]">—</span>}
+                      {p.division ? <span className="px-2 py-0.5 rounded-full bg-[#EEECFF] text-[#5143AD] text-[11px] font-semibold">{p.division.name}</span> : <span className="text-[#8A90A6]">—</span>}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {p.department ? <span className="text-[12px] text-[#1A1916]">{p.department.name}</span> : <span className="text-[#A8A39C]">—</span>}
+                      {p.department ? <span className="text-[12px] text-[#171C35]">{p.department.name}</span> : <span className="text-[#8A90A6]">—</span>}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {p.services.length === 0 ? (
-                        <span className="text-[#A8A39C]">—</span>
+                        <span className="text-[#8A90A6]">—</span>
                       ) : (
-                        <span className="text-[12px] text-[#6B6560]" title={p.services.map(s => s.name).join(", ")}>
+                        <span className="text-[12px] text-[#69708A]" title={p.services.map(s => s.name).join(", ")}>
                           {p.services[0].name}
-                          {p.services.length > 1 && <span className="text-[#A8A39C]"> +{p.services.length - 1}</span>}
+                          {p.services.length > 1 && <span className="text-[#8A90A6]"> +{p.services.length - 1}</span>}
                         </span>
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-1">
-                        <Link href={`/our-research/research-projects/${p.slug}`} target="_blank" title="View public page" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+                        <Link href={`/our-research/research-projects/${p.slug}`} target="_blank" title="View public page" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                         </Link>
-                        <button onClick={() => setProjectDrawer(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                        <button onClick={() => setProjectDrawer(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         <button onClick={() => setDeleteProj(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -1276,48 +1277,48 @@ export default function AdminProjectsPage() {
             {loading ? (
               <SkeletonCardList />
             ) : filteredProjects.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No projects found.</div>
+              <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No projects found.</div>
             ) : paginatedProjects.map(p => (
-              <div key={p.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <div key={p.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                 <div className="flex items-start gap-3">
                   {p.coverImage ? (
-                    <div className="relative w-10 h-10 rounded-[8px] overflow-hidden shrink-0 border border-[#E5E2DC]">
+                    <div className="relative w-10 h-10 rounded-[8px] overflow-hidden shrink-0 border border-[#DFE2ED]">
                       <Image src={p.coverImage} alt={p.title} fill className="object-cover" />
                     </div>
                   ) : (
-                    <div className="w-10 h-10 rounded-[8px] bg-[#EEF6FF] flex items-center justify-center shrink-0">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0474C4" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    <div className="w-10 h-10 rounded-[8px] bg-[#EEECFF] flex items-center justify-center shrink-0">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6655DF" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight line-clamp-2">{p.title}</p>
-                    <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{p.client}</p>
+                    <p className="font-semibold text-[#171C35] text-[14px] leading-tight line-clamp-2">{p.title}</p>
+                    <p className="text-[12px] text-[#8A90A6] mt-0.5 truncate">{p.client}</p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_COLORS[p.status]}`}>{STATUS_LABELS[p.status]}</span>
                   {p.division && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-[11px] font-semibold">{p.division.name}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-[#EEECFF] text-[#5143AD] text-[11px] font-semibold">{p.division.name}</span>
                   )}
                 </div>
 
                 {p.excerpt && (
-                  <p className="text-[12px] text-[#6B6560] line-clamp-2">{p.excerpt}</p>
+                  <p className="text-[12px] text-[#69708A] line-clamp-2">{p.excerpt}</p>
                 )}
 
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Department</dt>
-                    <dd className="text-[#1A1916] font-medium truncate">{p.department?.name ?? "—"}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Department</dt>
+                    <dd className="text-[#171C35] font-medium truncate">{p.department?.name ?? "—"}</dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Services</dt>
-                    <dd className="text-[#1A1916] font-medium truncate" title={p.services.map(s => s.name).join(", ")}>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Services</dt>
+                    <dd className="text-[#171C35] font-medium truncate" title={p.services.map(s => s.name).join(", ")}>
                       {p.services.length === 0 ? "—" : (
                         <>
                           {p.services[0].name}
-                          {p.services.length > 1 && <span className="text-[#A8A39C]"> +{p.services.length - 1}</span>}
+                          {p.services.length > 1 && <span className="text-[#8A90A6]"> +{p.services.length - 1}</span>}
                         </>
                       )}
                     </dd>
@@ -1325,10 +1326,10 @@ export default function AdminProjectsPage() {
                 </dl>
 
                 <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <Link href={`/our-research/research-projects/${p.slug}`} target="_blank" aria-label="View public page" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+                  <Link href={`/our-research/research-projects/${p.slug}`} target="_blank" aria-label="View public page" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                   </Link>
-                  <button onClick={() => setProjectDrawer(p)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                  <button onClick={() => setProjectDrawer(p)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button onClick={() => setDeleteProj(p)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -1339,19 +1340,19 @@ export default function AdminProjectsPage() {
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+            <p className="text-[11px] text-[#8A90A6]">
               {filteredProjects.length === 0 ? (
-                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{projects.length}</span> projects</>
+                <>Showing <span className="font-semibold text-[#69708A]">0</span> of <span className="font-semibold text-[#69708A]">{projects.length}</span> projects</>
               ) : (
-                <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, filteredProjects.length)}</span> of <span className="font-semibold text-[#6B6560]">{filteredProjects.length}</span> {filteredProjects.length === 1 ? "project" : "projects"}</>
+                <>Showing <span className="font-semibold text-[#69708A]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#69708A]">{Math.min(page * PAGE_SIZE, filteredProjects.length)}</span> of <span className="font-semibold text-[#69708A]">{filteredProjects.length}</span> {filteredProjects.length === 1 ? "project" : "projects"}</>
               )}
             </p>
             {filteredProjects.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
-                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#69708A] px-2">{page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
               </div>
             )}
           </div>

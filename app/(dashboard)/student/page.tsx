@@ -55,9 +55,9 @@ function ContinueLearningBar({ item }: { item: ContinueLearning }) {
   return (
     <Link
       href={`/student/programs/${item.slug}`}
-      className="group flex items-center gap-4 rounded-[14px] border border-[#BFE0FA] bg-gradient-to-r from-[#EEF6FF] to-white px-4 sm:px-5 py-4 mb-6 hover:border-[#0474C4] transition-colors"
+      className="group flex items-center gap-4 rounded-[16px] border border-[#DDD9F4] bg-gradient-to-r from-[#EEECFF] to-white px-4 sm:px-5 py-4 mb-6 hover:border-[#6655DF] transition-colors"
     >
-      <div className="relative w-11 h-11 rounded-[11px] bg-[#0474C4] text-white flex items-center justify-center shrink-0 overflow-hidden">
+      <div className="relative w-11 h-11 rounded-[11px] bg-[#6655DF] text-white flex items-center justify-center shrink-0 overflow-hidden">
         {item.thumbnail ? (
           <Image src={item.thumbnail} alt="" fill className="object-cover opacity-90" />
         ) : (
@@ -65,20 +65,20 @@ function ContinueLearningBar({ item }: { item: ContinueLearning }) {
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-bold text-[#0474C4] uppercase tracking-wide">Continue where you left off</p>
-        <p className="text-[14px] font-bold text-[#1A1916] truncate mt-0.5">{item.title}</p>
+        <p className="text-[11px] font-bold text-[#6655DF] uppercase tracking-wide">Continue where you left off</p>
+        <p className="text-[14px] font-bold text-[#171C35] truncate mt-0.5">{item.title}</p>
         {item.totalLessons > 0 ? (
           <div className="flex items-center gap-2 mt-1.5">
-            <div className="h-1.5 flex-1 max-w-40 rounded-full bg-[#D9E9F7] overflow-hidden">
-              <div className="h-full bg-[#0474C4] rounded-full transition-all" style={{ width: `${pct}%` }} />
+            <div className="h-1.5 flex-1 max-w-40 rounded-full bg-[#DDD9F4] overflow-hidden">
+              <div className="h-full bg-[#6655DF] rounded-full transition-all" style={{ width: `${pct}%` }} />
             </div>
-            <span className="text-[11px] text-[#6B6560] font-medium shrink-0">{item.completedLessons}/{item.totalLessons} lessons</span>
+            <span className="text-[11px] text-[#69708A] font-medium shrink-0">{item.completedLessons}/{item.totalLessons} lessons</span>
           </div>
         ) : (
-          <p className="text-[11px] text-[#6B6560] mt-1">You&apos;re enrolled — pick up where you left off</p>
+          <p className="text-[11px] text-[#69708A] mt-1">You&apos;re enrolled — pick up where you left off</p>
         )}
       </div>
-      <span className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white group-hover:bg-[#06457F] transition-colors shrink-0">
+      <span className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white group-hover:bg-[#2C2368] transition-colors shrink-0">
         Continue
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
       </span>
@@ -94,22 +94,22 @@ function StatCard({
   href: string; icon: React.ReactNode; color: string; bg: string; label: string
   loading: boolean; total: number; breakdown: { label: string; value: number; tone: "emerald" | "amber" | "slate" }[]
 }) {
-  const toneClasses = { emerald: "bg-emerald-50 text-emerald-700", amber: "bg-amber-50 text-amber-700", slate: "bg-[#F0EEE9] text-[#6B6560]" }
+  const toneClasses = { emerald: "bg-emerald-50 text-emerald-700", amber: "bg-amber-50 text-amber-700", slate: "bg-[#F0EFFA] text-[#69708A]" }
   return (
-    <Link href={href} className="group flex flex-col gap-3 p-4 rounded-[14px] border border-[#E5E2DC] bg-white hover:border-[#0474C4] hover:shadow-sm transition-all">
+    <Link href={href} className="group flex flex-col gap-3 p-4 rounded-[16px] border border-[#DFE2ED] bg-white hover:border-[#6655DF] hover:shadow-sm transition-all">
       <div className="flex items-center justify-between">
         <div className="w-9 h-9 rounded-[10px] flex items-center justify-center" style={{ backgroundColor: bg, color }}>
           <svg viewBox="0 0 24 24" className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
         </div>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#A8A39C] group-hover:text-[#0474C4] group-hover:translate-x-0.5 transition-all">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#8A90A6] group-hover:text-[#6655DF] group-hover:translate-x-0.5 transition-all">
           <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
         </svg>
       </div>
       <div>
-        <p className="text-[24px] font-extrabold text-[#1A1916] leading-none">
+        <p className="text-[24px] font-extrabold text-[#171C35] leading-none">
           {loading ? <Skeleton className="inline-block w-10 h-6" /> : total.toLocaleString()}
         </p>
-        <p className="text-[13px] font-semibold text-[#6B6560] mt-1.5">{label}</p>
+        <p className="text-[13px] font-semibold text-[#69708A] mt-1.5">{label}</p>
       </div>
       {!loading && (
         <div className="flex flex-wrap gap-1.5">
@@ -130,32 +130,32 @@ function WorkshopTable({
   title: string; rows: WorkshopRow[]; loading: boolean; emptyLabel: string; dateLabel: string
 }) {
   return (
-    <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden flex flex-col">
-      <div className="px-4 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9] flex items-center justify-between">
-        <h2 className="text-[13px] font-bold text-[#1A1916]">{title}</h2>
-        <Link href="/student/workshops" className="text-[11px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors">View all</Link>
+    <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden flex flex-col">
+      <div className="px-4 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF] flex items-center justify-between">
+        <h2 className="text-[13px] font-bold text-[#171C35]">{title}</h2>
+        <Link href="/student/workshops" className="text-[11px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors">View all</Link>
       </div>
       <table className="w-full text-[12.5px]">
         <thead>
-          <tr className="border-b border-[#F0EEE9]">
-            <th className="px-4 py-2 text-left text-[10px] font-bold text-[#A8A39C] uppercase tracking-wide">Workshop</th>
-            <th className="px-4 py-2 text-left text-[10px] font-bold text-[#A8A39C] uppercase tracking-wide whitespace-nowrap">{dateLabel}</th>
+          <tr className="border-b border-[#F0EFFA]">
+            <th className="px-4 py-2 text-left text-[10px] font-bold text-[#8A90A6] uppercase tracking-wide">Workshop</th>
+            <th className="px-4 py-2 text-left text-[10px] font-bold text-[#8A90A6] uppercase tracking-wide whitespace-nowrap">{dateLabel}</th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <tr key={i} className="border-b border-[#F0EEE9] last:border-none">
+              <tr key={i} className="border-b border-[#F0EFFA] last:border-none">
                 <td className="px-4 py-2.5"><Skeleton className="h-3.5 w-32" /></td>
                 <td className="px-4 py-2.5"><Skeleton className="h-3.5 w-16" /></td>
               </tr>
             ))
           ) : rows.length === 0 ? (
-            <tr><td colSpan={2} className="px-4 py-8 text-center text-[#A8A39C] text-[12px]">{emptyLabel}</td></tr>
+            <tr><td colSpan={2} className="px-4 py-8 text-center text-[#8A90A6] text-[12px]">{emptyLabel}</td></tr>
           ) : rows.map(r => (
-            <tr key={r.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
-              <td className="px-4 py-2.5 font-medium text-[#1A1916] truncate max-w-40">{r.title}</td>
-              <td className="px-4 py-2.5 text-[#6B6560] whitespace-nowrap">{r.date ? fmtDate(r.date) : "TBA"}</td>
+            <tr key={r.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
+              <td className="px-4 py-2.5 font-medium text-[#171C35] truncate max-w-40">{r.title}</td>
+              <td className="px-4 py-2.5 text-[#69708A] whitespace-nowrap">{r.date ? fmtDate(r.date) : "TBA"}</td>
             </tr>
           ))}
         </tbody>
@@ -168,53 +168,53 @@ function WorkshopTable({
 
 function RecentProgramsTable({ rows, loading }: { rows: ProgramRow[]; loading: boolean }) {
   return (
-    <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden flex flex-col">
-      <div className="px-4 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9] flex items-center justify-between">
-        <h2 className="text-[13px] font-bold text-[#1A1916]">Recent Programs</h2>
-        <Link href="/student/programs" className="text-[11px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors">View all</Link>
+    <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden flex flex-col">
+      <div className="px-4 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF] flex items-center justify-between">
+        <h2 className="text-[13px] font-bold text-[#171C35]">Recent Programs</h2>
+        <Link href="/student/programs" className="text-[11px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors">View all</Link>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-[13px]">
           <thead>
-            <tr className="border-b border-[#F0EEE9]">
+            <tr className="border-b border-[#F0EFFA]">
               {["Programme", "Level", "Progress", "Status", "Enrolled"].map(c => (
-                <th key={c} className="px-4 py-2 text-left text-[10px] font-bold text-[#A8A39C] uppercase tracking-wide whitespace-nowrap">{c}</th>
+                <th key={c} className="px-4 py-2 text-left text-[10px] font-bold text-[#8A90A6] uppercase tracking-wide whitespace-nowrap">{c}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <tr key={i} className="border-b border-[#F0EEE9] last:border-none">
+                <tr key={i} className="border-b border-[#F0EFFA] last:border-none">
                   {Array.from({ length: 5 }).map((__, j) => <td key={j} className="px-4 py-3"><Skeleton className="h-3.5 w-full" /></td>)}
                 </tr>
               ))
             ) : rows.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No programmes enrolled yet.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No programmes enrolled yet.</td></tr>
             ) : rows.map(p => {
               const pct = p.status === "COMPLETED" ? 100 : p.totalLessons > 0 ? Math.round((p.completedLessons / p.totalLessons) * 100) : 0
               return (
-                <tr key={p.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                <tr key={p.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
                   <td className="px-4 py-3">
-                    <Link href={`/student/programs/${p.slug}`} className="font-semibold text-[#1A1916] hover:text-[#0474C4] transition-colors line-clamp-1">{p.title}</Link>
+                    <Link href={`/student/programs/${p.slug}`} className="font-semibold text-[#171C35] hover:text-[#6655DF] transition-colors line-clamp-1">{p.title}</Link>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${LEVEL_COLORS[p.level] ?? "bg-[#F0EEE9] text-[#6B6560]"}`}>{LEVEL_LABELS[p.level] ?? p.level}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${LEVEL_COLORS[p.level] ?? "bg-[#F0EFFA] text-[#69708A]"}`}>{LEVEL_LABELS[p.level] ?? p.level}</span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      <div className="h-1.5 w-16 rounded-full bg-[#F0EEE9] overflow-hidden">
-                        <div className={`h-full rounded-full ${p.status === "COMPLETED" ? "bg-emerald-600" : "bg-[#0474C4]"}`} style={{ width: `${pct}%` }} />
+                      <div className="h-1.5 w-16 rounded-full bg-[#F0EFFA] overflow-hidden">
+                        <div className={`h-full rounded-full ${p.status === "COMPLETED" ? "bg-emerald-600" : "bg-[#6655DF]"}`} style={{ width: `${pct}%` }} />
                       </div>
-                      <span className="text-[11px] text-[#6B6560]">{pct}%</span>
+                      <span className="text-[11px] text-[#69708A]">{pct}%</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${p.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700" : p.status === "DROPPED" ? "bg-[#F0EEE9] text-[#6B6560]" : "bg-[#EEF6FF] text-[#0474C4]"}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${p.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700" : p.status === "DROPPED" ? "bg-[#F0EFFA] text-[#69708A]" : "bg-[#EEECFF] text-[#6655DF]"}`}>
                       {p.status === "COMPLETED" ? "Completed" : p.status === "DROPPED" ? "Dropped" : "Active"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(p.enrolledAt)}</td>
+                  <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDate(p.enrolledAt)}</td>
                 </tr>
               )
             })}
@@ -248,9 +248,9 @@ function MonthCalendar({ events, loading }: { events: CalendarWorkshop[]; loadin
   ]
 
   return (
-    <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-        <h2 className="text-[13px] font-bold text-[#1A1916]">{monthLabel}</h2>
+    <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden flex flex-col h-full">
+      <div className="px-4 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+        <h2 className="text-[13px] font-bold text-[#171C35]">{monthLabel}</h2>
       </div>
       {loading ? (
         <div className="p-4"><Skeleton className="h-48 rounded-[10px]" /></div>
@@ -259,7 +259,7 @@ function MonthCalendar({ events, loading }: { events: CalendarWorkshop[]; loadin
           <div className="p-3">
             <div className="grid grid-cols-7 gap-1 mb-1">
               {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-                <div key={i} className="text-[10px] font-bold text-[#A8A39C] text-center py-1">{d}</div>
+                <div key={i} className="text-[10px] font-bold text-[#8A90A6] text-center py-1">{d}</div>
               ))}
             </div>
             <div className="grid grid-cols-7 gap-1">
@@ -271,29 +271,29 @@ function MonthCalendar({ events, loading }: { events: CalendarWorkshop[]; loadin
                   <div
                     key={i}
                     className={`relative aspect-square flex items-center justify-center rounded-[8px] text-[11px] ${
-                      isToday ? "bg-[#0474C4] text-white font-bold" : dayEvents.length > 0 ? "bg-[#EEF6FF] text-[#0474C4] font-semibold" : "text-[#1A1916]"
+                      isToday ? "bg-[#6655DF] text-white font-bold" : dayEvents.length > 0 ? "bg-[#EEECFF] text-[#6655DF] font-semibold" : "text-[#171C35]"
                     }`}
                   >
                     {day}
-                    {dayEvents.length > 0 && !isToday && <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-[#0474C4]" />}
+                    {dayEvents.length > 0 && !isToday && <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-[#6655DF]" />}
                   </div>
                 )
               })}
             </div>
           </div>
           {events.length > 0 ? (
-            <div className="border-t border-[#E5E2DC] px-4 py-3 space-y-2">
-              <p className="text-[10px] font-bold text-[#A8A39C] uppercase tracking-wide">This month</p>
+            <div className="border-t border-[#DFE2ED] px-4 py-3 space-y-2">
+              <p className="text-[10px] font-bold text-[#8A90A6] uppercase tracking-wide">This month</p>
               {events.slice(0, 4).map(e => (
-                <Link key={e.id} href={`/workshop/${e.slug}`} className="flex items-center gap-2 text-[12px] text-[#1A1916] hover:text-[#0474C4] transition-colors">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0474C4] shrink-0" />
+                <Link key={e.id} href={`/workshop/${e.slug}`} className="flex items-center gap-2 text-[12px] text-[#171C35] hover:text-[#6655DF] transition-colors">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#6655DF] shrink-0" />
                   <span className="truncate flex-1">{e.title}</span>
-                  <span className="text-[#A8A39C] shrink-0">{new Date(e.date).getDate()}</span>
+                  <span className="text-[#8A90A6] shrink-0">{new Date(e.date).getDate()}</span>
                 </Link>
               ))}
             </div>
           ) : (
-            <div className="border-t border-[#E5E2DC] px-4 py-6 text-center text-[11px] text-[#A8A39C]">No workshops this month.</div>
+            <div className="border-t border-[#DFE2ED] px-4 py-6 text-center text-[11px] text-[#8A90A6]">No workshops this month.</div>
           )}
         </>
       )}
@@ -325,8 +325,9 @@ const StudentDashboardPage = () => {
   return (
     <div className="max-w-350 mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div className="mb-6">
-        <h1 className="text-[18px] font-extrabold text-[#1A1916]">Dashboard</h1>
-        <p className="text-[#A8A39C] text-[13px] mt-0.5">An overview of your learning</p>
+        <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Learner</span>
+        <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Dashboard</h1>
+        <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">An overview of your learning</p>
       </div>
 
       <ContinueLearningBar item={data?.continueLearning ?? null} />

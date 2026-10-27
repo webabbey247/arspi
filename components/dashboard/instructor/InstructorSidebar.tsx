@@ -17,7 +17,7 @@ export default function InstructorSidebar({ user }: { user: SessionPayload }) {
     .join("") || user.email[0].toUpperCase()
 
   return (
-    <aside className="w-60 shrink-0 bg-[#06457F] flex flex-col min-h-screen">
+    <aside className="w-60 shrink-0 bg-[#2C2368] flex flex-col min-h-screen">
       {/* Logo */}
       <div className="px-5 py-6 border-b border-white/10">
         <Link href="/">

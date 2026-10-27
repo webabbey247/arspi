@@ -104,14 +104,14 @@ function fmtFee(fee: number) {
 
 // ── Shared UI helpers ─────────────────────────────────────────────────────────
 
-const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors resize-none"
+const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors resize-none"
 
 function Field({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">
+      <label className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px]">
         {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-        {hint && <span className="ml-1 text-[10px] font-normal normal-case text-[#A8A39C]">({hint})</span>}
+        {hint && <span className="ml-1 text-[10px] font-normal normal-case text-[#8A90A6]">({hint})</span>}
       </label>
       {children}
     </div>
@@ -121,10 +121,10 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button type="button" onClick={() => onChange(!checked)} className="flex items-center gap-2 cursor-pointer">
-      <span className={`relative w-9 h-5 rounded-full transition-colors ${checked ? "bg-[#0474C4]" : "bg-[#D9D6D0]"}`}>
+      <span className={`relative w-9 h-5 rounded-full transition-colors ${checked ? "bg-[#6655DF]" : "bg-[#D8DAE5]"}`}>
         <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0"}`} />
       </span>
-      <span className="text-[13px] font-medium text-[#1A1916]">{label}</span>
+      <span className="text-[13px] font-medium text-[#171C35]">{label}</span>
     </button>
   )
 }
@@ -163,11 +163,11 @@ function StatusBadge({ published, onClick, loading }: { published: boolean; onCl
 
 function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171C35]/40">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
-        <p className="text-[14px] text-[#1A1916] mb-5">{message}</p>
+        <p className="text-[14px] text-[#171C35] mb-5">{message}</p>
         <div className="flex gap-2 justify-end">
-          <button onClick={onCancel} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
+          <button onClick={onCancel} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
           <button onClick={onConfirm} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-red-600 text-white hover:bg-red-700 cursor-pointer">Delete</button>
         </div>
       </div>
@@ -325,7 +325,7 @@ function ImageUpload({
   return (
     <div className="flex flex-col gap-2">
       {value && (
-        <div className={`relative w-full ${height} rounded-[10px] overflow-hidden border border-[#E5E2DC]`}>
+        <div className={`relative w-full ${height} rounded-[10px] overflow-hidden border border-[#DFE2ED]`}>
           <Image src={value} alt={label} fill className="object-cover" />
           <button
             type="button"
@@ -340,7 +340,7 @@ function ImageUpload({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="flex items-center justify-center gap-2 w-full py-2 rounded-[10px] text-[12px] font-semibold border border-dashed border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer"
+        className="flex items-center justify-center gap-2 w-full py-2 rounded-[10px] text-[12px] font-semibold border border-dashed border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 transition-colors cursor-pointer"
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         {uploading ? "Uploading…" : value ? `Replace ${label}` : `Upload ${label}`}
@@ -366,10 +366,10 @@ function FacilitatorsInput({ value, onChange }: { value: Facilitator[]; onChange
   return (
     <div className="space-y-3">
       {value.map((f, i) => (
-        <div key={i} className="border border-[#E5E2DC] rounded-[10px] p-3 space-y-2 bg-[#FAFAF7]">
+        <div key={i} className="border border-[#DFE2ED] rounded-[10px] p-3 space-y-2 bg-[#FAFAFF]">
           <div className="flex items-start justify-between gap-2">
-            <span className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">Facilitator {i + 1}</span>
-            <button type="button" onClick={() => remove(i)} className="text-[#A8A39C] hover:text-red-500 cursor-pointer">
+            <span className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px]">Facilitator {i + 1}</span>
+            <button type="button" onClick={() => remove(i)} className="text-[#8A90A6] hover:text-red-500 cursor-pointer">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
@@ -404,7 +404,7 @@ function FacilitatorsInput({ value, onChange }: { value: Facilitator[]; onChange
       <button
         type="button"
         onClick={add}
-        className="w-full py-2 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] cursor-pointer transition-colors"
+        className="w-full py-2 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] cursor-pointer transition-colors"
       >
         + Add facilitator
       </button>
@@ -436,17 +436,17 @@ function TimezoneSelect({ value, onChange, error }: { value: string; onChange: (
       <button
         type="button"
         onClick={() => { setOpen(o => !o); setSearch("") }}
-        className={cn(inputCls, "flex items-center justify-between text-left w-full gap-2", !value && "text-[#A8A39C]")}
+        className={cn(inputCls, "flex items-center justify-between text-left w-full gap-2", !value && "text-[#8A90A6]")}
       >
         <span className="flex items-center gap-1.5 truncate">
-          <Globe className="h-3.5 w-3.5 shrink-0 text-[#A8A39C]" />
+          <Globe className="h-3.5 w-3.5 shrink-0 text-[#8A90A6]" />
           <span className="truncate">{value || "Select timezone…"}</span>
         </span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       {open && (
-        <div className="absolute z-30 left-0 right-0 top-[calc(100%+4px)] bg-white border border-[#E5E2DC] rounded-xl shadow-lg overflow-hidden">
-          <div className="px-2 py-1.5 border-b border-[#E5E2DC]">
+        <div className="absolute z-30 left-0 right-0 top-[calc(100%+4px)] bg-white border border-[#DFE2ED] rounded-xl shadow-lg overflow-hidden">
+          <div className="px-2 py-1.5 border-b border-[#DFE2ED]">
             <input
               autoFocus
               value={search}
@@ -457,13 +457,13 @@ function TimezoneSelect({ value, onChange, error }: { value: string; onChange: (
           </div>
           <ul className="overflow-y-auto max-h-52">
             {filtered.length === 0 ? (
-              <li className="px-3.5 py-2 text-[12px] text-[#A8A39C]">No results</li>
+              <li className="px-3.5 py-2 text-[12px] text-[#8A90A6]">No results</li>
             ) : filtered.map(tz => (
               <li key={tz}>
                 <button
                   type="button"
                   onClick={() => { onChange(tz); setOpen(false) }}
-                  className={`w-full text-left px-3.5 py-2 text-[13px] transition-colors cursor-pointer border-none ${value === tz ? "bg-[#EBF5FF] text-[#0474C4] font-semibold" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
+                  className={`w-full text-left px-3.5 py-2 text-[13px] transition-colors cursor-pointer border-none ${value === tz ? "bg-[#EEECFF] text-[#6655DF] font-semibold" : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"}`}
                 >
                   {tz}
                 </button>
@@ -557,11 +557,11 @@ function WorkshopModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-end bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-start justify-end bg-[#171C35]/40">
       <div className="bg-white h-full w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="bg-[#0474C4] px-6 py-5 shrink-0 relative">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] px-6 py-5 shrink-0 relative">
           <button type="button" onClick={onClose} className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -656,7 +656,7 @@ function WorkshopModal({
                 step="0.01"
                 {...register("fee")}
                 readOnly={watchedType === "FREE"}
-                className={cn(inputCls, watchedType === "FREE" && "bg-[#F5F4F1] text-[#6B6560] cursor-not-allowed")}
+                className={cn(inputCls, watchedType === "FREE" && "bg-[#F5F6FB] text-[#69708A] cursor-not-allowed")}
                 placeholder="0"
               />
               {errors.fee && <p className="text-[11px] text-red-500 mt-0.5">{errors.fee.message}</p>}
@@ -697,20 +697,20 @@ function WorkshopModal({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Field label="Start Time" required>
               <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#A8A39C] pointer-events-none" />
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#8A90A6] pointer-events-none" />
                 <input type="time" {...register("startTime")} className={cn(inputCls, "pl-8")} />
               </div>
               {errors.startTime && <p className="text-[11px] text-red-500 mt-0.5">{errors.startTime.message}</p>}
             </Field>
             <Field label="End Time" required>
               <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#A8A39C] pointer-events-none" />
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#8A90A6] pointer-events-none" />
                 <input type="time" {...register("endTime")} className={cn(inputCls, "pl-8")} />
               </div>
               {errors.endTime && <p className="text-[11px] text-red-500 mt-0.5">{errors.endTime.message}</p>}
             </Field>
             <Field label="Duration" hint="Auto from start/end">
-              <div className={cn(inputCls, "flex items-center text-[#1A1916]")}>
+              <div className={cn(inputCls, "flex items-center text-[#171C35]")}>
                 {derivedDuration !== null ? `${derivedDuration} hour${derivedDuration === 1 ? "" : "s"}` : "—"}
               </div>
             </Field>
@@ -759,7 +759,7 @@ function WorkshopModal({
                     <button
                       type="button"
                       onClick={() => field.onChange("ONLINE")}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold border transition-colors cursor-pointer ${field.value === "ONLINE" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4]"}`}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold border transition-colors cursor-pointer ${field.value === "ONLINE" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF]"}`}
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
@@ -769,7 +769,7 @@ function WorkshopModal({
                     <button
                       type="button"
                       onClick={() => field.onChange("IN_PERSON")}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold border transition-colors cursor-pointer ${field.value === "IN_PERSON" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4]"}`}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold border transition-colors cursor-pointer ${field.value === "IN_PERSON" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF]"}`}
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
@@ -845,9 +845,9 @@ function WorkshopModal({
         </form>
 
         {/* Footer — button submits the form via id */}
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#E5E2DC] shrink-0">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
-          <button form="workshop-form" type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#DFE2ED] shrink-0">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
+          <button form="workshop-form" type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer">
             {isSubmitting ? "Saving…" : workshop ? "Save Changes" : "Create Workshop"}
           </button>
         </div>
@@ -1006,12 +1006,13 @@ export default function InstructorWorkshopsPage() {
       {/* Page header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-[18px] font-extrabold text-[#1A1916]">My Workshops</h1>
-          <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage your workshops, webinars and masterclasses</p>
+          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Instructor</span>
+          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">My Workshops</h1>
+          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage your workshops, webinars and masterclasses</p>
         </div>
         <button
           onClick={() => setModal("create")}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New Workshop
@@ -1019,7 +1020,7 @@ export default function InstructorWorkshopsPage() {
       </div>
 
       {/* Category filter tabs */}
-      <div className="flex flex-wrap gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 w-fit">
+      <div className="flex flex-wrap gap-1 mb-5 bg-[#F5F6FB] rounded-[12px] p-1 w-fit">
         {([
           ["ALL",          "All"],
           ["SHORT_COURSE", "Short Course"],
@@ -1031,38 +1032,38 @@ export default function InstructorWorkshopsPage() {
           <button
             key={val}
             onClick={() => setCatTabFilter(val as WorkshopCategory | "ALL")}
-            className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold transition-colors cursor-pointer ${catTabFilter === val ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}
+            className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold transition-colors cursor-pointer ${catTabFilter === val ? "bg-white text-[#171C35] shadow-sm" : "text-[#69708A] hover:text-[#171C35]"}`}
           >
             {label}
-            <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${catTabFilter === val ? "bg-[#F5F4F1] text-[#6B6560]" : "bg-[#E5E2DC] text-[#A8A39C]"}`}>{catCounts[val]}</span>
+            <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${catTabFilter === val ? "bg-[#F5F6FB] text-[#69708A]" : "bg-[#DFE2ED] text-[#8A90A6]"}`}>{catCounts[val]}</span>
           </button>
         ))}
       </div>
 
       {/* Table card */}
-      <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
+      <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
           <div className="relative w-full sm:w-64">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search workshops…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search workshops…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors" />
           </div>
 
           <div className="sm:ml-auto flex flex-wrap items-center gap-2">
             <div ref={filterRef} className="relative">
               <button
                 onClick={() => setFilterOpen(o => !o)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${typeDropFilter !== "All" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"}`}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${typeDropFilter !== "All" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                 Type
-                {typeDropFilter !== "All" && <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{typeDropFilter}</span>}
+                {typeDropFilter !== "All" && <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{typeDropFilter}</span>}
               </button>
               {filterOpen && (
-                <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#E5E2DC] rounded-xl shadow-lg py-1.5 min-w-36">
+                <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-36">
                   {["All", "Free", "Paid"].map(f => (
                     <button key={f} onClick={() => { setTypeDropFilter(f); setFilterOpen(false) }}
-                      className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${typeDropFilter === f ? "bg-[#FEF3C7] text-[#0474C4]" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
+                      className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${typeDropFilter === f ? "bg-[#FEF3C7] text-[#6655DF]" : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"}`}
                     >
                       {f}
                       {typeDropFilter === f && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
@@ -1078,9 +1079,9 @@ export default function InstructorWorkshopsPage() {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
                   {["Workshop", "Type", "Category", "Fee", "Date", "Status", ""].map((col, i) => (
-                    <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                    <th key={i} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -1088,30 +1089,30 @@ export default function InstructorWorkshopsPage() {
                 {loading ? (
                   <TableSkeletonRows colSpan={7} />
                 ) : filtered.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No workshops found.</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No workshops found.</td></tr>
                 ) : paginated.map(workshop => (
-                  <tr key={workshop.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                  <tr key={workshop.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
                     {/* Workshop info */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {workshop.coverImage ? (
-                          <div className="relative w-9 h-9 rounded-[8px] overflow-hidden shrink-0 border border-[#E5E2DC]">
+                          <div className="relative w-9 h-9 rounded-[8px] overflow-hidden shrink-0 border border-[#DFE2ED]">
                             <Image src={workshop.coverImage} alt={workshop.title} fill className="object-cover" />
                           </div>
                         ) : (
-                          <div className="w-9 h-9 rounded-[8px] bg-[#F5F4F1] flex items-center justify-center shrink-0">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A39C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <div className="w-9 h-9 rounded-[8px] bg-[#F5F6FB] flex items-center justify-center shrink-0">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A90A6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                             </svg>
                           </div>
                         )}
                         <div>
-                          <p className="font-semibold text-[#1A1916] leading-tight line-clamp-1">{workshop.title}</p>
+                          <p className="font-semibold text-[#171C35] leading-tight line-clamp-1">{workshop.title}</p>
                           {workshop.facilitator && (
-                            <p className="text-[11px] text-[#A8A39C] mt-0.5">{workshop.facilitator}</p>
+                            <p className="text-[11px] text-[#8A90A6] mt-0.5">{workshop.facilitator}</p>
                           )}
                           {workshop.featured && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#0474C4] mt-0.5">
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#6655DF] mt-0.5">
                               <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                               Featured
                             </span>
@@ -1136,13 +1137,13 @@ export default function InstructorWorkshopsPage() {
 
                     {/* Fee */}
                     <td className="px-4 py-3">
-                      <span className={`text-[12px] font-semibold ${workshop.fee === 0 ? "text-emerald-600" : "text-[#1A1916]"}`}>
+                      <span className={`text-[12px] font-semibold ${workshop.fee === 0 ? "text-emerald-600" : "text-[#171C35]"}`}>
                         {fmtFee(workshop.fee)}
                       </span>
                     </td>
 
                     {/* Date */}
-                    <td className="px-4 py-3 text-[#6B6560]">
+                    <td className="px-4 py-3 text-[#69708A]">
                       {fmtDate(workshop.date)}
                     </td>
 
@@ -1161,7 +1162,7 @@ export default function InstructorWorkshopsPage() {
                         <button
                           onClick={() => setModal(workshop)}
                           title="Edit"
-                          className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
+                          className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -1193,28 +1194,28 @@ export default function InstructorWorkshopsPage() {
             {loading ? (
               <SkeletonCardList />
             ) : filtered.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No workshops found.</div>
+              <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No workshops found.</div>
             ) : paginated.map(workshop => (
-              <div key={workshop.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <div key={workshop.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                 <div className="flex items-start gap-3">
                   {workshop.coverImage ? (
-                    <div className="relative w-10 h-10 rounded-[8px] overflow-hidden shrink-0 border border-[#E5E2DC]">
+                    <div className="relative w-10 h-10 rounded-[8px] overflow-hidden shrink-0 border border-[#DFE2ED]">
                       <Image src={workshop.coverImage} alt={workshop.title} fill className="object-cover" />
                     </div>
                   ) : (
-                    <div className="w-10 h-10 rounded-[8px] bg-[#F5F4F1] flex items-center justify-center shrink-0">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A39C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="w-10 h-10 rounded-[8px] bg-[#F5F6FB] flex items-center justify-center shrink-0">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A90A6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                       </svg>
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{workshop.title}</p>
+                    <p className="font-semibold text-[#171C35] text-[14px] leading-tight">{workshop.title}</p>
                     {workshop.facilitator && (
-                      <p className="text-[12px] text-[#A8A39C] mt-0.5 line-clamp-1">{workshop.facilitator}</p>
+                      <p className="text-[12px] text-[#8A90A6] mt-0.5 line-clamp-1">{workshop.facilitator}</p>
                     )}
                     {workshop.featured && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#0474C4] mt-0.5">
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#6655DF] mt-0.5">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                         Featured
                       </span>
@@ -1238,16 +1239,16 @@ export default function InstructorWorkshopsPage() {
 
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Fee</dt>
-                    <dd className={`font-medium ${workshop.fee === 0 ? "text-emerald-600" : "text-[#1A1916]"}`}>{fmtFee(workshop.fee)}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Fee</dt>
+                    <dd className={`font-medium ${workshop.fee === 0 ? "text-emerald-600" : "text-[#171C35]"}`}>{fmtFee(workshop.fee)}</dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Date</dt>
-                    <dd className="text-[#1A1916] font-medium">{fmtDate(workshop.date)}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Date</dt>
+                    <dd className="text-[#171C35] font-medium">{fmtDate(workshop.date)}</dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Registered</dt>
-                    <dd className="text-[#1A1916] font-medium">{workshop.registered}{workshop.capacity ? ` / ${workshop.capacity}` : ""}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Registered</dt>
+                    <dd className="text-[#171C35] font-medium">{workshop.registered}{workshop.capacity ? ` / ${workshop.capacity}` : ""}</dd>
                   </div>
                 </dl>
 
@@ -1255,7 +1256,7 @@ export default function InstructorWorkshopsPage() {
                   <button
                     onClick={() => setModal(workshop)}
                     aria-label="Edit"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -1280,12 +1281,12 @@ export default function InstructorWorkshopsPage() {
           </div>
 
           {/* Footer */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+            <p className="text-[11px] text-[#8A90A6]">
               {filtered.length === 0 ? (
-                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{workshops.length}</span> {workshops.length === 1 ? "entry" : "entries"}</>
+                <>Showing <span className="font-semibold text-[#69708A]">0</span> of <span className="font-semibold text-[#69708A]">{workshops.length}</span> {workshops.length === 1 ? "entry" : "entries"}</>
               ) : (
-                <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-semibold text-[#6B6560]">{filtered.length}</span> {filtered.length === 1 ? "entry" : "entries"}</>
+                <>Showing <span className="font-semibold text-[#69708A]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#69708A]">{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-semibold text-[#69708A]">{filtered.length}</span> {filtered.length === 1 ? "entry" : "entries"}</>
               )}
             </p>
             {filtered.length > 0 && (
@@ -1293,15 +1294,15 @@ export default function InstructorWorkshopsPage() {
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                  className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                 >
                   Prev
                 </button>
-                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
+                <span className="text-[11px] font-semibold text-[#69708A] px-2">{page} / {totalPages}</span>
                 <button
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
-                  className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                  className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                 >
                   Next
                 </button>

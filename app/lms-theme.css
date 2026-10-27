@@ -1,0 +1,96 @@
+/* ── LMS theme ────────────────────────────────────────────────────────────────
+   Design tokens, fonts and component defaults ported from the IARPS Institute
+   LMS. Applied to the (auth) and (dashboard) route groups via the `lms-theme`
+   class on their root wrapper. `body:has(.lms-theme)` re-applies the tokens at
+   body level so Radix portals (dialogs, popovers, selects) and the sonner
+   toaster — which mount outside the wrapper — pick them up too. */
+
+.lms-theme,
+body:has(.lms-theme) {
+  /* LMS palette */
+  --lms-ink: #171c35;
+  --lms-muted: #69708a;
+  --lms-line: #dfe2ed;
+  --lms-canvas: #f5f6fb;
+  --lms-purple: #6655df;
+  --lms-purple-dark: #2c2368;
+  --lms-lav: #eeecff;
+  --lms-gold: #d6a84c;
+  --lms-radius: 16px;
+
+  /* Fonts — the LMS uses a single system sans stack. Overriding the next/font
+     variables swaps both `font-body` and `font-heading` utilities. */
+  --font-dm-sans: Arial, Helvetica, sans-serif;
+  --font-playfair-display: Arial, Helvetica, sans-serif;
+
+  /* shadcn tokens → LMS palette */
+  --background: #ffffff;
+  --foreground: var(--lms-ink);
+  --card: #ffffff;
+  --card-foreground: var(--lms-ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--lms-ink);
+  --primary: var(--lms-purple);
+  --primary-foreground: #ffffff;
+  --secondary: #f0effa;
+  --secondary-foreground: var(--lms-purple-dark);
+  --muted: var(--lms-canvas);
+  --muted-foreground: var(--lms-muted);
+  --accent: var(--lms-lav);
+  --accent-foreground: var(--lms-purple);
+  --border: var(--lms-line);
+  --input: var(--lms-line);
+  --ring: var(--lms-purple);
+  --radius: 10px;
+  --chart-1: #6655df;
+  --chart-2: #8b80e8;
+  --chart-3: #2c2368;
+  --chart-4: #53a18f;
+  --chart-5: #d6a84c;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #60677e;
+  --sidebar-primary: var(--lms-purple);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--lms-lav);
+  --sidebar-accent-foreground: var(--lms-purple);
+  --sidebar-border: var(--lms-line);
+  --sidebar-ring: var(--lms-purple);
+}
+
+body:has(.lms-theme) {
+  background: var(--lms-canvas);
+  color: var(--lms-ink);
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.55;
+}
+
+.lms-theme ::selection {
+  background: var(--lms-lav);
+  color: var(--lms-purple-dark);
+}
+
+/* Native form controls pick up the LMS accent */
+.lms-theme input[type="checkbox"],
+.lms-theme input[type="radio"],
+.lms-theme input[type="range"],
+.lms-theme progress {
+  accent-color: var(--lms-purple);
+}
+
+/* Sidebar nav scrollbar — matches the LMS `.sidebar-scroll` treatment */
+.lms-sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: #8b80e8 #f0effa;
+}
+.lms-sidebar-nav::-webkit-scrollbar {
+  width: 8px;
+}
+.lms-sidebar-nav::-webkit-scrollbar-track {
+  background: #f0effa;
+  border-radius: 999px;
+}
+.lms-sidebar-nav::-webkit-scrollbar-thumb {
+  background: #8b80e8;
+  border: 2px solid #f0effa;
+  border-radius: 999px;
+}

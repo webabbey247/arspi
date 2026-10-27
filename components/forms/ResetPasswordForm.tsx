@@ -74,17 +74,17 @@ const ResetPasswordForm = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="mb-4">
-        <h1 className="font-heading text-[2rem] tracking-[-0.015em] leading-[1.2] font-bold text-[#071639] mb-1.5">
+        <h1 className="text-[clamp(30px,4vw,38px)] tracking-[-0.035em] leading-[1.1] font-extrabold text-[#171C35] mb-2">
           Choose a New Password
         </h1>
-        <p className="font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-slate-600">
+        <p className="text-[15px] leading-[1.55] text-[#69708A]">
           Your new password must be at least 8 characters and include an uppercase letter and a number.
         </p>
       </div>
 
       {/* New Password */}
       <div className="flex flex-col gap-1.5">
-        <label className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-slate-400">
+        <label className="text-[14px] font-extrabold text-[#171C35]">
           New Password
         </label>
         <div className="relative">
@@ -93,24 +93,24 @@ const ResetPasswordForm = ({
             placeholder="Enter your new password"
             autoComplete="new-password"
             {...register("password")}
-            className="pr-11 font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal bg-sky-light border border-[#0474C4]/25 rounded-sm px-3 py-2 text-ink outline-none focus:border-[#0474C4] placeholder:text-slate-400 placeholder:font-light"
+            className="pr-11 text-[15px] leading-[1.5] bg-white border border-[#DFE2ED] rounded-[10px] px-[13px] py-[11px] text-[#171C35] outline-none transition-shadow focus:border-[#6655DF] focus:ring-3 focus:ring-[#6655DF]/15 placeholder:text-[#8A90A6]"
           />
           <button
             type="button"
             onClick={() => setShowPw(!showPw)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-ink transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A90A6] hover:text-[#171C35] transition-colors"
           >
             {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
         {errors.password && (
-          <span className="font-body text-[0.6875rem] text-red-500">{errors.password.message}</span>
+          <span className="text-[12px] font-bold text-red-600">{errors.password.message}</span>
         )}
       </div>
 
       {/* Confirm New Password */}
       <div className="flex flex-col gap-1.5">
-        <label className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-slate-400">
+        <label className="text-[14px] font-extrabold text-[#171C35]">
           Confirm New Password
         </label>
         <div className="relative">
@@ -119,36 +119,36 @@ const ResetPasswordForm = ({
             placeholder="Repeat your new password"
             autoComplete="new-password"
             {...register("confirmPassword")}
-            className="pr-11 font-body text-[0.875rem] tracking-[0em] leading-[1.6] font-normal bg-sky-light border border-[#0474C4]/25 rounded-sm px-3 py-2 text-ink outline-none focus:border-[#0474C4] placeholder:text-slate-400 placeholder:font-light"
+            className="pr-11 text-[15px] leading-[1.5] bg-white border border-[#DFE2ED] rounded-[10px] px-[13px] py-[11px] text-[#171C35] outline-none transition-shadow focus:border-[#6655DF] focus:ring-3 focus:ring-[#6655DF]/15 placeholder:text-[#8A90A6]"
           />
           <button
             type="button"
             onClick={() => setShowConfirmPw(!showConfirmPw)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-ink transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A90A6] hover:text-[#171C35] transition-colors"
           >
             {showConfirmPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
         {errors.confirmPassword && (
-          <span className="font-body text-[0.6875rem] text-red-500">{errors.confirmPassword.message}</span>
+          <span className="text-[12px] font-bold text-red-600">{errors.confirmPassword.message}</span>
         )}
       </div>
 
       {apiError && (
-        <p className="font-body text-[0.6875rem] text-red-500 text-center">{apiError}</p>
+        <p className="text-[12px] font-bold text-red-600 text-center">{apiError}</p>
       )}
 
       <Button
         type="submit"
         disabled={isLoading}
-        className="bg-[#0474C4] min-w-40 h-12 text-white inline-flex border-none py-3.5 px-8 justify-center items-center font-body text-[0.82rem] font-medium tracking-widest uppercase cursor-pointer rounded transition-all duration-250 hover:bg-[#06457F] hover:border-[#06457F] disabled:opacity-60 disabled:cursor-not-allowed"
+        className="bg-[#6655DF] min-w-40 h-12 text-white inline-flex gap-2 border border-[#6655DF] py-[11px] px-4 justify-center items-center text-[15px] font-extrabold cursor-pointer rounded-[10px] transition-colors hover:bg-[#2C2368] hover:border-[#2C2368] disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isLoading ? "Updating…" : <>Update Password <ChevronRight className="h-4 w-4" /></>}
       </Button>
 
-      <p className="text-center font-body text-[0.75rem] tracking-[0em] leading-normal font-normal text-slate-400">
+      <p className="text-center text-[12px] text-[#8A90A6]">
         Remembered it?{" "}
-        <Link href="/login" className="text-[#0474C4] hover:text-[#06457F] transition-colors font-medium">
+        <Link href="/login" className="text-[#6655DF] hover:text-[#2C2368] transition-colors font-extrabold">
           Back to sign in
         </Link>
       </p>

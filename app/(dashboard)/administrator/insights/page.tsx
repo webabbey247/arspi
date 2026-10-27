@@ -98,11 +98,11 @@ function StatusBadge({ published, onClick, loading }: { published: boolean; onCl
 
 function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171C35]/40">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
-        <p className="text-[14px] text-[#1A1916] mb-5">{message}</p>
+        <p className="text-[14px] text-[#171C35] mb-5">{message}</p>
         <div className="flex gap-2 justify-end">
-          <button onClick={onCancel} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
+          <button onClick={onCancel} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
           <button onClick={onConfirm} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-red-600 text-white hover:bg-red-700 cursor-pointer">Delete</button>
         </div>
       </div>
@@ -133,7 +133,7 @@ function CoverImageUpload({ value, onChange }: { value: string; onChange: (url: 
   return (
     <div className="flex flex-col gap-2">
       {value && (
-        <div className="relative w-full h-32 rounded-[10px] overflow-hidden border border-[#E5E2DC]">
+        <div className="relative w-full h-32 rounded-[10px] overflow-hidden border border-[#DFE2ED]">
           <Image src={value} alt="Cover" fill className="object-cover" />
           <button
             type="button"
@@ -148,7 +148,7 @@ function CoverImageUpload({ value, onChange }: { value: string; onChange: (url: 
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer"
+        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-[10px] text-[13px] font-semibold border border-dashed border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 transition-colors cursor-pointer"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         {uploading ? "Uploading…" : value ? "Replace image" : "Upload cover image"}
@@ -181,14 +181,14 @@ function AvatarUpload({ value, onChange }: { value: string; onChange: (url: stri
   return (
     <div className="flex items-center gap-3">
       {value ? (
-        <Image src={value} alt="Avatar" width={48} height={48} className="rounded-full object-cover border border-[#E5E2DC]" />
+        <Image src={value} alt="Avatar" width={48} height={48} className="rounded-full object-cover border border-[#DFE2ED]" />
       ) : (
-        <div className="w-12 h-12 rounded-full bg-[#F5F4F1] border border-[#E5E2DC] flex items-center justify-center text-[#A8A39C]">
+        <div className="w-12 h-12 rounded-full bg-[#F5F6FB] border border-[#DFE2ED] flex items-center justify-center text-[#8A90A6]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
       )}
       <div className="flex flex-col gap-1">
-        <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="px-3 py-1.5 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-50 transition-colors cursor-pointer">
+        <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="px-3 py-1.5 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 transition-colors cursor-pointer">
           {uploading ? "Uploading…" : "Upload photo"}
         </button>
         {value && (
@@ -202,14 +202,14 @@ function AvatarUpload({ value, onChange }: { value: string; onChange: (url: stri
 
 // ── Shared form helpers ───────────────────────────────────────────────────────
 
-const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors resize-none"
+const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors resize-none"
 
 function Field({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[11px] font-bold text-[#6B6560] uppercase tracking-[0.4px]">
+      <label className="text-[11px] font-bold text-[#69708A] uppercase tracking-[0.4px]">
         {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-        {hint && <span className="ml-1 text-[10px] font-normal normal-case text-[#A8A39C]">({hint})</span>}
+        {hint && <span className="ml-1 text-[10px] font-normal normal-case text-[#8A90A6]">({hint})</span>}
       </label>
       {children}
     </div>
@@ -219,10 +219,10 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button type="button" onClick={() => onChange(!checked)} className="flex items-center gap-2 cursor-pointer">
-      <span className={`relative w-9 h-5 rounded-full transition-colors ${checked ? "bg-[#0474C4]" : "bg-[#D9D6D0]"}`}>
+      <span className={`relative w-9 h-5 rounded-full transition-colors ${checked ? "bg-[#6655DF]" : "bg-[#D8DAE5]"}`}>
         <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0"}`} />
       </span>
-      <span className="text-[13px] font-medium text-[#1A1916]">{label}</span>
+      <span className="text-[13px] font-medium text-[#171C35]">{label}</span>
     </button>
   )
 }
@@ -297,10 +297,10 @@ function InsightModal({
   }
 
   return (
-    <div className="fixed inset-0 z-100 flex items-start justify-end bg-black/40">
+    <div className="fixed inset-0 z-100 flex items-start justify-end bg-[#171C35]/40">
       <div className="bg-white h-full w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="bg-[#0474C4] px-6 py-5 shrink-0 relative">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] px-6 py-5 shrink-0 relative">
           <button type="button" onClick={onClose} className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -333,7 +333,7 @@ function InsightModal({
 
           {/* Slug — readonly, auto-generated from title */}
           <Field label="Slug" hint="Auto-generated from title">
-            <input value={form.slug} readOnly tabIndex={-1} className={`${inputCls} bg-[#F5F4F1] text-[#6B6560] cursor-not-allowed`} placeholder="generated-from-title" />
+            <input value={form.slug} readOnly tabIndex={-1} className={`${inputCls} bg-[#F5F6FB] text-[#69708A] cursor-not-allowed`} placeholder="generated-from-title" />
           </Field>
 
           {/* Category + Author row */}
@@ -384,9 +384,9 @@ function InsightModal({
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#E5E2DC] shrink-0">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
-          <button onClick={handleSubmit} disabled={saving} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#DFE2ED] shrink-0">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
+          <button onClick={handleSubmit} disabled={saving} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer">
             {saving ? "Saving…" : insight ? "Save Changes" : "Create Insight"}
           </button>
         </div>
@@ -413,10 +413,10 @@ function CategoryModal({ category, onSave, onClose }: { category: Category | nul
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171C35]/40">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
         {/* Header */}
-        <div className="bg-[#0474C4] p-5 flex items-start justify-between gap-4">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] p-5 flex items-start justify-between gap-4">
           <div>
             <div className="font-heading text-[1.125rem] tracking-[-0.005em] leading-[1.3] font-medium text-slate-300">
               {category ? "Edit Category" : "New Category"}
@@ -425,7 +425,7 @@ function CategoryModal({ category, onSave, onClose }: { category: Category | nul
               {category ? "Update the category name." : "Create a new insight category."}
             </div>
           </div>
-          <button type="button" onClick={onClose} className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EDF2FB]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+          <button type="button" onClick={onClose} className="text-white/35 hover:text-white text-xl leading-none shrink-0 bg-[#EEECFF]/20 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -435,8 +435,8 @@ function CategoryModal({ category, onSave, onClose }: { category: Category | nul
           {error && <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
           <input autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Research" className={inputCls} required />
           <div className="flex gap-2 justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
-            <button type="submit" disabled={saving || !name.trim()} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
+            <button type="submit" disabled={saving || !name.trim()} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer">
               {saving ? "Saving…" : category ? "Save" : "Create"}
             </button>
           </div>
@@ -478,9 +478,9 @@ function AuthorModal({
   }
 
   return (
-    <div className="fixed inset-0 z-100 flex items-start justify-end bg-black/40">
+    <div className="fixed inset-0 z-100 flex items-start justify-end bg-[#171C35]/40">
       <div className="bg-white h-full w-full max-w-md shadow-2xl flex flex-col overflow-hidden">
-        <div className="bg-[#0474C4] px-6 py-5 shrink-0 relative">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] px-6 py-5 shrink-0 relative">
           <button type="button" onClick={onClose} className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -517,9 +517,9 @@ function AuthorModal({
           </Field>
         </form>
 
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#E5E2DC] shrink-0">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] hover:bg-[#F5F4F1] cursor-pointer">Cancel</button>
-          <button onClick={handleSubmit} disabled={saving} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] disabled:opacity-50 cursor-pointer">
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#DFE2ED] shrink-0">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
+          <button onClick={handleSubmit} disabled={saving} className="px-5 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer">
             {saving ? "Saving…" : author ? "Save Changes" : "Create Author"}
           </button>
         </div>
@@ -781,8 +781,9 @@ export default function AdminInsightsPage() {
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-[18px] font-extrabold text-[#1A1916]">Insights</h1>
-          <p className="text-[#A8A39C] text-[13px] mt-0.5">Manage articles, categories, and visibility</p>
+          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
+          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Insights</h1>
+          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage articles, categories, and visibility</p>
         </div>
         <button
           onClick={() => {
@@ -790,7 +791,7 @@ export default function AdminInsightsPage() {
             else if (tab === "authors") setAuthorModal("create")
             else setCategoryModal("create")
           }}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#0474C4] text-white hover:bg-[#06457F] transition-colors cursor-pointer w-fit"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer w-fit"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           {tab === "insights" ? "New Insight" : tab === "authors" ? "New Author" : "New Category"}
@@ -798,13 +799,13 @@ export default function AdminInsightsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-5 bg-[#F5F4F1] rounded-[12px] p-1 w-fit">
+      <div className="flex gap-1 mb-5 bg-[#F5F6FB] rounded-[12px] p-1 w-fit">
         {(["insights", "authors", "categories"] as Tab[]).map(t => {
           const count = t === "insights" ? insights.length : t === "authors" ? authors.length : categories.length
           return (
-            <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#1A1916] shadow-sm" : "text-[#6B6560] hover:text-[#1A1916]"}`}>
+            <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-[9px] text-[13px] font-semibold capitalize transition-colors cursor-pointer ${tab === t ? "bg-white text-[#171C35] shadow-sm" : "text-[#69708A] hover:text-[#171C35]"}`}>
               {t}
-              <span className={`ml-1 font-normal ${tab === t ? "text-[#A8A39C]" : "text-[#A8A39C]"}`}>({count})</span>
+              <span className={`ml-1 font-normal ${tab === t ? "text-[#8A90A6]" : "text-[#8A90A6]"}`}>({count})</span>
             </button>
           )
         })}
@@ -812,12 +813,12 @@ export default function AdminInsightsPage() {
 
       {/* ── INSIGHTS TAB ──────────────────────────────────────────────────────── */}
       {tab === "insights" && (
-        <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
+        <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
           {/* Toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
             <div className="relative w-full sm:w-64">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input value={insightSearch} onChange={e => setInsightSearch(e.target.value)} placeholder="Search insights…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input value={insightSearch} onChange={e => setInsightSearch(e.target.value)} placeholder="Search insights…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors" />
             </div>
 
             <div className="sm:ml-auto flex flex-wrap items-center gap-2">
@@ -825,20 +826,20 @@ export default function AdminInsightsPage() {
               <div ref={filterRef} className="relative">
                 <button
                   onClick={() => setFilterOpen(o => !o)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${insightFilter !== "All" ? "bg-[#0474C4] text-white border-[#0474C4]" : "bg-white text-[#6B6560] border-[#E5E2DC] hover:border-[#0474C4] hover:text-[#0474C4]"}`}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${insightFilter !== "All" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
                 >
  <svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round'>
                   <line x1='4' y1='6' x2='20' y2='6' />
                   <line x1='8' y1='12' x2='16' y2='12' />
                   <line x1='11' y1='18' x2='13' y2='18' />
                 </svg>                  Filter
-                  {insightFilter !== "All" && <span className="ml-1 bg-white text-[#0474C4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{insightFilter}</span>}
+                  {insightFilter !== "All" && <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{insightFilter}</span>}
                 </button>
                 {filterOpen && (
-                  <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#E5E2DC] rounded-xl shadow-lg py-1.5 min-w-36">
+                  <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-36">
                     {filterOptions.map(f => (
                       <button key={f} onClick={() => { setInsightFilter(f); setFilterOpen(false) }}
-                        className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${insightFilter === f ? "bg-[#FEF3C7] text-[#0474C4]" : "bg-transparent text-[#1A1916] hover:bg-[#F5F4F1]"}`}
+                        className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${insightFilter === f ? "bg-[#FEF3C7] text-[#6655DF]" : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"}`}
                       >
                         {f}
                         {insightFilter === f && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
@@ -849,7 +850,7 @@ export default function AdminInsightsPage() {
               </div>
 
               {/* Export CSV */}
-              <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border border-[#E5E2DC] text-[#6B6560] bg-white hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer">
+              <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] bg-white hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Export CSV
               </button>
@@ -860,9 +861,9 @@ export default function AdminInsightsPage() {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
                   {["Title", "Category", "Author", "Status", "Featured", "Date", ""].map(col => (
-                    <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                    <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -870,37 +871,37 @@ export default function AdminInsightsPage() {
                 {insightsLoading ? (
                   <TableSkeletonRows colSpan={7} />
                 ) : filteredInsights.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#A8A39C]">No insights found.</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#8A90A6]">No insights found.</td></tr>
                 ) : paginatedInsights.map(ins => (
-                  <tr key={ins.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                  <tr key={ins.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
                     <td className="px-4 py-3 max-w-xs">
-                      <p className="font-semibold text-[#1A1916] truncate">{ins.title}</p>
-                      <p className="text-[11px] text-[#A8A39C] truncate">{ins.slug}</p>
+                      <p className="font-semibold text-[#171C35] truncate">{ins.title}</p>
+                      <p className="text-[11px] text-[#8A90A6] truncate">{ins.slug}</p>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {ins.category
-                        ? <span className="px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-[11px] font-semibold">{ins.category.name}</span>
-                        : <span className="text-[#A8A39C]">—</span>}
+                        ? <span className="px-2 py-0.5 rounded-full bg-[#EEECFF] text-[#5143AD] text-[11px] font-semibold">{ins.category.name}</span>
+                        : <span className="text-[#8A90A6]">—</span>}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {ins.author ? (
                         <div className="flex items-center gap-2">
                           {ins.author.avatar
-                            ? <Image src={ins.author.avatar} alt={ins.author.name} width={24} height={24} className="rounded-full w-6 h-6 object-cover border border-[#E5E2DC] shrink-0" />
-                            : <div className="w-6 h-6 rounded-full bg-[#0474C4] flex items-center justify-center text-white text-[9px] font-semibold shrink-0">{ins.author.name.split(" ").map(p => p[0]).slice(0,2).join("").toUpperCase()}</div>
+                            ? <Image src={ins.author.avatar} alt={ins.author.name} width={24} height={24} className="rounded-full w-6 h-6 object-cover border border-[#DFE2ED] shrink-0" />
+                            : <div className="w-6 h-6 rounded-full bg-[#6655DF] flex items-center justify-center text-white text-[9px] font-semibold shrink-0">{ins.author.name.split(" ").map(p => p[0]).slice(0,2).join("").toUpperCase()}</div>
                           }
-                          <span className="text-[#1A1916]">{ins.author.name}</span>
+                          <span className="text-[#171C35]">{ins.author.name}</span>
                         </div>
-                      ) : <span className="text-[#A8A39C]">—</span>}
+                      ) : <span className="text-[#8A90A6]">—</span>}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap"><StatusBadge published={ins.published} onClick={() => handleTogglePublished(ins)} loading={togglingIds.has(ins.id)} /></td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {ins.featured ? <span className="text-amber-500">★</span> : <span className="text-[#E5E2DC]">★</span>}
+                      {ins.featured ? <span className="text-amber-500">★</span> : <span className="text-[#DFE2ED]">★</span>}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-[#6B6560]">{fmtDate(ins.createdAt)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-[#69708A]">{fmtDate(ins.createdAt)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-1">
-                        <button onClick={() => setInsightModal(ins)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                        <button onClick={() => setInsightModal(ins)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         <button onClick={() => setDeleteInsight(ins)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -919,27 +920,27 @@ export default function AdminInsightsPage() {
             {insightsLoading ? (
               <SkeletonCardList />
             ) : filteredInsights.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No insights found.</div>
+              <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No insights found.</div>
             ) : paginatedInsights.map(ins => (
-              <div key={ins.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <div key={ins.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                 <div className="flex items-start gap-3">
                   {ins.coverImage ? (
-                    <Image src={ins.coverImage} alt="" width={40} height={40} className="w-10 h-10 rounded-[8px] object-cover border border-[#E5E2DC] shrink-0" />
+                    <Image src={ins.coverImage} alt="" width={40} height={40} className="w-10 h-10 rounded-[8px] object-cover border border-[#DFE2ED] shrink-0" />
                   ) : (
-                    <div className="w-10 h-10 rounded-[8px] bg-[#F5F4F1] border border-[#E5E2DC] flex items-center justify-center text-[#A8A39C] shrink-0">
+                    <div className="w-10 h-10 rounded-[8px] bg-[#F5F6FB] border border-[#DFE2ED] flex items-center justify-center text-[#8A90A6] shrink-0">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight line-clamp-2">{ins.title}</p>
-                    <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{ins.slug}</p>
+                    <p className="font-semibold text-[#171C35] text-[14px] leading-tight line-clamp-2">{ins.title}</p>
+                    <p className="text-[12px] text-[#8A90A6] mt-0.5 truncate">{ins.slug}</p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1.5">
                   <StatusBadge published={ins.published} onClick={() => handleTogglePublished(ins)} loading={togglingIds.has(ins.id)} />
                   {ins.category && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#4F46E5] text-[11px] font-semibold">{ins.category.name}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-[#EEECFF] text-[#5143AD] text-[11px] font-semibold">{ins.category.name}</span>
                   )}
                   {ins.featured && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 text-[11px] font-semibold">
@@ -949,31 +950,31 @@ export default function AdminInsightsPage() {
                 </div>
 
                 {ins.excerpt && (
-                  <p className="text-[12px] text-[#6B6560] line-clamp-2">{ins.excerpt}</p>
+                  <p className="text-[12px] text-[#69708A] line-clamp-2">{ins.excerpt}</p>
                 )}
 
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Author</dt>
-                    <dd className="text-[#1A1916] font-medium">
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Author</dt>
+                    <dd className="text-[#171C35] font-medium">
                       {ins.author ? (
                         <span className="flex items-center gap-1.5">
                           {ins.author.avatar
-                            ? <Image src={ins.author.avatar} alt={ins.author.name} width={20} height={20} className="rounded-full w-5 h-5 object-cover border border-[#E5E2DC] shrink-0" />
-                            : <span className="w-5 h-5 rounded-full bg-[#0474C4] flex items-center justify-center text-white text-[9px] font-semibold shrink-0">{ins.author.name.split(" ").map(p => p[0]).slice(0,2).join("").toUpperCase()}</span>}
+                            ? <Image src={ins.author.avatar} alt={ins.author.name} width={20} height={20} className="rounded-full w-5 h-5 object-cover border border-[#DFE2ED] shrink-0" />
+                            : <span className="w-5 h-5 rounded-full bg-[#6655DF] flex items-center justify-center text-white text-[9px] font-semibold shrink-0">{ins.author.name.split(" ").map(p => p[0]).slice(0,2).join("").toUpperCase()}</span>}
                           <span className="truncate">{ins.author.name}</span>
                         </span>
                       ) : "—"}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Date</dt>
-                    <dd className="text-[#1A1916] font-medium">{fmtDate(ins.createdAt)}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Date</dt>
+                    <dd className="text-[#171C35] font-medium">{fmtDate(ins.createdAt)}</dd>
                   </div>
                 </dl>
 
                 <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <button onClick={() => setInsightModal(ins)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                  <button onClick={() => setInsightModal(ins)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button onClick={() => setDeleteInsight(ins)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -984,19 +985,19 @@ export default function AdminInsightsPage() {
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+            <p className="text-[11px] text-[#8A90A6]">
               {filteredInsights.length === 0 ? (
-                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{insights.length}</span> insights</>
+                <>Showing <span className="font-semibold text-[#69708A]">0</span> of <span className="font-semibold text-[#69708A]">{insights.length}</span> insights</>
               ) : (
-                <>Showing <span className="font-semibold text-[#6B6560]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(page * PAGE_SIZE, filteredInsights.length)}</span> of <span className="font-semibold text-[#6B6560]">{filteredInsights.length}</span> {filteredInsights.length === 1 ? "insight" : "insights"}</>
+                <>Showing <span className="font-semibold text-[#69708A]">{(page - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#69708A]">{Math.min(page * PAGE_SIZE, filteredInsights.length)}</span> of <span className="font-semibold text-[#69708A]">{filteredInsights.length}</span> {filteredInsights.length === 1 ? "insight" : "insights"}</>
               )}
             </p>
             {filteredInsights.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
-                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{page} / {totalPages}</span>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#69708A] px-2">{page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
               </div>
             )}
           </div>
@@ -1005,20 +1006,20 @@ export default function AdminInsightsPage() {
 
       {/* ── AUTHORS TAB ───────────────────────────────────────────────────────── */}
       {tab === "authors" && (
-        <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+        <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
             <div className="relative w-full sm:w-64">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input value={authorSearch} onChange={e => setAuthorSearch(e.target.value)} placeholder="Search authors…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input value={authorSearch} onChange={e => setAuthorSearch(e.target.value)} placeholder="Search authors…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors" />
             </div>
           </div>
 
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
                   {["Author", "Job Title", "Insights", "Joined", ""].map(col => (
-                    <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                    <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -1026,29 +1027,29 @@ export default function AdminInsightsPage() {
                 {authorsLoading ? (
                   <TableSkeletonRows colSpan={5} />
                 ) : filteredAuthors.length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No authors found.</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-10 text-center text-[#8A90A6]">No authors found.</td></tr>
                 ) : paginatedAuthors.map(a => (
-                  <tr key={a.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
+                  <tr key={a.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         {a.avatar ? (
-                          <Image src={a.avatar} alt={a.name} width={32} height={32} className="rounded-full w-8 h-8 object-cover border border-[#E5E2DC] shrink-0" />
+                          <Image src={a.avatar} alt={a.name} width={32} height={32} className="rounded-full w-8 h-8 object-cover border border-[#DFE2ED] shrink-0" />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-[#0474C4] flex items-center justify-center text-white text-[11px] font-semibold shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[#6655DF] flex items-center justify-center text-white text-[11px] font-semibold shrink-0">
                             {a.name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()}
                           </div>
                         )}
-                        <span className="font-semibold text-[#1A1916] whitespace-nowrap">{a.name}</span>
+                        <span className="font-semibold text-[#171C35] whitespace-nowrap">{a.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{a.jobTitle ?? "—"}</td>
+                    <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{a.jobTitle ?? "—"}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">{a._count.insights}</span>
+                      <span className="px-2 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A] text-[11px] font-semibold">{a._count.insights}</span>
                     </td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(a.createdAt)}</td>
+                    <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDate(a.createdAt)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-1">
-                        <button onClick={() => setAuthorModal(a)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                        <button onClick={() => setAuthorModal(a)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         <button onClick={() => setDeleteAuthor(a)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -1067,40 +1068,40 @@ export default function AdminInsightsPage() {
             {authorsLoading ? (
               <SkeletonCardList />
             ) : filteredAuthors.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No authors found.</div>
+              <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No authors found.</div>
             ) : paginatedAuthors.map(a => (
-              <div key={a.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <div key={a.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                 <div className="flex items-start gap-3">
                   {a.avatar ? (
-                    <Image src={a.avatar} alt={a.name} width={40} height={40} className="rounded-full w-10 h-10 object-cover border border-[#E5E2DC] shrink-0" />
+                    <Image src={a.avatar} alt={a.name} width={40} height={40} className="rounded-full w-10 h-10 object-cover border border-[#DFE2ED] shrink-0" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-[#0474C4] flex items-center justify-center text-white text-[12px] font-semibold shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-[#6655DF] flex items-center justify-center text-white text-[12px] font-semibold shrink-0">
                       {a.name.split(" ").map(p => p[0]).slice(0, 2).join("").toUpperCase()}
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{a.name}</p>
-                    {a.jobTitle && <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{a.jobTitle}</p>}
+                    <p className="font-semibold text-[#171C35] text-[14px] leading-tight">{a.name}</p>
+                    {a.jobTitle && <p className="text-[12px] text-[#8A90A6] mt-0.5 truncate">{a.jobTitle}</p>}
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">{a._count.insights} {a._count.insights === 1 ? "insight" : "insights"}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A] text-[11px] font-semibold">{a._count.insights} {a._count.insights === 1 ? "insight" : "insights"}</span>
                 </div>
 
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Job Title</dt>
-                    <dd className="text-[#1A1916] font-medium">{a.jobTitle ?? "—"}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Job Title</dt>
+                    <dd className="text-[#171C35] font-medium">{a.jobTitle ?? "—"}</dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Joined</dt>
-                    <dd className="text-[#1A1916] font-medium">{fmtDate(a.createdAt)}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Joined</dt>
+                    <dd className="text-[#171C35] font-medium">{fmtDate(a.createdAt)}</dd>
                   </div>
                 </dl>
 
                 <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <button onClick={() => setAuthorModal(a)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                  <button onClick={() => setAuthorModal(a)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button onClick={() => setDeleteAuthor(a)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -1111,19 +1112,19 @@ export default function AdminInsightsPage() {
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+            <p className="text-[11px] text-[#8A90A6]">
               {filteredAuthors.length === 0 ? (
-                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{authors.length}</span> {authors.length === 1 ? "author" : "authors"}</>
+                <>Showing <span className="font-semibold text-[#69708A]">0</span> of <span className="font-semibold text-[#69708A]">{authors.length}</span> {authors.length === 1 ? "author" : "authors"}</>
               ) : (
-                <>Showing <span className="font-semibold text-[#6B6560]">{(authorsPage - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(authorsPage * PAGE_SIZE, filteredAuthors.length)}</span> of <span className="font-semibold text-[#6B6560]">{filteredAuthors.length}</span> {filteredAuthors.length === 1 ? "author" : "authors"}</>
+                <>Showing <span className="font-semibold text-[#69708A]">{(authorsPage - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#69708A]">{Math.min(authorsPage * PAGE_SIZE, filteredAuthors.length)}</span> of <span className="font-semibold text-[#69708A]">{filteredAuthors.length}</span> {filteredAuthors.length === 1 ? "author" : "authors"}</>
               )}
             </p>
             {filteredAuthors.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <button onClick={() => setAuthorsPage(p => Math.max(1, p - 1))} disabled={authorsPage === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
-                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{authorsPage} / {totalAuthorPages}</span>
-                <button onClick={() => setAuthorsPage(p => Math.min(totalAuthorPages, p + 1))} disabled={authorsPage >= totalAuthorPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+                <button onClick={() => setAuthorsPage(p => Math.max(1, p - 1))} disabled={authorsPage === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#69708A] px-2">{authorsPage} / {totalAuthorPages}</span>
+                <button onClick={() => setAuthorsPage(p => Math.min(totalAuthorPages, p + 1))} disabled={authorsPage >= totalAuthorPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
               </div>
             )}
           </div>
@@ -1132,20 +1133,20 @@ export default function AdminInsightsPage() {
 
       {/* ── CATEGORIES TAB ────────────────────────────────────────────────────── */}
       {tab === "categories" && (
-        <div className="rounded-[14px] border border-[#E5E2DC] overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#E5E2DC]">
+        <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
             <div className="relative w-full sm:w-64">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A39C]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input value={categorySearch} onChange={e => setCategorySearch(e.target.value)} placeholder="Search categories…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#E5E2DC] rounded-[10px] text-[#1A1916] outline-none placeholder:text-[#A8A39C] focus:border-[#0474C4] transition-colors" />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input value={categorySearch} onChange={e => setCategorySearch(e.target.value)} placeholder="Search categories…" className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors" />
             </div>
           </div>
 
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
+                <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
                   {["Name", "Slug", "Insights", "Created", ""].map(col => (
-                    <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#A8A39C] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
+                    <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -1153,16 +1154,16 @@ export default function AdminInsightsPage() {
                 {categoriesLoading ? (
                   <TableSkeletonRows colSpan={5} />
                 ) : filteredCategories.length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-10 text-center text-[#A8A39C]">No categories yet.</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-10 text-center text-[#8A90A6]">No categories yet.</td></tr>
                 ) : paginatedCategories.map(cat => (
-                  <tr key={cat.id} className="border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors">
-                    <td className="px-4 py-3 font-semibold text-[#1A1916] whitespace-nowrap">{cat.name}</td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{cat.slug}</td>
-                    <td className="px-4 py-3 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">{cat._count.insights}</span></td>
-                    <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(cat.createdAt)}</td>
+                  <tr key={cat.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
+                    <td className="px-4 py-3 font-semibold text-[#171C35] whitespace-nowrap">{cat.name}</td>
+                    <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{cat.slug}</td>
+                    <td className="px-4 py-3 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A] text-[11px] font-semibold">{cat._count.insights}</span></td>
+                    <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDate(cat.createdAt)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-1">
-                        <button onClick={() => setCategoryModal(cat)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                        <button onClick={() => setCategoryModal(cat)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         <button onClick={() => setDeleteCategory(cat)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -1181,29 +1182,29 @@ export default function AdminInsightsPage() {
             {categoriesLoading ? (
               <SkeletonCardList />
             ) : filteredCategories.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[#A8A39C] text-[13px]">No categories yet.</div>
+              <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No categories yet.</div>
             ) : paginatedCategories.map(cat => (
-              <div key={cat.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+              <div key={cat.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{cat.name}</p>
-                    <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{cat.slug}</p>
+                    <p className="font-semibold text-[#171C35] text-[14px] leading-tight">{cat.name}</p>
+                    <p className="text-[12px] text-[#8A90A6] mt-0.5 truncate">{cat.slug}</p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560] text-[11px] font-semibold">{cat._count.insights} {cat._count.insights === 1 ? "insight" : "insights"}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A] text-[11px] font-semibold">{cat._count.insights} {cat._count.insights === 1 ? "insight" : "insights"}</span>
                 </div>
 
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Created</dt>
-                    <dd className="text-[#1A1916] font-medium">{fmtDate(cat.createdAt)}</dd>
+                    <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Created</dt>
+                    <dd className="text-[#171C35] font-medium">{fmtDate(cat.createdAt)}</dd>
                   </div>
                 </dl>
 
                 <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <button onClick={() => setCategoryModal(cat)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] hover:bg-amber-50 cursor-pointer transition-colors">
+                  <button onClick={() => setCategoryModal(cat)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button onClick={() => setDeleteCategory(cat)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
@@ -1214,19 +1215,19 @@ export default function AdminInsightsPage() {
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAF9] border-t border-[#E5E2DC]">
-            <p className="text-[11px] text-[#A8A39C]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2.5 bg-[#FAFAFF] border-t border-[#DFE2ED]">
+            <p className="text-[11px] text-[#8A90A6]">
               {filteredCategories.length === 0 ? (
-                <>Showing <span className="font-semibold text-[#6B6560]">0</span> of <span className="font-semibold text-[#6B6560]">{categories.length}</span> categories</>
+                <>Showing <span className="font-semibold text-[#69708A]">0</span> of <span className="font-semibold text-[#69708A]">{categories.length}</span> categories</>
               ) : (
-                <>Showing <span className="font-semibold text-[#6B6560]">{(categoriesPage - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#6B6560]">{Math.min(categoriesPage * PAGE_SIZE, filteredCategories.length)}</span> of <span className="font-semibold text-[#6B6560]">{filteredCategories.length}</span> {filteredCategories.length === 1 ? "category" : "categories"}</>
+                <>Showing <span className="font-semibold text-[#69708A]">{(categoriesPage - 1) * PAGE_SIZE + 1}</span>–<span className="font-semibold text-[#69708A]">{Math.min(categoriesPage * PAGE_SIZE, filteredCategories.length)}</span> of <span className="font-semibold text-[#69708A]">{filteredCategories.length}</span> {filteredCategories.length === 1 ? "category" : "categories"}</>
               )}
             </p>
             {filteredCategories.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <button onClick={() => setCategoriesPage(p => Math.max(1, p - 1))} disabled={categoriesPage === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
-                <span className="text-[11px] font-semibold text-[#6B6560] px-2">{categoriesPage} / {totalCategoryPages}</span>
-                <button onClick={() => setCategoriesPage(p => Math.min(totalCategoryPages, p + 1))} disabled={categoriesPage >= totalCategoryPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
+                <button onClick={() => setCategoriesPage(p => Math.max(1, p - 1))} disabled={categoriesPage === 1} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Prev</button>
+                <span className="text-[11px] font-semibold text-[#69708A] px-2">{categoriesPage} / {totalCategoryPages}</span>
+                <button onClick={() => setCategoriesPage(p => Math.min(totalCategoryPages, p + 1))} disabled={categoriesPage >= totalCategoryPages} className="px-3 py-1 rounded-[8px] text-[12px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">Next</button>
               </div>
             )}
           </div>

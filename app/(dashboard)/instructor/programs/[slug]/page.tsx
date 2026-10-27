@@ -126,19 +126,19 @@ function exportCSV(enrollments: Enrollment[], programTitle: string) {
 
 function StatCard({ label, value, sub, accent }: { label: string; value: React.ReactNode; sub?: string; accent?: string }) {
   return (
-    <div className="rounded-[14px] border border-[#E5E2DC] bg-white px-5 py-4 flex flex-col gap-1">
-      <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">{label}</p>
-      <p className={cn("text-[26px] font-extrabold leading-tight", accent ?? "text-[#1A1916]")}>{value}</p>
-      {sub && <p className="text-[12px] text-[#A8A39C]">{sub}</p>}
+    <div className="rounded-[16px] border border-[#DFE2ED] bg-white px-5 py-4 flex flex-col gap-1">
+      <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">{label}</p>
+      <p className={cn("text-[26px] font-extrabold leading-tight", accent ?? "text-[#171C35]")}>{value}</p>
+      {sub && <p className="text-[12px] text-[#8A90A6]">{sub}</p>}
     </div>
   )
 }
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-4 py-3 border-b border-[#F0EEE9] last:border-none">
-      <span className="w-28 shrink-0 text-[12px] font-medium text-[#A8A39C] uppercase tracking-wide pt-0.5">{label}</span>
-      <span className="text-[13px] text-[#1A1916] flex-1">{value ?? <span className="text-[#A8A39C]">—</span>}</span>
+    <div className="flex items-start gap-4 py-3 border-b border-[#F0EFFA] last:border-none">
+      <span className="w-28 shrink-0 text-[12px] font-medium text-[#8A90A6] uppercase tracking-wide pt-0.5">{label}</span>
+      <span className="text-[13px] text-[#171C35] flex-1">{value ?? <span className="text-[#8A90A6]">—</span>}</span>
     </div>
   )
 }
@@ -204,7 +204,7 @@ export default function InstructorProgramDetailPage() {
   if (error || !program) {
     return (
       <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
-        <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">{error ?? "Program not found."}</div>
+        <div className="h-64 flex items-center justify-center text-[#8A90A6] text-[13px]">{error ?? "Program not found."}</div>
       </div>
     )
   }
@@ -223,13 +223,14 @@ export default function InstructorProgramDetailPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/instructor/programs"
-            className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </Link>
           <div>
-            <h1 className="text-[18px] font-extrabold text-[#1A1916]">{program.title}</h1>
-            <p className="text-[#A8A39C] text-[13px] mt-0.5">Created {fmtDate(program.createdAt)}</p>
+            <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Instructor</span>
+            <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">{program.title}</h1>
+            <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Created {fmtDate(program.createdAt)}</p>
           </div>
         </div>
 
@@ -237,7 +238,7 @@ export default function InstructorProgramDetailPage() {
           <Link
             href={`/programs/${program.slug}`}
             target="_blank"
-            className="h-8 px-3.5 rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] text-[13px] font-medium hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center gap-1.5"
+            className="h-8 px-3.5 rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] text-[13px] font-medium hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center gap-1.5"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             View Public Page
@@ -245,7 +246,7 @@ export default function InstructorProgramDetailPage() {
           {enrollments.length > 0 && (
             <button
               onClick={() => exportCSV(enrollments, program.title)}
-              className="h-8 px-3.5 rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] text-[13px] font-medium hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer flex items-center gap-1.5"
+              className="h-8 px-3.5 rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] text-[13px] font-medium hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer flex items-center gap-1.5"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
@@ -274,13 +275,13 @@ export default function InstructorProgramDetailPage() {
 
         {/* Left — core details */}
         <div className="col-span-1 lg:col-span-2">
-          <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Program Details</p>
+          <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Program Details</p>
             </div>
             <div className="px-5">
               <InfoRow label="Title"    value={program.title} />
-              <InfoRow label="Slug"     value={<span className="font-mono text-[12px] text-[#6B6560]">{program.slug}</span>} />
+              <InfoRow label="Slug"     value={<span className="font-mono text-[12px] text-[#69708A]">{program.slug}</span>} />
               <InfoRow label="Tagline"  value={program.tagline} />
               <InfoRow label="Level"    value={
                 <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", LEVEL_COLORS[program.level])}>
@@ -297,9 +298,9 @@ export default function InstructorProgramDetailPage() {
         <div className="space-y-5">
 
           {/* Status */}
-          <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Status</p>
+          <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Status</p>
             </div>
             <div className="p-5 space-y-4">
               {[
@@ -307,7 +308,7 @@ export default function InstructorProgramDetailPage() {
                   label: "Published",
                   value: (
                     <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold",
-                      program.published ? "bg-emerald-50 text-emerald-700" : "bg-[#F5F4F1] text-[#6B6560]"
+                      program.published ? "bg-emerald-50 text-emerald-700" : "bg-[#F5F6FB] text-[#69708A]"
                     )}>
                       {program.published ? "Published" : "Draft"}
                     </span>
@@ -317,7 +318,7 @@ export default function InstructorProgramDetailPage() {
                   label: "Featured",
                   value: (
                     <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold",
-                      program.featured ? "bg-amber-50 text-amber-700" : "bg-[#F5F4F1] text-[#6B6560]"
+                      program.featured ? "bg-amber-50 text-amber-700" : "bg-[#F5F6FB] text-[#69708A]"
                     )}>
                       {program.featured ? "Yes" : "No"}
                     </span>
@@ -325,7 +326,7 @@ export default function InstructorProgramDetailPage() {
                 },
               ].map(({ label, value }) => (
                 <div key={label} className="flex items-center justify-between">
-                  <span className="text-[13px] text-[#6B6560]">{label}</span>
+                  <span className="text-[13px] text-[#69708A]">{label}</span>
                   {value}
                 </div>
               ))}
@@ -333,20 +334,20 @@ export default function InstructorProgramDetailPage() {
           </div>
 
           {/* Description */}
-          <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Description</p>
+          <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Description</p>
             </div>
             <div className="px-5 py-4">
-              <p className="text-[13px] text-[#1A1916] leading-relaxed whitespace-pre-wrap">{program.description}</p>
+              <p className="text-[13px] text-[#171C35] leading-relaxed whitespace-pre-wrap">{program.description}</p>
             </div>
           </div>
 
           {/* Enrollment breakdown */}
           {!enrollLoading && total > 0 && (
-            <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-              <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-                <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Breakdown</p>
+            <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+              <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+                <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Breakdown</p>
               </div>
               <div className="p-5 space-y-3">
                 {[
@@ -356,10 +357,10 @@ export default function InstructorProgramDetailPage() {
                 ].map(({ label, count, color }) => (
                   <div key={label}>
                     <div className="flex justify-between text-[12px] mb-1">
-                      <span className="text-[#6B6560]">{label}</span>
-                      <span className="font-semibold text-[#1A1916]">{count}</span>
+                      <span className="text-[#69708A]">{label}</span>
+                      <span className="font-semibold text-[#171C35]">{count}</span>
                     </div>
-                    <div className="h-1.5 bg-[#F0EEE9] rounded-full">
+                    <div className="h-1.5 bg-[#F0EFFA] rounded-full">
                       <div
                         className={cn("h-full rounded-full transition-all", color)}
                         style={{ width: `${total > 0 ? Math.round((count / total) * 100) : 0}%` }}
@@ -375,9 +376,9 @@ export default function InstructorProgramDetailPage() {
 
       {/* Programme Details + Social Proof — full width */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
-        <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-            <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Programme Details</p>
+        <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+            <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Programme Details</p>
           </div>
           <div className="px-5">
             <InfoRow label="Duration"    value={program.duration} />
@@ -388,9 +389,9 @@ export default function InstructorProgramDetailPage() {
           </div>
         </div>
 
-        <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-            <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Social Proof</p>
+        <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+            <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Social Proof</p>
           </div>
           <div className="px-5">
             <InfoRow label="Rating"    value={program.rating        != null ? `${program.rating} / 5.0`                  : null} />
@@ -406,9 +407,9 @@ export default function InstructorProgramDetailPage() {
         learningObjs.length > 0 || whatIsIncluded.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
           {(program.instructorName || program.instructorTitle || program.instructorBio) && (
-            <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-              <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-                <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Facilitator</p>
+            <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+              <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+                <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Facilitator</p>
               </div>
               <div className="px-5">
                 <InfoRow label="Name"     value={program.instructorName} />
@@ -422,7 +423,7 @@ export default function InstructorProgramDetailPage() {
                   <InfoRow label="Credentials" value={
                     <div className="flex flex-wrap gap-1.5">
                       {credentials.map((c, i) => (
-                        <span key={i} className="px-2 py-0.5 rounded-full text-[11px] bg-[#F5F4F1] text-[#6B6560]">{c}</span>
+                        <span key={i} className="px-2 py-0.5 rounded-full text-[11px] bg-[#F5F6FB] text-[#69708A]">{c}</span>
                       ))}
                     </div>
                   } />
@@ -433,14 +434,14 @@ export default function InstructorProgramDetailPage() {
 
           <div className="space-y-5">
             {learningObjs.length > 0 && (
-              <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-                <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-                  <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Learning Objectives</p>
+              <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+                <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+                  <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Learning Objectives</p>
                 </div>
                 <ul className="px-5 py-4 space-y-2">
                   {learningObjs.map((obj, i) => (
-                    <li key={i} className="flex items-start gap-2 text-[13px] text-[#1A1916]">
-                      <span className="mt-1 w-1.5 h-1.5 rounded-full bg-[#0474C4] shrink-0" />
+                    <li key={i} className="flex items-start gap-2 text-[13px] text-[#171C35]">
+                      <span className="mt-1 w-1.5 h-1.5 rounded-full bg-[#6655DF] shrink-0" />
                       {obj}
                     </li>
                   ))}
@@ -449,13 +450,13 @@ export default function InstructorProgramDetailPage() {
             )}
 
             {whatIsIncluded.length > 0 && (
-              <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-                <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-                  <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Highlights</p>
+              <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+                <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+                  <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Highlights</p>
                 </div>
                 <ul className="px-5 py-4 space-y-2">
                   {whatIsIncluded.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-[13px] text-[#1A1916]">
+                    <li key={i} className="flex items-start gap-2 text-[13px] text-[#171C35]">
                       <span className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                       {item}
                     </li>
@@ -471,24 +472,24 @@ export default function InstructorProgramDetailPage() {
       {(curriculum.length > 0 || faqs.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
           {curriculum.length > 0 && (
-            <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-              <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-                <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Curriculum</p>
+            <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+              <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+                <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Curriculum</p>
               </div>
-              <div className="divide-y divide-[#F0EEE9]">
+              <div className="divide-y divide-[#F0EFFA]">
                 {curriculum.map((mod, i) => (
                   <div key={i} className="px-5 py-4">
                     <div className="flex items-center gap-2 mb-1.5">
                       {mod.week && (
-                        <span className="text-[10px] font-bold tracking-widest uppercase text-[#0474C4] bg-[#EEF6FF] px-2 py-0.5 rounded-full">{mod.week}</span>
+                        <span className="text-[10px] font-bold tracking-widest uppercase text-[#6655DF] bg-[#EEECFF] px-2 py-0.5 rounded-full">{mod.week}</span>
                       )}
-                      <span className="text-[13px] font-semibold text-[#1A1916]">{mod.title}</span>
+                      <span className="text-[13px] font-semibold text-[#171C35]">{mod.title}</span>
                     </div>
-                    {mod.desc && <p className="text-[12px] text-[#6B6560] leading-relaxed mb-2">{mod.desc}</p>}
+                    {mod.desc && <p className="text-[12px] text-[#69708A] leading-relaxed mb-2">{mod.desc}</p>}
                     {mod.lessons && mod.lessons.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         {mod.lessons.map((l, j) => (
-                          <span key={j} className="text-[11px] px-2 py-0.5 rounded-full bg-[#F5F4F1] text-[#6B6560]">{l.title}</span>
+                          <span key={j} className="text-[11px] px-2 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A]">{l.title}</span>
                         ))}
                       </div>
                     )}
@@ -499,15 +500,15 @@ export default function InstructorProgramDetailPage() {
           )}
 
           {faqs.length > 0 && (
-            <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-              <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-                <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">FAQs</p>
+            <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+              <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+                <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">FAQs</p>
               </div>
-              <div className="divide-y divide-[#F0EEE9]">
+              <div className="divide-y divide-[#F0EFFA]">
                 {faqs.map((faq, i) => (
                   <div key={i} className="px-5 py-4">
-                    <p className="text-[13px] font-semibold text-[#1A1916] mb-1">{faq.q}</p>
-                    <p className="text-[12px] text-[#6B6560] leading-relaxed">{faq.a}</p>
+                    <p className="text-[13px] font-semibold text-[#171C35] mb-1">{faq.q}</p>
+                    <p className="text-[12px] text-[#69708A] leading-relaxed">{faq.a}</p>
                   </div>
                 ))}
               </div>
@@ -517,16 +518,16 @@ export default function InstructorProgramDetailPage() {
       )}
 
       {/* Enrollments table */}
-      <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-        <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9] flex items-center justify-between">
-          <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">
+      <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+        <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF] flex items-center justify-between">
+          <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">
             Enrolled Students
-            {!enrollLoading && <span className="ml-2 text-[#1A1916]">{total}</span>}
+            {!enrollLoading && <span className="ml-2 text-[#171C35]">{total}</span>}
           </p>
           {!enrollLoading && enrollments.length > 0 && (
             <button
               onClick={() => exportCSV(enrollments, program.title)}
-              className="text-[11px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
+              className="text-[11px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer"
             >
               Export CSV
             </button>
@@ -536,30 +537,30 @@ export default function InstructorProgramDetailPage() {
         {enrollLoading ? (
           <InlineSkeleton rows={3} />
         ) : enrollments.length === 0 ? (
-          <div className="p-8 flex items-center justify-center text-[13px] text-[#A8A39C]">No enrollments yet.</div>
+          <div className="p-8 flex items-center justify-center text-[13px] text-[#8A90A6]">No enrollments yet.</div>
         ) : (
           <>
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-[13px]">
                 <thead>
-                  <tr className="border-b border-[#F0EEE9]">
+                  <tr className="border-b border-[#F0EFFA]">
                     {["Name", "Email", "Status", "Enrolled", "Completed"].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide whitespace-nowrap">{h}</th>
+                      <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {enrollments.map((e, i) => (
-                    <tr key={e.id} className={cn("border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors", i % 2 !== 0 ? "bg-[#FAFAF9]/40" : "")}>
-                      <td className="px-4 py-3 font-medium text-[#1A1916] whitespace-nowrap">{userName(e)}</td>
-                      <td className="px-4 py-3 text-[#6B6560]">{e.user.email}</td>
+                    <tr key={e.id} className={cn("border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors", i % 2 !== 0 ? "bg-[#FAFAFF]/40" : "")}>
+                      <td className="px-4 py-3 font-medium text-[#171C35] whitespace-nowrap">{userName(e)}</td>
+                      <td className="px-4 py-3 text-[#69708A]">{e.user.email}</td>
                       <td className="px-4 py-3">
                         <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", STATUS_COLORS[e.status])}>
                           {e.status.charAt(0) + e.status.slice(1).toLowerCase()}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(e.enrolledAt)}</td>
-                      <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDate(e.completedAt)}</td>
+                      <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDate(e.enrolledAt)}</td>
+                      <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDate(e.completedAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -568,11 +569,11 @@ export default function InstructorProgramDetailPage() {
 
             <div className="md:hidden flex flex-col">
               {enrollments.map(e => (
-                <div key={e.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                <div key={e.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-semibold text-[#1A1916] text-[14px] leading-tight truncate">{userName(e)}</p>
-                      <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{e.user.email}</p>
+                      <p className="font-semibold text-[#171C35] text-[14px] leading-tight truncate">{userName(e)}</p>
+                      <p className="text-[12px] text-[#8A90A6] mt-0.5 truncate">{e.user.email}</p>
                     </div>
                     <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0", STATUS_COLORS[e.status])}>
                       {e.status.charAt(0) + e.status.slice(1).toLowerCase()}
@@ -581,12 +582,12 @@ export default function InstructorProgramDetailPage() {
 
                   <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12px]">
                     <div>
-                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Enrolled</dt>
-                      <dd className="text-[#1A1916] font-medium">{fmtDate(e.enrolledAt)}</dd>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Enrolled</dt>
+                      <dd className="text-[#171C35] font-medium">{fmtDate(e.enrolledAt)}</dd>
                     </div>
                     <div>
-                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Completed</dt>
-                      <dd className="text-[#1A1916] font-medium">{fmtDate(e.completedAt)}</dd>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Completed</dt>
+                      <dd className="text-[#171C35] font-medium">{fmtDate(e.completedAt)}</dd>
                     </div>
                   </dl>
                 </div>

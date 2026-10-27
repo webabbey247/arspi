@@ -119,11 +119,11 @@ function exportCSV(registrations: Registration[], workshopTitle: string) {
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-4 py-3 border-b border-[#F0EEE9] last:border-none">
-      <span className="w-32 shrink-0 text-[12px] font-medium text-[#A8A39C] uppercase tracking-wide pt-0.5">
+    <div className="flex items-start gap-4 py-3 border-b border-[#F0EFFA] last:border-none">
+      <span className="w-32 shrink-0 text-[12px] font-medium text-[#8A90A6] uppercase tracking-wide pt-0.5">
         {label}
       </span>
-      <span className="text-[13px] text-[#1A1916] flex-1">{value ?? <span className="text-[#A8A39C]">—</span>}</span>
+      <span className="text-[13px] text-[#171C35] flex-1">{value ?? <span className="text-[#8A90A6]">—</span>}</span>
     </div>
   )
 }
@@ -132,10 +132,10 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 function StatCard({ label, value, sub, accent }: { label: string; value: React.ReactNode; sub?: string; accent?: string }) {
   return (
-    <div className="rounded-[14px] border border-[#E5E2DC] bg-white px-5 py-4 flex flex-col gap-1">
-      <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">{label}</p>
-      <p className={cn("text-[26px] font-extrabold leading-tight", accent ?? "text-[#1A1916]")}>{value}</p>
-      {sub && <p className="text-[12px] text-[#A8A39C]">{sub}</p>}
+    <div className="rounded-[16px] border border-[#DFE2ED] bg-white px-5 py-4 flex flex-col gap-1">
+      <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">{label}</p>
+      <p className={cn("text-[26px] font-extrabold leading-tight", accent ?? "text-[#171C35]")}>{value}</p>
+      {sub && <p className="text-[12px] text-[#8A90A6]">{sub}</p>}
     </div>
   )
 }
@@ -211,7 +211,7 @@ export default function WorkshopDetailPage() {
   if (!workshop) {
     return (
       <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
-        <div className="h-64 flex items-center justify-center text-[#A8A39C] text-[13px]">
+        <div className="h-64 flex items-center justify-center text-[#8A90A6] text-[13px]">
           Workshop not found.
         </div>
       </div>
@@ -244,15 +244,16 @@ export default function WorkshopDetailPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/administrator/workshops")}
-            className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6"/>
             </svg>
           </button>
           <div>
-            <h1 className="text-[18px] font-extrabold text-[#1A1916]">{workshop.title}</h1>
-            <p className="text-[#A8A39C] text-[13px] mt-0.5">Created {fmtDate(workshop.createdAt)}</p>
+            <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
+            <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">{workshop.title}</h1>
+            <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Created {fmtDate(workshop.createdAt)}</p>
           </div>
         </div>
 
@@ -260,7 +261,7 @@ export default function WorkshopDetailPage() {
           {registrations.length > 0 && (
             <button
               onClick={() => exportCSV(registrations, workshop.title)}
-              className="h-8 px-3.5 rounded-[8px] border border-[#E5E2DC] bg-white text-[#6B6560] text-[13px] font-medium hover:border-[#0474C4] hover:text-[#0474C4] transition-colors cursor-pointer flex items-center gap-1.5"
+              className="h-8 px-3.5 rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] text-[13px] font-medium hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer flex items-center gap-1.5"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
@@ -305,13 +306,13 @@ export default function WorkshopDetailPage() {
         <div className="col-span-1 lg:col-span-2 space-y-5">
 
           {/* Details card */}
-          <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Workshop Details</p>
+          <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Workshop Details</p>
             </div>
             <div className="px-5">
               <InfoRow label="Title"       value={workshop.title} />
-              <InfoRow label="Slug"        value={<span className="font-mono text-[12px] text-[#6B6560]">{workshop.slug}</span>} />
+              <InfoRow label="Slug"        value={<span className="font-mono text-[12px] text-[#69708A]">{workshop.slug}</span>} />
               <InfoRow label="Category"    value={
                 <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", CATEGORY_COLORS[workshop.category])}>
                   {CATEGORY_LABELS[workshop.category]}
@@ -343,20 +344,20 @@ export default function WorkshopDetailPage() {
         <div className="space-y-5">
 
           {/* Description */}
-          <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Description</p>
+          <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Description</p>
             </div>
             <div className="px-5 py-4">
-              <p className="text-[13px] text-[#1A1916] leading-relaxed whitespace-pre-wrap">{workshop.description}</p>
+              <p className="text-[13px] text-[#171C35] leading-relaxed whitespace-pre-wrap">{workshop.description}</p>
             </div>
           </div>
 
 
           {/* Status card */}
-          <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Status</p>
+          <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Status</p>
             </div>
             <div className="p-5 space-y-4">
               {[
@@ -364,7 +365,7 @@ export default function WorkshopDetailPage() {
                   label: "Published",
                   value: (
                     <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold",
-                      workshop.published ? "bg-emerald-50 text-emerald-700" : "bg-[#F5F4F1] text-[#6B6560]"
+                      workshop.published ? "bg-emerald-50 text-emerald-700" : "bg-[#F5F6FB] text-[#69708A]"
                     )}>
                       {workshop.published ? "Published" : "Draft"}
                     </span>
@@ -374,7 +375,7 @@ export default function WorkshopDetailPage() {
                   label: "Featured",
                   value: (
                     <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold",
-                      workshop.featured ? "bg-amber-50 text-amber-700" : "bg-[#F5F4F1] text-[#6B6560]"
+                      workshop.featured ? "bg-amber-50 text-amber-700" : "bg-[#F5F6FB] text-[#69708A]"
                     )}>
                       {workshop.featured ? "Yes" : "No"}
                     </span>
@@ -382,7 +383,7 @@ export default function WorkshopDetailPage() {
                 },
               ].map(({ label, value }) => (
                 <div key={label} className="flex items-center justify-between">
-                  <span className="text-[13px] text-[#6B6560]">{label}</span>
+                  <span className="text-[13px] text-[#69708A]">{label}</span>
                   {value}
                 </div>
               ))}
@@ -390,22 +391,22 @@ export default function WorkshopDetailPage() {
           </div>
 
           {/* Capacity card */}
-          <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9]">
-              <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">Capacity</p>
+          <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Capacity</p>
             </div>
             <div className="p-5 space-y-3">
               <div className="flex items-end justify-between">
-                <span className="text-[26px] font-extrabold text-[#1A1916] leading-tight">{registrationCount}</span>
-                <span className="text-[13px] text-[#A8A39C] mb-1">/ {workshop.capacity}</span>
+                <span className="text-[26px] font-extrabold text-[#171C35] leading-tight">{registrationCount}</span>
+                <span className="text-[13px] text-[#8A90A6] mb-1">/ {workshop.capacity}</span>
               </div>
-              <div className="h-2 bg-[#F0EEE9] rounded-full overflow-hidden">
+              <div className="h-2 bg-[#F0EFFA] rounded-full overflow-hidden">
                 <div
-                  className={cn("h-full rounded-full transition-all", fillPct >= 90 ? "bg-red-500" : fillPct >= 70 ? "bg-amber-500" : "bg-[#0474C4]")}
+                  className={cn("h-full rounded-full transition-all", fillPct >= 90 ? "bg-red-500" : fillPct >= 70 ? "bg-amber-500" : "bg-[#6655DF]")}
                   style={{ width: `${fillPct}%` }}
                 />
               </div>
-              <p className="text-[12px] text-[#A8A39C]">
+              <p className="text-[12px] text-[#8A90A6]">
                 {workshop.capacity !== null
                   ? `${fillPct}% full · ${Math.max(0, workshop.capacity - registrationCount)} seats remaining`
                   : `${registrationCount} registered · uncapped`}
@@ -417,18 +418,18 @@ export default function WorkshopDetailPage() {
       </div>
 
       {/* Registrations table */}
-      <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden">
-        <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9] flex items-center justify-between">
-          <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide">
+      <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+        <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF] flex items-center justify-between">
+          <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">
             Registrations
             {!regLoading && (
-              <span className="ml-2 text-[#1A1916]">{totalRegistered}</span>
+              <span className="ml-2 text-[#171C35]">{totalRegistered}</span>
             )}
           </p>
           {!regLoading && registrations.length > 0 && (
             <button
               onClick={() => exportCSV(registrations, workshop.title)}
-              className="text-[11px] font-semibold text-[#0474C4] hover:text-[#06457F] transition-colors cursor-pointer"
+              className="text-[11px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer"
             >
               Export CSV
             </button>
@@ -438,7 +439,7 @@ export default function WorkshopDetailPage() {
         {regLoading ? (
           <InlineSkeleton rows={3} />
         ) : registrations.length === 0 ? (
-          <div className="p-8 flex items-center justify-center text-[13px] text-[#A8A39C]">
+          <div className="p-8 flex items-center justify-center text-[13px] text-[#8A90A6]">
             No registrations yet.
           </div>
         ) : (
@@ -446,9 +447,9 @@ export default function WorkshopDetailPage() {
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-[13px]">
                 <thead>
-                  <tr className="border-b border-[#F0EEE9]">
+                  <tr className="border-b border-[#F0EFFA]">
                     {["Name", "Email", "Organisation", "Payment", "Status", "Fee", "Registered"].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-[#A8A39C] uppercase tracking-wide whitespace-nowrap">
+                      <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide whitespace-nowrap">
                         {h}
                       </th>
                     ))}
@@ -458,25 +459,25 @@ export default function WorkshopDetailPage() {
                   {registrations.map((r, i) => (
                     <tr
                       key={r.id}
-                      className={cn("border-b border-[#F0EEE9] last:border-none hover:bg-[#FAFAF9] transition-colors", i % 2 === 0 ? "" : "bg-[#FAFAF9]/40")}
+                      className={cn("border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors", i % 2 === 0 ? "" : "bg-[#FAFAFF]/40")}
                     >
-                      <td className="px-4 py-3 font-medium text-[#1A1916] whitespace-nowrap">
+                      <td className="px-4 py-3 font-medium text-[#171C35] whitespace-nowrap">
                         {r.firstName} {r.lastName}
                       </td>
-                      <td className="px-4 py-3 text-[#6B6560]">{r.email}</td>
-                      <td className="px-4 py-3 text-[#6B6560]">{r.organisation ?? <span className="text-[#A8A39C]">—</span>}</td>
-                      <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">
-                        {r.paymentMethod ? PAYMENT_LABELS[r.paymentMethod] ?? r.paymentMethod : <span className="text-[#A8A39C]">—</span>}
+                      <td className="px-4 py-3 text-[#69708A]">{r.email}</td>
+                      <td className="px-4 py-3 text-[#69708A]">{r.organisation ?? <span className="text-[#8A90A6]">—</span>}</td>
+                      <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">
+                        {r.paymentMethod ? PAYMENT_LABELS[r.paymentMethod] ?? r.paymentMethod : <span className="text-[#8A90A6]">—</span>}
                       </td>
                       <td className="px-4 py-3">
                         <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", STATUS_COLORS[r.status])}>
                           {r.status.charAt(0) + r.status.slice(1).toLowerCase()}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">
+                      <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">
                         {r.fee > 0 ? `$${r.fee}` : <span className="text-emerald-700 font-medium">Free</span>}
                       </td>
-                      <td className="px-4 py-3 text-[#6B6560] whitespace-nowrap">{fmtDateTime(r.createdAt)}</td>
+                      <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDateTime(r.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -485,11 +486,11 @@ export default function WorkshopDetailPage() {
 
             <div className="md:hidden flex flex-col">
               {registrations.map(r => (
-                <div key={r.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                <div key={r.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-semibold text-[#1A1916] text-[14px] leading-tight truncate">{r.firstName} {r.lastName}</p>
-                      <p className="text-[12px] text-[#A8A39C] mt-0.5 truncate">{r.email}</p>
+                      <p className="font-semibold text-[#171C35] text-[14px] leading-tight truncate">{r.firstName} {r.lastName}</p>
+                      <p className="text-[12px] text-[#8A90A6] mt-0.5 truncate">{r.email}</p>
                     </div>
                     <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0", STATUS_COLORS[r.status])}>
                       {r.status.charAt(0) + r.status.slice(1).toLowerCase()}
@@ -498,24 +499,24 @@ export default function WorkshopDetailPage() {
 
                   <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12px]">
                     <div>
-                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Organisation</dt>
-                      <dd className="text-[#1A1916] font-medium truncate">{r.organisation ?? "—"}</dd>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Organisation</dt>
+                      <dd className="text-[#171C35] font-medium truncate">{r.organisation ?? "—"}</dd>
                     </div>
                     <div>
-                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Payment</dt>
-                      <dd className="text-[#1A1916] font-medium">
+                      <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Payment</dt>
+                      <dd className="text-[#171C35] font-medium">
                         {r.paymentMethod ? PAYMENT_LABELS[r.paymentMethod] ?? r.paymentMethod : "—"}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Fee</dt>
-                      <dd className="text-[#1A1916] font-medium">
+                      <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Fee</dt>
+                      <dd className="text-[#171C35] font-medium">
                         {r.fee > 0 ? `$${r.fee}` : <span className="text-emerald-700">Free</span>}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Registered</dt>
-                      <dd className="text-[#1A1916] font-medium">{fmtDateTime(r.createdAt)}</dd>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Registered</dt>
+                      <dd className="text-[#171C35] font-medium">{fmtDateTime(r.createdAt)}</dd>
                     </div>
                   </dl>
                 </div>

@@ -73,10 +73,10 @@ function fmtSalary(min: number | null, max: number | null, currency: string) {
 
 function MetricCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
-    <div className="rounded-[14px] border border-[#E5E2DC] bg-white px-5 py-4">
-      <p className="text-[11px] font-bold text-[#A8A39C] uppercase tracking-[0.5px]">{label}</p>
-      <p className="text-[24px] font-extrabold text-[#1A1916] mt-1">{value}</p>
-      {hint && <p className="text-[11px] text-[#A8A39C] mt-0.5">{hint}</p>}
+    <div className="rounded-[16px] border border-[#DFE2ED] bg-white px-5 py-4">
+      <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-[0.5px]">{label}</p>
+      <p className="text-[24px] font-extrabold text-[#171C35] mt-1">{value}</p>
+      {hint && <p className="text-[11px] text-[#8A90A6] mt-0.5">{hint}</p>}
     </div>
   )
 }
@@ -141,7 +141,7 @@ export default function AdminCareerDetailPage() {
         <p className="text-[13px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
           {error ?? "Career posting not found."}
         </p>
-        <Link href="/administrator/careers" className="text-[13px] text-[#0474C4] font-semibold mt-3 inline-block">← Back to careers</Link>
+        <Link href="/administrator/careers" className="text-[13px] text-[#6655DF] font-semibold mt-3 inline-block">← Back to careers</Link>
       </div>
     )
   }
@@ -153,14 +153,14 @@ export default function AdminCareerDetailPage() {
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
       {/* Back */}
-      <Link href="/administrator/careers" className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#6B6560] hover:text-[#0474C4] transition-colors mb-4">
+      <Link href="/administrator/careers" className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#69708A] hover:text-[#6655DF] transition-colors mb-4">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         Back to careers
       </Link>
 
       {/* Header */}
-      <div className="rounded-[14px] overflow-hidden border border-[#E5E2DC] mb-6">
-        <div className="bg-[#0474C4] px-6 py-5">
+      <div className="rounded-[16px] overflow-hidden border border-[#DFE2ED] mb-6">
+        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] px-6 py-5">
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white uppercase tracking-wider">
               {TYPE_LABELS[career.type]}
@@ -179,20 +179,20 @@ export default function AdminCareerDetailPage() {
         </div>
         <div className="bg-white px-6 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-[12px]">
           <div>
-            <p className="text-[10px] font-bold text-[#A8A39C] uppercase tracking-[0.5px]">Salary</p>
-            <p className="text-[#1A1916] font-semibold mt-0.5">{fmtSalary(career.salaryMin, career.salaryMax, career.currency)}</p>
+            <p className="text-[10px] font-bold text-[#8A90A6] uppercase tracking-[0.5px]">Salary</p>
+            <p className="text-[#171C35] font-semibold mt-0.5">{fmtSalary(career.salaryMin, career.salaryMax, career.currency)}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-[#A8A39C] uppercase tracking-[0.5px]">Closing date</p>
-            <p className="text-[#1A1916] font-semibold mt-0.5">{fmtDate(career.closingDate)}</p>
+            <p className="text-[10px] font-bold text-[#8A90A6] uppercase tracking-[0.5px]">Closing date</p>
+            <p className="text-[#171C35] font-semibold mt-0.5">{fmtDate(career.closingDate)}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-[#A8A39C] uppercase tracking-[0.5px]">Posted</p>
-            <p className="text-[#1A1916] font-semibold mt-0.5">{fmtDate(career.createdAt)}</p>
+            <p className="text-[10px] font-bold text-[#8A90A6] uppercase tracking-[0.5px]">Posted</p>
+            <p className="text-[#171C35] font-semibold mt-0.5">{fmtDate(career.createdAt)}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-[#A8A39C] uppercase tracking-[0.5px]">Last updated</p>
-            <p className="text-[#1A1916] font-semibold mt-0.5">{fmtDate(career.updatedAt)}</p>
+            <p className="text-[10px] font-bold text-[#8A90A6] uppercase tracking-[0.5px]">Last updated</p>
+            <p className="text-[#171C35] font-semibold mt-0.5">{fmtDate(career.updatedAt)}</p>
           </div>
         </div>
       </div>
@@ -209,19 +209,19 @@ export default function AdminCareerDetailPage() {
       </div>
 
       {/* Body */}
-      <div className="rounded-[14px] border border-[#E5E2DC] bg-white p-6 space-y-6">
+      <div className="rounded-[16px] border border-[#DFE2ED] bg-white p-6 space-y-6">
         <section>
-          <h3 className="text-[14px] font-bold text-[#1A1916] mb-2">Description</h3>
-          <div className="text-[13px] text-[#3F3B36] leading-relaxed [&_a]:text-[#0474C4] [&_a]:underline" dangerouslySetInnerHTML={{ __html: sanitizeHtml(career.description) }} />
+          <h3 className="text-[14px] font-bold text-[#171C35] mb-2">Description</h3>
+          <div className="text-[13px] text-[#343A52] leading-relaxed [&_a]:text-[#6655DF] [&_a]:underline" dangerouslySetInnerHTML={{ __html: sanitizeHtml(career.description) }} />
         </section>
 
         {responsibilities.length > 0 && (
           <section>
-            <h3 className="text-[14px] font-bold text-[#1A1916] mb-2">Responsibilities</h3>
+            <h3 className="text-[14px] font-bold text-[#171C35] mb-2">Responsibilities</h3>
             <ul className="space-y-1.5">
               {responsibilities.map((item, i) => (
-                <li key={i} className="flex gap-2 text-[13px] text-[#3F3B36]">
-                  <span className="mt-1.5 w-1 h-1 rounded-full bg-[#0474C4] shrink-0" />
+                <li key={i} className="flex gap-2 text-[13px] text-[#343A52]">
+                  <span className="mt-1.5 w-1 h-1 rounded-full bg-[#6655DF] shrink-0" />
                   <span>{item}</span>
                 </li>
               ))}
@@ -231,11 +231,11 @@ export default function AdminCareerDetailPage() {
 
         {requirements.length > 0 && (
           <section>
-            <h3 className="text-[14px] font-bold text-[#1A1916] mb-2">Requirements</h3>
+            <h3 className="text-[14px] font-bold text-[#171C35] mb-2">Requirements</h3>
             <ul className="space-y-1.5">
               {requirements.map((item, i) => (
-                <li key={i} className="flex gap-2 text-[13px] text-[#3F3B36]">
-                  <span className="mt-1.5 w-1 h-1 rounded-full bg-[#0474C4] shrink-0" />
+                <li key={i} className="flex gap-2 text-[13px] text-[#343A52]">
+                  <span className="mt-1.5 w-1 h-1 rounded-full bg-[#6655DF] shrink-0" />
                   <span>{item}</span>
                 </li>
               ))}
@@ -245,10 +245,10 @@ export default function AdminCareerDetailPage() {
 
         {benefits.length > 0 && (
           <section>
-            <h3 className="text-[14px] font-bold text-[#1A1916] mb-2">Benefits</h3>
+            <h3 className="text-[14px] font-bold text-[#171C35] mb-2">Benefits</h3>
             <ul className="space-y-1.5">
               {benefits.map((item, i) => (
-                <li key={i} className="flex gap-2 text-[13px] text-[#3F3B36]">
+                <li key={i} className="flex gap-2 text-[13px] text-[#343A52]">
                   <span className="mt-1.5 w-1 h-1 rounded-full bg-emerald-500 shrink-0" />
                   <span>{item}</span>
                 </li>
@@ -259,33 +259,33 @@ export default function AdminCareerDetailPage() {
 
         {career.applyEmail && (
           <section>
-            <h3 className="text-[14px] font-bold text-[#1A1916] mb-2">How to apply</h3>
-            <div className="space-y-1 text-[13px] text-[#3F3B36]">
-              <p>Email: <a href={`mailto:${career.applyEmail}`} className="text-[#0474C4] hover:underline">{career.applyEmail}</a></p>
+            <h3 className="text-[14px] font-bold text-[#171C35] mb-2">How to apply</h3>
+            <div className="space-y-1 text-[13px] text-[#343A52]">
+              <p>Email: <a href={`mailto:${career.applyEmail}`} className="text-[#6655DF] hover:underline">{career.applyEmail}</a></p>
             </div>
           </section>
         )}
       </div>
 
       {/* Applicants table — last section on the page */}
-      <div className="rounded-[14px] border border-[#E5E2DC] bg-white overflow-hidden mt-6">
-        <div className="px-5 py-3 border-b border-[#E5E2DC] bg-[#FAFAF9] flex items-center justify-between">
+      <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden mt-6">
+        <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF] flex items-center justify-between">
           <div>
-            <h3 className="text-[13px] font-bold text-[#1A1916]">Applicants</h3>
-            <p className="text-[11px] text-[#A8A39C] mt-0.5">{applicantsTotal} total submission{applicantsTotal === 1 ? "" : "s"}</p>
+            <h3 className="text-[13px] font-bold text-[#171C35]">Applicants</h3>
+            <p className="text-[11px] text-[#8A90A6] mt-0.5">{applicantsTotal} total submission{applicantsTotal === 1 ? "" : "s"}</p>
           </div>
         </div>
 
         {applicantsLoading ? (
           <InlineSkeleton rows={3} />
         ) : applicants.length === 0 ? (
-          <div className="px-5 py-10 text-center text-[12px] text-[#A8A39C]">No applications yet.</div>
+          <div className="px-5 py-10 text-center text-[12px] text-[#8A90A6]">No applications yet.</div>
         ) : (
           <>
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-[12px]">
-                <thead className="bg-[#FAFAF9] border-b border-[#E5E2DC]">
-                  <tr className="text-left text-[10px] font-bold text-[#A8A39C] uppercase tracking-[0.5px]">
+                <thead className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
+                  <tr className="text-left text-[10px] font-bold text-[#8A90A6] uppercase tracking-[0.5px]">
                     <th className="px-5 py-2.5">Name</th>
                     <th className="px-3 py-2.5">Email</th>
                     <th className="px-3 py-2.5">Country</th>
@@ -299,28 +299,28 @@ export default function AdminCareerDetailPage() {
                 </thead>
                 <tbody>
                   {applicants.map((a) => (
-                    <tr key={a.id} className="border-b border-[#F5F4F1] last:border-b-0 text-[#1A1916]">
+                    <tr key={a.id} className="border-b border-[#F5F6FB] last:border-b-0 text-[#171C35]">
                       <td className="px-5 py-3 font-semibold">{a.fullName}</td>
-                      <td className="px-3 py-3 text-[#3F3B36]">
-                        <a href={`mailto:${a.email}`} className="hover:text-[#0474C4]">{a.email}</a>
+                      <td className="px-3 py-3 text-[#343A52]">
+                        <a href={`mailto:${a.email}`} className="hover:text-[#6655DF]">{a.email}</a>
                       </td>
-                      <td className="px-3 py-3 text-[#3F3B36]">{a.country}</td>
-                      <td className="px-3 py-3 text-[#3F3B36]">{a.mobile}</td>
+                      <td className="px-3 py-3 text-[#343A52]">{a.country}</td>
+                      <td className="px-3 py-3 text-[#343A52]">{a.mobile}</td>
                       <td className="px-3 py-3">
-                        <a href={a.resumeUrl} target="_blank" rel="noreferrer" className="text-[#0474C4] hover:underline">View</a>
+                        <a href={a.resumeUrl} target="_blank" rel="noreferrer" className="text-[#6655DF] hover:underline">View</a>
                       </td>
                       <td className="px-3 py-3">
                         {a.coverLetterUrl
-                          ? <a href={a.coverLetterUrl} target="_blank" rel="noreferrer" className="text-[#0474C4] hover:underline">View</a>
-                          : <span className="text-[#A8A39C]">—</span>}
+                          ? <a href={a.coverLetterUrl} target="_blank" rel="noreferrer" className="text-[#6655DF] hover:underline">View</a>
+                          : <span className="text-[#8A90A6]">—</span>}
                       </td>
                       <td className="px-3 py-3">
                         {a.linkedinUrl
-                          ? <a href={a.linkedinUrl} target="_blank" rel="noreferrer" className="text-[#0474C4] hover:underline">Profile</a>
-                          : <span className="text-[#A8A39C]">—</span>}
+                          ? <a href={a.linkedinUrl} target="_blank" rel="noreferrer" className="text-[#6655DF] hover:underline">Profile</a>
+                          : <span className="text-[#8A90A6]">—</span>}
                       </td>
-                      <td className="px-3 py-3 text-[#3F3B36]">{a.source ?? "—"}</td>
-                      <td className="px-5 py-3 text-[#A8A39C] whitespace-nowrap">{fmtDate(a.createdAt)}</td>
+                      <td className="px-3 py-3 text-[#343A52]">{a.source ?? "—"}</td>
+                      <td className="px-5 py-3 text-[#8A90A6] whitespace-nowrap">{fmtDate(a.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -329,38 +329,38 @@ export default function AdminCareerDetailPage() {
 
             <div className="md:hidden flex flex-col">
               {applicants.map((a) => (
-                <div key={a.id} className="px-4 py-4 border-b border-[#F0EEE9] last:border-none flex flex-col gap-3">
+                <div key={a.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                   <div>
-                    <p className="font-semibold text-[#1A1916] text-[14px] leading-tight">{a.fullName}</p>
-                    <a href={`mailto:${a.email}`} className="text-[12px] text-[#A8A39C] hover:text-[#0474C4] block truncate mt-0.5">{a.email}</a>
+                    <p className="font-semibold text-[#171C35] text-[14px] leading-tight">{a.fullName}</p>
+                    <a href={`mailto:${a.email}`} className="text-[12px] text-[#8A90A6] hover:text-[#6655DF] block truncate mt-0.5">{a.email}</a>
                   </div>
 
                   <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-[12px]">
                     <div>
-                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Country</dt>
-                      <dd className="text-[#1A1916] font-medium">{a.country}</dd>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Country</dt>
+                      <dd className="text-[#171C35] font-medium">{a.country}</dd>
                     </div>
                     <div>
-                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Mobile</dt>
-                      <dd className="text-[#1A1916] font-medium">{a.mobile}</dd>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Mobile</dt>
+                      <dd className="text-[#171C35] font-medium">{a.mobile}</dd>
                     </div>
                     <div>
-                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Source</dt>
-                      <dd className="text-[#1A1916] font-medium">{a.source ?? "—"}</dd>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Source</dt>
+                      <dd className="text-[#171C35] font-medium">{a.source ?? "—"}</dd>
                     </div>
                     <div>
-                      <dt className="text-[10px] uppercase tracking-wide text-[#A8A39C] font-semibold">Submitted</dt>
-                      <dd className="text-[#1A1916] font-medium">{fmtDate(a.createdAt)}</dd>
+                      <dt className="text-[10px] uppercase tracking-wide text-[#8A90A6] font-semibold">Submitted</dt>
+                      <dd className="text-[#171C35] font-medium">{fmtDate(a.createdAt)}</dd>
                     </div>
                   </dl>
 
                   <div className="flex flex-wrap items-center gap-3 text-[12px] pt-1">
-                    <a href={a.resumeUrl} target="_blank" rel="noreferrer" className="font-semibold text-[#0474C4] hover:underline">Resume</a>
+                    <a href={a.resumeUrl} target="_blank" rel="noreferrer" className="font-semibold text-[#6655DF] hover:underline">Resume</a>
                     {a.coverLetterUrl && (
-                      <a href={a.coverLetterUrl} target="_blank" rel="noreferrer" className="font-semibold text-[#0474C4] hover:underline">Cover letter</a>
+                      <a href={a.coverLetterUrl} target="_blank" rel="noreferrer" className="font-semibold text-[#6655DF] hover:underline">Cover letter</a>
                     )}
                     {a.linkedinUrl && (
-                      <a href={a.linkedinUrl} target="_blank" rel="noreferrer" className="font-semibold text-[#0474C4] hover:underline">LinkedIn</a>
+                      <a href={a.linkedinUrl} target="_blank" rel="noreferrer" className="font-semibold text-[#6655DF] hover:underline">LinkedIn</a>
                     )}
                   </div>
                 </div>
@@ -371,8 +371,8 @@ export default function AdminCareerDetailPage() {
 
         {/* Pager — hidden when no rows */}
         {applicants.length > 0 && (
-          <div className="px-5 py-3 border-t border-[#E5E2DC] flex items-center justify-between">
-            <span className="text-[11px] text-[#A8A39C]">
+          <div className="px-5 py-3 border-t border-[#DFE2ED] flex items-center justify-between">
+            <span className="text-[11px] text-[#8A90A6]">
               Page {applicantsPage} of {totalApplicantPages}
             </span>
             <div className="flex items-center gap-2">
@@ -380,7 +380,7 @@ export default function AdminCareerDetailPage() {
                 type="button"
                 disabled={applicantsPage === 1}
                 onClick={() => setAppPage(p => Math.max(1, p - 1))}
-                className="px-3 py-1.5 rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-[11px] font-semibold uppercase tracking-[0.05em]"
+                className="px-3 py-1.5 rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-[11px] font-semibold uppercase tracking-[0.05em]"
               >
                 Prev
               </button>
@@ -388,7 +388,7 @@ export default function AdminCareerDetailPage() {
                 type="button"
                 disabled={applicantsPage === totalApplicantPages}
                 onClick={() => setAppPage(p => Math.min(totalApplicantPages, p + 1))}
-                className="px-3 py-1.5 rounded-[8px] border border-[#E5E2DC] text-[#6B6560] hover:border-[#0474C4] hover:text-[#0474C4] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-[11px] font-semibold uppercase tracking-[0.05em]"
+                className="px-3 py-1.5 rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-[11px] font-semibold uppercase tracking-[0.05em]"
               >
                 Next
               </button>

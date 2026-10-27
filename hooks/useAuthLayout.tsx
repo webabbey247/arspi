@@ -3,111 +3,97 @@
 
 import { ComponentType } from "react";
 import Link from "next/link";
-import Image from "next/image";
 
 const withAuthLayout = <P extends object>(WrappedComponent: ComponentType<P>) => {
   const LayoutComponent = (props: P) => (
-        <div className="min-h-screen grid lg:grid-cols-2">
-      {/* ── Left panel ── */}
-      <div className="bg-[#06457F] hidden lg:flex flex-col p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-ink pointer-events-none" />
-        <div className="absolute -top-24 -left-24 w-112.5 h-112.5 rounded-full bg-[#06457F]/8 blur-[100px] pointer-events-none" />
-        <div className="absolute -bottom-20 -right-20 w-90 h-90 rounded-full bg-[#06457F]/6 blur-[100px] pointer-events-none" />
-
-     <Link href="/" className="flex justify-start gap-2.5 shrink-0 no-underline w-50">
-          <div className="flex flex-wrap justify-start items-center gap-2.5 px-[1.2rem] shrink-0">
-            <div className="w-8 h-8 border-[1.5px] border-white rounded-full flex items-center justify-center font-heading text-lg font-medium text-white shrink-0">
-              A
-            </div>
-            <span className="font-heading text-xl tracking-[-0.005em] leading-[1.3] font-medium text-white">
-              ARPS Institute
+    <div className="min-h-screen grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] bg-[#F5F6FB]">
+      {/* ── Left panel — LMS programme-hero treatment ── */}
+      <div className="bg-[#17172F] text-white hidden lg:flex flex-col relative overflow-hidden">
+        <div className="flex flex-col flex-1 p-12">
+          <Link href="/" className="flex items-center gap-3 no-underline w-fit">
+            <span className="grid place-items-center w-[42px] h-[42px] rounded-[12px] bg-[linear-gradient(145deg,#2C2368,#6655DF)] text-white text-[15px] font-extrabold shrink-0">
+              AI
             </span>
-          </div>
-        </Link>
-        {/* <Link
-          href="/"
-          className="relative z-10 flex items-center gap-3 no-underline mb-auto"
-        >
-          <Image
-            src="/images/arps-institute-logo.webp"
-            alt="ARPS Institute Logo"
-            width={198}
-            height={39}
-            className="h-9.75 w-49.5"
-            priority
-          />
-        </Link> */}
+            <b className="text-[19px] leading-[1.1] text-white">
+              ARPS Institute
+              <small className="block text-[10px] tracking-[0.12em] text-[#D6A84C] mt-1 uppercase">
+                Learning management system
+              </small>
+            </b>
+          </Link>
 
-        <div className="relative z-10 flex-1 flex flex-col justify-center py-12">
-          <p className="font-body text-[0.75rem] tracking-[0.07em] uppercase font-medium text-slate-300 flex items-center gap-3 mb-5">
-            <span className="block w-6 h-px bg-slate-300" />
-            Welcome Back
-          </p>
+          <div className="flex-1 flex flex-col justify-center py-12">
+            <span className="text-[13px] tracking-[0.14em] uppercase font-black text-[#D6A84C]">
+              Welcome back
+            </span>
 
-          <h2 className="font-heading text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-white mb-4">
-            Continue Your
-            <br />
-            <em className="italic text-sky">Learning Journey</em>
-          </h2>
+            <h2 className="mt-3 mb-5 text-[clamp(34px,3.6vw,50px)] leading-[1.04] tracking-[-0.045em] font-extrabold text-white max-w-md">
+              Continue your learning journey
+            </h2>
 
-          <p className="font-body text-[0.9375rem] tracking-[0em] leading-[1.7] font-normal text-slate-300 mb-10 max-w-xs">
-            Sign in to access your programmes, track your progress, connect with
-            your cohort, and download your certificates.
-          </p>
+            <p className="text-[17px] leading-[1.6] text-[#DEDDEB] max-w-md mb-10">
+              Sign in to access your programmes, track your progress, connect with
+              your cohort, and download your certificates.
+            </p>
 
-          <div className="flex gap-8 flex-wrap pt-8 border-t border-white/20">
-            {[
-              ["40+", "Certificate Programmes"],
-              ["2,100+", "Active Learners"],
-              ["120+", "Countries"],
-            ].map(([val, lbl]) => (
-              <div key={lbl}>
-                <div className="font-heading text-[1.375rem] tracking-[-0.005em] leading-[1.1] font-semibold text-white mb-1">
-                  {val}
+            {/* Testimonial */}
+            <div className="bg-white/5 border border-white/15 rounded-[16px] p-5 max-w-md">
+              <p className="text-[15px] leading-[1.6] italic text-[#DEDDEB] mb-4">
+                &ldquo;The ARPS M&amp;E programme transformed how I approach
+                monitoring in my NGO. The certificate opened doors I hadn&apos;t
+                expected.&rdquo;
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-[10px] bg-[#6655DF] grid place-items-center text-[12px] font-extrabold text-white">
+                  AD
                 </div>
-                <div className="font-body text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-slate-300">
-                  {lbl}
+                <div>
+                  <b className="block text-[14px] text-white">Amara Diallo</b>
+                  <small className="block text-[12px] text-[#D8D7E3]">
+                    M&amp;E Manager · CARE International, Dakar
+                  </small>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Testimonial */}
-        <div className="relative z-10 bg-white/4 border border-white/20 rounded-xl p-5">
-          <p className="font-heading text-[0.875rem] tracking-[0em] leading-[1.6] font-normal italic text-slate-300 mb-4">
-            &ldquo;The ARPS M&amp;E programme transformed how I approach
-            monitoring in my NGO. The certificate opened doors I hadn&apos;t
-            expected.&rdquo;
-          </p>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-transparent border border-slate-300 flex items-center justify-center font-body text-[0.6875rem] font-medium text-white">
-              AD
-            </div>
-            <div>
-              <div className="font-body text-[0.8125rem] tracking-[0em] leading-normal font-medium text-slate-300">
-                Amara Diallo
-              </div>
-              <div className="font-body text-[0.6875rem] tracking-[0em] leading-normal font-normal text-slate-300">
-                M&amp;E Manager · CARE International, Dakar
               </div>
             </div>
           </div>
+
+          <Link
+            href="/"
+            className="text-[14px] font-bold text-[#D8D4FF] hover:text-white transition-colors w-fit"
+          >
+            ← Back to ARPS Institute
+          </Link>
         </div>
 
-        <Link
-          href="/"
-          className="relative z-10 flex items-center gap-1.5 font-body text-[0.75rem] tracking-[0em] font-normal text-slate-300 hover:text-sky transition-colors mt-6"
-        >
-          ← Back to ARPS Institute
-        </Link>
+        {/* Fact strip */}
+        <div className="grid grid-cols-3 bg-[#6757DB] px-12 py-5">
+          {[
+            ["40+", "Certificate programmes"],
+            ["2,100+", "Active learners"],
+            ["120+", "Countries"],
+          ].map(([val, lbl], i) => (
+            <div key={lbl} className={i < 2 ? "border-r border-white/20 px-4 first:pl-0" : "pl-4"}>
+              <span className="flex flex-col text-[13px] text-[#DEDAFF]">
+                {lbl}
+                <strong className="mt-0.5 text-[17px] text-white">{val}</strong>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* ── Right panel ── */}
-      <div className="flex flex-col items-center justify-center px-8 py-12 bg-sky-pale relative">
-       
-       <WrappedComponent {...props} />
-     </div>
+      {/* ── Right panel — LMS auth card ── */}
+      <div className="flex flex-col items-center justify-center px-4 sm:px-8 py-10 sm:py-12">
+        <Link href="/" className="lg:hidden flex items-center gap-3 no-underline mb-8">
+          <span className="grid place-items-center w-[42px] h-[42px] rounded-[12px] bg-[linear-gradient(145deg,#2C2368,#6655DF)] text-white text-[15px] font-extrabold">
+            AI
+          </span>
+          <b className="text-[19px] leading-[1.1] text-[#171C35]">ARPS Institute</b>
+        </Link>
+        <div className="w-full max-w-130 bg-white border border-[#DFE2ED] rounded-[16px] p-6 sm:p-9 flex flex-col items-center">
+          <WrappedComponent {...props} />
+        </div>
+      </div>
     </div>
   );
 

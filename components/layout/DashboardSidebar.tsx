@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
+import { LogOut, X } from "lucide-react";
+import { BrandMark } from "./DashboardHeader";
 import { cn } from "@/lib/utils";
 import type { SessionPayload } from "@/types/session";
 
@@ -364,24 +365,39 @@ function canAccess(allowed: Role | Role[] | undefined, userRole: Role): boolean 
 
 function navItemClass(isActive: boolean) {
   const base =
-    "flex items-center gap-[9px] px-[1.2rem] py-[9px] cursor-pointer font-body text-[0.8125rem] tracking-[0em] font-normal border-l-2 transition-all duration-[180ms] no-underline";
+    "flex items-center gap-3 px-[13px] py-[10px] rounded-[10px] cursor-pointer text-[14px] font-bold transition-colors duration-[180ms] no-underline";
   return isActive
-    ? `${base} bg-[#0474C4]/10 text-[#0474C4] border-l-[#0474C4]`
-    : `${base} text-[#1A1916] border-l-transparent hover:bg-[rgba(247,243,237,0.04)] hover:text-[#0474C4] hover:border-l-[#0474C4]`;
+    ? `${base} bg-[#EEECFF] text-[#6655DF]`
+    : `${base} text-[#60677E] hover:bg-[#EEECFF] hover:text-[#6655DF]`;
 }
+
+const ROLE_HOME: Record<Role, string> = {
+  ADMIN:      "/administrator",
+  INSTRUCTOR: "/instructor",
+  USER:       "/student",
+};
+
+const ROLE_LABEL: Record<Role, string> = {
+  ADMIN:      "Administrator",
+  INSTRUCTOR: "Instructor",
+  USER:       "Learner",
+};
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const DashboardSidebar = ({
-  userRole,
+  user,
   isOpen = false,
   onClose,
+  onLogout,
 }: {
-  userRole: Role;
+  user: SessionPayload;
   isOpen?: boolean;
   onClose?: () => void;
+  onLogout: () => void;
 }) => {
   const pathname = usePathname();
+  const userRole = user.role;
 
   const visibleSections = NAV
     .filter(s => canAccess(s.role, userRole))
@@ -391,6 +407,8 @@ const DashboardSidebar = ({
     }))
     .filter(s => s.items.length > 0);
 
+  const displayName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -398,83 +416,110 @@ const DashboardSidebar = ({
         onClick={onClose}
         aria-hidden="true"
         className={cn(
-          "lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px] transition-opacity",
+          "lg:hidden fixed inset-0 z-140 bg-[#171C35]/40 backdrop-blur-[1px] transition-opacity",
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
       />
 
       <aside
         className={cn(
-          "bg-white border-r border-[rgba(200,169,110,0.1)] py-4 flex flex-col overflow-y-auto shrink-0 w-64",
+          "bg-white border-r border-[#DFE2ED] px-4 py-6 flex flex-col overflow-hidden shrink-0 w-[270px] h-screen",
           // Mobile: fixed drawer
-          "fixed top-0 left-0 z-50 h-screen transform transition-transform duration-200",
+          "fixed top-0 left-0 z-150 transform transition-transform duration-200",
           isOpen ? "translate-x-0" : "-translate-x-full",
-          // Desktop: static in flex flow
-          "lg:static lg:translate-x-0 lg:w-56 lg:h-auto lg:sticky lg:top-0 lg:z-auto"
+          // Desktop: static 250px column, as in the LMS app shell
+          "lg:static lg:translate-x-0 lg:w-[250px] lg:z-auto"
         )}
       >
-        {/* Mobile-only close button */}
-        <div className="flex items-center justify-between px-[1.2rem] mb-2 lg:hidden">
-          <span className="font-heading text-[0.9375rem] tracking-[-0.005em] font-medium text-[#0474C4]">
-            Menu
-          </span>
+        {/* Brand */}
+        <div className="flex items-start justify-between gap-2 px-2.5 pb-7">
+          <Link href={ROLE_HOME[userRole]} className="flex items-center gap-3 no-underline min-w-0">
+            <BrandMark />
+            <b className="text-[19px] leading-[1.1] text-[#171C35]">
+              ARPS Institute
+              <small className="block text-[10px] tracking-[0.12em] text-[#6655DF] mt-1 uppercase">
+                {ROLE_LABEL[userRole]} workspace
+              </small>
+            </b>
+          </Link>
+          {/* Mobile-only close button */}
           <button
             type="button"
             onClick={onClose}
             aria-label="Close menu"
-            className="w-8 h-8 inline-flex items-center justify-center rounded-md text-[#6B6560] hover:bg-[rgba(200,169,110,0.08)] cursor-pointer"
+            className="lg:hidden w-8 h-8 inline-flex items-center justify-center rounded-[10px] text-[#69708A] hover:bg-[#EEECFF] cursor-pointer shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {visibleSections.map(({ section, items }) => (
-          <div key={section}>
-            <span className="block text-[0.58rem] tracking-[0.18em] uppercase text-slate-400 px-[1.2rem] mt-4 mb-1.5">
-              {section}
-            </span>
+        <nav className="lms-sidebar-nav flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1">
+          {visibleSections.map(({ section, items }, i) => (
+            <div key={section} className={i > 0 ? "mt-5" : undefined}>
+              <span className="block text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6] px-[13px] mb-1.5">
+                {section}
+              </span>
 
-            {items.map((item) => {
-              // A single-segment href (e.g. "/administrator", the section's own
-              // "Dashboard" entry) is a path prefix of every other page in that
-              // section, so it must match exactly — otherwise "Dashboard" stays
-              // highlighted no matter which page you're actually on. Deeper
-              // hrefs (e.g. "/administrator/programs") still match their own
-              // sub-pages, respecting a "/" boundary so a sibling path that
-              // merely starts with the same characters doesn't false-match.
-              const isRootLevel = item.href.split("/").filter(Boolean).length <= 1;
-              const isActive = isRootLevel
-                ? pathname === item.href
-                : pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <Link key={item.href} href={item.href} className={navItemClass(isActive)}>
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="w-3.75 h-3.75 stroke-current fill-none stroke-[1.6] shrink-0"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    {item.icon}
-                  </svg>
+              <div className="grid gap-1.5">
+                {items.map((item) => {
+                  // A single-segment href (e.g. "/administrator", the section's own
+                  // "Dashboard" entry) is a path prefix of every other page in that
+                  // section, so it must match exactly — otherwise "Dashboard" stays
+                  // highlighted no matter which page you're actually on. Deeper
+                  // hrefs (e.g. "/administrator/programs") still match their own
+                  // sub-pages, respecting a "/" boundary so a sibling path that
+                  // merely starts with the same characters doesn't false-match.
+                  const isRootLevel = item.href.split("/").filter(Boolean).length <= 1;
+                  const isActive = isRootLevel
+                    ? pathname === item.href
+                    : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  return (
+                    <Link key={item.href} href={item.href} className={navItemClass(isActive)}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="w-[19px] h-[19px] stroke-current fill-none stroke-[1.8] shrink-0"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        {item.icon}
+                      </svg>
 
-                  {item.label}
+                      {item.label}
 
-                  {item.count !== undefined && (
-                    <span
-                      className={`ml-auto text-[0.6rem] px-1.5 py-0.5 rounded-lg font-medium ${
-                        item.countRed
-                          ? "bg-[rgba(239,68,68,0.15)] text-[#FCA5A5]"
-                          : "bg-[rgba(200,169,110,0.14)] text-[#C8A96E]"
-                      }`}
-                    >
-                      {item.count}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
+                      {item.count !== undefined && (
+                        <span
+                          className={`ml-auto text-[11px] px-2 py-0.5 rounded-full font-extrabold ${
+                            item.countRed
+                              ? "bg-red-50 text-red-600"
+                              : "bg-[#EEECFF] text-[#6655DF]"
+                          }`}
+                        >
+                          {item.count}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {/* Role card */}
+        <div className="mt-4 border-t border-[#DFE2ED] pt-4.5 px-2.5 grid gap-2">
+          <Link href="/settings" className="grid no-underline min-w-0">
+            <b className="text-[14px] text-[#171C35] truncate">{displayName}</b>
+            <span className="text-[12px] text-[#69708A]">{ROLE_LABEL[userRole]}</span>
+          </Link>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="inline-flex items-center gap-1.5 w-fit text-[13px] font-bold text-[#6655DF] hover:text-[#2C2368] cursor-pointer"
+          >
+            <LogOut className="w-3.75 h-3.75" />
+            Sign out
+          </button>
+        </div>
       </aside>
     </>
   );
