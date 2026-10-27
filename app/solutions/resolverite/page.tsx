@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import withLayout from "@/hooks/useLayout";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -53,9 +52,13 @@ const ResolveRitePage = () => {
     </p>
 
     <div className="flex gap-3.5 flex-wrap">
-      <Button className="font-body text-[0.8125rem] h-full rounded-[32px] min-w-40 tracking-[0.07em] uppercase font-medium bg-[#2563EB] text-white border-0 py-3.5 px-8 cursor-pointer transition-all duration-250 no-underline inline-block hover:bg-[#1D4ED8]">
+      <a
+        href="https://www.resolverite.app"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-body text-[0.8125rem] h-full rounded-[32px] min-w-40 tracking-[0.07em] uppercase font-medium bg-[#2563EB] text-white border-0 py-3.5 px-8 cursor-pointer transition-all duration-250 no-underline inline-flex items-center justify-center hover:bg-[#1D4ED8]">
         Request a Demo
-      </Button>
+      </a>
       <Link href="#faqs" className="font-body text-[0.8125rem] h-full rounded-[32px] min-w-40 text-center tracking-[0.07em] uppercase font-medium bg-transparent text-[#0474C4] border border-[#0474C4] py-3.25 px-7 cursor-pointer transition-all duration-250 no-underline inline-block hover:border-[rgba(247,243,237,0.5)] hover:text-[#F7F3ED]">
         View FAQs
       </Link>
@@ -166,7 +169,11 @@ const ResolveRitePage = () => {
     </p>
 
     <div className="mt-8 flex gap-3.5 flex-wrap">
-      <a href="#" className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium bg-(--rr) text-white border-0 py-3.5 px-8 cursor-pointer rounded-xs transition-all duration-250 no-underline inline-block hover:bg-(--rr-dark)">
+      <a
+        href="https://console.resolverite.app/auth/register"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium bg-(--rr) text-white border-0 py-3.5 px-8 cursor-pointer rounded-xs transition-all duration-250 no-underline inline-flex items-center justify-center hover:bg-(--rr-dark)">
         Start Free Trial
       </a>
     </div>
@@ -451,18 +458,23 @@ const ResolveRitePage = () => {
     </p>
 
     <div className="flex gap-4 justify-center flex-wrap">
-            <Button
-              className="font-body text-[0.875rem] tracking-[0.02em] font-medium bg-[#0474C4] text-[#EBF3FC] capitalize border-[#0474C4] py-3.5 px-5 h-12 rounded-[32px] min-w-40  transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
+            <a
+              href="https://www.resolverite.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-body text-[0.875rem] tracking-[0.02em] font-medium bg-[#0474C4] text-[#EBF3FC] capitalize border border-[#0474C4] py-3.5 px-5 h-12 rounded-[32px] min-w-40 inline-flex items-center justify-center transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
             >
               Request a Demo
-            </Button>
+            </a>
 
-            <Link
-              href="/contact"
-              className="font-body text-[0.875rem] tracking-[0.02em] font-medium bg-transparent text-center text-[#EBF3FC] capitalize border border-[#EBF3FC] py-3.5 px-5 h-12 rounded-[32px] min-w-40  transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
+            <a
+              href="https://console.resolverite.app/auth/register"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-body text-[0.875rem] tracking-[0.02em] font-medium bg-transparent text-center text-[#EBF3FC] capitalize border border-[#EBF3FC] py-3.5 px-5 h-12 rounded-[32px] min-w-40 inline-flex items-center justify-center transition-colors duration-200 hover:bg-[#06457F] hover:border-[#06457F]"
             >
               Start free trial
-            </Link>
+            </a>
           </div>
 
   </div>

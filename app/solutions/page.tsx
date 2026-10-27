@@ -250,16 +250,18 @@ const SolutionsPage = () => {
     </p>
 
         <div className="flex gap-3 sm:gap-3.5 flex-wrap mt-8 sm:mt-10">
-  <Button className="rounded font-body h-11 sm:h-12 text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3 sm:py-3.25 px-5 sm:px-7 cursor-pointer transition-all duration-250 no-underline inline-block bg-[#2563EB] text-white hover:bg-[#1D4ED8]">
+  <a
+        href="https://www.resolverite.app"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="rounded font-body h-11 sm:h-12 text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3 sm:py-3.25 px-5 sm:px-7 cursor-pointer transition-all duration-250 no-underline inline-flex items-center justify-center bg-[#2563EB] text-white hover:bg-[#1D4ED8]">
        Request a Demo
-      </Button>
-        <Button
-        className="font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3 sm:py-3.25 px-5 sm:px-7 rounded cursor-pointer transition-all h-11 sm:h-12 duration-250 no-underline inline-block bg-transparent border border-[#2563EB] text-[#2563EB] hover:bg-[#F0FDFA]">
+      </a>
+        <Link
+        href="/solutions/resolverite"
+        className="font-body text-[0.75rem] sm:text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3 sm:py-3.25 px-5 sm:px-7 rounded cursor-pointer transition-all h-11 sm:h-12 duration-250 no-underline inline-flex items-center justify-center bg-transparent border border-[#2563EB] text-[#2563EB] hover:bg-[#F0FDFA]">
       Learn More
-      </Button>
-      {/* <Link href="/solutions/resolverite" className="font-body text-[0.8125rem] tracking-[0.07em] uppercase font-medium py-3.25 px-7 rounded cursor-pointer transition-all h-12 duration-250 no-underline inline-block bg-transparent border border-[#2563EB] text-[#2563EB] hover:bg-[#F0FDFA]">
-        Learn More
-      </Link> */}
+      </Link>
     </div>
 
      
