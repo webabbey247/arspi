@@ -22,7 +22,7 @@ import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type CourseLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
-type CourseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED"
+type CourseStatus = "DRAFT" | "PUBLISHED"
 
 type Category = {
   id:        string
@@ -356,11 +356,6 @@ function RowActionsMenu({ actions, label }: { actions: RowAction[]; label: strin
   )
 }
 
-/** Only the non-public states get a pill — PUBLISHED is the unremarkable case. */
-const STATUS_PILL: Record<Exclude<CourseStatus, "PUBLISHED">, { label: string; cls: string }> = {
-  DRAFT:    { label: "Draft",    cls: "bg-amber-50 text-amber-700" },
-  ARCHIVED: { label: "Archived", cls: "bg-slate-100 text-slate-600" },
-}
 
 // ── Thumbnail upload ───────────────────────────────────────────────────────────
 
@@ -2479,33 +2474,32 @@ export default function AdminProgramsPage() {
       return
     }
     toast.success(
-      status === "PUBLISHED" ? `"${p.title}" is now live.`
-      : status === "ARCHIVED" ? `"${p.title}" has been archived.`
-      : `"${p.title}" moved back to draft.`
+      status === "PUBLISHED"
+        ? `"${p.title}" is now live.`
+        : `"${p.title}" has been archived back to draft and is off the public site.`
     )
     await fetchPrograms()
   }
 
   /** Menu contents depend on where the programme sits in its lifecycle:
-   *  a draft can be approved, a live programme can be archived, and an
-   *  archived one can be put back — otherwise archiving would be a one-way
-   *  door with no way out of the admin UI. */
+   *  a draft can be approved to go live, and a live programme can be archived
+   *  straight back to draft — so the pair is a round trip, not a dead end. */
   function programActions(p: Program): RowAction[] {
     const actions: RowAction[] = [
       { label: "View Analytics", href: `/administrator/programs/${p.slug}`, icon: ACTION_ICONS.analytics },
       { label: "View Program",   href: `/programs/${p.slug}`, target: "_blank", icon: ACTION_ICONS.external },
       { label: "Edit Program",   onSelect: () => setProgramModal(p), icon: ACTION_ICONS.edit },
     ]
-    if (p.status !== "PUBLISHED") {
+    if (p.status === "DRAFT") {
       actions.push({
-        label:    p.status === "DRAFT" ? "Approve Program" : "Restore Program",
+        label:    "Approve Program",
         onSelect: () => handleSetProgramStatus(p, "PUBLISHED"),
         icon:     ACTION_ICONS.approve,
       })
     } else {
       actions.push({
         label:    "Archive Program",
-        onSelect: () => handleSetProgramStatus(p, "ARCHIVED"),
+        onSelect: () => handleSetProgramStatus(p, "DRAFT"),
         icon:     ACTION_ICONS.archive,
       })
     }
@@ -2797,8 +2791,8 @@ export default function AdminProgramsPage() {
                         <div>
                           <div className="flex items-center gap-1.5">
                             <p className="font-semibold text-[#171C35] leading-tight line-clamp-1">{p.title}</p>
-                            {p.status !== "PUBLISHED" && (
-                              <span className={`shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${STATUS_PILL[p.status].cls}`}>{STATUS_PILL[p.status].label}</span>
+                            {p.status === "DRAFT" && (
+                              <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Draft</span>
                             )}
                           </div>
                           <p className="text-[11px] text-[#8A90A6] mt-0.5">{instructorName(p)}</p>
@@ -2882,8 +2876,8 @@ export default function AdminProgramsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <p className="font-semibold text-[#171C35] text-[14px] leading-tight line-clamp-2">{p.title}</p>
-                      {p.status !== "PUBLISHED" && (
-                        <span className={`shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${STATUS_PILL[p.status].cls}`}>{STATUS_PILL[p.status].label}</span>
+                      {p.status === "DRAFT" && (
+                        <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Draft</span>
                       )}
                     </div>
                     <p className="text-[12px] text-[#8A90A6] mt-0.5 truncate">{instructorName(p)}</p>

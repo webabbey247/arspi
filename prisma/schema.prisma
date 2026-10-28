@@ -45,7 +45,10 @@ enum UserStatus {
 enum CourseStatus {
   DRAFT
   PUBLISHED
-  ARCHIVED // withdrawn from the public site but kept for its enrolment history
+  // Present in the database but unused by the app: archiving a programme sends
+  // it back to DRAFT. Kept here only so the schema still matches the live enum
+  // — Postgres cannot drop a value from a type in place. Do not write it.
+  ARCHIVED
 }
 
 model User {

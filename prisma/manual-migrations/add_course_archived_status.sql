@@ -1,25 +1,23 @@
 -- ============================================================
--- Manual migration: add_course_archived_status
+-- Manual migration: add_course_archived_status   [APPLIED — NOW VESTIGIAL]
 --
--- Adds an ARCHIVED member to the "CourseStatus" enum so a
--- published programme can be withdrawn from the public site
--- without deleting it (and without losing its enrolments).
--- Mirrors the existing "CareerStatus" enum, which already has
--- PUBLISHED / ARCHIVED. Apply with:
+-- Added an ARCHIVED member to the "CourseStatus" enum. This was
+-- applied to the database on 2026-10-28, and then the product
+-- decision changed: archiving a programme in the admin UI sends
+-- it back to DRAFT instead, so nothing reads or writes ARCHIVED.
 --
---   psql "$DATABASE_URL" -f prisma/manual-migrations/add_course_archived_status.sql
+-- The value is left in place because Postgres cannot drop a
+-- member from an enum type in situ (it would mean recreating
+-- "CourseStatus" and rewriting every dependent column). It is
+-- harmless: no row uses it, and the Zod payload schemas in
+-- app/api/programs reject it.
 --
--- Then regenerate the Prisma client:
+-- Kept in the repo so prisma/schema.prisma still matches the
+-- live enum. Nothing to run — retained as a record only.
 --
---   npx prisma generate
+--   psql "$DIRECT_URL" -f prisma/manual-migrations/add_course_archived_status.sql
 --
--- Idempotent: re-running this script is safe (IF NOT EXISTS).
---
--- Deliberately NOT wrapped in BEGIN/COMMIT. Postgres only allows
--- ALTER TYPE ... ADD VALUE inside a transaction when the new value
--- is not used in that same transaction, and the single statement
--- here is already atomic, so a wrapper would buy nothing while
--- risking "unsafe use of new value" on older servers.
+-- Idempotent if it ever is re-run (IF NOT EXISTS).
 -- ============================================================
 
 ALTER TYPE "CourseStatus" ADD VALUE IF NOT EXISTS 'ARCHIVED';
