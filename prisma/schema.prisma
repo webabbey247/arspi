@@ -45,6 +45,7 @@ enum UserStatus {
 enum CourseStatus {
   DRAFT
   PUBLISHED
+  ARCHIVED // withdrawn from the public site but kept for its enrolment history
 }
 
 model User {

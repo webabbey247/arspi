@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import { createPortal } from "react-dom"
 import Link from "next/link"
 import Image from "next/image"
 import { useUploadThing } from "@/lib/uploadthing-client"
@@ -21,7 +22,7 @@ import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type CourseLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
-type CourseStatus = "DRAFT" | "PUBLISHED"
+type CourseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED"
 
 type Category = {
   id:        string
@@ -221,6 +222,144 @@ function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onCo
       </div>
     </div>
   )
+}
+
+// ── Row actions dropdown ──────────────────────────────────────────────────────
+
+const ACTION_ICONS = {
+  analytics: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  external:  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
+  edit:      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  approve:   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+  archive:   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg>,
+  trash:     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
+}
+
+type RowAction = {
+  label:     string
+  icon:      React.ReactNode
+  /** Set to render the item as a link; otherwise it is a button. */
+  href?:     string
+  target?:   "_blank"
+  onSelect?: () => void
+  /** Tints the item red and separates it from the group above. */
+  danger?:   boolean
+}
+
+const MENU_WIDTH   = 212
+const MENU_ROW_H   = 36   // keep in step with the py-2 + text-[13px] items below
+const MENU_PADDING = 12
+
+/** Per-row "⋯" actions menu. The panel goes through a portal and is positioned
+ *  `fixed` rather than `absolute` inside the row: the desktop table sits in an
+ *  `overflow-x-auto` wrapper, which would otherwise clip the panel and stretch
+ *  the horizontal scroll area. Flips above the trigger when there is no room
+ *  below, and dismisses on scroll, since a fixed panel can't follow its row. */
+function RowActionsMenu({ actions, label }: { actions: RowAction[]; label: string }) {
+  const [open, setOpen] = useState(false)
+  const [pos, setPos]   = useState<{ top: number; left: number } | null>(null)
+  const triggerRef      = useRef<HTMLButtonElement>(null)
+  const panelRef        = useRef<HTMLDivElement>(null)
+
+  /** Measured on open rather than in an effect: the trigger's box is what the
+   *  panel hangs off, and it is already laid out by the time the click lands. */
+  function toggle() {
+    if (open) { setOpen(false); return }
+    const rect = triggerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const height    = actions.length * MENU_ROW_H + MENU_PADDING
+    const roomBelow = window.innerHeight - rect.bottom
+    const flip      = roomBelow < height + 12 && rect.top > height + 12
+    setPos({
+      top:  flip ? rect.top - height - 6 : rect.bottom + 6,
+      left: Math.max(8, Math.min(rect.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - 8)),
+    })
+    setOpen(true)
+  }
+
+  useEffect(() => {
+    if (!open) return
+
+    function onPointerDown(e: MouseEvent) {
+      if (triggerRef.current?.contains(e.target as Node)) return
+      if (panelRef.current?.contains(e.target as Node)) return
+      setOpen(false)
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") { setOpen(false); triggerRef.current?.focus() }
+    }
+    function dismiss() { setOpen(false) }
+
+    document.addEventListener("mousedown", onPointerDown)
+    document.addEventListener("keydown", onKeyDown)
+    window.addEventListener("resize", dismiss)
+    window.addEventListener("scroll", dismiss, true)
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown)
+      document.removeEventListener("keydown", onKeyDown)
+      window.removeEventListener("resize", dismiss)
+      window.removeEventListener("scroll", dismiss, true)
+    }
+  }, [open])
+
+  const itemClass = (danger?: boolean) =>
+    `w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-left no-underline transition-colors cursor-pointer ${
+      danger ? "text-red-600 hover:bg-red-50" : "text-[#171C35] hover:bg-[#F5F6FB]"
+    }`
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={toggle}
+        aria-label={label}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={`w-8 h-8 flex items-center justify-center rounded-[8px] border cursor-pointer transition-colors ${
+          open
+            ? "border-[#6655DF] bg-[#EEECFF] text-[#6655DF]"
+            : "border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF]"
+        }`}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>
+      </button>
+
+      {open && pos && createPortal(
+        <div
+          ref={panelRef}
+          role="menu"
+          aria-label={label}
+          style={{ top: pos.top, left: pos.left, width: MENU_WIDTH }}
+          className="fixed z-50 bg-white border border-[#DFE2ED] rounded-xl shadow-[0_12px_32px_rgba(23,28,53,0.16)] py-1.5"
+        >
+          {actions.map((a, i) => (
+            <div key={a.label}>
+              {a.danger && i > 0 && <div className="my-1 h-px bg-[#F0EFFA]" />}
+              {a.href ? (
+                <Link href={a.href} target={a.target} role="menuitem" onClick={() => setOpen(false)} className={itemClass(a.danger)}>
+                  <span className="shrink-0 text-[#8A90A6]">{a.icon}</span>
+                  {a.label}
+                </Link>
+              ) : (
+                <button type="button" role="menuitem" onClick={() => { setOpen(false); a.onSelect?.() }} className={`${itemClass(a.danger)} bg-transparent border-none`}>
+                  <span className={`shrink-0 ${a.danger ? "text-red-400" : "text-[#8A90A6]"}`}>{a.icon}</span>
+                  {a.label}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>,
+        document.body,
+      )}
+    </>
+  )
+}
+
+/** Only the non-public states get a pill — PUBLISHED is the unremarkable case. */
+const STATUS_PILL: Record<Exclude<CourseStatus, "PUBLISHED">, { label: string; cls: string }> = {
+  DRAFT:    { label: "Draft",    cls: "bg-amber-50 text-amber-700" },
+  ARCHIVED: { label: "Archived", cls: "bg-slate-100 text-slate-600" },
 }
 
 // ── Thumbnail upload ───────────────────────────────────────────────────────────
@@ -2328,18 +2467,50 @@ export default function AdminProgramsPage() {
     await fetchPrograms()
   }
 
-  async function handlePublishProgram(p: Program) {
+  async function handleSetProgramStatus(p: Program, status: CourseStatus) {
     const res = await fetch(`/api/programs/${p.id}`, {
       method:  "PUT",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ status: "PUBLISHED" }),
+      body:    JSON.stringify({ status }),
     })
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))
-      alert(d.error ?? "Failed to publish program.")
+      toast.error(d.error ?? "Failed to update program status.")
       return
     }
+    toast.success(
+      status === "PUBLISHED" ? `"${p.title}" is now live.`
+      : status === "ARCHIVED" ? `"${p.title}" has been archived.`
+      : `"${p.title}" moved back to draft.`
+    )
     await fetchPrograms()
+  }
+
+  /** Menu contents depend on where the programme sits in its lifecycle:
+   *  a draft can be approved, a live programme can be archived, and an
+   *  archived one can be put back — otherwise archiving would be a one-way
+   *  door with no way out of the admin UI. */
+  function programActions(p: Program): RowAction[] {
+    const actions: RowAction[] = [
+      { label: "View Analytics", href: `/administrator/programs/${p.slug}`, icon: ACTION_ICONS.analytics },
+      { label: "View Program",   href: `/programs/${p.slug}`, target: "_blank", icon: ACTION_ICONS.external },
+      { label: "Edit Program",   onSelect: () => setProgramModal(p), icon: ACTION_ICONS.edit },
+    ]
+    if (p.status !== "PUBLISHED") {
+      actions.push({
+        label:    p.status === "DRAFT" ? "Approve Program" : "Restore Program",
+        onSelect: () => handleSetProgramStatus(p, "PUBLISHED"),
+        icon:     ACTION_ICONS.approve,
+      })
+    } else {
+      actions.push({
+        label:    "Archive Program",
+        onSelect: () => handleSetProgramStatus(p, "ARCHIVED"),
+        icon:     ACTION_ICONS.archive,
+      })
+    }
+    actions.push({ label: "Delete Program", onSelect: () => setDeleteProgram(p), icon: ACTION_ICONS.trash, danger: true })
+    return actions
   }
 
   // ── Category CRUD ──────────────────────────────────────────────────────────
@@ -2626,8 +2797,8 @@ export default function AdminProgramsPage() {
                         <div>
                           <div className="flex items-center gap-1.5">
                             <p className="font-semibold text-[#171C35] leading-tight line-clamp-1">{p.title}</p>
-                            {p.status === "DRAFT" && (
-                              <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Draft</span>
+                            {p.status !== "PUBLISHED" && (
+                              <span className={`shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${STATUS_PILL[p.status].cls}`}>{STATUS_PILL[p.status].label}</span>
                             )}
                           </div>
                           <p className="text-[11px] text-[#8A90A6] mt-0.5">{instructorName(p)}</p>
@@ -2679,25 +2850,7 @@ export default function AdminProgramsPage() {
 
                     {/* Actions */}
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <Link href={`/administrator/programs/${p.slug}`} title="Analytics &amp; details" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-blue-50 transition-colors">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                        </Link>
-                        <Link href={`/programs/${p.slug}`} target="_blank" title="View public page" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        </Link>
-                        {p.status === "DRAFT" && (
-                          <button onClick={() => handlePublishProgram(p)} title="Publish" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-emerald-200 bg-emerald-50 text-emerald-600 hover:border-emerald-400 hover:bg-emerald-100 cursor-pointer transition-colors">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                          </button>
-                        )}
-                        <button onClick={() => setProgramModal(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                        <button onClick={() => setDeleteProgram(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                        </button>
-                      </div>
+                      <RowActionsMenu actions={programActions(p)} label={`Actions for ${p.title}`} />
                     </td>
                   </tr>
                 ))}
@@ -2729,8 +2882,8 @@ export default function AdminProgramsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <p className="font-semibold text-[#171C35] text-[14px] leading-tight line-clamp-2">{p.title}</p>
-                      {p.status === "DRAFT" && (
-                        <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Draft</span>
+                      {p.status !== "PUBLISHED" && (
+                        <span className={`shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${STATUS_PILL[p.status].cls}`}>{STATUS_PILL[p.status].label}</span>
                       )}
                     </div>
                     <p className="text-[12px] text-[#8A90A6] mt-0.5 truncate">{instructorName(p)}</p>
@@ -2772,45 +2925,8 @@ export default function AdminProgramsPage() {
                   )}
                 </dl>
 
-                <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <Link
-                    href={`/administrator/programs/${p.slug}`}
-                    aria-label="Analytics & details"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-blue-50 transition-colors"
-                  >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                  </Link>
-                  <Link
-                    href={`/programs/${p.slug}`}
-                    target="_blank"
-                    aria-label="View public page"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
-                  >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  </Link>
-                  {p.status === "DRAFT" && (
-                    <button
-                      onClick={() => handlePublishProgram(p)}
-                      aria-label="Publish"
-                      className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-emerald-200 bg-emerald-50 text-emerald-600 hover:border-emerald-400 hover:bg-emerald-100 cursor-pointer transition-colors"
-                    >
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setProgramModal(p)}
-                    aria-label="Edit"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors"
-                  >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button
-                    onClick={() => setDeleteProgram(p)}
-                    aria-label="Delete"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                  </button>
+                <div className="flex items-center justify-end pt-1">
+                  <RowActionsMenu actions={programActions(p)} label={`Actions for ${p.title}`} />
                 </div>
               </div>
             ))}

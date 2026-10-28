@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 // decoupled from the service row types so this page only depends on the wire shape.
 
 type ProgramRow = {
-  id: string; title: string; slug: string; status: "DRAFT" | "PUBLISHED"
+  id: string; title: string; slug: string; status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
   createdAt: string; _count: { enrollments: number }
 }
 type InsightRow = {

@@ -25,7 +25,7 @@ const createSchema = z.object({
   level:        z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
   featured:     z.boolean().optional(),
   predefinedAnalytics: z.boolean().optional(),
-  status:       z.enum(["DRAFT", "PUBLISHED"]).optional(),
+  status:       z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
   categoryId:   z.string().nullable().optional(),
 
   // Lookup-table relations (Levels / Formats / Pricing tabs)

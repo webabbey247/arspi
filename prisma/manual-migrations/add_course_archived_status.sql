@@ -1,0 +1,25 @@
+-- ============================================================
+-- Manual migration: add_course_archived_status
+--
+-- Adds an ARCHIVED member to the "CourseStatus" enum so a
+-- published programme can be withdrawn from the public site
+-- without deleting it (and without losing its enrolments).
+-- Mirrors the existing "CareerStatus" enum, which already has
+-- PUBLISHED / ARCHIVED. Apply with:
+--
+--   psql "$DATABASE_URL" -f prisma/manual-migrations/add_course_archived_status.sql
+--
+-- Then regenerate the Prisma client:
+--
+--   npx prisma generate
+--
+-- Idempotent: re-running this script is safe (IF NOT EXISTS).
+--
+-- Deliberately NOT wrapped in BEGIN/COMMIT. Postgres only allows
+-- ALTER TYPE ... ADD VALUE inside a transaction when the new value
+-- is not used in that same transaction, and the single statement
+-- here is already atomic, so a wrapper would buy nothing while
+-- risking "unsafe use of new value" on older servers.
+-- ============================================================
+
+ALTER TYPE "CourseStatus" ADD VALUE IF NOT EXISTS 'ARCHIVED';
