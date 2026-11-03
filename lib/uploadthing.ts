@@ -41,6 +41,28 @@ export const ourFileRouter = {
       return { url: file.ufsUrl }
     }),
 
+  /** Project submissions — any signed-in student uploading their own work.
+   *  Needed as its own endpoint because pdfUploader is staff-only (a student
+   *  would be rejected by its middleware) and documentUploader is deliberately
+   *  unauthenticated and single-file for public job applicants. */
+  projectUploader: f({
+    pdf:   { maxFileSize: "16MB", maxFileCount: 5 },
+    image: { maxFileSize: "8MB",  maxFileCount: 5 },
+    text:  { maxFileSize: "4MB",  maxFileCount: 5 },
+    "application/msword": { maxFileSize: "16MB", maxFileCount: 5 },
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": { maxFileSize: "16MB", maxFileCount: 5 },
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": { maxFileSize: "16MB", maxFileCount: 5 },
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { maxFileSize: "16MB", maxFileCount: 5 },
+    "application/zip": { maxFileSize: "32MB", maxFileCount: 3 },
+  })
+    .middleware(async () => {
+      const session = await requireAuthenticated()
+      return { userId: session.sub }
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: file.ufsUrl, name: file.name, size: file.size }
+    }),
+
   /** PDF upload for lesson content blocks — admin or instructor only */
   pdfUploader: f({ pdf: { maxFileSize: "32MB", maxFileCount: 1 } })
     .middleware(async () => {

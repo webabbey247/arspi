@@ -65,6 +65,16 @@ export type ProgramRow = {
 
   facilitators:         unknown | null
 
+  // Assessment & grading policy (see services/assessment.service.ts)
+  gradingEnabled:          boolean
+  quizWeight:              number
+  projectWeight:           number
+  passMark:                number
+  componentPassMark:       number
+  maxQuizAttempts:         number
+  attemptCooldownHours:    number
+  maxProjectResubmissions: number
+
   instructorId: string
   instructor:  {
     id:      string

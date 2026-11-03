@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
- provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -54,7 +54,7 @@ enum CourseStatus {
 model User {
   id        String     @id @default(cuid())
   email     String     @unique
-  password  String?    // nullable — OAuth users have no password
+  password  String? // nullable — OAuth users have no password
   role      Role       @default(USER)
   status    UserStatus @default(ACTIVE)
   createdAt DateTime   @default(now())
@@ -63,8 +63,8 @@ model User {
   accounts Account[]
 
   // Onboarding flags
-  hasProfile   Boolean  @default(false)
-  hasInterests Boolean  @default(false)
+  hasProfile   Boolean @default(false)
+  hasInterests Boolean @default(false)
 
   // Email verification
   emailVerified            Boolean   @default(false)
@@ -77,23 +77,26 @@ model User {
   lessonCompletions   LessonCompletion[]
   lessonProgress      LessonProgress[]
   certificates        Certificate[]
-  taughtCourses       Course[]           @relation("CourseInstructor")
-  taughtWorkshops     Workshop[]         @relation("WorkshopInstructor")
+  taughtCourses       Course[]             @relation("CourseInstructor")
+  taughtWorkshops     Workshop[]           @relation("WorkshopInstructor")
   passwordResetTokens PasswordResetToken[]
-  createdInsights     Insight[]              @relation("InsightAuthor")
+  createdInsights     Insight[]            @relation("InsightAuthor")
+  assessmentAttempts  AssessmentAttempt[]  @relation("AttemptStudent")
+  gradedAttempts      AssessmentAttempt[]  @relation("AttemptGrader")
+  courseGrades        CourseGrade[]
+  studyPlans          StudyPlan[]
 
   @@map("users")
 }
 
-
 model Profile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   firstName      String?
   lastName       String?
-  avatar         String?  // URL to S3 / R2
+  avatar         String? // URL to S3 / R2
   bio            String?
   phone          String?
   country        String?
@@ -149,8 +152,6 @@ model Account {
 // COURSES
 // ============================================================
 
-
-
 model Category {
   id        String   @id @default(cuid())
   name      String   @unique
@@ -162,59 +163,71 @@ model Category {
 }
 
 model Course {
-  id           String      @id @default(cuid())
-  title        String
-  slug         String      @unique
-  excerpt      String                       // renamed from description; short summary shown on cards
-  thumbnail    String?
-  price        Float       @default(0)
-  pricing      String      @default("free") // "free" | "paid"
-  paymentType  String?                      // "one-time" | "subscription" | "monthly" — only when pricing = "paid"
-  level        CourseLevel @default(BEGINNER)
-  featured     Boolean     @default(false)
-  predefinedAnalytics Boolean @default(false)  // when true, render Metrics + Social Proof publicly
-  status       CourseStatus @default(PUBLISHED) // DRAFT = AI-generated / unfinished, hidden from public site
+  id                  String       @id @default(cuid())
+  title               String
+  slug                String       @unique
+  excerpt             String // renamed from description; short summary shown on cards
+  thumbnail           String?
+  price               Float        @default(0)
+  pricing             String       @default("free") // "free" | "paid"
+  paymentType         String? // "one-time" | "subscription" | "monthly" — only when pricing = "paid"
+  level               CourseLevel  @default(BEGINNER)
+  featured            Boolean      @default(false)
+  predefinedAnalytics Boolean      @default(false) // when true, render Metrics + Social Proof publicly
+  status              CourseStatus @default(PUBLISHED) // DRAFT = AI-generated / unfinished, hidden from public site
 
   // Programme details
-  tagline              String?
-  duration             String?
-  format               String?
-  startDate            String?
-  endDate              String?
-  cohortSize           Int?
-  rating               Float?
-  reviewCount          Int?
-  enrolledCount        Int?
-  countriesCount       Int?
+  tagline        String?
+  duration       String?
+  format         String?
+  startDate      String?
+  endDate        String?
+  cohortSize     Int?
+  rating         Float?
+  reviewCount    Int?
+  enrolledCount  Int?
+  countriesCount Int?
 
   // Rich content (JSON)
-  overview             String?
-  targetAudience       Json?        // String[]
-  learningObjectives   Json?        // String[]
-  curriculum           Json?        // { title, desc, lessons[] }[]
-  whatIsIncluded       Json?        // String[]
-  faqs                 Json?        // { q, a }[]
+  overview           String?
+  targetAudience     Json? // String[]
+  learningObjectives Json? // String[]
+  curriculum         Json? // { title, desc, lessons[] }[]
+  whatIsIncluded     Json? // String[]
+  faqs               Json? // { q, a }[]
 
   // Facilitators array (replaces standalone instructor columns)
-  facilitators         Json?        // { name, imageUrl?, title, bio, credentials? }[]
+  facilitators Json? // { name, imageUrl?, title, bio, credentials? }[]
 
   // Instructor (User relation)
   instructorId String
-  instructor   User        @relation("CourseInstructor", fields: [instructorId], references: [id])
+  instructor   User   @relation("CourseInstructor", fields: [instructorId], references: [id])
 
   // Category
-  categoryId   String?
-  category     Category?   @relation(fields: [categoryId], references: [id])
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
 
   // Lookup-table relations (replacing CourseLevel enum, format string, pricing string)
-  programLevelId   String?
-  programLevel     ProgramLevel?   @relation(fields: [programLevelId],   references: [id])
+  programLevelId String?
+  programLevel   ProgramLevel? @relation(fields: [programLevelId], references: [id])
 
-  programFormatId  String?
-  programFormat    ProgramFormat?  @relation(fields: [programFormatId],  references: [id])
+  programFormatId String?
+  programFormat   ProgramFormat? @relation(fields: [programFormatId], references: [id])
 
   programPricingId String?
   programPricing   ProgramPricing? @relation(fields: [programPricingId], references: [id])
+
+  // ── Assessment & grading ─────────────────────────────────────────────────
+  // Off by default so every existing programme keeps the old "finish every
+  // lesson" certificate rule until an admin deliberately turns grading on.
+  gradingEnabled          Boolean @default(false)
+  quizWeight              Int     @default(50) // marks out of 100 from chapter quizzes
+  projectWeight           Int     @default(50) // marks out of 100 from the project
+  passMark                Int     @default(50) // overall marks needed, out of 100
+  componentPassMark       Int     @default(50) // % needed within EACH component
+  maxQuizAttempts         Int     @default(3)
+  attemptCooldownHours    Int     @default(24)
+  maxProjectResubmissions Int     @default(2)
 
   // Relations
   sections       Section[]
@@ -222,6 +235,9 @@ model Course {
   lessonProgress LessonProgress[]
   certificates   Certificate[]
   tags           CourseTag[]
+  assessments    Assessment[]
+  grades         CourseGrade[]
+  studyPlans     StudyPlan[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -271,7 +287,6 @@ model CourseTag {
   @@map("course_tags")
 }
 
-
 // ============================================================
 // SECTIONS + LESSONS
 // ============================================================
@@ -287,15 +302,15 @@ model Section {
 }
 
 model Lesson {
-  id          String           @id @default(cuid())
+  id          String             @id @default(cuid())
   title       String
   description String?
-  videoUrl    String?          // URL to hosted video
-  duration    Int?             // seconds
+  videoUrl    String? // URL to hosted video
+  duration    Int? // seconds
   order       Int
-  isFree      Boolean          @default(false) // preview lessons
+  isFree      Boolean            @default(false) // preview lessons
   sectionId   String
-  section     Section          @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  section     Section            @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   completions LessonCompletion[]
   resources   LessonResource[]
 
@@ -370,6 +385,7 @@ model LessonProgress {
   @@unique([userId, courseId])
   @@map("lesson_progress")
 }
+
 // ============================================================
 // CERTIFICATES
 // ============================================================
@@ -378,7 +394,7 @@ model Certificate {
   userId     String
   courseId   String
   verifyCode String    @unique @default(cuid())
-  pdfUrl     String?   // URL to generated PDF in S3 / R2
+  pdfUrl     String? // URL to generated PDF in S3 / R2
   issuedAt   DateTime  @default(now())
   expiresAt  DateTime? // null = never expires
 
@@ -387,6 +403,196 @@ model Certificate {
 
   @@unique([userId, courseId]) // one cert per user per course
   @@map("certificates")
+}
+
+enum AssessmentKind {
+  CHAPTER_QUIZ // auto-graded, drawn from a question pool
+  PROJECT // file submission, graded by an instructor against a rubric
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED // answers/files in, awaiting scoring or a grader
+  GRADED
+  CHANGES_REQUESTED // project returned to the student for resubmission
+}
+
+/// A graded instrument. In-lesson quiz content-blocks stay unscored practice
+/// gates; these are the only things that carry marks.
+model Assessment {
+  id           String         @id @default(cuid())
+  courseId     String
+  course       Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  kind         AssessmentKind
+  title        String
+  instructions String?
+
+  /// CHAPTER_QUIZ only — the `id` of the chapter in Course.curriculum this
+  /// assessment closes out. A plain string, because curriculum chapters live
+  /// in JSON and have no row of their own; validate it still resolves before
+  /// relying on it. Null for PROJECT, which is course-wide.
+  chapterId String?
+
+  /// CHAPTER_QUIZ: [{ id, prompt, options: string[], correctIndex, points }]
+  /// The answer key never leaves the server — see stripAssessmentAnswers().
+  questions Json?
+  /// PROJECT: [{ id, criterion, maxPoints }]
+  rubric    Json?
+
+  /// Questions to draw per attempt (null = serve all). Drawing a subset from a
+  /// larger pool is what stops a retake from being a memory test.
+  drawCount      Int?
+  shuffleOptions Boolean @default(true)
+  orderIndex     Int     @default(0)
+
+  attempts AssessmentAttempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courseId])
+  @@map("assessments")
+}
+
+model AssessmentAttempt {
+  id           String     @id @default(cuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation("AttemptStudent", fields: [userId], references: [id], onDelete: Cascade)
+
+  attemptNo Int
+  status    AttemptStatus @default(IN_PROGRESS)
+
+  /// Voided attempts keep their history and their number but stop counting
+  /// against the cap — this is how an instructor grants one more try without
+  /// renumbering anything or loosening the policy for everyone else.
+  voided Boolean @default(false)
+
+  /// CHAPTER_QUIZ: the exact questions served for this attempt, answer key
+  /// excluded — pinned at start so an edit to the assessment mid-attempt
+  /// can't change what the student is answering.
+  /// [{ id, prompt, options: string[], points }]
+  servedQuestions Json?
+  /// CHAPTER_QUIZ: { [questionId]: selectedIndex }
+  answers         Json?
+  /// CHAPTER_QUIZ: { [questionId]: number[] } mapping each SERVED option
+  /// position back to its position in the authored question. Grading is done
+  /// through this rather than by comparing option text, which silently
+  /// mis-grades whenever two options share the same wording. Server-only —
+  /// never include it in a student response.
+  optionMap       Json?
+  /// PROJECT: [{ url, name, size }] — uploaded via UploadThing
+  files           Json?
+  note            String?
+
+  score        Float?
+  maxScore     Float?
+  passed       Boolean?
+  /// PROJECT: { [criterionId]: points }
+  rubricScores Json?
+  feedback     String?
+
+  gradedById String?
+  gradedBy   User?   @relation("AttemptGrader", fields: [gradedById], references: [id])
+
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+  gradedAt    DateTime?
+
+  @@unique([assessmentId, userId, attemptNo])
+  @@index([userId, assessmentId])
+  @@map("assessment_attempts")
+}
+
+/// Cached rollup of a student's marks for one course. Recomputed whenever an
+/// attempt is scored — kept as a row so listings and the certificate check
+/// don't have to replay every attempt.
+model CourseGrade {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  quizMarks    Float   @default(0) // out of Course.quizWeight
+  projectMarks Float   @default(0) // out of Course.projectWeight
+  finalMarks   Float   @default(0) // out of 100
+  quizPct      Float   @default(0) // component %, for the per-component pass rule
+  projectPct   Float   @default(0)
+  passed       Boolean @default(false)
+
+  computedAt DateTime @updatedAt
+
+  @@unique([userId, courseId])
+  @@map("course_grades")
+}
+
+enum StudySessionStatus {
+  PLANNED
+  DONE
+  MISSED
+  SKIPPED
+}
+
+/// A student's self-paced timetable for one programme: when they intend to
+/// study, from which the sessions below are generated.
+model StudyPlan {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  /// Weekly availability: [{ weekday: 0-6 (Sun-Sat), start: "19:00", end: "21:00" }]
+  /// A recurring pattern rather than explicit dates, so the plan can be
+  /// re-flowed when a student falls behind without re-asking them anything.
+  availability Json
+
+  /// IANA zone the slots are expressed in. Stored because "19:00 Tuesday"
+  /// means nothing without it, and a student may travel.
+  timezone      String    @default("UTC")
+  startDate     DateTime
+  /// Set when the plan was built backwards from a deadline rather than
+  /// forwards from availability — kept so the UI can say which it was.
+  targetEndDate DateTime?
+
+  sessions StudySession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId])
+  @@map("study_plans")
+}
+
+/// One materialised sitting. Rows rather than a computed projection because
+/// students tick them off, miss them and reschedule — that needs identity.
+model StudySession {
+  id     String    @id @default(cuid())
+  planId String
+  plan   StudyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  /// Local date of the sitting at midnight UTC, paired with startMinute below
+  /// rather than stored as an instant: a timezone change should move the clock
+  /// time with the student, not silently shift every session.
+  date        DateTime
+  startMinute Int // minutes from local midnight
+  endMinute   Int
+
+  /// Curriculum lesson ids assigned to this sitting, in order. Lessons are
+  /// never split across sittings — a half-watched lesson isn't progress.
+  lessonIds        Json
+  /// Denormalised for display, so rendering a plan doesn't need the curriculum.
+  lessonTitles     Json
+  chapterTitle     String?
+  estimatedMinutes Int     @default(0)
+
+  status      StudySessionStatus @default(PLANNED)
+  completedAt DateTime?
+
+  @@index([planId, date])
+  @@map("study_sessions")
 }
 
 // ============================================================
@@ -437,20 +643,20 @@ enum WorkshopRegistrationStatus {
 }
 
 model Workshop {
-  id          String           @id @default(cuid())
-  title       String
-  slug        String           @unique
-  description String           @db.Text
-  type        WorkshopType     @default(FREE)
-  category    WorkshopCategory @default(WORKSHOP)
-  fee         Float            @default(0)
-  featured    Boolean          @default(false)
-  published   Boolean          @default(false)
-  date        DateTime?
-  startTime   String           @default("")
-  endTime     String           @default("")
-  timezone    String           @default("UTC")
-  level       String           @default("BEGINNER")
+  id             String           @id @default(cuid())
+  title          String
+  slug           String           @unique
+  description    String           @db.Text
+  type           WorkshopType     @default(FREE)
+  category       WorkshopCategory @default(WORKSHOP)
+  fee            Float            @default(0)
+  featured       Boolean          @default(false)
+  published      Boolean          @default(false)
+  date           DateTime?
+  startTime      String           @default("")
+  endTime        String           @default("")
+  timezone       String           @default("UTC")
+  level          String           @default("BEGINNER")
   facilitator    String           @default("")
   facilitators   Json?
   medium         String           @default("ONLINE")
@@ -461,13 +667,13 @@ model Workshop {
   venueState     String?
   venueCountry   String?
   capacity       Int?
-  registered  Int              @default(0)
-  coverImage  String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  registered     Int              @default(0)
+  coverImage     String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
-  instructorId  String?
-  instructor    User?            @relation("WorkshopInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
+  instructorId String?
+  instructor   User?   @relation("WorkshopInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
 
   registrations WorkshopRegistration[]
 
@@ -475,22 +681,22 @@ model Workshop {
 }
 
 model WorkshopRegistration {
-  id            String                     @id @default(cuid())
-  firstName     String
-  lastName      String
-  email         String
-  organisation  String?
-  workshopTitle String
-  workshopDate  String
-  workshopTime  String
-  fee           Float
+  id                      String                     @id @default(cuid())
+  firstName               String
+  lastName                String
+  email                   String
+  organisation            String?
+  workshopTitle           String
+  workshopDate            String
+  workshopTime            String
+  fee                     Float
   paymentMethod           WorkshopPaymentMethod?
   status                  WorkshopRegistrationStatus @default(PENDING)
   stripeCheckoutSessionId String?                    @unique
   createdAt               DateTime                   @default(now())
 
-  workshopId    String?
-  workshop      Workshop?                  @relation(fields: [workshopId], references: [id], onDelete: SetNull)
+  workshopId String?
+  workshop   Workshop? @relation(fields: [workshopId], references: [id], onDelete: SetNull)
 
   @@map("workshop_registrations")
 }
@@ -518,7 +724,7 @@ model Author {
   name      String
   jobTitle  String?
   bio       String?
-  avatar    String?   // URL
+  avatar    String? // URL
   insights  Insight[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -527,27 +733,27 @@ model Author {
 }
 
 model Insight {
-  id          String           @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
-  slug        String           @unique
+  slug        String    @unique
   excerpt     String
-  body        String           @db.Text
-  featured    Boolean          @default(false)
-  published   Boolean          @default(false)
-  readTime    String           @default("5 min read")
+  body        String    @db.Text
+  featured    Boolean   @default(false)
+  published   Boolean   @default(false)
+  readTime    String    @default("5 min read")
   coverImage  String?
   publishedAt DateTime?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  authorId    String?
-  author      Author?          @relation(fields: [authorId], references: [id])
+  authorId String?
+  author   Author? @relation(fields: [authorId], references: [id])
 
-  categoryId  String?
-  category    InsightCategory? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+  category   InsightCategory? @relation(fields: [categoryId], references: [id])
 
   createdById String
-  createdBy   User             @relation("InsightAuthor", fields: [createdById], references: [id])
+  createdBy   User   @relation("InsightAuthor", fields: [createdById], references: [id])
 
   @@map("insights")
 }
@@ -567,15 +773,15 @@ enum ContactStatus {
 }
 
 model ContactMessage {
-  id          String         @id @default(cuid())
-  firstName   String
-  lastName    String
-  email       String
-  phone       String?
-  subject     ContactSubject @default(ENQUIRY)
-  message     String
-  status      ContactStatus  @default(NEW)
-  createdAt   DateTime       @default(now())
+  id        String         @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String
+  phone     String?
+  subject   ContactSubject @default(ENQUIRY)
+  message   String
+  status    ContactStatus  @default(NEW)
+  createdAt DateTime       @default(now())
 
   @@map("contact_messages")
 }
@@ -590,10 +796,10 @@ enum SubscriptionStatus {
 }
 
 model NewsletterSubscriber {
-  id         String             @id @default(cuid())
-  email      String             @unique
-  status     SubscriptionStatus @default(ACTIVE)
-  subscribedAt DateTime         @default(now())
+  id             String             @id @default(cuid())
+  email          String             @unique
+  status         SubscriptionStatus @default(ACTIVE)
+  subscribedAt   DateTime           @default(now())
   unsubscribedAt DateTime?
 
   @@map("newsletter_subscribers")
@@ -652,48 +858,48 @@ model CareerDepartment {
 }
 
 model Career {
-  id              String          @id @default(cuid())
-  title           String
-  slug            String          @unique
-  department      String
-  type            CareerType      @default(FULL_TIME)
-  experienceLevel ExperienceLevel @default(MID)
-  location        String
-  remote          Boolean         @default(false)
-  salaryMin       Float?
-  salaryMax       Float?
-  currency        String          @default("USD")
-  description     String          @db.Text
-  responsibilities Json?          // String[]
-  requirements    Json?           // String[]
-  benefits        Json?           // String[]
-  applyEmail      String?
-  status          CareerStatus    @default(PUBLISHED)
-  views           Int             @default(0)
-  applications    Int             @default(0)
-  closingDate     DateTime?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id               String          @id @default(cuid())
+  title            String
+  slug             String          @unique
+  department       String
+  type             CareerType      @default(FULL_TIME)
+  experienceLevel  ExperienceLevel @default(MID)
+  location         String
+  remote           Boolean         @default(false)
+  salaryMin        Float?
+  salaryMax        Float?
+  currency         String          @default("USD")
+  description      String          @db.Text
+  responsibilities Json? // String[]
+  requirements     Json? // String[]
+  benefits         Json? // String[]
+  applyEmail       String?
+  status           CareerStatus    @default(PUBLISHED)
+  views            Int             @default(0)
+  applications     Int             @default(0)
+  closingDate      DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
-  applicants      CareerApplication[]
+  applicants CareerApplication[]
 
   @@map("careers")
 }
 
 model CareerApplication {
-  id              String   @id @default(cuid())
-  fullName        String
-  email           String
-  mobile          String
-  country         String
-  coverLetterUrl  String?
-  resumeUrl       String
-  linkedinUrl     String?
-  source          String?
-  createdAt       DateTime @default(now())
+  id             String   @id @default(cuid())
+  fullName       String
+  email          String
+  mobile         String
+  country        String
+  coverLetterUrl String?
+  resumeUrl      String
+  linkedinUrl    String?
+  source         String?
+  createdAt      DateTime @default(now())
 
-  careerId        String
-  career          Career   @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  careerId String
+  career   Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
 
   @@index([careerId])
   @@map("career_applications")
@@ -778,17 +984,17 @@ model Project {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  divisionId   String?
-  division     ProjectDivision? @relation(fields: [divisionId], references: [id])
+  divisionId String?
+  division   ProjectDivision? @relation(fields: [divisionId], references: [id])
 
   departmentId String?
   department   ProjectDepartment? @relation(fields: [departmentId], references: [id])
 
-  services     ProjectService[]
+  services ProjectService[]
 
   // People (project-scoped JSON arrays; not reusable across projects)
-  investigators Json?  // Array<{ imageUrl?: string; name: string; role?: string }>
-  members       Json?  // Array<{ imageUrl?: string; name: string; role?: string }>
+  investigators Json? // Array<{ imageUrl?: string; name: string; role?: string }>
+  members       Json? // Array<{ imageUrl?: string; name: string; role?: string }>
 
   @@index([status, displayOrder])
   @@map("projects")
@@ -845,4 +1051,3 @@ model GlobalOffice {
   @@index([region, displayOrder])
   @@map("global_offices")
 }
-

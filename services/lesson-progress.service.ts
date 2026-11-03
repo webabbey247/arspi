@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import { issueCertificate } from "@/services/certificate.service"
+import { hasPassedCourse } from "@/services/assessment.service"
 
 // ── Curriculum shape (mirrors the JSON stored on Course.curriculum) ────────────
 
@@ -174,15 +175,21 @@ export async function setLessonCompletion(
 
   let certificate: SetLessonCompletionResult["certificate"] = null
   if (courseCompleted) {
-    const enrollment = await db.enrollment.findUnique({ where: { userId_courseId: { userId, courseId } } })
-    if (enrollment && enrollment.status !== "COMPLETED") {
-      await db.enrollment.update({
-        where: { id: enrollment.id },
-        data:  { status: "COMPLETED", completedAt: new Date() },
-      })
+    // On a graded course, finishing the lessons is necessary but not
+    // sufficient — the student also has to have passed. hasPassedCourse()
+    // returns true for ungraded courses, so existing programmes are unaffected.
+    const passed = await hasPassedCourse(userId, courseId)
+    if (passed) {
+      const enrollment = await db.enrollment.findUnique({ where: { userId_courseId: { userId, courseId } } })
+      if (enrollment && enrollment.status !== "COMPLETED") {
+        await db.enrollment.update({
+          where: { id: enrollment.id },
+          data:  { status: "COMPLETED", completedAt: new Date() },
+        })
+      }
+      const result = await issueCertificate(userId, courseId)
+      if (result.success) certificate = { id: result.data.id, verifyCode: result.data.verifyCode }
     }
-    const result = await issueCertificate(userId, courseId)
-    if (result.success) certificate = { id: result.data.id, verifyCode: result.data.verifyCode }
   }
 
   return { completedIds: next, courseCompleted, certificate }

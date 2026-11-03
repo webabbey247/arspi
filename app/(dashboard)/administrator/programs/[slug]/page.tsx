@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { DetailPageSkeleton, InlineSkeleton } from "@/components/ui/skeleton"
+import AssessmentManager from "@/components/assessments/AssessmentManager"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -696,6 +697,8 @@ export default function ProgramDetailPage() {
           </>
         )}
       </div>
+
+      <AssessmentManager programId={program.id} />
 
     </div>
   )

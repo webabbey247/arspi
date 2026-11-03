@@ -13,7 +13,7 @@ export async function GET() {
     if (!guard.ok) return guard.response
     const { session } = guard
 
-    const [enrollments, registrations, certificatesCount] = await Promise.all([
+    const [enrollments, registrations, certificates] = await Promise.all([
       db.enrollment.findMany({
         where:   { userId: session.sub },
         include: {
@@ -35,7 +35,11 @@ export async function GET() {
         },
         orderBy: { createdAt: "desc" },
       }),
-      db.certificate.count({ where: { userId: session.sub } }),
+      db.certificate.findMany({
+        where:   { userId: session.sub },
+        include: { course: { select: { title: true, slug: true } } },
+        orderBy: { issuedAt: "desc" },
+      }),
     ])
 
     const courseIds = enrollments.map(e => e.courseId)
@@ -52,6 +56,7 @@ export async function GET() {
         enrollmentId: e.id,
         status:       e.status,
         enrolledAt:   e.enrolledAt,
+        completedAt:  e.completedAt,
         course: {
           id: e.course.id, title: e.course.title, slug: e.course.slug,
           thumbnail: e.course.thumbnail, tagline: e.course.tagline, level: e.course.level,
@@ -93,11 +98,75 @@ export async function GET() {
         date: r.workshop!.date!.toISOString(),
       }))
 
+    const lessonsTotal     = programs.reduce((sum, p) => sum + p.totalLessons, 0)
+    const lessonsCompleted = programs.reduce((sum, p) => sum + p.completedLessons, 0)
+
+    /** Every event here carries a real timestamp. Note there is no per-lesson
+     *  completion history to draw on — the player stores progress as a JSON
+     *  array on LessonProgress with a single updatedAt — so "picked up again"
+     *  is one event per programme, not one per lesson, and no per-day
+     *  activity series is possible without a schema change. */
+    const activity = [
+      ...programs.flatMap(p => {
+        const href = `/student/programs/${p.course.slug}`
+        const rows: { id: string; kind: "enrolled" | "completed" | "progress"; title: string; href: string; at: string }[] = [{
+          id: `enrol-${p.enrollmentId}`, kind: "enrolled" as const,
+          title: p.course.title, href, at: p.enrolledAt.toISOString(),
+        }]
+        if (p.completedAt) {
+          rows.push({
+            id: `done-${p.enrollmentId}`, kind: "completed" as const,
+            title: p.course.title, href, at: p.completedAt.toISOString(),
+          })
+        }
+        if (p.completedLessons > 0 && p.lastTouchedAt > p.enrolledAt) {
+          rows.push({
+            id: `touch-${p.enrollmentId}`, kind: "progress" as const,
+            title: p.course.title, href, at: p.lastTouchedAt.toISOString(),
+          })
+        }
+        return rows
+      }),
+      ...certificates.map(c => ({
+        id: `cert-${c.id}`, kind: "certificate" as const,
+        title: c.course.title, href: `/verify/${c.verifyCode}`, at: c.issuedAt.toISOString(),
+      })),
+      ...registrations.map(r => ({
+        id: `reg-${r.id}`, kind: "workshop" as const,
+        title: r.workshop?.title ?? r.workshopTitle,
+        href: r.workshop?.slug ? `/workshop/${r.workshop.slug}` : null,
+        at: r.createdAt.toISOString(),
+      })),
+    ].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 10)
+
     return NextResponse.json({
+      student: {
+        firstName: session.firstName,
+        name: [session.firstName, session.lastName].filter(Boolean).join(" ") || session.email,
+      },
+      activity,
+      lessons: { completed: lessonsCompleted, total: lessonsTotal },
+      programProgress: programs
+        .filter(p => p.status !== "DROPPED" && p.totalLessons > 0)
+        .map(p => ({
+          id: p.enrollmentId, title: p.course.title, slug: p.course.slug,
+          completedLessons: p.completedLessons, totalLessons: p.totalLessons,
+          status: p.status, lastTouchedAt: p.lastTouchedAt.toISOString(),
+        }))
+        .sort((a, b) => (b.completedLessons / b.totalLessons) - (a.completedLessons / a.totalLessons))
+        .slice(0, 6),
       stats: {
-        programs:     { total: programs.length, active: programs.filter(p => p.status === "ACTIVE").length, completed: programs.filter(p => p.status === "COMPLETED").length },
+        programs: {
+          total:     programs.length,
+          active:    programs.filter(p => p.status === "ACTIVE").length,
+          completed: programs.filter(p => p.status === "COMPLETED").length,
+          thisMonth: programs.filter(p => p.enrolledAt >= monthStart).length,
+        },
         workshops:    { total: registrations.length, upcoming: upcomingRegs.length, past: pastRegs.length },
-        certificates: { total: certificatesCount },
+        certificates: {
+          total:     certificates.length,
+          thisMonth: certificates.filter(c => c.issuedAt >= monthStart).length,
+        },
       },
       continueLearning: continueLearning ? {
         courseId: continueLearning.course.id, title: continueLearning.course.title, slug: continueLearning.course.slug,

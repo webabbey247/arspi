@@ -421,6 +421,10 @@ type Lesson = {
   brief?:        string
   mustCover?:    string[]
   mustNotCover?: string[]
+  /** Author's own estimate in minutes. Optional — when blank, the player and
+   *  the study scheduler fall back to estimating from the lesson's content.
+   *  See lib/lesson-duration.ts. */
+  estimatedMinutes?: number | null
 }
 type CurriculumItem = {
   id:      string
@@ -612,6 +616,7 @@ const programSchema = yup.object({
       title:       yup.string().required("Lesson title is required"),
       description: yup.string(),
       blocks:      yup.array(yup.mixed()).default([]),
+      estimatedMinutes: yup.number().min(1).max(600).nullable().transform(v => (Number.isNaN(v) ? null : v)),
       focus:        yup.string(),
       brief:        yup.string(),
       mustCover:    yup.array(yup.string()),
@@ -993,6 +998,17 @@ function LessonItem({
           <input {...register(`curriculum.${moduleIndex}.lessons.${lessonIndex}.title` as any)} className={inputCls} placeholder="e.g. Introduction to Results Frameworks" />
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           <FieldError msg={(errors.curriculum?.[moduleIndex] as any)?.lessons?.[lessonIndex]?.title?.message} />
+        </Field>
+        <Field label="Estimated minutes" hint="Leave blank to estimate from the lesson's content">
+          <input
+            type="number" min={1} max={600}
+            className={inputCls}
+            placeholder="auto"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            {...register(`curriculum.${moduleIndex}.lessons.${lessonIndex}.estimatedMinutes` as any, {
+              setValueAs: (v: string) => (v === "" ? null : Number(v)),
+            })}
+          />
         </Field>
         <Field label="Short Description" action={<AiBuilderTrigger onClick={() => setAiOpen(true)} />}>
           <RichTextEditor
@@ -1388,6 +1404,7 @@ function ProgramModal({
                 title:       String(l.title       ?? ""),
                 description: String(l.description ?? ""),
                 blocks:      Array.isArray(l.blocks) ? l.blocks as ContentBlock[] : [],
+                estimatedMinutes: typeof l.estimatedMinutes === "number" ? l.estimatedMinutes : null,
                 // Planning metadata, present only on AI-planned lessons —
                 // read back so regeneration still works after a reload.
                 focus:        typeof l.focus === "string" ? l.focus as LessonFocus : undefined,
@@ -1837,6 +1854,9 @@ function AiCourseBuilderModal({
             title:        lesson.title,
             description:  lesson.description,
             blocks:       lesson.blocks ?? [],
+            // The generator doesn't estimate runtimes, so leave it unset and
+            // let lib/lesson-duration.ts derive one from the content.
+            estimatedMinutes: null,
             focus:        lesson.focus,
             brief:        lesson.brief,
             mustCover:    lesson.mustCover,

@@ -58,6 +58,16 @@ const createSchema = z.object({
       title:       z.string(),
       description: z.string().nullable().optional(),
       blocks:      z.array(z.any()).optional(),
+      /** Author's own runtime estimate; blank means derive it from the
+       *  content (lib/lesson-duration.ts). Used by the study scheduler. */
+      estimatedMinutes: z.number().int().min(1).max(600).nullable().optional(),
+      /** Planning metadata from the AI chapter agent. These must be listed:
+       *  zod strips unknown keys, so leaving them out silently dropped them on
+       *  every save and broke "regenerate this lesson" after a reload. */
+      focus:        z.enum(["teach", "practice", "assess", "reflect"]).optional(),
+      brief:        z.string().optional(),
+      mustCover:    z.array(z.string()).optional(),
+      mustNotCover: z.array(z.string()).optional(),
     })).optional(),
   })).nullable().optional(),
   whatIsIncluded:     z.array(z.string()).nullable().optional(),

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { DetailPageSkeleton, InlineSkeleton } from "@/components/ui/skeleton"
+import AssessmentManager from "@/components/assessments/AssessmentManager"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -596,6 +597,8 @@ export default function InstructorProgramDetailPage() {
           </>
         )}
       </div>
+
+      <AssessmentManager programId={program.id} />
 
     </div>
   )

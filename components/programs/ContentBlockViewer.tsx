@@ -17,7 +17,12 @@ function toEmbedUrl(url: string): string | null {
 }
 
 const panelCls = "rounded-[12px] border border-[#DFE2ED] bg-white overflow-hidden"
-const labelCls = "px-4 py-2 text-[10px] font-bold uppercase tracking-[0.5px] text-[#8A90A6] bg-[#FAFAFF] border-b border-[#DFE2ED]"
+const labelCls = "px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.12em] text-[#8A90A6] bg-[#FAFAFF] border-b border-[#DFE2ED]"
+
+/** Shared by every rich-text field in a block (lesson text, assignment
+ *  instructions). Matches the player page's own prose scale so the viewer
+ *  never reads as a different typeface from the lesson around it. */
+const proseCls = "text-[14px] leading-relaxed [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_p]:mb-2 last:[&_p]:mb-0 [&_strong]:font-bold [&_a]:text-[#6655DF] [&_a]:underline"
 
 // ── Blocks ───────────────────────────────────────────────────────────────────
 
@@ -25,7 +30,7 @@ function TextBlockView({ block }: { block: Extract<ContentBlock, { type: "text" 
   if (!block.content?.trim()) return null
   return (
     <div
-      className="text-[14px] text-[#171C35] leading-relaxed [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_p]:mb-2 last:[&_p]:mb-0"
+      className={`${proseCls} text-[#171C35]`}
       dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.content) }}
     />
   )
@@ -84,7 +89,7 @@ function FileLinkView({
     >
       <div className="w-9 h-9 rounded-[9px] bg-[#EEECFF] text-[#6655DF] flex items-center justify-center shrink-0">{icon}</div>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold text-[#171C35] truncate">{title}</p>
+        <p className="text-[14px] font-bold text-[#171C35] truncate">{title}</p>
         {sub && <p className="text-[11px] text-[#8A90A6]">{sub}</p>}
       </div>
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#8A90A6] shrink-0">
@@ -116,8 +121,8 @@ function QuizBlockView({
       <div className={panelCls}>
         <div className={labelCls}>Quiz</div>
         <div className="px-4 py-3 space-y-1.5">
-          <p className="text-[13.5px] font-semibold text-[#171C35]">{block.question}</p>
-          <p className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-700">
+          <p className="text-[14px] font-bold text-[#171C35]">{block.question}</p>
+          <p className="inline-flex items-center gap-1.5 text-[12px] font-bold text-emerald-700">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
             Answered correctly
           </p>
@@ -142,12 +147,12 @@ function QuizBlockView({
     <div className={panelCls}>
       <div className={labelCls}>Quiz{onAnswer ? " — required to continue" : ""}</div>
       <div className="px-4 py-3 space-y-2.5">
-        <p className="text-[13.5px] font-semibold text-[#171C35]">{block.question}</p>
+        <p className="text-[14px] font-bold text-[#171C35]">{block.question}</p>
         <div className="space-y-1.5">
           {(block.options ?? []).map((opt, i) => (
             <label
               key={i}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-[9px] border text-[13px] transition-colors ${
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-[9px] border text-[14px] transition-colors ${
                 onAnswer ? "cursor-pointer" : "cursor-default opacity-70"
               } ${selected === i ? "border-[#6655DF] bg-[#EEECFF]" : "border-[#DFE2ED]"}`}
             >
@@ -163,13 +168,13 @@ function QuizBlockView({
             </label>
           ))}
         </div>
-        {wrong && <p className="text-[12px] font-medium text-red-600">Not quite — try again.</p>}
+        {wrong && <p className="text-[12px] font-bold text-red-600">Not quite — try again.</p>}
         {onAnswer && (
           <button
             type="button"
             onClick={submit}
             disabled={selected === null || submitting}
-            className="px-4 py-2 rounded-[9px] text-[12.5px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            className="px-4 py-2 rounded-[9px] text-[14px] font-bold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
           >
             {submitting ? "Checking…" : "Submit answer"}
           </button>
@@ -185,10 +190,10 @@ function QuestionSetView({ title, kicker, items }: { title: string; kicker: stri
     <div className={panelCls}>
       <div className={labelCls}>{kicker}</div>
       <div className="px-4 py-3 space-y-2">
-        {title && <p className="text-[13.5px] font-semibold text-[#171C35]">{title}</p>}
+        {title && <p className="text-[14px] font-bold text-[#171C35]">{title}</p>}
         {items.length > 0 && (
           <ol className="space-y-1.5 list-decimal ml-5">
-            {items.map((q, i) => <li key={i} className="text-[13px] text-[#171C35]">{q}</li>)}
+            {items.map((q, i) => <li key={i} className="text-[14px] text-[#171C35]">{q}</li>)}
           </ol>
         )}
       </div>
@@ -201,8 +206,13 @@ function AssignmentBlockView({ block }: { block: Extract<ContentBlock, { type: "
     <div className={panelCls}>
       <div className={labelCls}>Assignment{block.dueInDays ? ` · due in ${block.dueInDays} day${block.dueInDays === "1" ? "" : "s"}` : ""}{block.points ? ` · ${block.points} pts` : ""}</div>
       <div className="px-4 py-3 space-y-1.5">
-        {block.title && <p className="text-[13.5px] font-semibold text-[#171C35]">{block.title}</p>}
-        {block.instructions && <p className="text-[13px] text-[#69708A] leading-relaxed whitespace-pre-line">{block.instructions}</p>}
+        {block.title && <p className="text-[14px] font-bold text-[#171C35]">{block.title}</p>}
+        {block.instructions && (
+          <div
+            className={`${proseCls} text-[#69708A]`}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.instructions) }}
+          />
+        )}
       </div>
     </div>
   )
