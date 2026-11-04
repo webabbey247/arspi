@@ -304,6 +304,53 @@ export type ProgramListingRow = {
   _count:          { enrollments: number }
 }
 
+/** The handful of fields a programme *card* needs — nothing else.
+ *
+ *  Exists because the detail page used to pull the full programme row (with
+ *  curriculum JSON, facilitators, FAQs and overview) just to render related
+ *  cards. Across ~190 prerendered pages that was the single biggest cost in
+ *  the build, and it costs the same on every runtime revalidation. */
+export type ProgramCardRow = {
+  slug:        string
+  title:       string
+  duration:    string | null
+  thumbnail:   string | null
+  price:       number
+  level:       CourseLevel
+  rating:      number | null
+  reviewCount: number | null
+  category:    { name: string } | null
+}
+
+export async function getProgramCards(filters?: {
+  categoryId?:   string
+  instructorId?: string
+  status?:       CourseStatus
+}): Promise<ProgramCardRow[]> {
+  return db.course.findMany({
+    where: {
+      ...(filters?.categoryId   !== undefined && { categoryId:   filters.categoryId }),
+      ...(filters?.instructorId !== undefined && { instructorId: filters.instructorId }),
+      ...(filters?.status       !== undefined && { status:       filters.status }),
+    },
+    select: {
+      slug: true, title: true, duration: true, thumbnail: true,
+      price: true, level: true, rating: true, reviewCount: true,
+      category: { select: { name: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
+/** Published slugs only — all generateStaticParams actually needs. */
+export async function getPublishedProgramSlugs(): Promise<string[]> {
+  const rows = await db.course.findMany({
+    where:  { status: "PUBLISHED" },
+    select: { slug: true },
+  })
+  return rows.map(r => r.slug)
+}
+
 export async function getProgramsForListing(filters?: {
   categoryId?:   string
   level?:        CourseLevel

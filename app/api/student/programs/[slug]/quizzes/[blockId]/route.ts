@@ -5,7 +5,11 @@ import { getProgramBySlug } from "@/services/program.service"
 import { setQuizAnswer, findQuizBlock, isLessonUnlocked, getLessonProgress, getQuizProgress } from "@/services/lesson-progress.service"
 import { z } from "zod"
 
-const patchSchema = z.object({ selectedIndex: z.number().int().min(0) })
+const patchSchema = z.object({
+  selectedIndex: z.number().int().min(0),
+  /** Which alternative phrasing is on screen; 0 is the original question. */
+  variantIndex:  z.number().int().min(0).max(20).default(0),
+})
 
 type Context = { params: Promise<{ slug: string; blockId: string }> }
 
@@ -50,7 +54,10 @@ export async function PATCH(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: "Complete the previous chapter before continuing." }, { status: 403 })
     }
 
-    const result = await setQuizAnswer(session.sub, program.id, program.curriculum, blockId, parsed.data.selectedIndex)
+    const result = await setQuizAnswer(
+      session.sub, program.id, program.curriculum, blockId,
+      parsed.data.selectedIndex, parsed.data.variantIndex,
+    )
     if (!result) {
       return NextResponse.json({ error: "Quiz not found in this program." }, { status: 404 })
     }

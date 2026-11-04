@@ -2,6 +2,8 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { getCertificateByToken, displayName } from "@/services/certificate.service"
+import { SITE_NAME, SITE_URL, absoluteUrl, organizationJsonLd } from "@/lib/seo"
+import JsonLd from "@/components/seo/JsonLd"
 
 type Props = { params: Promise<{ token: string }> }
 
@@ -9,9 +11,41 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { token } = await params
   const cert = await getCertificateByToken(token)
   // Certificate pages carry a named individual's record — never index them.
+  // Link-preview crawlers are allowed in via robots.txt so a shared
+  // certificate still renders a card; noindex keeps it out of search.
   const robots = { index: false, follow: false }
   if (!cert) return { title: "Certificate Not Found — ARPS Institute", robots }
-  return { title: `Certificate — ${displayName(cert.user)} · ARPS Institute`, robots }
+
+  const name   = displayName(cert.user)
+  const title  = `${name} — ${cert.course.title}`
+  const issued = new Date(cert.issuedAt).toLocaleDateString("en-GB", {
+    day: "numeric", month: "long", year: "numeric",
+  })
+  const description =
+    `${name} completed ${cert.course.title} at ${SITE_NAME}, issued ${issued}. ` +
+    `Verify this certificate with code ${cert.verifyCode}.`
+  const url = absoluteUrl(`/verify/${cert.verifyCode}`)
+
+  return {
+    title: `${title} · ${SITE_NAME}`,
+    description,
+    robots,
+    alternates: { canonical: url },
+    openGraph: {
+      type:        "article",
+      url,
+      title,
+      description,
+      siteName:    SITE_NAME,
+      publishedTime: new Date(cert.issuedAt).toISOString(),
+      // The image itself comes from opengraph-image.tsx alongside this file.
+    },
+    twitter: {
+      card:        "summary_large_image",
+      title,
+      description,
+    },
+  }
 }
 
 export default async function VerifyPage({ params }: Props) {
@@ -32,8 +66,27 @@ export default async function VerifyPage({ params }: Props) {
     ? new Date(cert.expiresAt).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })
     : null
 
+  /** Describes the award and who issued it, so a scraper (or anyone inspecting
+   *  the page) gets the organisation alongside the credential rather than just
+   *  a name and a date. */
+  const credentialJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOccupationalCredential",
+    name: cert.course.title,
+    description: `Certificate of completion awarded to ${recipientName} for ${cert.course.title}.`,
+    url: absoluteUrl(`/verify/${cert.verifyCode}`),
+    identifier: cert.verifyCode,
+    dateCreated: new Date(cert.issuedAt).toISOString(),
+    ...(cert.expiresAt ? { expires: new Date(cert.expiresAt).toISOString() } : {}),
+    credentialCategory: "Certificate",
+    recognizedBy: { "@type": "EducationalOrganization", name: SITE_NAME, url: SITE_URL },
+    about: { "@type": "Course", name: cert.course.title },
+  }
+
   return (
     <div className="min-h-screen bg-[#060D14] flex flex-col">
+      <JsonLd data={organizationJsonLd()} />
+      <JsonLd data={credentialJsonLd} />
 
       {/* Top bar */}
       <header className="border-b border-white/8 px-4 sm:px-6 md:px-8 py-3 sm:py-4 flex items-center justify-between gap-3">

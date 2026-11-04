@@ -108,11 +108,17 @@ function QuizBlockView({
 }: {
   block:     Extract<ContentBlock, { type: "quiz" }>
   passed:    boolean
-  onAnswer?: (selectedIndex: number) => Promise<boolean>
+  onAnswer?: (selectedIndex: number, variantIndex: number) => Promise<boolean>
 }) {
   const [selected, setSelected]     = useState<number | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [wrong, setWrong]           = useState(false)
+  /** 0 is the authored question; 1..n are its alternative phrasings. */
+  const [variant, setVariant]       = useState(0)
+
+  const variants  = block.variants ?? []
+  const current   = variant === 0 ? block : variants[variant - 1]
+  const hasMore   = variant < variants.length
 
   if (!block.question) return null
 
@@ -136,20 +142,34 @@ function QuizBlockView({
     setSubmitting(true)
     setWrong(false)
     try {
-      const correct = await onAnswer(selected)
+      const correct = await onAnswer(selected, variant)
       if (!correct) setWrong(true)
     } finally {
       setSubmitting(false)
     }
   }
 
+  /** Moves to the next pre-authored phrasing. Variants are written alongside
+   *  the lesson rather than generated here, so the retake is instant and
+   *  every question a learner sees has been reviewed by its author. */
+  function retake() {
+    setVariant(v => v + 1)
+    setSelected(null)
+    setWrong(false)
+  }
+
   return (
     <div className={panelCls}>
       <div className={labelCls}>Quiz{onAnswer ? " — required to continue" : ""}</div>
       <div className="px-4 py-3 space-y-2.5">
-        <p className="text-[14px] font-bold text-[#171C35]">{block.question}</p>
+        {variant > 0 && (
+          <p className="text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6]">
+            New question · attempt {variant + 1}
+          </p>
+        )}
+        <p className="text-[14px] font-bold text-[#171C35]">{current?.question ?? block.question}</p>
         <div className="space-y-1.5">
-          {(block.options ?? []).map((opt, i) => (
+          {(current?.options ?? []).map((opt, i) => (
             <label
               key={i}
               className={`flex items-center gap-2.5 px-3 py-2 rounded-[9px] border text-[14px] transition-colors ${
@@ -158,7 +178,7 @@ function QuizBlockView({
             >
               <input
                 type="radio"
-                name={block.id}
+                name={`${block.id}-v${variant}`}
                 checked={selected === i}
                 onChange={() => onAnswer && setSelected(i)}
                 disabled={!onAnswer}
@@ -168,16 +188,34 @@ function QuizBlockView({
             </label>
           ))}
         </div>
-        {wrong && <p className="text-[12px] font-bold text-red-600">Not quite — try again.</p>}
+        {wrong && (
+          <p className="text-[12px] font-bold text-red-600">
+            {hasMore
+              ? "Not quite. Take another question on this point."
+              : "Not quite — try again."}
+          </p>
+        )}
         {onAnswer && (
-          <button
-            type="button"
-            onClick={submit}
-            disabled={selected === null || submitting}
-            className="px-4 py-2 rounded-[9px] text-[14px] font-bold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
-          >
-            {submitting ? "Checking…" : "Submit answer"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={submit}
+              disabled={selected === null || submitting}
+              className="px-4 py-2 rounded-[9px] text-[14px] font-bold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            >
+              {submitting ? "Checking…" : "Submit answer"}
+            </button>
+            {wrong && hasMore && (
+              <button
+                type="button"
+                onClick={retake}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[9px] text-[14px] font-bold border border-[#6655DF] text-[#6655DF] hover:bg-[#EEECFF] cursor-pointer transition-colors"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg>
+                Retake with a new question
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>
@@ -232,7 +270,7 @@ export function ContentBlockViewer({
   /** Quiz content-block ids this student has already answered correctly. */
   quizProgress?: Set<string>
   /** Submits an answer for a quiz block; resolves to whether it was correct. */
-  onQuizAnswer?: (blockId: string, selectedIndex: number) => Promise<boolean>
+  onQuizAnswer?: (blockId: string, selectedIndex: number, variantIndex: number) => Promise<boolean>
 }) {
   if (!Array.isArray(blocks) || blocks.length === 0) return null
   return (
@@ -264,7 +302,7 @@ export function ContentBlockViewer({
                 key={block.id}
                 block={block}
                 passed={!!block.id && !!quizProgress?.has(block.id)}
-                onAnswer={onQuizAnswer && block.id ? (selectedIndex) => onQuizAnswer(block.id!, selectedIndex) : undefined}
+                onAnswer={onQuizAnswer && block.id ? (selectedIndex, variantIndex) => onQuizAnswer(block.id!, selectedIndex, variantIndex) : undefined}
               />
             )
           case "questionnaire":

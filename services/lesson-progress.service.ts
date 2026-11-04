@@ -4,7 +4,8 @@ import { hasPassedCourse } from "@/services/assessment.service"
 
 // ── Curriculum shape (mirrors the JSON stored on Course.curriculum) ────────────
 
-export type CurriculumBlock  = { id?: string; type?: string; correctIndex?: number }
+export type CurriculumVariant = { question?: string; options?: string[]; correctIndex?: number }
+export type CurriculumBlock  = { id?: string; type?: string; correctIndex?: number; variants?: CurriculumVariant[] }
 export type CurriculumLesson = { id?: string; title: string; description?: string | null; blocks?: CurriculumBlock[] | null }
 export type CurriculumChapter = { id?: string; title: string; lessons?: CurriculumLesson[] | null }
 
@@ -42,14 +43,26 @@ export function collectQuizBlocksByLesson(curriculum: unknown): Map<string, stri
 /** Finds a quiz content-block by id anywhere in the curriculum and returns which
  *  lesson it belongs to plus its correct-answer index (server-side source of
  *  truth — never trust a client-submitted "this was correct" claim). */
-export function findQuizBlock(curriculum: unknown, blockId: string): { lessonId: string; correctIndex: number } | null {
+/** Resolves a quiz block's answer key. `variantKeys` holds the key for each
+ *  alternative phrasing, in the order the student is served them. */
+export function findQuizBlock(
+  curriculum: unknown,
+  blockId: string,
+): { lessonId: string; correctIndex: number; variantKeys: number[] } | null {
   if (!Array.isArray(curriculum)) return null
   for (const chapter of curriculum as CurriculumChapter[]) {
     if (!Array.isArray(chapter?.lessons)) continue
     for (const lesson of chapter.lessons) {
       if (!lesson?.id || !Array.isArray(lesson.blocks)) continue
       const block = lesson.blocks.find(b => b?.id === blockId && b?.type === "quiz")
-      if (block) return { lessonId: lesson.id, correctIndex: block.correctIndex ?? -1 }
+      if (block) {
+        const variants = Array.isArray(block.variants) ? block.variants as { correctIndex?: number }[] : []
+        return {
+          lessonId:     lesson.id,
+          correctIndex: block.correctIndex ?? -1,
+          variantKeys:  variants.map(v => v?.correctIndex ?? -1),
+        }
+      }
     }
   }
   return null
@@ -120,7 +133,17 @@ export function stripQuizAnswers(curriculum: unknown): unknown {
         return {
           ...lesson,
           blocks: blocks.map((block: Record<string, unknown>) =>
-            block?.type === "quiz" ? { ...block, correctIndex: undefined } : block
+            block?.type === "quiz"
+              ? {
+                  ...block,
+                  correctIndex: undefined,
+                  // Variants carry their own key — stripping only the top-level
+                  // one would ship every retake answer to the browser.
+                  variants: Array.isArray(block.variants)
+                    ? (block.variants as Record<string, unknown>[]).map(v => ({ ...v, correctIndex: undefined }))
+                    : block.variants,
+                }
+              : block
           ),
         }
       }),
@@ -212,11 +235,22 @@ export async function setQuizAnswer(
   curriculum:    unknown,
   blockId:       string,
   selectedIndex: number,
+  /** Which alternative phrasing the student is answering. 0 (or absent) is the
+   *  original question; 1..n index into the block's variants. The client says
+   *  which variant it is showing, never whether the answer was right. */
+  variantIndex = 0,
 ): Promise<SetQuizAnswerResult | null> {
   const found = findQuizBlock(curriculum, blockId)
   if (!found) return null
 
-  const correct = found.correctIndex === selectedIndex
+  // An out-of-range variant can never be correct — a client that invents one
+  // gets a wrong answer rather than a pass.
+  const key =
+    variantIndex <= 0
+      ? found.correctIndex
+      : found.variantKeys[variantIndex - 1] ?? -1
+
+  const correct = key === selectedIndex && key >= 0
   const existingQuizIds = await getQuizProgress(userId, courseId)
 
   if (!correct) {

@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { MyLearningSkeleton } from "@/components/ui/skeleton"
+import { TickProgress } from "@/components/ui/TickProgress"
 
 type ProgramSummary = {
   enrollmentId: string
@@ -176,15 +177,12 @@ function ResumeHero({ p }: { p: ProgramSummary }) {
         </h2>
         <p className="text-[14px] text-white/70 mt-1.5">{p.course.instructor.name}</p>
 
-        <div className="mt-4 max-w-md">
-          <div className="flex items-center justify-between text-[12px] font-bold text-white/85 mb-1.5">
-            <span>{p.completedLessons} of {p.totalLessons} lessons</span>
-            <span>{pct}%</span>
-          </div>
-          <div className="h-2 rounded-full bg-white/20 overflow-hidden">
-            <div className="h-full rounded-full bg-[#A99BFF] transition-all duration-500" style={{ width: `${pct}%` }} />
-          </div>
-        </div>
+        <TickProgress
+          value={pct}
+          tone="light"
+          className="mt-4 max-w-md"
+          label={`${p.completedLessons} of ${p.totalLessons} lessons`}
+        />
 
         <div className="flex flex-wrap items-center gap-3 mt-5">
           <Link
@@ -291,12 +289,7 @@ function ProgramCard({
       </Link>
 
       <div className="px-4 pb-4 pt-3 mt-auto">
-        <div className="h-1.5 rounded-full bg-[#F0EFFA] overflow-hidden">
-          <div
-            className={cn("h-full rounded-full transition-all duration-500", completed ? "bg-emerald-600" : "bg-[#6655DF]")}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
+        <TickProgress value={pct} ticks={34} tone={completed ? "success" : "brand"} />
         <div className="flex items-center justify-between mt-2">
           <span className="text-[12px] font-bold text-[#69708A]">
             {pct}% · {p.completedLessons}/{p.totalLessons}
@@ -350,12 +343,7 @@ function ProgramRow({
         </p>
 
         <div className="flex items-center gap-3 mt-2.5 max-w-md">
-          <div className="h-1.5 flex-1 rounded-full bg-[#F0EFFA] overflow-hidden">
-            <div
-              className={cn("h-full rounded-full transition-all duration-500", completed ? "bg-emerald-600" : "bg-[#6655DF]")}
-              style={{ width: `${pct}%` }}
-            />
-          </div>
+          <TickProgress value={pct} ticks={28} tone={completed ? "success" : "brand"} className="flex-1" />
           <span className="text-[12px] font-bold text-[#69708A] shrink-0">{pct}% · {p.completedLessons}/{p.totalLessons}</span>
         </div>
       </div>

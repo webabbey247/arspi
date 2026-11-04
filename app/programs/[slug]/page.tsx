@@ -3,7 +3,10 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { programCategories } from "@/lib/data"
-import { getProgramBySlug, getPrograms } from "@/services/program.service"
+import { cache } from "react"
+import {
+  getProgramBySlug, getProgramCards, getPublishedProgramSlugs,
+} from "@/services/program.service"
 import withLayout from "@/hooks/useLayout"
 import EnrollCTA from "./EnrollCTA"
 import ShareButton from "./ShareButton"
@@ -257,6 +260,14 @@ function pickFirstFacilitator(v: unknown): {
   }
 }
 
+/** The full published catalogue, fetched at most once per render.
+ *
+ *  React's cache() dedupes within a single render pass, which is what this
+ *  page needs: the related-programmes pool and the top-up list both want the
+ *  same rows. It does not cache across pages or requests, so nothing here can
+ *  go stale between revalidations. */
+const publishedCards = cache(() => getProgramCards({ status: "PUBLISHED" }))
+
 async function resolveProgram(slug: string): Promise<PageProgram | null> {
   const dbProg = await getProgramBySlug(slug)
   if (!dbProg || dbProg.status !== "PUBLISHED") return null
@@ -266,13 +277,15 @@ async function resolveProgram(slug: string): Promise<PageProgram | null> {
   // Related = same-category siblings first, topped up with other programmes so
   // the "You May Also Like" section always populates when more than one exists —
   // shuffled so it's a different random 4 on each visit, not always the same set.
-  // Status is explicitly PUBLISHED-only here — getPrograms() has no default
-  // status filter, so omitting this would leak draft programmes onto a public
-  // page (their cards would render but 404 on click).
+  // Status is explicitly PUBLISHED-only here — getProgramCards() has no
+  // default status filter, so omitting this would leak draft programmes onto
+  // a public page (their cards would render but 404 on click).
   const siblingRows = dbProg.categoryId
-    ? await getPrograms({ categoryId: dbProg.categoryId, status: "PUBLISHED" })
+    ? await getProgramCards({ categoryId: dbProg.categoryId, status: "PUBLISHED" })
     : []
-  const fillerRows = await getPrograms({ status: "PUBLISHED" })
+  // Deduped per render: this same catalogue is also needed further down, and
+  // without cache() the page fetched every published programme twice.
+  const fillerRows = await publishedCards()
   const relatedPool = [...siblingRows, ...fillerRows]
     .filter((p) => p.slug !== slug)
     .filter((p, i, arr) => arr.findIndex((q) => q.slug === p.slug) === i)
@@ -287,7 +300,7 @@ async function resolveProgram(slug: string): Promise<PageProgram | null> {
   // "instructor stats" like Udemy's review/course counts, since this app doesn't
   // track those in aggregate). Full list kept for an accurate count; only the
   // first 3 are shown as cards.
-  const instructorRows = (await getPrograms({ instructorId: dbProg.instructorId, status: "PUBLISHED" }))
+  const instructorRows = (await getProgramCards({ instructorId: dbProg.instructorId, status: "PUBLISHED" }))
     .filter((p) => p.slug !== slug)
   const moreByInstructor = instructorRows.slice(0, 3).map(toRelated)
 
@@ -355,8 +368,8 @@ async function resolveProgram(slug: string): Promise<PageProgram | null> {
 // ── Static params & metadata ──────────────────────────────────────────────────
 
 export async function generateStaticParams() {
-  const programs = await getPrograms({ status: "PUBLISHED" })
-  return programs.map((p) => ({ slug: p.slug }))
+  // Slugs only — this used to hydrate every programme in full to read one field.
+  return (await getPublishedProgramSlugs()).map((slug) => ({ slug }))
 }
 
 export async function generateMetadata({

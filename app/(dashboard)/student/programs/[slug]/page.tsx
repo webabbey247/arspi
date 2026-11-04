@@ -12,6 +12,7 @@ import { CoursePlayerSkeleton } from "@/components/ui/skeleton"
 import { sanitizeHtml } from "@/lib/sanitize"
 import { cn } from "@/lib/utils"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
+import { TickProgress } from "@/components/ui/TickProgress"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -280,11 +281,11 @@ const StudentCoursePlayerPage = () => {
     return isChapterDoneWith(chapter, completedIds, passedQuizIds)
   }
 
-  async function handleQuizAnswer(blockId: string, selectedIndex: number): Promise<boolean> {
+  async function handleQuizAnswer(blockId: string, selectedIndex: number, variantIndex = 0): Promise<boolean> {
     const res = await fetch(`/api/student/programs/${slug}/quizzes/${blockId}`, {
       method:  "PATCH",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ selectedIndex }),
+      body:    JSON.stringify({ selectedIndex, variantIndex }),
     })
     const d = await res.json().catch(() => ({}))
     if (!res.ok) return false
@@ -565,12 +566,7 @@ const StudentCoursePlayerPage = () => {
               <p className="text-[12px] font-bold text-[#171C35]">
                 {completedIds.size} of {totalLessons} lessons complete
               </p>
-              <div className="h-2 rounded-full bg-[#F0EFFA] overflow-hidden mt-2">
-                <div
-                  className={cn("h-full rounded-full transition-all duration-500", completed ? "bg-emerald-600" : "bg-[#6655DF]")}
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
+              <TickProgress value={pct} ticks={30} tone={completed ? "success" : "brand"} className="mt-2" />
               <p className="text-[11px] text-[#8A90A6] mt-2">
                 {completed
                   ? "Programme complete — your certificate is ready."

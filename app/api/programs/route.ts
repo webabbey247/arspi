@@ -57,6 +57,8 @@ const createSchema = z.object({
       id:          z.string().optional(),
       title:       z.string(),
       description: z.string().nullable().optional(),
+      // z.any() already carries `variants` through; spelled out here only as a
+      // reminder that quiz blocks now hold alternative phrasings.
       blocks:      z.array(z.any()).optional(),
       /** Author's own runtime estimate; blank means derive it from the
        *  content (lib/lesson-duration.ts). Used by the study scheduler. */

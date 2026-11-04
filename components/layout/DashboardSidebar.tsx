@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { LogOut, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { LogOut, X, ChevronDown, Settings, LayoutDashboard } from "lucide-react";
+import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { BrandMark } from "./DashboardHeader";
 import { cn } from "@/lib/utils";
 import type { SessionPayload } from "@/types/session";
@@ -417,7 +418,12 @@ const DashboardSidebar = ({
     }))
     .filter(s => s.items.length > 0);
 
+  const router = useRouter();
   const displayName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
+  const initials =
+    (user.firstName || user.lastName)
+      ? [user.firstName, user.lastName].filter(Boolean).map(n => n![0]!.toUpperCase()).join("")
+      : user.email[0]!.toUpperCase();
 
   return (
     <>
@@ -515,20 +521,37 @@ const DashboardSidebar = ({
           ))}
         </nav>
 
-        {/* Role card */}
-        <div className="mt-4 border-t border-[#DFE2ED] pt-4.5 px-2.5 grid gap-2">
-          <Link href="/settings" className="grid no-underline min-w-0">
-            <b className="text-[14px] text-[#171C35] truncate">{displayName}</b>
-            <span className="text-[12px] text-[#69708A]">{ROLE_LABEL[userRole]}</span>
-          </Link>
-          <button
-            type="button"
-            onClick={onLogout}
-            className="inline-flex items-center gap-1.5 w-fit text-[13px] font-bold text-[#6655DF] hover:text-[#2C2368] cursor-pointer"
-          >
-            <LogOut className="w-3.75 h-3.75" />
-            Sign out
-          </button>
+        {/* Signed-in user — the whole row is the menu trigger, so the account
+            actions live in one place instead of a link plus a stray button. */}
+        <div className="mt-4 border-t border-[#DFE2ED] p-2">
+          <DropdownMenu
+            triggerLabel="Account menu"
+            side="top"
+            menuWidth="w-56"
+            className="w-full"
+            triggerClassName="flex w-full items-center gap-3 rounded-[11px] px-2.5 py-2 transition-colors hover:bg-[#EEECFF] cursor-pointer"
+            activeTriggerClassName="bg-[#EEECFF]"
+            trigger={
+              <>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#171C35] text-[13px] font-extrabold text-white">
+                  {initials}
+                </span>
+                <span className="min-w-0 flex-1 text-left">
+                  <span className="block truncate text-[14px] font-bold text-[#171C35]">{displayName}</span>
+                  <span className="block truncate text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6]">
+                    {ROLE_LABEL[userRole]}
+                  </span>
+                </span>
+                <ChevronDown className="h-4 w-4 shrink-0 text-[#8A90A6]" />
+              </>
+            }
+            items={[
+              { label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" />, onSelect: () => router.push(ROLE_HOME[userRole]) },
+              { label: "Settings",  icon: <Settings className="w-4 h-4" />,        onSelect: () => router.push("/settings") },
+              { type: "separator" },
+              { label: "Sign out",  icon: <LogOut className="w-4 h-4" />, danger: true, onSelect: onLogout },
+            ]}
+          />
         </div>
       </aside>
     </>

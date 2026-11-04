@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { StudentHomeSkeleton } from "@/components/ui/skeleton"
+import { TickProgress } from "@/components/ui/TickProgress"
 
 // ── Types (mirrors /api/student/dashboard) ──────────────────────────────────
 
@@ -139,15 +140,12 @@ function ContinueHero({ item }: { item: ContinueLearning }) {
         </p>
 
         {item.totalLessons > 0 && (
-          <div className="mt-3.5 max-w-sm">
-            <div className="flex items-center justify-between text-[12px] font-bold text-white/85 mb-1.5">
-              <span>{item.completedLessons} of {item.totalLessons} lessons</span>
-              <span>{pct}%</span>
-            </div>
-            <div className="h-2 rounded-full bg-white/20 overflow-hidden">
-              <div className="h-full rounded-full bg-[#A99BFF] transition-all duration-500" style={{ width: `${pct}%` }} />
-            </div>
-          </div>
+          <TickProgress
+            value={pct}
+            tone="light"
+            className="mt-3.5 max-w-sm"
+            label={`${item.completedLessons} of ${item.totalLessons} lessons`}
+          />
         )}
 
         <Link
@@ -233,15 +231,10 @@ function ProgressPanel({ lessons, rows }: { lessons: { completed: number; total:
                     {r.title}
                   </Link>
                   <span className="text-[12px] font-bold text-[#69708A] shrink-0">
-                    {r.completedLessons}/{r.totalLessons} · {rp}%
+                    {r.completedLessons}/{r.totalLessons}
                   </span>
                 </div>
-                <div className="h-2 rounded-full bg-[#F0EFFA] overflow-hidden">
-                  <div
-                    className={cn("h-full rounded-full transition-all duration-500", done ? "bg-emerald-600" : "bg-[#6655DF]")}
-                    style={{ width: `${rp}%` }}
-                  />
-                </div>
+                <TickProgress value={rp} ticks={36} tone={done ? "success" : "brand"} />
               </div>
             )
           })}

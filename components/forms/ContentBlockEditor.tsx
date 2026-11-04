@@ -14,7 +14,11 @@ import MermaidDiagram from "@/components/ui/MermaidDiagram"
 export type TextBlock         = { id: string; type: "text";          content: string }
 export type VideoBlock        = { id: string; type: "video";         url: string; caption: string }
 export type ImageBlock        = { id: string; type: "image";         url: string; caption: string }
-export type QuizBlock         = { id: string; type: "quiz";          question: string; options: string[]; correctIndex: number }
+/** One alternative phrasing of the same check, served when a learner gets the
+ *  quiz wrong. Pre-authored rather than generated on demand: a retake has to
+ *  be instant, and every question a student sees should have been reviewed. */
+export type QuizVariant       = { question: string; options: string[]; correctIndex: number }
+export type QuizBlock         = { id: string; type: "quiz";          question: string; options: string[]; correctIndex: number; variants?: QuizVariant[] }
 export type QuestionnaireBlock= { id: string; type: "questionnaire"; title: string; questions: string[] }
 export type AssignmentBlock   = { id: string; type: "assignment";    title: string; instructions: string; submissionType: "text" | "file" | "link" | "none"; dueInDays: string; points: string }
 export type DocumentBlock     = { id: string; type: "document";      url: string; title: string }
@@ -279,7 +283,46 @@ function ImageBlockEditor({ block, onChange }: { block: ImageBlock; onChange: (b
   )
 }
 
-function QuizBlockEditor({ block, onChange }: { block: QuizBlock; onChange: (b: QuizBlock) => void }) {
+function QuizBlockEditor({
+  block, onChange, aiContext,
+}: {
+  block: QuizBlock
+  onChange: (b: QuizBlock) => void
+  aiContext?: AiExpandContext
+}) {
+  const [drafting, setDrafting] = useState(false)
+  const variants = block.variants ?? []
+
+  /** Variants are written here, not generated when a learner retakes: the
+   *  retake has to be instant, the cost stays bounded, and you get to review
+   *  every question before anyone sits it. */
+  async function draftVariants() {
+    if (!block.question.trim() || block.options.some(o => !o.trim())) return
+    setDrafting(true)
+    try {
+      const res = await fetch("/api/programs/ai-generate/quiz-variants", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider:     "anthropic",
+          courseTitle:  aiContext?.courseTitle,
+          chapterTitle: aiContext?.chapterTitle,
+          lessonTitle:  aiContext?.lessonTitle,
+          lessonText:   aiContext?.lessonSummary,
+          question:     block.question,
+          options:      block.options,
+          correctIndex: block.correctIndex,
+          count:        3,
+        }),
+      })
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok) { alert(d.error ?? "Could not draft variants."); return }
+      onChange({ ...block, variants: [...variants, ...(d.variants as QuizVariant[])] })
+    } finally {
+      setDrafting(false)
+    }
+  }
+
   function setOption(i: number, val: string) {
     const opts = [...block.options]
     opts[i] = val
@@ -331,6 +374,53 @@ function QuizBlockEditor({ block, onChange }: { block: QuizBlock; onChange: (b: 
         Add option
       </button>
       <p className="text-[11px] text-[#8A90A6]">Click the circle next to the correct answer.</p>
+
+      {/* Retake variants */}
+      <div className="mt-3 pt-3 border-t border-[#F0EFFA]">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[12px] font-bold text-[#171C35]">Retake questions</p>
+            <p className="text-[11px] text-[#8A90A6] mt-0.5">
+              {variants.length === 0
+                ? "Without these, a wrong answer just re-asks the same question."
+                : `${variants.length} alternative${variants.length === 1 ? "" : "s"} — served one at a time after a wrong answer.`}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={draftVariants}
+            disabled={drafting || !block.question.trim()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[9px] text-[12px] font-semibold border border-[#6655DF] text-[#6655DF] hover:bg-[#EEECFF] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shrink-0"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
+            {drafting ? "Drafting…" : "Draft with AI"}
+          </button>
+        </div>
+
+        {variants.length > 0 && (
+          <ul className="mt-2.5 space-y-1.5">
+            {variants.map((v, i) => (
+              <li key={i} className="flex items-start gap-2 rounded-[9px] border border-[#DFE2ED] bg-[#FAFAFF] px-3 py-2">
+                <span className="text-[10px] font-bold text-[#8A90A6] mt-0.5 shrink-0">{i + 1}.</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[12.5px] font-semibold text-[#171C35]">{v.question}</span>
+                  <span className="block text-[11px] text-[#8A90A6] mt-0.5 truncate">
+                    Answer: {v.options[v.correctIndex] ?? "—"}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...block, variants: variants.filter((_, j) => j !== i) })}
+                  aria-label={`Remove variant ${i + 1}`}
+                  className="w-6 h-6 flex items-center justify-center rounded-full text-[#8A90A6] hover:bg-red-50 hover:text-red-500 cursor-pointer shrink-0"
+                >
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }
@@ -781,7 +871,7 @@ function BlockCard({
           {block.type === "diagram"       && <DiagramBlockEditor       block={block} onChange={b => onChange(b)} />}
           {block.type === "document"      && <DocumentBlockEditor      block={block} onChange={b => onChange(b)} />}
           {block.type === "pdf"           && <PdfBlockEditor           block={block} onChange={b => onChange(b)} />}
-          {block.type === "quiz"          && <QuizBlockEditor          block={block} onChange={b => onChange(b)} />}
+          {block.type === "quiz"          && <QuizBlockEditor          block={block} onChange={b => onChange(b)} aiContext={aiContext} />}
           {block.type === "questionnaire" && <QuestionnaireBlockEditor block={block} onChange={b => onChange(b)} />}
           {block.type === "survey"        && <SurveyBlockEditor        block={block} onChange={b => onChange(b)} />}
           {block.type === "assignment"    && <AssignmentBlockEditor    block={block} onChange={b => onChange(b)} aiContext={aiContext} />}
