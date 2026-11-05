@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import type { ContactStatus, ContactSubject } from "@/services/contact.service"
 import { downloadCsv } from "@/lib/csv"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
+import { AdminPageHeader, StatTile } from "@/components/admin/AdminKit"
 
 type EnquiryRow = {
   id: string
@@ -152,14 +153,45 @@ export default function AdminEnquiriesPage() {
   const totalPages = Math.max(1, Math.ceil(enquiries.length / PAGE_SIZE))
   const paginated  = enquiries.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  const enquiryStats = {
+    unread:  enquiries.filter(e => e.status === "NEW").length,
+    read:    enquiries.filter(e => e.status === "READ").length,
+    replied: enquiries.filter(e => e.status === "REPLIED").length,
+    today:   enquiries.filter(e => new Date(e.createdAt).toDateString() === new Date().toDateString()).length,
+  }
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Enquiries</h1>
-          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Review all contact form submissions from the public website</p>
-        </div>
+      <AdminPageHeader
+        title="Enquiries"
+        description="Contact form submissions from the public website."
+      />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">
+        <StatTile
+          label="Enquiries" value={enquiries.length} loading={loading}
+          motif="dots" accent="text-[#6655DF]" tone="bg-[#EEECFF] text-[#6655DF]"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2 7 12 13 22 7"/></svg>}
+          breakdown={[{ label: "new", value: enquiryStats.unread, tone: "amber" }, { label: "read", value: enquiryStats.read, tone: "sky" }, { label: "replied", value: enquiryStats.replied, tone: "emerald" }]}
+        />
+        <StatTile
+          label="Awaiting reply" value={enquiryStats.unread + enquiryStats.read} loading={loading}
+          motif="rings" accent="text-amber-600" tone="bg-amber-50 text-amber-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>}
+          hint="New and read, not yet answered"
+        />
+        <StatTile
+          label="Replied" value={enquiryStats.replied} loading={loading}
+          motif="hatch" accent="text-emerald-600" tone="bg-emerald-50 text-emerald-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>}
+          hint="Closed out"
+        />
+        <StatTile
+          label="Today" value={enquiryStats.today} loading={loading}
+          motif="waves" accent="text-sky-600" tone="bg-sky-50 text-sky-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
+          hint="Received since midnight"
+        />
       </div>
 
       <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">

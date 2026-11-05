@@ -1,6 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
-import { LayoutDashboard, Users, BookOpen, Award, Settings, LogOut } from "lucide-react"
+import SignOutButton from "@/components/auth/SignOutButton"
+import {LayoutDashboard, Users, BookOpen, Award, Settings} from "lucide-react"
 import type { SessionPayload } from "@/lib/session"
 
 const nav = [
@@ -59,15 +60,7 @@ export default function AdminSidebar({ user }: { user: SessionPayload }) {
             <p className="font-body text-[0.625rem] text-slate-400 uppercase tracking-wider">Admin</p>
           </div>
         </div>
-        <form action="/api/auth/logout" method="post" className="shrink-0">
-          <button
-            type="submit"
-            className="text-slate-400 hover:text-white transition-colors"
-            title="Sign out"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
-        </form>
+        <SignOutButton className="shrink-0 text-slate-400 hover:text-white transition-colors disabled:opacity-50" />
       </div>
     </aside>
   )

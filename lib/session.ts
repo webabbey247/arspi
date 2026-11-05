@@ -1,9 +1,11 @@
 import "server-only"
 import { cookies } from "next/headers"
+import { headers } from "next/headers"
 import { jwtVerify, SignJWT } from "jose"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 import { db } from "@/lib/db"
+import { openSession, isSessionLive, touchSession, revokeSession } from "@/services/session.service"
 import { getAuthEnv } from "@/lib/env"
 import { getSessionSecret } from "@/lib/auth-secret"
 import { signSessionCookie, verifySessionCookie } from "@/lib/session-cookie"
@@ -38,7 +40,14 @@ const cookieOptions = {
   sameSite: "lax",
 } as const
 
-const refreshClaimsSchema = z.object({ sub: z.string(), remember: z.boolean() })
+const refreshClaimsSchema = z.object({
+  sub:      z.string(),
+  remember: z.boolean(),
+  /** Device-session row id. Optional: tokens minted before user_sessions
+   *  existed carry no sid, and are adopted on their next refresh rather than
+   *  being rejected, which would sign every active user out at deploy. */
+  sid:      z.string().optional(),
+})
 type RefreshClaims = z.infer<typeof refreshClaimsSchema>
 
 function refreshMaxAge(remember: boolean): number {
@@ -61,12 +70,49 @@ async function signRefreshToken(claims: RefreshClaims): Promise<string> {
     .sign(getSessionSecret())
 }
 
-/** Writes all three cookies after a fresh login. */
+/** Best-effort client description for the session row. Both values are
+ *  self-reported and are only ever shown back to the account that created
+ *  them — never used to make a decision. */
+async function describeClient(): Promise<{ userAgent: string | null; ipAddress: string | null }> {
+  try {
+    const h = await headers()
+    const fwd = h.get("x-forwarded-for")
+    return {
+      userAgent: h.get("user-agent"),
+      // The left-most entry is the client; the rest are proxies.
+      ipAddress: fwd ? fwd.split(",")[0].trim() : h.get("x-real-ip"),
+    }
+  } catch {
+    return { userAgent: null, ipAddress: null }
+  }
+}
+
+/** Writes all three cookies after a fresh login, and opens the device-session
+ *  row whose id travels in the refresh token as `sid`. */
 export async function createSession(payload: SessionPayload, rememberMe = false): Promise<void> {
   const env = getAuthEnv()
+  const maxAgeSeconds = refreshMaxAge(rememberMe)
+
+  const client = await describeClient()
+  let sid: string | undefined
+  try {
+    // null when session tracking is not available yet; the token simply
+    // carries no sid, exactly like a pre-table login.
+    sid = (await openSession({
+      userId:    payload.sub,
+      userAgent: client.userAgent,
+      ipAddress: client.ipAddress,
+      expiresAt: new Date(Date.now() + maxAgeSeconds * 1000),
+    })) ?? undefined
+  } catch (err) {
+    // Session listing is a convenience; it must never be the reason a correct
+    // password fails to log someone in.
+    console.error("[createSession] could not open a device session", err)
+  }
+
   const [accessToken, refreshToken, sessionCookie] = await Promise.all([
     signAccessToken(payload),
-    signRefreshToken({ sub: payload.sub, remember: rememberMe }),
+    signRefreshToken({ sub: payload.sub, remember: rememberMe, sid }),
     signSessionCookie(payload, env.sessionSecret),
   ])
 
@@ -81,6 +127,15 @@ export async function createSession(payload: SessionPayload, rememberMe = false)
 export async function clearSession(): Promise<void> {
   const env = getAuthEnv()
   const jar = await cookies()
+
+  // Revoke the row too: clearing cookies only ends this browser, and a copied
+  // refresh token would otherwise keep working until it expired.
+  const sid = await getCurrentSessionId()
+  if (sid) {
+    const claims = await readRefreshClaims()
+    if (claims) await revokeSession(claims.sub, sid).catch(() => {})
+  }
+
   jar.set(env.accessCookieName, "", { ...cookieOptions, path: "/", maxAge: 0 })
   jar.set(env.refreshCookieName, "", { ...cookieOptions, path: "/", maxAge: 0 })
   jar.set(env.sessionCookieName, "", { ...cookieOptions, path: "/", maxAge: 0 })
@@ -122,6 +177,12 @@ async function verifyRefresh(): Promise<RefreshedSession | null> {
 
     const session = await loadSessionPayload(parsed.data.sub)
     if (!session) return null
+
+    // A revoked or expired device session must not be able to refresh — this
+    // is what makes "sign out other sessions" actually end them.
+    if (parsed.data.sid && !(await isSessionLive(parsed.data.sid, parsed.data.sub))) {
+      return null
+    }
 
     return { payload: session, refreshClaims: parsed.data }
   } catch {
@@ -177,12 +238,33 @@ export async function getSessionAndRefresh(): Promise<SessionPayload | null> {
   if (!refreshed) return null
 
   const { payload, refreshClaims } = refreshed
+  const maxAge = refreshMaxAge(refreshClaims.remember)
+  const expiresAt = new Date(Date.now() + maxAge * 1000)
+
+  // Adopt a pre-table token by opening a row for it now, rather than refusing
+  // it; otherwise shipping this would sign out everyone currently logged in.
+  let sid = refreshClaims.sid
+  try {
+    if (sid) {
+      await touchSession(sid, expiresAt)
+    } else {
+      const client = await describeClient()
+      sid = (await openSession({
+        userId:    payload.sub,
+        userAgent: client.userAgent,
+        ipAddress: client.ipAddress,
+        expiresAt,
+      })) ?? undefined
+    }
+  } catch (err) {
+    console.error("[getSessionAndRefresh] device session bookkeeping failed", err)
+  }
+
   const [newAccessToken, newRefreshToken, newSessionCookie] = await Promise.all([
     signAccessToken(payload),
-    signRefreshToken(refreshClaims), // rotated — same "remember" window, extended from now
+    signRefreshToken({ ...refreshClaims, sid }), // rotated — same window, extended from now
     signSessionCookie(payload, env.sessionSecret),
   ])
-  const maxAge = refreshMaxAge(refreshClaims.remember)
   jar.set(env.accessCookieName, newAccessToken, { ...cookieOptions, path: "/", maxAge: ACCESS_MAX_AGE_SECONDS })
   jar.set(env.refreshCookieName, newRefreshToken, { ...cookieOptions, path: "/", maxAge })
   jar.set(env.sessionCookieName, newSessionCookie, { ...cookieOptions, path: "/", maxAge })
@@ -198,6 +280,28 @@ export async function readDisplaySession(): Promise<SessionPayload | null> {
   const env = getAuthEnv()
   const jar = await cookies()
   return verifySessionCookie(jar.get(env.sessionCookieName)?.value, env.sessionSecret)
+}
+
+/** The refresh cookie's claims, or null. Read-only. */
+async function readRefreshClaims(): Promise<RefreshClaims | null> {
+  const env = getAuthEnv()
+  const jar = await cookies()
+  const token = jar.get(env.refreshCookieName)?.value
+  if (!token) return null
+  try {
+    const { payload } = await jwtVerify(token, getSessionSecret(), { algorithms: ["HS256"] })
+    const parsed = refreshClaimsSchema.safeParse(payload)
+    return parsed.success ? parsed.data : null
+  } catch {
+    return null
+  }
+}
+
+/** The device-session row id for this request, so the sessions list can mark
+ *  which row is "this device". Null for a token minted before the table. */
+export async function getCurrentSessionId(): Promise<string | null> {
+  const claims = await readRefreshClaims()
+  return claims?.sid ?? null
 }
 
 /** Redirects to /login if not authenticated. */

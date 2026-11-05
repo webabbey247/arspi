@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
+import { AdminPageHeader, RowActions, RowIcon, StatTile } from "@/components/admin/AdminKit"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -347,22 +348,62 @@ export default function AdminTeamPage() {
   const startIdx   = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
   const endIdx     = Math.min(page * PAGE_SIZE, total)
 
+  /** Category counts feed the first tile's meter, so the mix is visible
+   *  without opening the filter. */
+  const teamStats = {
+    leadership: members.filter(m => m.category === "EXECUTIVE_MANAGEMENT").length,
+    withPhoto:  members.filter(m => !!m.coverImage).length,
+    categories: new Set(members.map(m => m.category)).size,
+    byCategory: (Object.keys(CATEGORY_LABEL) as TeamCategory[])
+      .map((c, i) => ({
+        label: CATEGORY_LABEL[c].toLowerCase(),
+        value: members.filter(m => m.category === c).length,
+        tone:  (["emerald", "amber", "sky", "slate"] as const)[i % 4],
+      }))
+      .filter(b => b.value > 0),
+  }
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Team</h1>
-          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage executive management and staff profiles displayed on the public team page</p>
-        </div>
-        <button
-          onClick={() => setDrawer("create")}
-          className="flex items-center gap-1.5 px-4 py-2 rounded text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer w-fit"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New Member
-        </button>
+      <AdminPageHeader
+        title="Team"
+        description="Executive management and staff profiles, as shown on the public team page."
+        actions={
+          <button
+            onClick={() => setDrawer("create")}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[14px] font-bold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Member
+          </button>
+        }
+      />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">
+        <StatTile
+          label="Members" value={members.length} loading={loading}
+          motif="dots" accent="text-[#6655DF]" tone="bg-[#EEECFF] text-[#6655DF]"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>}
+          breakdown={teamStats.byCategory}
+        />
+        <StatTile
+          label="Leadership" value={teamStats.leadership} loading={loading}
+          motif="rings" accent="text-amber-600" tone="bg-amber-50 text-amber-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
+          hint="Executive management"
+        />
+        <StatTile
+          label="With a photo" value={teamStats.withPhoto} loading={loading}
+          motif="hatch" accent="text-emerald-600" tone="bg-emerald-50 text-emerald-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>}
+          hint={`${members.length - teamStats.withPhoto} still missing one`}
+        />
+        <StatTile
+          label="Categories" value={teamStats.categories} loading={loading}
+          motif="grid" accent="text-sky-600" tone="bg-sky-50 text-sky-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>}
+          hint="Groups on the public page"
+        />
       </div>
 
       {/* Table card */}
@@ -420,14 +461,14 @@ export default function AdminTeamPage() {
                   <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{m.displayOrder}</td>
                   <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDate(m.updatedAt)}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => setDrawer(m)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      </button>
-                      <button onClick={() => setToDelete(m)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                      </button>
-                    </div>
+                    <RowActions
+                      label={`Actions for ${m.name}`}
+                      items={[
+                        { label: "Edit member",   icon: RowIcon.edit,  onSelect: () => setDrawer(m) },
+                        { type: "separator" },
+                        { label: "Delete member", icon: RowIcon.trash, danger: true, onSelect: () => setToDelete(m) },
+                      ]}
+                    />
                   </td>
                 </tr>
               ))}
@@ -474,14 +515,14 @@ export default function AdminTeamPage() {
                 </div>
               </dl>
 
-              <div className="flex items-center justify-end gap-1.5 pt-1">
-                <button onClick={() => setDrawer(m)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                <button onClick={() => setToDelete(m)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                </button>
-              </div>
+              <RowActions
+                label={`Actions for ${m.name}`}
+                items={[
+                  { label: "Edit member",   icon: RowIcon.edit,  onSelect: () => setDrawer(m) },
+                  { type: "separator" },
+                  { label: "Delete member", icon: RowIcon.trash, danger: true, onSelect: () => setToDelete(m) },
+                ]}
+              />
             </div>
           ))}
         </div>

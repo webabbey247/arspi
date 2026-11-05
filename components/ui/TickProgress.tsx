@@ -96,19 +96,28 @@ export type TickSegment = { key: string; label: string; value: number; hex: stri
  * name and amount of every part beside the bar.
  */
 export function TickSegments({
-  parts, ticks = 44, className,
+  parts, ticks = 44, className, bare = false,
 }: {
   parts: TickSegment[]
   ticks?: number
   className?: string
+  /** Drops the bordered shell and shortens the ticks, for use inside a card
+   *  that already has its own border — nesting two makes the card read as a
+   *  box in a box. */
+  bare?: boolean
 }) {
+  const shell = bare
+    ? "flex items-stretch gap-[2px]"
+    : "flex items-stretch gap-[2px] rounded-[8px] border border-[#DFE2ED] bg-white px-2 py-2"
+  const tick = bare ? "h-2.5 flex-1 rounded-[1px]" : "h-4 flex-1 rounded-[1px]"
+
   const live  = parts.filter(p => p.value > 0)
   const total = live.reduce((sum, p) => sum + p.value, 0)
   if (total === 0 || live.length === 0) {
     return (
-      <div className={cn("flex items-stretch gap-[2px] rounded-[8px] border border-[#DFE2ED] bg-white px-2 py-2", className)}>
+      <div className={cn(shell, className)}>
         {Array.from({ length: ticks }).map((_, i) => (
-          <span key={i} className="h-4 flex-1 rounded-[1px] bg-[#EEEFF5]" />
+          <span key={i} className={cn(tick, "bg-[#EEEFF5]")} />
         ))}
       </div>
     )
@@ -138,14 +147,14 @@ export function TickSegments({
     <div
       role="img"
       aria-label={live.map(p => `${p.label} ${p.value}`).join("; ")}
-      className={cn("flex items-stretch gap-[2px] rounded-[8px] border border-[#DFE2ED] bg-white px-2 py-2 overflow-hidden", className)}
+      className={cn(shell, "overflow-hidden", className)}
     >
       {cells.map(c => (
         <span
           key={c.key}
           title={`${c.label}: ${c.value}`}
           style={{ backgroundColor: c.hex }}
-          className="h-4 flex-1 rounded-[1px]"
+          className={tick}
         />
       ))}
     </div>

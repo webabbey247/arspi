@@ -7,6 +7,7 @@ import { useForm, Controller } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
+import { AdminPageHeader, RowActions, RowIcon, StatTile } from "@/components/admin/AdminKit"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -284,6 +285,7 @@ function OfficeDrawer({
                   control={control}
                   render={({ field }) => <Toggle label={field.value ? "Active" : "Hidden"} checked={!!field.value} onChange={field.onChange} />}
                 />
+
               </div>
             </Field>
           </div>
@@ -390,21 +392,51 @@ export default function AdminGlobalOfficesPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+
+  const officeStats = {
+    regions:   new Set(offices.map(o => o.region)).size,
+    countries: new Set(offices.map(o => o.country)).size,
+    withPhone: offices.filter(o => !!o.phone).length,
+  }
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Global Offices</h1>
-          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage international office locations shown on the contact page</p>
-        </div>
-        <button
+      <AdminPageHeader
+        title="Global Offices"
+        description="International office locations shown on the public contact page."
+        actions={<><button
           onClick={() => setDrawer("create")}
           className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer self-start sm:self-auto"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New Office
-        </button>
+        </button></>}
+      />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">
+        <StatTile
+          label="Offices" value={offices.length} loading={loading}
+          motif="dots" accent="text-[#6655DF]" tone="bg-[#EEECFF] text-[#6655DF]"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>}
+          hint="Shown on the contact page"
+        />
+        <StatTile
+          label="Countries" value={officeStats.countries} loading={loading}
+          motif="waves" accent="text-sky-600" tone="bg-sky-50 text-sky-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z"/></svg>}
+          hint="Distinct locations"
+        />
+        <StatTile
+          label="Regions" value={officeStats.regions} loading={loading}
+          motif="rings" accent="text-amber-600" tone="bg-amber-50 text-amber-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z"/></svg>}
+          hint="Of six possible"
+        />
+        <StatTile
+          label="With a phone" value={officeStats.withPhone} loading={loading}
+          motif="hatch" accent="text-emerald-600" tone="bg-emerald-50 text-emerald-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>}
+          hint={`${offices.length - officeStats.withPhone} missing one`}
+        />
       </div>
 
       <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
@@ -537,14 +569,14 @@ export default function AdminGlobalOfficesPage() {
                 </div>
               </dl>
 
-              <div className="flex items-center justify-end gap-1.5 pt-1">
-                <button onClick={() => setDrawer(o)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                <button onClick={() => setToDelete(o)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                </button>
-              </div>
+              <RowActions
+                label={`Actions for ${o.city}, ${o.country}`}
+                items={[
+                  { label: "Edit office",   icon: RowIcon.edit,  onSelect: () => setDrawer(o) },
+                  { type: "separator" },
+                  { label: "Delete office", icon: RowIcon.trash, danger: true, onSelect: () => setToDelete(o) },
+                ]}
+              />
             </div>
           ))}
         </div>

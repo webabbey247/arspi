@@ -5,6 +5,8 @@ import { useParams } from "next/navigation"
 import Link from "next/link"
 import { sanitizeHtml } from "@/lib/sanitize"
 import { DetailPageSkeleton, InlineSkeleton } from "@/components/ui/skeleton"
+import { StatTile, Pill, EmptyState, DOTS, AURORA, metaCls } from "@/components/admin/AdminKit"
+import { cn } from "@/lib/utils"
 
 type Applicant = {
   id:             string
@@ -71,15 +73,6 @@ function fmtSalary(min: number | null, max: number | null, currency: string) {
   return fmt((min ?? max) as number)
 }
 
-function MetricCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
-  return (
-    <div className="rounded-[16px] border border-[#DFE2ED] bg-white px-5 py-4">
-      <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-[0.5px]">{label}</p>
-      <p className="text-[24px] font-extrabold text-[#171C35] mt-1">{value}</p>
-      {hint && <p className="text-[11px] text-[#8A90A6] mt-0.5">{hint}</p>}
-    </div>
-  )
-}
 
 export default function AdminCareerDetailPage() {
   const params  = useParams<{ id: string }>()
@@ -160,51 +153,70 @@ export default function AdminCareerDetailPage() {
 
       {/* Header */}
       <div className="rounded-[16px] overflow-hidden border border-[#DFE2ED] mb-6">
-        <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] px-6 py-5">
-          <div className="flex flex-wrap items-center gap-2 mb-2">
+        <div className={cn("relative overflow-hidden bg-[#0E1230] px-6 py-6", DOTS)}>
+          <div className={cn("absolute inset-0 opacity-70 blur-2xl motion-safe:animate-[pulse_10s_ease-in-out_infinite]", AURORA)} />
+          <div className="relative flex flex-wrap items-center gap-2 mb-2">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white uppercase tracking-wider">
               {TYPE_LABELS[career.type]}
             </span>
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white uppercase tracking-wider">
               {LEVEL_LABELS[career.experienceLevel]}
             </span>
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${career.status === "PUBLISHED" ? "bg-emerald-500/30 text-white" : "bg-amber-500/30 text-white"}`}>
-              {career.status}
-            </span>
+            <Pill tone={career.status === "PUBLISHED" ? "emerald" : "amber"}>{career.status}</Pill>
           </div>
-          <h1 className="text-[22px] font-extrabold text-white leading-tight">{career.title}</h1>
-          <p className="text-[13px] text-white/80 mt-1.5">
+          <h1 className="relative text-[clamp(22px,2.6vw,30px)] leading-[1.1] tracking-[-0.03em] font-extrabold text-white">{career.title}</h1>
+          <p className="relative text-[14px] font-bold text-white/65 mt-1.5">
             {career.department} · {career.location}{career.remote && " · Remote-friendly"}
           </p>
         </div>
         <div className="bg-white px-6 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-[12px]">
           <div>
-            <p className="text-[10px] font-bold text-[#8A90A6] uppercase tracking-[0.5px]">Salary</p>
-            <p className="text-[#171C35] font-semibold mt-0.5">{fmtSalary(career.salaryMin, career.salaryMax, career.currency)}</p>
+            <p className={metaCls}>Salary</p>
+            <p className="text-[14px] font-bold text-[#171C35] mt-1">{fmtSalary(career.salaryMin, career.salaryMax, career.currency)}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-[#8A90A6] uppercase tracking-[0.5px]">Closing date</p>
-            <p className="text-[#171C35] font-semibold mt-0.5">{fmtDate(career.closingDate)}</p>
+            <p className={metaCls}>Closing date</p>
+            <p className="text-[14px] font-bold text-[#171C35] mt-1">{fmtDate(career.closingDate)}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-[#8A90A6] uppercase tracking-[0.5px]">Posted</p>
-            <p className="text-[#171C35] font-semibold mt-0.5">{fmtDate(career.createdAt)}</p>
+            <p className={metaCls}>Posted</p>
+            <p className="text-[14px] font-bold text-[#171C35] mt-1">{fmtDate(career.createdAt)}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-[#8A90A6] uppercase tracking-[0.5px]">Last updated</p>
-            <p className="text-[#171C35] font-semibold mt-0.5">{fmtDate(career.updatedAt)}</p>
+            <p className={metaCls}>Last updated</p>
+            <p className="text-[14px] font-bold text-[#171C35] mt-1">{fmtDate(career.updatedAt)}</p>
           </div>
         </div>
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <MetricCard label="Views"        value={career.views}        hint="Total page views" />
-        <MetricCard label="Applications" value={career.applications} hint="Submitted to date" />
-        <MetricCard
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">
+        <StatTile
+          label="Views" value={career.views}
+          motif="waves" accent="text-sky-600" tone="bg-sky-50 text-sky-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>}
+          hint="On the public careers page"
+        />
+        <StatTile
+          label="Applications" value={career.applications}
+          motif="dots" accent="text-[#6655DF]" tone="bg-[#EEECFF] text-[#6655DF]"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>}
+          hint="Submitted to date"
+        />
+        <StatTile
           label="Conversion"
-          value={career.views > 0 ? `${((career.applications / career.views) * 100).toFixed(1)}%` : "—"}
-          hint="Applications / views"
+          value={career.views > 0 ? `${((career.applications / career.views) * 100).toFixed(1)}%` : "\u2014"}
+          motif="rings" accent="text-amber-600" tone="bg-amber-50 text-amber-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>}
+          hint="Applications per view"
+        />
+        <StatTile
+          label="Status" value={career.status === "PUBLISHED" ? "Live" : "Archived"}
+          motif="hatch"
+          accent={career.status === "PUBLISHED" ? "text-emerald-600" : "text-slate-500"}
+          tone={career.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-600" : "bg-[#F0EFFA] text-[#69708A]"}
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>}
+          hint={career.closingDate ? `Closes ${fmtDate(career.closingDate)}` : "No closing date"}
         />
       </div>
 
@@ -279,7 +291,14 @@ export default function AdminCareerDetailPage() {
         {applicantsLoading ? (
           <InlineSkeleton rows={3} />
         ) : applicants.length === 0 ? (
-          <div className="px-5 py-10 text-center text-[12px] text-[#8A90A6]">No applications yet.</div>
+          <EmptyState
+            className="border-0 rounded-none py-12"
+            icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>}
+            title="No applications yet"
+            hint={career.status === "PUBLISHED"
+              ? "This role is live on the public careers page. Submissions will appear here as they arrive."
+              : "This role is archived, so it is not collecting applications."}
+          />
         ) : (
           <>
             <div className="hidden md:block overflow-x-auto">

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import type { SubscriptionStatus } from "@/services/subscription.service"
 import { downloadCsv } from "@/lib/csv"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
+import { AdminPageHeader, StatTile } from "@/components/admin/AdminKit"
 
 type SubscriberRow = {
   id: string
@@ -130,14 +131,48 @@ export default function AdminSubscribersPage() {
   const totalPages = Math.max(1, Math.ceil(subscribers.length / PAGE_SIZE))
   const paginated  = subscribers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
+  const subStats = {
+    active:       subscribers.filter(s => s.status === "ACTIVE").length,
+    unsubscribed: subscribers.filter(s => s.status !== "ACTIVE").length,
+    thisMonth:    subscribers.filter(s => {
+      const d = new Date(s.subscribedAt)
+      const n = new Date()
+      return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth()
+    }).length,
+  }
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Subscribers</h1>
-          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Monitor newsletter signups and subscription status</p>
-        </div>
+      <AdminPageHeader
+        title="Subscribers"
+        description="Newsletter signups and their subscription status."
+      />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">
+        <StatTile
+          label="Subscribers" value={subscribers.length} loading={loading}
+          motif="dots" accent="text-[#6655DF]" tone="bg-[#EEECFF] text-[#6655DF]"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2 7 12 13 22 7"/></svg>}
+          breakdown={[{ label: "active", value: subStats.active, tone: "emerald" }, { label: "unsubscribed", value: subStats.unsubscribed, tone: "slate" }]}
+        />
+        <StatTile
+          label="Active" value={subStats.active} loading={loading}
+          motif="hatch" accent="text-emerald-600" tone="bg-emerald-50 text-emerald-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>}
+          hint="Receiving the newsletter"
+        />
+        <StatTile
+          label="Joined this month" value={subStats.thisMonth} loading={loading}
+          motif="waves" accent="text-sky-600" tone="bg-sky-50 text-sky-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
+          hint="Since the 1st"
+        />
+        <StatTile
+          label="Unsubscribed" value={subStats.unsubscribed} loading={loading}
+          motif="rings" accent="text-rose-500" tone="bg-rose-50 text-rose-500"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>}
+          hint="Opted out"
+        />
       </div>
 
       <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">

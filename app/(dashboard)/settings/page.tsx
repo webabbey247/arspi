@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { useForm, Controller, type Resolver } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
@@ -8,8 +8,9 @@ import * as yup from "yup"
 import { Check, X, ShieldCheck, GraduationCap, User as UserIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUploadThing } from "@/lib/uploadthing-client"
-import { SettingsSkeleton } from "@/components/ui/skeleton"
+import { SettingsSkeleton, InlineSkeleton } from "@/components/ui/skeleton"
 import type { AccountProfile } from "@/services/profile.service"
+import type { DeviceSession } from "@/services/session.service"
 
 type Role = "ADMIN" | "INSTRUCTOR" | "USER"
 
@@ -170,46 +171,147 @@ function combinePhone(code: string, number: string): string {
   return `${code} ${cleaned}`
 }
 
-type Tab = "profile" | "contact" | "password" | "config" | "billings"
-
-const TABS: { id: Tab; label: string; hint: string; icon: React.ReactNode }[] = [
-  { id: "profile",  label: "Profile",  hint: "Name, photo and bio",
-    icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> },
-  { id: "contact",  label: "Contact",  hint: "Email, phone and address",
-    icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v16H4z"/><polyline points="4 7 12 13 20 7"/></svg> },
-  { id: "password", label: "Security", hint: "Password and access",
-    icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> },
-  { id: "config",   label: "Preferences", hint: "How the app behaves",
-    icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9z"/></svg> },
-  { id: "billings", label: "Billing",  hint: "Payments and invoices",
-    icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> },
-]
-
 const dash = (v: string | number | null | undefined) =>
   v === null || v === undefined || v === "" ? "—" : String(v)
 
 /** A titled card with an icon and a note — the unit every settings panel is
  *  built from, matching the console's Section. */
 function Section({
-  icon, title, note, action, children,
+  id, icon, eyebrow, title, note, action, children,
 }: {
-  icon: React.ReactNode; title: string; note?: string
+  id?: string
+  icon: React.ReactNode; eyebrow: string; title: string; note?: string
   action?: React.ReactNode; children: React.ReactNode
 }) {
   return (
-    <section className="min-w-0 rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
-      <div className="flex items-start gap-3 px-4 sm:px-5 py-4 border-b border-[#F0EFFA]">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-[#EEECFF] text-[#6655DF]">
-          {icon}
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-[14px] font-bold text-[#171C35]">{title}</h2>
-          {note && <p className="text-[12px] font-bold text-[#8A90A6] mt-0.5">{note}</p>}
+    <section id={id} className="min-w-0 scroll-mt-6 rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+      <div className="px-5 sm:px-6 pt-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6]">
+              <span className="text-[#6655DF]">{icon}</span>
+              {eyebrow}
+            </p>
+            <h2 className="mt-2 text-[20px] leading-[1.25] tracking-[-0.02em] font-extrabold text-[#171C35]">{title}</h2>
+            {note && <p className="mt-1.5 max-w-prose text-[13.5px] leading-relaxed text-[#69708A]">{note}</p>}
+          </div>
+          {action}
         </div>
-        {action}
+        {/* Dashed, so the intro reads as a preamble to the card rather than as
+            another banded header like the tables elsewhere. */}
+        <div className="mt-5 border-t border-dashed border-[#DFE2ED]" />
       </div>
-      <div className="px-4 sm:px-5 py-5">{children}</div>
+      <div className="px-5 sm:px-6 py-5">{children}</div>
     </section>
+  )
+}
+
+/** A card for the operator view: a filled dark icon tile, title and one line
+ *  of explanation. Dark rather than the lavender chip used elsewhere, so the
+ *  operator screen reads as account administration and not as a profile. */
+function OpsCard({
+  title, note, children,
+}: {
+  title: string; note?: string; children: React.ReactNode
+}) {
+  return (
+    <section className="min-w-0 rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+      <div className="px-5 py-4 border-b border-[#F0EFFA]">
+        <h2 className="text-[15px] font-extrabold text-[#171C35]">{title}</h2>
+        {note && <p className="mt-0.5 text-[13px] text-[#69708A]">{note}</p>}
+      </div>
+      <div className="px-5 py-5">{children}</div>
+    </section>
+  )
+}
+
+/** Uppercase label over a value — the operator record's unit. */
+function OpsFact({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6]">{label}</dt>
+      <dd className="mt-1 text-[14.5px] font-bold text-[#171C35] break-words">{value}</dd>
+    </div>
+  )
+}
+
+/** Password input with a reveal toggle.
+ *
+ *  `type` is swapped rather than the value being mirrored into a text input,
+ *  so the field keeps its autocomplete behaviour and the browser's password
+ *  manager still recognises it. The button is excluded from the tab order:
+ *  it is a convenience, and stopping between every password field to skip it
+ *  would be worse than not having it. */
+function PasswordInput({
+  label, error, inputClassName, ...field
+}: React.InputHTMLAttributes<HTMLInputElement> & {
+  label: string
+  error?: string
+  inputClassName: string
+}) {
+  const [shown, setShown] = useState(false)
+  return (
+    <div>
+      <label className={labelCls}>{label}</label>
+      <div className="relative">
+        <input
+          {...field}
+          type={shown ? "text" : "password"}
+          className={cn(inputClassName, "pr-10")}
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => setShown(v => !v)}
+          aria-label={shown ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+          className="absolute right-2 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded-[7px] text-[#8A90A6] hover:text-[#171C35] hover:bg-[#F5F6FB] cursor-pointer transition-colors"
+        >
+          {shown ? (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          ) : (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          )}
+        </button>
+      </div>
+      {error && <p className="text-[11px] text-red-500 mt-1">{error}</p>}
+    </div>
+  )
+}
+
+/** Relative where it reads better than a timestamp, absolute once it is old
+ *  enough that "12 days ago" stops being useful. */
+function fmtWhen(iso: string) {
+  const then = new Date(iso)
+  if (Number.isNaN(then.getTime())) return "—"
+  const mins = Math.round((Date.now() - then.getTime()) / 60000)
+  if (mins < 1)    return "just now"
+  if (mins < 60)   return `${mins} min ago`
+  const hrs = Math.round(mins / 60)
+  if (hrs < 24)    return `${hrs} hour${hrs === 1 ? "" : "s"} ago`
+  const days = Math.round(hrs / 24)
+  if (days <= 7)   return `${days} day${days === 1 ? "" : "s"} ago`
+  return then.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+}
+
+/** Date only, for account facts. Empty string means the value never loaded,
+ *  which is different from a date we have and should not be dressed up. */
+function fmtDay(iso: string | null | undefined) {
+  if (!iso) return "—"
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return "—"
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+}
+
+/** Icon + label on the left, value hard right — the rail's list row. */
+function RailLine({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-[#F0EFFA] py-2.5 last:border-none">
+      <dt className="flex items-center gap-2 text-[13px] text-[#69708A]">
+        <span className="shrink-0 text-[#8A90A6]">{icon}</span>
+        {label}
+      </dt>
+      <dd className="min-w-0 break-words text-right text-[13px] font-bold text-[#171C35]">{value}</dd>
+    </div>
   )
 }
 
@@ -279,12 +381,23 @@ const DOTS =
 export default function SettingsPage() {
   const [profile,  setProfile]  = useState<AccountProfile | null>(null)
   const [role,     setRole]     = useState<Role>("USER")
+  // Operators get the account-record view; learners get the profile view.
+  // Instructors count as operators: they author material others consume.
+  const isOperator = role === "ADMIN" || role === "INSTRUCTOR"
   const [loading,  setLoading]  = useState(true)
   const [avatar,   setAvatar]   = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [sessions, setSessions]               = useState<DeviceSession[]>([])
+  const [sessionsLoading, setSessionsLoading] = useState(true)
+  const [sessionsError, setSessionsError]     = useState<string | null>(null)
+  // False until the user_sessions migration has been applied.
+  const [sessionsReady, setSessionsReady]     = useState(true)
+  const [revokingId, setRevokingId]           = useState<string | null>(null)
+  const [revokingOthers, setRevokingOthers]   = useState(false)
+  const otherSessions = sessions.filter(sn => !sn.current).length
   const [toast,    setToast]    = useState<{ msg: string; ok: boolean } | null>(null)
-  const [activeTab, setActiveTab] = useState<Tab>("profile")
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const { startUpload } = useUploadThing("imageUploader")
 
@@ -396,6 +509,14 @@ export default function SettingsPage() {
               language:     null,
               timezone:     null,
               emailOptIn:   true,
+              // This branch only runs when the profile endpoint failed, so the
+              // account facts are genuinely unknown rather than empty. The UI
+              // reads them as "—" instead of asserting anything.
+              role:          me.role ?? "USER",
+              status:        "",
+              emailVerified: false,
+              createdAt:     "",
+              providers:     [],
             })
           }
         }
@@ -537,6 +658,69 @@ export default function SettingsPage() {
     showToast("Password updated.")
   }
 
+  const loadSessions = useCallback(async () => {
+    try {
+      const resp = await fetch("/api/account/sessions")
+      if (!resp.ok) {
+        const d = await resp.json().catch(() => ({}))
+        setSessionsError(d.error ?? "Could not load your sessions.")
+        return
+      }
+      const data = await resp.json()
+      setSessions(data.sessions ?? [])
+      setSessionsReady(data.available !== false)
+      setSessionsError(null)
+    } catch {
+      setSessionsError("Could not load your sessions.")
+    } finally {
+      setSessionsLoading(false)
+    }
+  }, [])
+
+  // Only operators see the sessions card, so only they pay for the request.
+  useEffect(() => {
+    if (!isOperator) { setSessionsLoading(false); return }
+    loadSessions()
+  }, [isOperator, loadSessions])
+
+  async function revokeOne(id: string) {
+    setRevokingId(id)
+    try {
+      const resp = await fetch(`/api/account/sessions/${id}`, { method: "DELETE" })
+      if (!resp.ok) {
+        const d = await resp.json().catch(() => ({}))
+        showToast(d.error ?? "Could not sign that session out.", false)
+        return
+      }
+      setSessions(prev => prev.filter(s => s.id !== id))
+      showToast("That device will be signed out within 15 minutes.", true)
+    } finally {
+      setRevokingId(null)
+    }
+  }
+
+  async function revokeOthers() {
+    setRevokingOthers(true)
+    try {
+      const resp = await fetch("/api/account/sessions", { method: "DELETE" })
+      if (!resp.ok) {
+        const d = await resp.json().catch(() => ({}))
+        showToast(d.error ?? "Could not sign the other sessions out.", false)
+        return
+      }
+      const { revoked } = await resp.json()
+      setSessions(prev => prev.filter(s => s.current))
+      showToast(
+        revoked === 0
+          ? "There were no other sessions."
+          : `${revoked} session${revoked === 1 ? "" : "s"} will be signed out within 15 minutes.`,
+        true,
+      )
+    } finally {
+      setRevokingOthers(false)
+    }
+  }
+
   async function handleSignOutAll() {
     const resp = await fetch("/api/auth/logout", { method: "POST" })
     if (resp.redirected) {
@@ -608,491 +792,780 @@ export default function SettingsPage() {
       <div className="px-4 sm:px-6 lg:px-8 pb-10 pt-5">
         <div className="max-w-400 mx-auto">
 
-          {/* Identity banner — decorative strip with the avatar overlapping it,
-              then the facts that identify this account. */}
-          <div className="overflow-hidden rounded-[16px] border border-[#DFE2ED] bg-white">
-            <div className={cn("relative h-24 overflow-hidden bg-[#0E1230]", DOTS)}>
-              <div className={cn("absolute inset-0 opacity-70 blur-2xl motion-safe:animate-[pulse_9s_ease-in-out_infinite]", AURORA)} />
-            </div>
+          {/* Hero — the band is filled rather than used as a strip with the
+              avatar hanging off it, so the whole card carries the identity.
+              The facts that used to sit under it now live in the rail, where
+              they do not compete with the editable copies below. */}
+          <div className={cn("relative overflow-hidden rounded-[16px] bg-[#0E1230] px-5 sm:px-7 py-6 sm:py-7", DOTS)}>
+            <div className={cn("absolute inset-0 opacity-70 blur-2xl motion-safe:animate-[pulse_9s_ease-in-out_infinite]", AURORA)} />
 
-            <div className="px-4 sm:px-5 pb-5">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div className="flex min-w-0 items-end gap-4">
-                  <span className="relative z-10 -mt-8 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[18px] bg-[#EEECFF] ring-4 ring-white">
-                    {loading ? null : avatar ? (
-                      <Image src={avatar} alt="Avatar" fill className="object-cover" />
-                    ) : (
-                      <span className="text-[20px] font-extrabold text-[#6655DF]">{initials}</span>
-                    )}
+            <div className="relative flex flex-wrap items-center gap-4 sm:gap-5">
+              <span className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-[14px] bg-white ring-1 ring-white/25">
+                {loading ? null : avatar ? (
+                  <Image src={avatar} alt="" fill className="object-cover" />
+                ) : (
+                  <span className="text-[20px] font-extrabold text-[#6655DF]">{initials}</span>
+                )}
+              </span>
+
+              <div className="min-w-0 flex-1">
+                <span className="block text-[11px] tracking-[0.12em] uppercase font-extrabold text-white/60">Settings</span>
+                <h2 className="mt-1 break-words text-[clamp(22px,2.6vw,30px)] leading-[1.1] tracking-[-0.03em] font-extrabold text-white">
+                  {loading ? "…" : fullName || profile?.email.split("@")[0] || "—"}
+                </h2>
+
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-bold text-white/85 ring-1 ring-white/15">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v16H4z"/><polyline points="4 7 12 13 20 7"/></svg>
+                    {profile?.email ?? "—"}
                   </span>
-                  <div className="min-w-0 pb-0.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="min-w-0 text-[20px] font-extrabold tracking-[-0.02em] text-[#171C35] break-words">
-                        {loading ? "…" : fullName || profile?.email.split("@")[0] || "—"}
-                      </h2>
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EEECFF] text-[#6655DF] text-[11px] tracking-[0.12em] uppercase font-extrabold">
-                        {ROLE_ICONS[role]}
-                        {ROLE_LABELS[role]}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-[13px] font-bold text-[#8A90A6] truncate">{profile?.email ?? ""}</p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => { setActiveTab("profile"); avatarInputRef.current?.click() }}
-                  disabled={uploading}
-                  className="flex h-9 shrink-0 items-center gap-1.5 self-start rounded-[10px] border border-[#DFE2ED] bg-white px-3.5 text-[14px] font-bold text-[#171C35] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 cursor-pointer transition-colors sm:self-auto"
-                >
-                  {uploading ? "Uploading…" : avatar ? "Replace photo" : "Add photo"}
-                </button>
-              </div>
-
-              {/* Key facts */}
-              <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-[#F0EFFA] pt-4 sm:grid-cols-4">
-                <Fact label="Job title"    value={dash(profile?.jobTitle)} />
-                <Fact label="Organisation" value={dash(profile?.organisation)} />
-                <Fact label="Country"      value={dash(profile?.country)} />
-                <Fact label="Timezone"     value={dash(profile?.timezone)} />
-              </dl>
-            </div>
-          </div>
-
-          {/* Tabs — label over hint, the active one filled */}
-          <div role="tablist" aria-label="Settings" className="mt-5 flex w-full overflow-x-auto rounded-[14px] border border-[#DFE2ED] bg-white p-1 sm:inline-flex sm:w-auto">
-            {TABS.map(t => {
-              const active = activeTab === t.id
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  role="tab"
-                  id={`settings-tab-${t.id}`}
-                  aria-selected={active}
-                  aria-controls={`settings-panel-${t.id}`}
-                  onClick={() => setActiveTab(t.id)}
-                  className={cn(
-                    "min-w-0 shrink-0 flex-1 rounded-[11px] px-3 py-2 text-left transition-colors cursor-pointer sm:flex-none sm:px-4",
-                    active ? "bg-[#171C35] text-white shadow-sm" : "text-[#171C35] hover:bg-[#F5F6FB]",
-                  )}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className={cn("shrink-0", active ? "text-white" : "text-[#8A90A6]")}>{t.icon}</span>
-                    <span className="block text-[14px] font-bold whitespace-nowrap">{t.label}</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-bold text-white/85 ring-1 ring-white/15">
+                    {ROLE_ICONS[role]}
+                    {ROLE_LABELS[role]}
                   </span>
-                  <span className={cn("mt-0.5 block text-[11px] font-bold whitespace-nowrap", active ? "text-white/60" : "text-[#8A90A6]")}>
-                    {t.hint}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Active panel */}
-          <div
-            role="tabpanel"
-            id={`settings-panel-${activeTab}`}
-            aria-labelledby={`settings-tab-${activeTab}`}
-            className="mt-5"
-          >
-
-          {activeTab === "profile" && (
-            <div className="space-y-5">
-
-              {/* At a glance — the record as it stands, beside the details
-                  needed to reach this person. Two columns from xl, stacked
-                  below it, matching the console's settings layout. */}
-              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-                <Section
-                  icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
-                  title="At a glance"
-                  note="How you appear across the platform."
-                  action={<CompletenessRing value={completeness} />}
-                >
-                  <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
-                    <Fact label="Full name"    value={dash(fullName)} />
-                    <Fact label="Email"        value={profile?.email ?? "—"} />
-                    <Fact label="Role"         value={ROLE_LABELS[role]} />
-                    <Fact label="Job title"    value={dash(profile?.jobTitle)} />
-                    <Fact label="Organisation" value={dash(profile?.organisation)} />
-                    <Fact label="Language"     value={dash(profile?.language)} />
-                  </dl>
-                  {profile?.bio ? (
-                    <blockquote className="mt-5 border-l-2 border-[#6655DF] pl-4 text-[14px] leading-relaxed text-[#69708A] italic">
-                      {profile.bio}
-                    </blockquote>
+                  {profile?.jobTitle ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-bold text-white/85 ring-1 ring-white/15">
+                      {profile.jobTitle}
+                    </span>
                   ) : null}
-                </Section>
-
-                <Section
-                  icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v16H4z"/><polyline points="4 7 12 13 20 7"/></svg>}
-                  title="Reach you"
-                  note="Used for receipts and account notices."
-                >
-                  <div className="grid gap-2.5">
-                    <ContactTile
-                      icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v16H4z"/><polyline points="4 7 12 13 20 7"/></svg>}
-                      label="Email" value={profile?.email ?? "—"}
-                    />
-                    <ContactTile
-                      icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.1 9.9a16 16 0 0 0 6 6l1.26-1.26a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>}
-                      label="Phone" value={dash(profile?.phone)}
-                    />
-                    <ContactTile
-                      icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>}
-                      label="Location"
-                      value={[profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ") || "—"}
-                    />
-                  </div>
-                </Section>
+                </div>
               </div>
 
-              {/* Avatar */}
-              <div className="flex items-center gap-4 flex-wrap pb-4 border-b border-[#F0EFFA]">
-                <div className="relative w-20 h-20 rounded-full overflow-hidden border border-[#DFE2ED] bg-[#F5F6FB] shrink-0">
-                  {avatar ? (
-                    <Image src={avatar} alt="Avatar" fill className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center font-heading text-[1.25rem] font-semibold text-[#6655DF]">
-                      {initials}
-                    </div>
-                  )}
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploading}
+                className="flex h-9 shrink-0 items-center gap-1.5 self-start rounded-[10px] bg-white/10 px-3.5 text-[13px] font-bold text-white ring-1 ring-white/20 hover:bg-white/20 disabled:opacity-50 cursor-pointer transition-colors"
+              >
+                {uploading ? "Uploading…" : avatar ? "Replace photo" : "Add photo"}
+              </button>
+            </div>
+          </div>
+
+          {/* Operators get the account record, not a profile to fill in:
+              what this account is, and how it is secured. */}
+          {isOperator && (
+            <div className="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+
+              <OpsCard
+                title="Profile"
+                note="How you appear to other operators and on anything you author."
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#DFE2ED] bg-[#FAFAFF] px-4 py-3.5">
+                  <div className="min-w-0">
+                    <p className="text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6]">Name</p>
+                    <p className="mt-1 text-[16px] font-extrabold text-[#171C35] break-words">
+                      {loading ? "…" : fullName || "—"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditingName(v => !v)}
+                    className="flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-[#DFE2ED] bg-white px-3.5 text-[13px] font-bold text-[#171C35] hover:border-[#6655DF] hover:text-[#6655DF] cursor-pointer transition-colors"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    {editingName ? "Close" : "Edit name"}
+                  </button>
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => avatarInputRef.current?.click()}
-                      disabled={uploading}
-                      className="px-3 py-1.5 rounded-[10px] text-[12px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
-                    >
-                      {uploading ? "Uploading…" : avatar ? "Replace photo" : "Upload photo"}
-                    </button>
-                    {avatar && (
+
+                {editingName && (
+                  <form onSubmit={profileForm.handleSubmit(onSaveProfile)} className="mt-4 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className={labelCls}>First name</label>
+                        <input {...profileForm.register("firstName")} className={inputCls} disabled={loading} />
+                        {profileForm.formState.errors.firstName && (
+                          <p className="text-[11px] text-red-500 mt-1">{profileForm.formState.errors.firstName.message}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className={labelCls}>Last name</label>
+                        <input {...profileForm.register("lastName")} className={inputCls} disabled={loading} />
+                        {profileForm.formState.errors.lastName && (
+                          <p className="text-[11px] text-red-500 mt-1">{profileForm.formState.errors.lastName.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="submit"
+                        disabled={profileForm.formState.isSubmitting || loading}
+                        className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
+                      >
+                        {profileForm.formState.isSubmitting ? "Saving…" : "Save name"}
+                      </button>
                       <button
                         type="button"
-                        onClick={handleRemoveAvatar}
-                        className="px-3 py-1.5 rounded-[10px] text-[12px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:border-red-300 hover:text-red-600 cursor-pointer transition-colors"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={uploading}
+                        className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 cursor-pointer transition-colors"
                       >
-                        Remove
+                        {uploading ? "Uploading…" : avatar ? "Replace photo" : "Add photo"}
                       </button>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-[#8A90A6]">JPG, PNG or WEBP. Max 4 MB.</p>
-                  <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-                </div>
-              </div>
+                      <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                    </div>
+                  </form>
+                )}
 
-              <form onSubmit={profileForm.handleSubmit(onSaveProfile)} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className={labelCls}>First name</label>
-                    <input {...profileForm.register("firstName")} className={inputCls} placeholder="Jane" readOnly />
-                    {profileForm.formState.errors.firstName && (
-                      <p className="text-[11px] text-red-500 mt-1">{profileForm.formState.errors.firstName.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className={labelCls}>Last name</label>
-                    <input {...profileForm.register("lastName")} className={inputCls} placeholder="Doe" readOnly />
-                    {profileForm.formState.errors.lastName && (
-                      <p className="text-[11px] text-red-500 mt-1">{profileForm.formState.errors.lastName.message}</p>
-                    )}
-                  </div>
-                </div>
+                <dl className="mt-5 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-3">
+                  <OpsFact label="Email" value={profile?.email ?? "—"} />
+                  <OpsFact label="Role" value={ROLE_LABELS[role]} />
+                  <OpsFact label="Joined" value={fmtDay(profile?.createdAt)} />
+                  <OpsFact
+                    label="Sign-in method"
+                    value={
+                      profile?.providers?.length
+                        ? profile.providers.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")
+                        : "Password"
+                    }
+                  />
+                  <OpsFact
+                    label="Email verified"
+                    value={profile?.emailVerified
+                      ? <span className="text-emerald-700">Yes</span>
+                      : <span className="text-amber-700">Not verified</span>}
+                  />
+                  <OpsFact
+                    label="Account status"
+                    value={profile?.status
+                      ? profile.status.charAt(0) + profile.status.slice(1).toLowerCase()
+                      : "—"}
+                  />
+                </dl>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className={labelCls}>Phone</label>
-                    <div className="flex">
-                      <select
-                        {...profileForm.register("phoneCountryCode")}
-                        disabled={loading}
-                        className="px-2 py-2.5 rounded-l-[10px] border border-r-0 border-[#DFE2ED] text-[13px] text-[#171C35] bg-[#FAFAFF] focus:outline-none focus:ring-2 focus:ring-[#6655DF]/20 focus:border-[#6655DF] transition-colors disabled:opacity-50 cursor-pointer"
-                      >
-                        {COUNTRY_CODES.map(c => (
-                          <option key={c.code} value={c.code}>
-                            {c.flag} {c.code}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        {...profileForm.register("phone")}
-                        className={`${inputCls} rounded-l-none min-w-0`}
-                        placeholder="800 000 0000"
-                        disabled={loading}
+                <div className="mt-5 border-t border-dashed border-[#DFE2ED] pt-4">
+                  <p className="text-[12.5px] leading-relaxed text-[#8A90A6]">
+                    Your email is your sign-in and can&apos;t be changed here. Roles are set by an administrator
+                    under Users.
+                  </p>
+                </div>
+              </OpsCard>
+
+              <div className="min-w-0 space-y-5">
+                <OpsCard
+                  title="Password"
+                  note="Use a long passphrase you don't use anywhere else."
+                >
+                  <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
+
+                    <PasswordInput
+                      label="Current password"
+                      inputClassName={inputCls}
+                      autoComplete="current-password"
+                      error={passwordForm.formState.errors.currentPassword?.message}
+                      {...passwordForm.register("currentPassword")}
+                    />
+
+                    <div className="grid grid-cols-1 gap-3">
+                      <PasswordInput
+                        label="New password"
+                        inputClassName={inputCls}
+                        autoComplete="new-password"
+                        error={passwordForm.formState.errors.newPassword?.message}
+                        {...passwordForm.register("newPassword")}
+                      />
+                      <PasswordInput
+                        label="Confirm new password"
+                        inputClassName={inputCls}
+                        autoComplete="new-password"
+                        error={passwordForm.formState.errors.confirmPassword?.message}
+                        {...passwordForm.register("confirmPassword")}
                       />
                     </div>
-                  </div>
-                  <div>
-                    <label className={labelCls}>Email</label>
-                    <input value={profile?.email ?? ""} readOnly className={inputCls} />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Date of birth</label>
-                    <input type="date" {...profileForm.register("dateOfBirth")} className={inputCls} disabled={loading} />
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className={labelCls}>Job title</label>
-                    <input {...profileForm.register("jobTitle")} className={inputCls} placeholder="Senior Researcher" disabled={loading} />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Organisation</label>
-                    <input {...profileForm.register("organisation")} className={inputCls} placeholder="ARPS Institute" disabled={loading} />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Country</label>
-                    <input {...profileForm.register("country")} className={inputCls} placeholder="Nigeria" disabled={loading} />
-                  </div>
-                </div>
+                    <div>
+                      <button
+                        type="submit"
+                        disabled={passwordForm.formState.isSubmitting}
+                        className="w-full px-4 py-2.5 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
+                      >
+                        {passwordForm.formState.isSubmitting ? "Updating…" : "Update password"}
+                      </button>
+                    </div>
+                  </form>
+                  <p className="mt-4 border-t border-dashed border-[#DFE2ED] pt-4 text-[12.5px] text-[#8A90A6]">
+                    Changing it does not end your other sessions — use the Sessions card below for that.
+                  </p>
+                </OpsCard>
 
-                <div>
-                  <label className={labelCls}>Bio</label>
-                  <textarea
-                    {...profileForm.register("bio")}
-                    className={`${inputCls} min-h-24 resize-y`}
-                    placeholder="A short introduction about yourself"
-                    disabled={loading}
-                  />
-                  {profileForm.formState.errors.bio && (
-                    <p className="text-[11px] text-red-500 mt-1">{profileForm.formState.errors.bio.message}</p>
-                  )}
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    type="submit"
-                    disabled={profileForm.formState.isSubmitting || loading}
-                    className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
-                  >
-                    {profileForm.formState.isSubmitting ? "Saving…" : "Save changes"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {activeTab === "password" && (
-            <div className="space-y-5">
-              <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
-                <div>
-                  <h3 className="font-semibold text-[13px] text-[#171C35]">Change password</h3>
-                  <p className="text-[12px] text-[#8A90A6] mt-0.5">Use at least 8 characters with an uppercase letter and a number.</p>
-                </div>
-
-                <div>
-                  <label className={labelCls}>Current password</label>
-                  <input
-                    type="password"
-                    {...passwordForm.register("currentPassword")}
-                    className={inputCls}
-                    autoComplete="current-password"
-                  />
-                  {passwordForm.formState.errors.currentPassword && (
-                    <p className="text-[11px] text-red-500 mt-1">{passwordForm.formState.errors.currentPassword.message}</p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className={labelCls}>New password</label>
-                    <input
-                      type="password"
-                      {...passwordForm.register("newPassword")}
-                      className={inputCls}
-                      autoComplete="new-password"
-                    />
-                    {passwordForm.formState.errors.newPassword && (
-                      <p className="text-[11px] text-red-500 mt-1">{passwordForm.formState.errors.newPassword.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className={labelCls}>Confirm new password</label>
-                    <input
-                      type="password"
-                      {...passwordForm.register("confirmPassword")}
-                      className={inputCls}
-                      autoComplete="new-password"
-                    />
-                    {passwordForm.formState.errors.confirmPassword && (
-                      <p className="text-[11px] text-red-500 mt-1">{passwordForm.formState.errors.confirmPassword.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={passwordForm.formState.isSubmitting}
-                    className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
-                  >
-                    {passwordForm.formState.isSubmitting ? "Updating…" : "Update password"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {activeTab === "contact" && (
-            <form onSubmit={contactInfoForm.handleSubmit(onSaveContactInfo)} className="space-y-4">
-              <div>
-                <label className={labelCls}>Address line 1</label>
-                <input {...contactInfoForm.register("addressLine1")} className={inputCls} placeholder="123 Main Street" disabled={loading} />
-              </div>
-              <div>
-                <label className={labelCls}>Address line 2</label>
-                <input {...contactInfoForm.register("addressLine2")} className={inputCls} placeholder="Apt, suite, floor (optional)" disabled={loading} />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className={labelCls}>City</label>
-                  <input {...contactInfoForm.register("city")} className={inputCls} placeholder="Lagos" disabled={loading} />
-                </div>
-                <div>
-                  <label className={labelCls}>State / Province</label>
-                  <input {...contactInfoForm.register("state")} className={inputCls} placeholder="Lagos State" disabled={loading} />
-                </div>
-                <div>
-                  <label className={labelCls}>Postal code</label>
-                  <input {...contactInfoForm.register("postalCode")} className={inputCls} placeholder="100001" disabled={loading} />
-                </div>
-              </div>
-              <div className="flex justify-end pt-2">
-                <button
-                  type="submit"
-                  disabled={contactInfoForm.formState.isSubmitting || loading}
-                  className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
+                {/* Sessions — real rows from user_sessions, not a stand-in.
+                    A revoked device keeps its unexpired access token until it
+                    runs out, so the copy promises "within 15 minutes" rather
+                    than an instant kill. */}
+                <OpsCard
+                  title="Sessions"
+                  note="Browsers and devices signed in to your account."
                 >
-                  {contactInfoForm.formState.isSubmitting ? "Saving…" : "Save changes"}
-                </button>
+                  {sessionsLoading ? (
+                    <InlineSkeleton rows={2} />
+                  ) : sessionsError ? (
+                    <p className="text-[13px] text-amber-700">{sessionsError}</p>
+                  ) : !sessionsReady ? (
+                    <div className="rounded-[12px] border border-dashed border-[#DFE2ED] px-4 py-5">
+                      <p className="text-[13.5px] font-bold text-[#171C35]">Session tracking isn&apos;t set up yet</p>
+                      <p className="mt-1 text-[13px] leading-relaxed text-[#69708A]">
+                        The <code className="font-mono text-[12.5px]">user_sessions</code> table has not been created,
+                        so there is nothing to list. Run the migration, then restart the dev server:
+                      </p>
+                      <pre className="mt-2.5 overflow-x-auto rounded-[9px] bg-[#F5F6FB] px-3 py-2.5 text-[12px] leading-relaxed text-[#171C35]">
+npm run db:exec -- prisma/manual-migrations/add_user_sessions.sql{"\n"}npx prisma generate</pre>
+                      <p className="mt-2.5 text-[12.5px] text-[#8A90A6]">
+                        Signing in still works meanwhile — session records are written only when the table exists.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-[14px] font-extrabold text-[#171C35]">
+                        {sessions.length} active session{sessions.length === 1 ? "" : "s"}
+                      </p>
+                      <p className="mt-0.5 text-[13px] text-[#69708A]">
+                        {otherSessions === 0
+                          ? "Just this one."
+                          : `This one, plus ${otherSessions} other${otherSessions === 1 ? "" : "s"}.`}
+                        {" "}Signing a device out takes effect within 15 minutes.
+                      </p>
+
+                      <ul className="mt-4 space-y-2.5">
+                        {sessions.map(sn => (
+                          <li
+                            key={sn.id}
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#DFE2ED] bg-[#FAFAFF] px-4 py-3"
+                          >
+                            <div className="min-w-0">
+                              <p className="flex flex-wrap items-center gap-2 text-[13.5px] font-bold text-[#171C35]">
+                                {sn.browser} on {sn.os}
+                                {sn.current && (
+                                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] tracking-[0.08em] uppercase font-extrabold text-emerald-700">
+                                    This device
+                                  </span>
+                                )}
+                              </p>
+                              <p className="mt-0.5 text-[12px] text-[#8A90A6]">
+                                {sn.ipAddress ?? "IP unknown"} · last active {fmtWhen(sn.lastSeenAt)}
+                              </p>
+                            </div>
+                            {!sn.current && (
+                              <button
+                                type="button"
+                                disabled={revokingId === sn.id}
+                                onClick={() => revokeOne(sn.id)}
+                                className="shrink-0 rounded-[9px] border border-[#DFE2ED] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#69708A] hover:border-red-300 hover:text-red-600 disabled:opacity-50 cursor-pointer transition-colors"
+                              >
+                                {revokingId === sn.id ? "Signing out…" : "Sign out"}
+                              </button>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-dashed border-[#DFE2ED] pt-4">
+                        <button
+                          type="button"
+                          disabled={otherSessions === 0 || revokingOthers}
+                          onClick={revokeOthers}
+                          className="rounded-[10px] border border-[#DFE2ED] bg-white px-4 py-2 text-[13px] font-semibold text-[#171C35] hover:border-red-300 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-45 cursor-pointer transition-colors"
+                        >
+                          {revokingOthers ? "Signing out…" : "Sign out other sessions"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSignOutAll}
+                          className="rounded-[10px] px-4 py-2 text-[13px] font-semibold text-[#69708A] hover:text-red-600 cursor-pointer transition-colors"
+                        >
+                          Sign out this device
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </OpsCard>
               </div>
-            </form>
+            </div>
           )}
 
-          {activeTab === "config" && (
-            <form onSubmit={configForm.handleSubmit(onSaveConfig)} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className={labelCls}>Language</label>
-                  <select {...configForm.register("language")} className={inputCls} disabled={loading}>
-                    <option value="">Select language…</option>
-                    {LANGUAGE_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelCls}>Timezone</label>
-                  <select {...configForm.register("timezone")} className={inputCls} disabled={loading}>
-                    <option value="">Auto-detect from device</option>
-                    {TIMEZONE_OPTIONS.map(tz => (
-                      <option key={tz} value={tz}>{tz}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
 
-              <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#F0EFFA]">
-                <div className="min-w-0">
-                  <p className="font-semibold text-[13px] text-[#171C35]">Email notifications</p>
-                  <p className="text-[12px] text-[#8A90A6] mt-0.5">Receive product updates, course announcements and research highlights.</p>
-                </div>
-                <Controller
-                  name="emailOptIn"
-                  control={configForm.control}
-                  render={({ field }) => (
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={field.value}
-                      onClick={() => field.onChange(!field.value)}
-                      disabled={loading}
-                      className={cn(
-                        "relative w-10 h-5 rounded-full transition-colors cursor-pointer shrink-0 disabled:opacity-50",
-                        field.value ? "bg-[#6655DF]" : "bg-[#DFE2ED]",
+          {/* Learner view — two columns from xl: everything editable on the
+              left, a rail on the right. Below xl it collapses to one column,
+              rail last. */}
+          {!isOperator && (
+            <div className="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
+              <div className="min-w-0 space-y-5">
+
+                {/* One column of cards: the rail on the right took the width
+                    the old side-by-side pair used to have. */}
+                  <Section
+                    id="settings-profile"
+                    icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
+                    eyebrow="Your record"
+                    title="How you appear across the platform"
+                    note="These details show on your certificates, on discussion posts and to the facilitators of anything you enrol in."
+                  >
+                    <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+                      <Fact label="Full name"    value={dash(fullName)} />
+                      <Fact label="Email"        value={profile?.email ?? "—"} />
+                      <Fact label="Role"         value={ROLE_LABELS[role]} />
+                      <Fact label="Job title"    value={dash(profile?.jobTitle)} />
+                      <Fact label="Organisation" value={dash(profile?.organisation)} />
+                      <Fact label="Language"     value={dash(profile?.language)} />
+                    </dl>
+                    {profile?.bio ? (
+                      <blockquote className="mt-5 border-l-2 border-[#6655DF] pl-4 text-[14px] leading-relaxed text-[#69708A] italic">
+                        {profile.bio}
+                      </blockquote>
+                    ) : null}
+                  </Section>
+
+                  <Section
+                    icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v16H4z"/><polyline points="4 7 12 13 20 7"/></svg>}
+                    eyebrow="Reach you"
+                    title="Where we send things"
+                    note="Receipts, certificates and account notices go here."
+                  >
+                    <div className="grid gap-2.5">
+                      <ContactTile
+                        icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v16H4z"/><polyline points="4 7 12 13 20 7"/></svg>}
+                        label="Email" value={profile?.email ?? "—"}
+                      />
+                      <ContactTile
+                        icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.1 9.9a16 16 0 0 0 6 6l1.26-1.26a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>}
+                        label="Phone" value={dash(profile?.phone)}
+                      />
+                      <ContactTile
+                        icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>}
+                        label="Location"
+                        value={[profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ") || "—"}
+                      />
+                    </div>
+                  </Section>
+
+                <Section
+                  eyebrow="Your details"
+                  title="Edit your profile"
+                  note="Your photo, name and bio. Everything here is optional except the name."
+                  icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>}
+                >
+                {/* Avatar */}
+                <div className="flex items-center gap-4 flex-wrap pb-4 border-b border-[#F0EFFA]">
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden border border-[#DFE2ED] bg-[#F5F6FB] shrink-0">
+                    {avatar ? (
+                      <Image src={avatar} alt="Avatar" fill className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center font-heading text-[1.25rem] font-semibold text-[#6655DF]">
+                        {initials}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={uploading}
+                        className="px-3 py-1.5 rounded-[10px] text-[12px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
+                      >
+                        {uploading ? "Uploading…" : avatar ? "Replace photo" : "Upload photo"}
+                      </button>
+                      {avatar && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveAvatar}
+                          className="px-3 py-1.5 rounded-[10px] text-[12px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:border-red-300 hover:text-red-600 cursor-pointer transition-colors"
+                        >
+                          Remove
+                        </button>
                       )}
+                    </div>
+                    <p className="text-[11px] text-[#8A90A6]">JPG, PNG or WEBP. Max 4 MB.</p>
+                    <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                  </div>
+                </div>
+
+                <form onSubmit={profileForm.handleSubmit(onSaveProfile)} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelCls}>First name</label>
+                      <input {...profileForm.register("firstName")} className={inputCls} placeholder="Jane" readOnly />
+                      {profileForm.formState.errors.firstName && (
+                        <p className="text-[11px] text-red-500 mt-1">{profileForm.formState.errors.firstName.message}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className={labelCls}>Last name</label>
+                      <input {...profileForm.register("lastName")} className={inputCls} placeholder="Doe" readOnly />
+                      {profileForm.formState.errors.lastName && (
+                        <p className="text-[11px] text-red-500 mt-1">{profileForm.formState.errors.lastName.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className={labelCls}>Phone</label>
+                      <div className="flex">
+                        <select
+                          {...profileForm.register("phoneCountryCode")}
+                          disabled={loading}
+                          className="px-2 py-2.5 rounded-l-[10px] border border-r-0 border-[#DFE2ED] text-[13px] text-[#171C35] bg-[#FAFAFF] focus:outline-none focus:ring-2 focus:ring-[#6655DF]/20 focus:border-[#6655DF] transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {COUNTRY_CODES.map(c => (
+                            <option key={c.code} value={c.code}>
+                              {c.flag} {c.code}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          {...profileForm.register("phone")}
+                          className={`${inputCls} rounded-l-none min-w-0`}
+                          placeholder="800 000 0000"
+                          disabled={loading}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className={labelCls}>Email</label>
+                      <input value={profile?.email ?? ""} readOnly className={inputCls} />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Date of birth</label>
+                      <input type="date" {...profileForm.register("dateOfBirth")} className={inputCls} disabled={loading} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className={labelCls}>Job title</label>
+                      <input {...profileForm.register("jobTitle")} className={inputCls} placeholder="Senior Researcher" disabled={loading} />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Organisation</label>
+                      <input {...profileForm.register("organisation")} className={inputCls} placeholder="ARPS Institute" disabled={loading} />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Country</label>
+                      <input {...profileForm.register("country")} className={inputCls} placeholder="Nigeria" disabled={loading} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={labelCls}>Bio</label>
+                    <textarea
+                      {...profileForm.register("bio")}
+                      className={`${inputCls} min-h-24 resize-y`}
+                      placeholder="A short introduction about yourself"
+                      disabled={loading}
+                    />
+                    {profileForm.formState.errors.bio && (
+                      <p className="text-[11px] text-red-500 mt-1">{profileForm.formState.errors.bio.message}</p>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      disabled={profileForm.formState.isSubmitting || loading}
+                      className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
                     >
-                      <span
-                        className={cn(
-                          "absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all",
-                          field.value ? "left-5" : "left-0.5",
+                      {profileForm.formState.isSubmitting ? "Saving…" : "Save changes"}
+                    </button>
+                  </div>
+                </form>
+                </Section>
+
+                <Section
+                  id="settings-contact"
+                  eyebrow="Contact"
+                  title="Your postal address"
+                  note="Where anything physical goes, and what we quote on invoices."
+                  icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>}
+                >
+                  <form onSubmit={contactInfoForm.handleSubmit(onSaveContactInfo)} className="space-y-4">
+                    <div>
+                      <label className={labelCls}>Address line 1</label>
+                      <input {...contactInfoForm.register("addressLine1")} className={inputCls} placeholder="123 Main Street" disabled={loading} />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Address line 2</label>
+                      <input {...contactInfoForm.register("addressLine2")} className={inputCls} placeholder="Apt, suite, floor (optional)" disabled={loading} />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className={labelCls}>City</label>
+                        <input {...contactInfoForm.register("city")} className={inputCls} placeholder="Lagos" disabled={loading} />
+                      </div>
+                      <div>
+                        <label className={labelCls}>State / Province</label>
+                        <input {...contactInfoForm.register("state")} className={inputCls} placeholder="Lagos State" disabled={loading} />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Postal code</label>
+                        <input {...contactInfoForm.register("postalCode")} className={inputCls} placeholder="100001" disabled={loading} />
+                      </div>
+                    </div>
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="submit"
+                        disabled={contactInfoForm.formState.isSubmitting || loading}
+                        className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
+                      >
+                        {contactInfoForm.formState.isSubmitting ? "Saving…" : "Save changes"}
+                      </button>
+                    </div>
+                  </form>
+                </Section>
+
+                <Section
+                  id="settings-preferences"
+                  eyebrow="Preferences"
+                  title="How the app behaves"
+                  note="Language, timezone and what we are allowed to email you about."
+                  icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9z"/></svg>}
+                >
+                  <form onSubmit={configForm.handleSubmit(onSaveConfig)} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className={labelCls}>Language</label>
+                        <select {...configForm.register("language")} className={inputCls} disabled={loading}>
+                          <option value="">Select language…</option>
+                          {LANGUAGE_OPTIONS.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={labelCls}>Timezone</label>
+                        <select {...configForm.register("timezone")} className={inputCls} disabled={loading}>
+                          <option value="">Auto-detect from device</option>
+                          {TIMEZONE_OPTIONS.map(tz => (
+                            <option key={tz} value={tz}>{tz}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#F0EFFA]">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-[13px] text-[#171C35]">Email notifications</p>
+                        <p className="text-[12px] text-[#8A90A6] mt-0.5">Receive product updates, course announcements and research highlights.</p>
+                      </div>
+                      <Controller
+                        name="emailOptIn"
+                        control={configForm.control}
+                        render={({ field }) => (
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={field.value}
+                            onClick={() => field.onChange(!field.value)}
+                            disabled={loading}
+                            className={cn(
+                              "relative w-10 h-5 rounded-full transition-colors cursor-pointer shrink-0 disabled:opacity-50",
+                              field.value ? "bg-[#6655DF]" : "bg-[#DFE2ED]",
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all",
+                                field.value ? "left-5" : "left-0.5",
+                              )}
+                            />
+                          </button>
                         )}
                       />
-                    </button>
-                  )}
-                />
-              </div>
+                    </div>
 
-              <div className="flex justify-end pt-2">
-                <button
-                  type="submit"
-                  disabled={configForm.formState.isSubmitting || loading}
-                  className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="submit"
+                        disabled={configForm.formState.isSubmitting || loading}
+                        className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
+                      >
+                        {configForm.formState.isSubmitting ? "Saving…" : "Save changes"}
+                      </button>
+                    </div>
+                  </form>
+                </Section>
+
+                <Section
+                  eyebrow="Billing"
+                  title="Payments and invoices"
+                  note="Receipts for anything you have paid for on the platform."
+                  icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>}
                 >
-                  {configForm.formState.isSubmitting ? "Saving…" : "Save changes"}
-                </button>
+                  <div className="flex flex-col items-center text-center py-10 px-4">
+                    <div className="w-14 h-14 rounded-full bg-[#F5F6FB] flex items-center justify-center mb-3">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A90A6" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="6" width="20" height="14" rx="2"/>
+                        <line x1="2" y1="10" x2="22" y2="10"/>
+                        <line x1="6" y1="15" x2="10" y2="15"/>
+                      </svg>
+                    </div>
+                    <h3 className="font-heading text-[14px] font-semibold text-[#171C35]">No billing on file</h3>
+                    <p className="text-[12px] text-[#8A90A6] mt-1 max-w-sm">
+                      When you purchase a program or workshop, your receipts and payment methods will appear here.
+                    </p>
+                  </div>
+                </Section>
+
+                  {/* Danger zone */}
+                  <section className="mt-5 rounded-[16px] border border-red-200 bg-white overflow-hidden">
+                <header className="px-4 sm:px-5 py-4 border-b border-red-100 bg-red-50/60">
+                  <h2 className="font-heading text-[14px] font-semibold text-red-700">Danger zone</h2>
+                  <p className="text-[12px] text-red-500/80 mt-0.5">Sensitive actions that affect access to your account.</p>
+                </header>
+
+                <div className="p-4 sm:p-5 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-[#F0EFFA]">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[13px] text-[#171C35]">Sign out</p>
+                      <p className="text-[12px] text-[#8A90A6] mt-0.5">End the current session and return to the login page.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSignOutAll}
+                      className="self-start sm:self-auto px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] cursor-pointer transition-colors"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[13px] text-[#171C35]">Delete account</p>
+                      <p className="text-[12px] text-[#8A90A6] mt-0.5">Disables your account immediately. Contact support to restore access.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDelete(true)}
+                      className="self-start sm:self-auto px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-red-600 text-white hover:bg-red-700 cursor-pointer transition-colors"
+                    >
+                      Delete account
+                    </button>
+                  </div>
+                    </div>
+                  </section>
               </div>
-            </form>
-          )}
 
-          {activeTab === "billings" && (
-            <div className="flex flex-col items-center text-center py-10 px-4">
-              <div className="w-14 h-14 rounded-full bg-[#F5F6FB] flex items-center justify-center mb-3">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A90A6" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="6" width="20" height="14" rx="2"/>
-                  <line x1="2" y1="10" x2="22" y2="10"/>
-                  <line x1="6" y1="15" x2="10" y2="15"/>
-                </svg>
-              </div>
-              <h3 className="font-heading text-[14px] font-semibold text-[#171C35]">No billing on file</h3>
-              <p className="text-[12px] text-[#8A90A6] mt-1 max-w-sm">
-                When you purchase a program or workshop, your receipts and payment methods will appear here.
-              </p>
+
+              {/* Rail — who you are, the one security action, and where to go
+                  for everything this screen cannot change. Sticky from xl, so
+                  it stays put while the left column scrolls. */}
+              <aside className="min-w-0 space-y-5 xl:sticky xl:top-6 xl:self-start">
+
+                <section className="rounded-[16px] border border-[#DFE2ED] bg-white p-5">
+                  <div className="flex items-center gap-3.5">
+                    <span className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-[#EEECFF]">
+                      {avatar
+                        ? <Image src={avatar} alt="" fill className="object-cover" />
+                        : <span className="text-[15px] font-extrabold text-[#6655DF]">{initials}</span>}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[17px] leading-[1.25] tracking-[-0.02em] font-extrabold text-[#171C35] break-words">
+                        {loading ? "…" : fullName || profile?.email.split("@")[0] || "—"}
+                      </p>
+                      <p className="mt-0.5 text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6]">
+                        {ROLE_LABELS[role]}
+                      </p>
+                    </div>
+                  </div>
+
+                  <dl className="mt-4">
+                    <RailLine
+                      icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v16H4z"/><polyline points="4 7 12 13 20 7"/></svg>}
+                      label="Work email" value={profile?.email ?? "—"}
+                    />
+                    <RailLine
+                      icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>}
+                      label="Organisation" value={dash(profile?.organisation)}
+                    />
+                    <RailLine
+                      icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>}
+                      label="Country" value={dash(profile?.country)}
+                    />
+                    <RailLine
+                      icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
+                      label="Timezone" value={dash(profile?.timezone)}
+                    />
+                  </dl>
+
+                  <div className="mt-4 border-t border-dashed border-[#DFE2ED] pt-4">
+                    <CompletenessRing value={completeness} />
+                  </div>
+                </section>
+
+                <section className="rounded-[16px] border border-[#DFE2ED] bg-white p-5">
+                  <h2 className="text-[17px] leading-[1.25] tracking-[-0.02em] font-extrabold text-[#171C35]">Change password</h2>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-[#69708A]">
+                    Confirm your current password to set a new one. Use at least 8 characters with an uppercase letter and a number.
+                  </p>
+                  <div className="mt-4">
+                    <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
+
+                      <PasswordInput
+                        label="Current password"
+                        inputClassName={inputCls}
+                        autoComplete="current-password"
+                        error={passwordForm.formState.errors.currentPassword?.message}
+                        {...passwordForm.register("currentPassword")}
+                      />
+
+                      <div className="grid grid-cols-1 gap-3">
+                        <PasswordInput
+                          label="New password"
+                          inputClassName={inputCls}
+                          autoComplete="new-password"
+                          error={passwordForm.formState.errors.newPassword?.message}
+                          {...passwordForm.register("newPassword")}
+                        />
+                        <PasswordInput
+                          label="Confirm new password"
+                          inputClassName={inputCls}
+                          autoComplete="new-password"
+                          error={passwordForm.formState.errors.confirmPassword?.message}
+                          {...passwordForm.register("confirmPassword")}
+                        />
+                      </div>
+
+                      <div>
+                        <button
+                          type="submit"
+                          disabled={passwordForm.formState.isSubmitting}
+                          className="w-full px-4 py-2.5 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
+                        >
+                          {passwordForm.formState.isSubmitting ? "Updating…" : "Update password"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </section>
+
+                {/* Dashed, because nothing in it is editable here — these are
+                    pointers to where the change actually happens. */}
+                <section className="rounded-[16px] border border-dashed border-[#DFE2ED] bg-white p-5">
+                  <h2 className="text-[15px] font-extrabold text-[#171C35]">Need a change?</h2>
+                  <div className="mt-3 -mx-1.5">
+                    {[
+                      { label: "Your name, photo and bio", target: "settings-profile" },
+                      { label: "Email, phone and address", target: "settings-contact" },
+                      { label: "Language, timezone and email opt-in", target: "settings-preferences" },
+                    ].map(item => (
+                      <button
+                        key={item.target}
+                        type="button"
+                        onClick={() => document.getElementById(item.target)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                        className="flex w-full items-center justify-between gap-3 rounded-[9px] px-1.5 py-2 text-left text-[13.5px] text-[#171C35] hover:bg-[#F5F6FB] cursor-pointer transition-colors"
+                      >
+                        {item.label}
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8A90A6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[12px] text-[#8A90A6]">
+                    Your role is set by an administrator and cannot be changed here.
+                  </p>
+                </section>
+              </aside>
+
             </div>
           )}
-          </div>
-
-          {/* Danger zone */}
-          <section className="mt-5 rounded-[16px] border border-red-200 bg-white overflow-hidden">
-        <header className="px-4 sm:px-5 py-4 border-b border-red-100 bg-red-50/60">
-          <h2 className="font-heading text-[14px] font-semibold text-red-700">Danger zone</h2>
-          <p className="text-[12px] text-red-500/80 mt-0.5">Sensitive actions that affect access to your account.</p>
-        </header>
-
-        <div className="p-4 sm:p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-[#F0EFFA]">
-            <div className="min-w-0">
-              <p className="font-semibold text-[13px] text-[#171C35]">Sign out</p>
-              <p className="text-[12px] text-[#8A90A6] mt-0.5">End the current session and return to the login page.</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleSignOutAll}
-              className="self-start sm:self-auto px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] cursor-pointer transition-colors"
-            >
-              Sign out
-            </button>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="min-w-0">
-              <p className="font-semibold text-[13px] text-[#171C35]">Delete account</p>
-              <p className="text-[12px] text-[#8A90A6] mt-0.5">Disables your account immediately. Contact support to restore access.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setConfirmDelete(true)}
-              className="self-start sm:self-auto px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-red-600 text-white hover:bg-red-700 cursor-pointer transition-colors"
-            >
-              Delete account
-            </button>
-          </div>
-            </div>
-          </section>
 
         </div>
       </div>

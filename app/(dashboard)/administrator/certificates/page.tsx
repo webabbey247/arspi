@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
+import {
+  AdminPageHeader, StatTile, SearchInput, EmptyState, metaCls,
+} from "@/components/admin/AdminKit"
+import { cn } from "@/lib/utils"
 
 type Certificate = {
   id:         string
@@ -73,29 +77,69 @@ const AdminCertificatesPage = () => {
     c.user.email.toLowerCase().includes(q) ||
     c.course.title.toLowerCase().includes(q)
   )
+  // Derived here rather than server-side: the full list is already loaded,
+  // so another round trip to count it would be wasted.
+  const now = new Date()
+  const issuedThisMonth = certificates.filter(c => {
+    const d = new Date(c.issuedAt)
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+  }).length
+  const distinctCourses = new Set(certificates.map(c => c.course.id)).size
+  const expiredCount    = certificates.filter(c => c.expiresAt && new Date(c.expiresAt) < now).length
+
   const totalPages   = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated     = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
-      <div className="mb-6">
-        <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-        <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Certificates</h1>
-        <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">All certificates issued across every programme</p>
+      <AdminPageHeader
+        title="Certificates"
+        description="Every certificate issued across the platform. Each one carries a public verification link."
+      />
+
+      {/* Stat strip — counts an admin would otherwise work out by filtering */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">
+        <StatTile
+          label="Issued" value={certificates.length} loading={loading}
+          motif="dots"  accent="text-[#6655DF]"
+          tone="bg-[#EEECFF] text-[#6655DF]"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5"/></svg>}
+        />
+        <StatTile
+          label="This month" value={issuedThisMonth} loading={loading}
+          motif="hatch" accent="text-emerald-600"
+          hint="Issued since the 1st"
+          tone="bg-emerald-50 text-emerald-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>}
+        />
+        <StatTile
+          label="Programmes" value={distinctCourses} loading={loading}
+          motif="rings" accent="text-amber-600"
+          hint="With at least one certificate"
+          tone="bg-amber-50 text-amber-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>}
+        />
+        <StatTile
+          label="Expired" value={expiredCount} loading={loading}
+          motif="grid"  accent="text-rose-500"
+          hint="Past their expiry date"
+          tone="bg-rose-50 text-rose-500"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>}
+        />
       </div>
 
       <div className="rounded-[16px] border border-[#DFE2ED] overflow-hidden">
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 bg-white border-b border-[#DFE2ED]">
-          <div className="relative w-full sm:w-72">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A90A6]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search by student or programme…"
-              className="w-full pl-8 pr-3 py-2 text-[13px] bg-white border border-[#DFE2ED] rounded-[10px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors"
-            />
-          </div>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search by student or programme…"
+            className="sm:w-72"
+          />
+          <span className={cn(metaCls, "sm:ml-auto")}>
+            {filtered.length} of {certificates.length}
+          </span>
         </div>
 
         {/* Table — desktop */}
@@ -112,7 +156,9 @@ const AdminCertificatesPage = () => {
               {loading ? (
                 <TableSkeletonRows colSpan={5} />
               ) : paginated.length === 0 ? (
-                <tr><td colSpan={5} className="px-4 py-10 text-center text-[#8A90A6]">No certificates found.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-12 text-center text-[14px] font-bold text-[#8A90A6]">
+                  {search.trim() ? `No certificates match \u201c${search.trim()}\u201d.` : "No certificates issued yet."}
+                </td></tr>
               ) : paginated.map(c => (
                 <tr key={c.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
                   <td className="px-4 py-3">
@@ -146,7 +192,14 @@ const AdminCertificatesPage = () => {
           {loading ? (
             <SkeletonCardList />
           ) : paginated.length === 0 ? (
-            <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No certificates found.</div>
+            <EmptyState
+              className="border-0 rounded-none"
+              title={search.trim() ? "No matches" : "No certificates issued yet."}
+              hint={search.trim()
+                ? `Nothing matches \u201c${search.trim()}\u201d.`
+                : "Certificates are issued automatically when a learner completes a programme."}
+              icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5"/></svg>}
+            />
           ) : paginated.map(c => (
             <div key={c.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
               <div>

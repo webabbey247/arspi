@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import { computeDurationHours, normalizeFacilitators, type Facilitator } from "@/lib/workshop-helpers"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
+import { AdminPageHeader, StatTile, EmptyState, RowActions, RowIcon } from "@/components/admin/AdminKit"
 
 // ── Timezone list (built from Intl API — evaluated once at module load) ────────
 const TIMEZONES: string[] = (Intl as unknown as { supportedValuesOf(key: string): string[] })
@@ -914,6 +915,18 @@ export default function AdminWorkshopsPage() {
 
   // ── Filtered list ──────────────────────────────────────────────────────────
 
+  // Figures for the stat strip. A workshop with no date can't be upcoming,
+  // so it falls into neither bucket rather than being counted as past.
+  const nowMs = Date.now()
+  const wsStats = {
+    published:  workshops.filter(w => w.published).length,
+    draft:      workshops.filter(w => !w.published).length,
+    upcoming:   workshops.filter(w => w.date && new Date(w.date).getTime() >= nowMs).length,
+    past:       workshops.filter(w => w.date && new Date(w.date).getTime() <  nowMs).length,
+    registered: workshops.reduce((sum, w) => sum + (w.registered ?? 0), 0),
+    free:       workshops.filter(w => w.fee === 0).length,
+  }
+
   const filtered = workshops.filter(w => {
     const matchSearch   = !search || w.title.toLowerCase().includes(search.toLowerCase()) || w.facilitator.toLowerCase().includes(search.toLowerCase())
     const matchCategory = catTabFilter === "ALL" || w.category === catTabFilter
@@ -1020,19 +1033,53 @@ export default function AdminWorkshopsPage() {
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
       {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Workshops</h1>
-          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage workshops, webinars and masterclasses</p>
-        </div>
-        <button
-          onClick={() => setModal("create")}
-          className="self-start sm:self-auto flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New Workshop
-        </button>
+      <AdminPageHeader
+        title="Workshops"
+        description="Workshops, webinars and masterclasses, and who has registered for them."
+        actions={
+          <button
+            onClick={() => setModal("create")}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[14px] font-bold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Workshop
+          </button>
+        }
+      />
+
+      {/* Stat strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">
+        <StatTile
+          label="Workshops" value={workshops.length} loading={loading}
+          motif="dots"  accent="text-[#6655DF]"
+          tone="bg-[#EEECFF] text-[#6655DF]"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>}
+          breakdown={[
+            { label: "live",  value: wsStats.published, tone: "emerald" },
+            { label: "draft", value: wsStats.draft,     tone: "amber" },
+          ]}
+        />
+        <StatTile
+          label="Upcoming" value={wsStats.upcoming} loading={loading}
+          motif="rings" accent="text-amber-600"
+          tone="bg-amber-50 text-amber-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
+          breakdown={[{ label: "past", value: wsStats.past, tone: "slate" }]}
+        />
+        <StatTile
+          label="Registrations" value={wsStats.registered} loading={loading}
+          motif="waves" accent="text-sky-600"
+          hint="Across every workshop"
+          tone="bg-sky-50 text-sky-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>}
+        />
+        <StatTile
+          label="Free to join" value={wsStats.free} loading={loading}
+          motif="hatch" accent="text-emerald-600"
+          tone="bg-emerald-50 text-emerald-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
+          breakdown={[{ label: "paid", value: workshops.length - wsStats.free, tone: "slate" }]}
+        />
       </div>
 
       {/* Category filter tabs */}
@@ -1105,7 +1152,11 @@ export default function AdminWorkshopsPage() {
                 {loading ? (
                   <TableSkeletonRows colSpan={7} />
                 ) : filtered.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No workshops found.</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-12 text-center text-[14px] font-bold text-[#8A90A6]">
+                    {search.trim() || catTabFilter !== "ALL" || typeDropFilter !== "All"
+                      ? "No workshops match those filters."
+                      : "No workshops yet."}
+                  </td></tr>
                 ) : paginated.map(workshop => (
                   <tr key={workshop.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
                     {/* Workshop info */}
@@ -1175,35 +1226,17 @@ export default function AdminWorkshopsPage() {
                     {/* Actions */}
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => router.push(`/administrator/workshops/${workshop.id}`)}
-                          title="Analytics &amp; details"
-                          className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
-                        >
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                        </button>
-                        <button
-                          onClick={() => setModal(workshop)}
-                          title="Edit"
-                          className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(workshop)}
-                          title="Delete"
-                          className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer"
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                            <path d="M10 11v6M14 11v6"/>
-                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                          </svg>
-                        </button>
+                      <RowActions
+                        label={`Actions for ${workshop.title}`}
+                        items={[
+                          { label: "Analytics & details", icon: RowIcon.analytics, onSelect: () => router.push(`/administrator/workshops/${workshop.id}`) },
+                          { label: "View public page",    icon: RowIcon.view,      onSelect: () => window.open(`/workshop/${workshop.slug}`, "_blank", "noopener,noreferrer") },
+                          { label: "Edit workshop",       icon: RowIcon.edit,      onSelect: () => setModal(workshop) },
+                          { label: workshop.published ? "Unpublish" : "Publish", icon: workshop.published ? RowIcon.archive : RowIcon.publish, onSelect: () => handleTogglePublished(workshop) },
+                          { type: "separator" },
+                          { label: "Delete workshop",     icon: RowIcon.trash, danger: true, onSelect: () => setDeleteTarget(workshop) },
+                        ]}
+                      />
                       </div>
                     </td>
                   </tr>
@@ -1217,7 +1250,14 @@ export default function AdminWorkshopsPage() {
             {loading ? (
               <SkeletonCardList />
             ) : filtered.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No workshops found.</div>
+              <EmptyState
+                className="border-0 rounded-none"
+                title={search.trim() || catTabFilter !== "ALL" || typeDropFilter !== "All"
+                  ? "No workshops match those filters."
+                  : "No workshops yet."}
+                hint="Create one to start taking registrations."
+                icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>}
+              />
             ) : paginated.map(workshop => (
               <div key={workshop.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                 <div className="flex items-start gap-3">
@@ -1272,35 +1312,17 @@ export default function AdminWorkshopsPage() {
                 </dl>
 
                 <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <button
-                    onClick={() => router.push(`/administrator/workshops/${workshop.id}`)}
-                    aria-label="Analytics & details"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
-                  >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                  </button>
-                  <button
-                    onClick={() => setModal(workshop)}
-                    aria-label="Edit"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => setDeleteTarget(workshop)}
-                    aria-label="Delete"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                      <path d="M10 11v6M14 11v6"/>
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                    </svg>
-                  </button>
+                  <RowActions
+                    label={`Actions for ${workshop.title}`}
+                    items={[
+                      { label: "Analytics & details", icon: RowIcon.analytics, onSelect: () => router.push(`/administrator/workshops/${workshop.id}`) },
+                      { label: "View public page",    icon: RowIcon.view,      onSelect: () => window.open(`/workshop/${workshop.slug}`, "_blank", "noopener,noreferrer") },
+                      { label: "Edit workshop",       icon: RowIcon.edit,      onSelect: () => setModal(workshop) },
+                      { label: workshop.published ? "Unpublish" : "Publish", icon: workshop.published ? RowIcon.archive : RowIcon.publish, onSelect: () => handleTogglePublished(workshop) },
+                      { type: "separator" },
+                      { label: "Delete workshop",     icon: RowIcon.trash, danger: true, onSelect: () => setDeleteTarget(workshop) },
+                    ]}
+                      />
                 </div>
               </div>
             ))}

@@ -6,6 +6,8 @@ import { Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { computeDurationHours } from "@/lib/workshop-helpers"
 import { DetailPageSkeleton, InlineSkeleton } from "@/components/ui/skeleton"
+import { AdminPageHeader, StatTile } from "@/components/admin/AdminKit"
+import { TickProgress } from "@/components/ui/TickProgress"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -130,15 +132,6 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 // ── StatCard ──────────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub, accent }: { label: string; value: React.ReactNode; sub?: string; accent?: string }) {
-  return (
-    <div className="rounded-[16px] border border-[#DFE2ED] bg-white px-5 py-4 flex flex-col gap-1">
-      <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">{label}</p>
-      <p className={cn("text-[26px] font-extrabold leading-tight", accent ?? "text-[#171C35]")}>{value}</p>
-      {sub && <p className="text-[12px] text-[#8A90A6]">{sub}</p>}
-    </div>
-  )
-}
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -250,10 +243,11 @@ export default function WorkshopDetailPage() {
               <polyline points="15 18 9 12 15 6"/>
             </svg>
           </button>
-          <div>
-            <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-            <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">{workshop.title}</h1>
-            <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Created {fmtDate(workshop.createdAt)}</p>
+          <div className="min-w-0 flex-1">
+            <AdminPageHeader
+              title={workshop.title}
+              description={`Created ${fmtDate(workshop.createdAt)}`}
+            />
           </div>
         </div>
 
@@ -272,30 +266,37 @@ export default function WorkshopDetailPage() {
         </div>
       </div>
 
-      {/* Analytics cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Registered"
-          value={totalRegistered}
-          sub={`of ${workshop.capacity} capacity`}
+      {/* Analytics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatTile
+          label="Registered" value={totalRegistered}
+          motif="dots" accent="text-[#6655DF]" tone="bg-[#EEECFF] text-[#6655DF]"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>}
+          breakdown={[
+            { label: "confirmed", value: confirmed, tone: "emerald" },
+            { label: "pending",   value: pending,   tone: "amber" },
+          ]}
         />
-        <StatCard
-          label="Revenue"
-          value={workshop.fee > 0 ? `$${revenue.toLocaleString()}` : "—"}
-          sub={workshop.fee > 0 ? `from ${confirmed} confirmed` : "Free workshop"}
-          accent={workshop.fee > 0 ? "text-emerald-700" : undefined}
+        <StatTile
+          label="Seats filled"
+          value={workshop.capacity ? `${Math.round((totalRegistered / workshop.capacity) * 100)}%` : "\u2014"}
+          motif="rings" accent="text-amber-600" tone="bg-amber-50 text-amber-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>}
+          hint={workshop.capacity
+            ? `${Math.max(0, workshop.capacity - totalRegistered)} of ${workshop.capacity} left`
+            : "No capacity set"}
         />
-        <StatCard
-          label="Confirmed"
-          value={confirmed}
-          sub={`${totalRegistered > 0 ? Math.round((confirmed / totalRegistered) * 100) : 0}% of registrations`}
-          accent="text-emerald-700"
+        <StatTile
+          label="Revenue" value={workshop.fee > 0 ? `$${revenue.toLocaleString()}` : "\u2014"}
+          motif="hatch" accent="text-emerald-600" tone="bg-emerald-50 text-emerald-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
+          hint={workshop.fee > 0 ? `From ${confirmed} confirmed` : "Free workshop"}
         />
-        <StatCard
-          label="Pending"
-          value={pending}
-          sub={workshop.fee > 0 ? "Awaiting payment" : "Awaiting confirmation"}
-          accent={pending > 0 ? "text-amber-600" : undefined}
+        <StatTile
+          label="Awaiting action" value={pending}
+          motif="waves" accent="text-sky-600" tone="bg-sky-50 text-sky-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
+          hint={workshop.fee > 0 ? "Awaiting payment" : "Awaiting confirmation"}
         />
       </div>
 
@@ -307,8 +308,8 @@ export default function WorkshopDetailPage() {
 
           {/* Details card */}
           <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
-              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Workshop Details</p>
+            <div className="px-5 py-4 border-b border-[#F0EFFA]">
+              <h2 className="text-[14px] font-bold text-[#171C35]">Workshop Details</h2>
             </div>
             <div className="px-5">
               <InfoRow label="Title"       value={workshop.title} />
@@ -345,8 +346,8 @@ export default function WorkshopDetailPage() {
 
           {/* Description */}
           <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
-              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Description</p>
+            <div className="px-5 py-4 border-b border-[#F0EFFA]">
+              <h2 className="text-[14px] font-bold text-[#171C35]">Description</h2>
             </div>
             <div className="px-5 py-4">
               <p className="text-[13px] text-[#171C35] leading-relaxed whitespace-pre-wrap">{workshop.description}</p>
@@ -356,8 +357,8 @@ export default function WorkshopDetailPage() {
 
           {/* Status card */}
           <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
-              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Status</p>
+            <div className="px-5 py-4 border-b border-[#F0EFFA]">
+              <h2 className="text-[14px] font-bold text-[#171C35]">Status</h2>
             </div>
             <div className="p-5 space-y-4">
               {[
@@ -392,20 +393,19 @@ export default function WorkshopDetailPage() {
 
           {/* Capacity card */}
           <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
-              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Capacity</p>
+            <div className="px-5 py-4 border-b border-[#F0EFFA]">
+              <h2 className="text-[14px] font-bold text-[#171C35]">Capacity</h2>
             </div>
             <div className="p-5 space-y-3">
               <div className="flex items-end justify-between">
                 <span className="text-[26px] font-extrabold text-[#171C35] leading-tight">{registrationCount}</span>
                 <span className="text-[13px] text-[#8A90A6] mb-1">/ {workshop.capacity}</span>
               </div>
-              <div className="h-2 bg-[#F0EFFA] rounded-full overflow-hidden">
-                <div
-                  className={cn("h-full rounded-full transition-all", fillPct >= 90 ? "bg-red-500" : fillPct >= 70 ? "bg-amber-500" : "bg-[#6655DF]")}
-                  style={{ width: `${fillPct}%` }}
-                />
-              </div>
+              {/* The one plain fill-bar left in the workspace; every other
+                  meter is the tick style, in both the student and admin
+                  workspaces. A nearly-full workshop is a good outcome, so
+                  90%+ reads as success rather than as a warning. */}
+              <TickProgress value={fillPct} ticks={30} tone={fillPct >= 90 ? "success" : "brand"} />
               <p className="text-[12px] text-[#8A90A6]">
                 {workshop.capacity !== null
                   ? `${fillPct}% full · ${Math.max(0, workshop.capacity - registrationCount)} seats remaining`
@@ -419,8 +419,8 @@ export default function WorkshopDetailPage() {
 
       {/* Registrations table */}
       <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
-        <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF] flex items-center justify-between">
-          <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">
+        <div className="px-5 py-4 border-b border-[#F0EFFA] flex items-center justify-between">
+          <p className="text-[14px] font-bold text-[#171C35]">
             Registrations
             {!regLoading && (
               <span className="ml-2 text-[#171C35]">{totalRegistered}</span>

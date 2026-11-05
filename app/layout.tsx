@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import { Toaster } from "sonner";
+import CsrfFetch from "@/components/security/CsrfFetch";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, organizationJsonLd } from "@/lib/seo";
 import "./globals.css";
@@ -64,6 +65,7 @@ export default function RootLayout({
         className={`${playfairDisplay.variable} ${dmSans.variable} w-full h-full antialiased`}
       >
        {children}
+        <CsrfFetch />
         <Toaster position="bottom-right" richColors />
         <JsonLd data={organizationJsonLd()} />
       </body>

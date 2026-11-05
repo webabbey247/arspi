@@ -9,6 +9,7 @@ import * as yup from "yup"
 import { Check, ShieldCheck, GraduationCap, User as UserIcon, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
+import { AdminPageHeader, StatTile } from "@/components/admin/AdminKit"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -292,6 +293,15 @@ export default function UsersPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
+  const userStats = {
+    admins:      users.filter(u => u.role === "ADMIN").length,
+    instructors: users.filter(u => u.role === "INSTRUCTOR").length,
+    learners:    users.filter(u => u.role === "USER").length,
+    active:      users.filter(u => u.status === "ACTIVE").length,
+    disabled:    users.filter(u => u.status !== "ACTIVE").length,
+    verified:    users.filter(u => u.emailVerified).length,
+  }
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
 
@@ -309,12 +319,36 @@ export default function UsersPage() {
       )}
 
       {/* Page header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Users</h1>
-          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage registered accounts and access levels</p>
-        </div>
+      <AdminPageHeader
+        title="Users"
+        description="Registered accounts and the access level each one holds."
+      />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">
+        <StatTile
+          label="Accounts" value={users.length} loading={loading}
+          motif="dots" accent="text-[#6655DF]" tone="bg-[#EEECFF] text-[#6655DF]"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>}
+          breakdown={[{ label: "active", value: userStats.active, tone: "emerald" }, { label: "disabled", value: userStats.disabled, tone: "slate" }]}
+        />
+        <StatTile
+          label="Learners" value={userStats.learners} loading={loading}
+          motif="waves" accent="text-sky-600" tone="bg-sky-50 text-sky-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg>}
+          hint="Role: USER"
+        />
+        <StatTile
+          label="Staff" value={userStats.admins + userStats.instructors} loading={loading}
+          motif="rings" accent="text-amber-600" tone="bg-amber-50 text-amber-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}
+          breakdown={[{ label: "admin", value: userStats.admins, tone: "amber" }, { label: "instructor", value: userStats.instructors, tone: "sky" }]}
+        />
+        <StatTile
+          label="Email verified" value={userStats.verified} loading={loading}
+          motif="hatch" accent="text-emerald-600" tone="bg-emerald-50 text-emerald-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>}
+          hint={`${users.length - userStats.verified} still unverified`}
+        />
       </div>
 
       {/* Table card */}

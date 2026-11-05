@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import Link from "next/link"
 import { useForm, Controller, type Resolver } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
@@ -12,6 +11,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import RichTextEditor from "@/components/ui/RichTextEditor"
 import { cn } from "@/lib/utils"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
+import { AdminPageHeader, RowActions, RowIcon, StatTile } from "@/components/admin/AdminKit"
+import { useRouter } from "next/navigation"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -775,23 +776,58 @@ export default function AdminCareersPage() {
   const deptTotalPages  = Math.max(1, Math.ceil(filteredDepts.length / PAGE_SIZE))
   const paginatedDepts  = filteredDepts.slice((deptPage - 1) * PAGE_SIZE, deptPage * PAGE_SIZE)
 
+  const router = useRouter()
+  const careerStats = {
+    published:    careers.filter(c => c.status === "PUBLISHED").length,
+    archived:     careers.filter(c => c.status !== "PUBLISHED").length,
+    applications: careers.reduce((sum, c) => sum + (c.applications ?? 0), 0),
+    views:        careers.reduce((sum, c) => sum + (c.views ?? 0), 0),
+  }
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Careers</h1>
-          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage open roles and departments</p>
+      <AdminPageHeader
+        title="Careers"
+        description="Open roles, the departments they sit in, and the applications they attract."
+        actions={
+          <button
+            onClick={() => tab === "jobs" ? setDrawer("create") : setDeptModal("create")}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[14px] font-bold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            {tab === "jobs" ? "New Posting" : "New Department"}
+          </button>
+        }
+      />
+
+      {tab === "jobs" && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">
+          <StatTile
+            label="Postings" value={careers.length} loading={loading}
+            motif="dots" accent="text-[#6655DF]" tone="bg-[#EEECFF] text-[#6655DF]"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>}
+            breakdown={[{ label: "live", value: careerStats.published, tone: "emerald" }, { label: "archived", value: careerStats.archived, tone: "slate" }]}
+          />
+          <StatTile
+            label="Applications" value={careerStats.applications} loading={loading}
+            motif="waves" accent="text-sky-600" tone="bg-sky-50 text-sky-600"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>}
+            hint="Across every posting"
+          />
+          <StatTile
+            label="Views" value={careerStats.views} loading={loading}
+            motif="rings" accent="text-amber-600" tone="bg-amber-50 text-amber-600"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>}
+            hint="Total on the public careers page"
+          />
+          <StatTile
+            label="Departments" value={departments.length} loading={loading}
+            motif="hatch" accent="text-emerald-600" tone="bg-emerald-50 text-emerald-600"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>}
+            hint="Used to group postings"
+          />
         </div>
-        <button
-          onClick={() => tab === "jobs" ? setDrawer("create") : setDeptModal("create")}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer w-fit"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          {tab === "jobs" ? "New Posting" : "New Department"}
-        </button>
-      </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-5 bg-[#F5F6FB] rounded-[12px] p-1 w-fit">
@@ -888,24 +924,25 @@ export default function AdminCareersPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button onClick={() => setDrawer(career)} title="Edit" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                        <button onClick={() => handleToggleStatus(career)} disabled={togglingIds.has(career.id)} title={career.status === "PUBLISHED" ? "Archive" : "Publish"} className={`w-7 h-7 flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer disabled:opacity-50 ${career.status === "PUBLISHED" ? "border-amber-200 bg-amber-50 text-amber-600 hover:border-amber-300" : "border-emerald-200 bg-emerald-50 text-emerald-600 hover:border-emerald-300"}`}>
-                          {career.status === "PUBLISHED" ? (
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
-                          ) : (
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-                          )}
-                        </button>
-                        <Link href={`/administrator/careers/${career.id}`} title="View analytics" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                        </Link>
-                        <button onClick={() => setToDelete(career)} title="Delete" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                        </button>
-                      </div>
+                      <RowActions
+                        label={`Actions for ${career.title}`}
+                        items={[
+                          { label: "View analytics",   icon: RowIcon.analytics, onSelect: () => router.push(`/administrator/careers/${career.id}`) },
+                          { label: "View public page", icon: RowIcon.view,      onSelect: () => window.open(`/careers/${career.slug}`, "_blank", "noopener,noreferrer") },
+                          { label: "Edit posting",     icon: RowIcon.edit,      onSelect: () => setDrawer(career) },
+                          {
+                            // Restored from the icon row this menu replaced — swapping
+                            // buttons for a menu must not quietly drop an action.
+                            label: togglingIds.has(career.id)
+    ? "Updating\u2026"
+    : career.status === "PUBLISHED" ? "Archive posting" : "Publish posting",
+                            icon:  career.status === "PUBLISHED" ? RowIcon.archive : RowIcon.publish,
+                            onSelect: () => handleToggleStatus(career),
+                          },
+                          { type: "separator" },
+                          { label: "Delete posting",   icon: RowIcon.trash, danger: true, onSelect: () => setToDelete(career) },
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -954,24 +991,25 @@ export default function AdminCareersPage() {
                   </div>
                 </dl>
 
-                <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <button onClick={() => setDrawer(career)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button onClick={() => handleToggleStatus(career)} disabled={togglingIds.has(career.id)} aria-label={career.status === "PUBLISHED" ? "Archive" : "Publish"} className={`w-8 h-8 flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer disabled:opacity-50 ${career.status === "PUBLISHED" ? "border-amber-200 bg-amber-50 text-amber-600 hover:border-amber-300" : "border-emerald-200 bg-emerald-50 text-emerald-600 hover:border-emerald-300"}`}>
-                    {career.status === "PUBLISHED" ? (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
-                    ) : (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-                    )}
-                  </button>
-                  <Link href={`/administrator/careers/${career.id}`} aria-label="View analytics" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                  </Link>
-                  <button onClick={() => setToDelete(career)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                  </button>
-                </div>
+                <RowActions
+                  label={`Actions for ${career.title}`}
+                  items={[
+                    { label: "View analytics",   icon: RowIcon.analytics, onSelect: () => router.push(`/administrator/careers/${career.id}`) },
+                    { label: "View public page", icon: RowIcon.view,      onSelect: () => window.open(`/careers/${career.slug}`, "_blank", "noopener,noreferrer") },
+                    { label: "Edit posting",     icon: RowIcon.edit,      onSelect: () => setDrawer(career) },
+                    {
+                      // Restored from the icon row this menu replaced — swapping
+                      // buttons for a menu must not quietly drop an action.
+                      label: togglingIds.has(career.id)
+    ? "Updating\u2026"
+    : career.status === "PUBLISHED" ? "Archive posting" : "Publish posting",
+                      icon:  career.status === "PUBLISHED" ? RowIcon.archive : RowIcon.publish,
+                      onSelect: () => handleToggleStatus(career),
+                    },
+                    { type: "separator" },
+                    { label: "Delete posting",   icon: RowIcon.trash, danger: true, onSelect: () => setToDelete(career) },
+                  ]}
+                />
               </div>
             ))}
           </div>
@@ -1029,14 +1067,14 @@ export default function AdminCareersPage() {
                       {new Date(dept.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button onClick={() => setDeptModal(dept)} title="Edit" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                        <button onClick={() => setDeptToDelete(dept)} title="Delete" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                        </button>
-                      </div>
+                      <RowActions
+                        label={`Actions for ${dept.name}`}
+                        items={[
+                          { label: "Edit department",   icon: RowIcon.edit,  onSelect: () => setDeptModal(dept) },
+                          { type: "separator" },
+                          { label: "Delete department", icon: RowIcon.trash, danger: true, onSelect: () => setDeptToDelete(dept) },
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -1067,14 +1105,14 @@ export default function AdminCareersPage() {
                   </div>
                 </dl>
 
-                <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <button onClick={() => setDeptModal(dept)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button onClick={() => setDeptToDelete(dept)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                  </button>
-                </div>
+                <RowActions
+                  label={`Actions for ${dept.name}`}
+                  items={[
+                    { label: "Edit department",   icon: RowIcon.edit,  onSelect: () => setDeptModal(dept) },
+                    { type: "separator" },
+                    { label: "Delete department", icon: RowIcon.trash, danger: true, onSelect: () => setDeptToDelete(dept) },
+                  ]}
+                />
               </div>
             ))}
           </div>

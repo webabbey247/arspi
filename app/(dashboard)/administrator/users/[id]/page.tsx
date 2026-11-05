@@ -9,6 +9,7 @@ import * as yup from "yup"
 import { Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DetailPageSkeleton } from "@/components/ui/skeleton"
+import { AdminPageHeader, StatTile } from "@/components/admin/AdminKit"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -339,10 +340,11 @@ export default function UserDetailPage() {
               <polyline points="15 18 9 12 15 6"/>
             </svg>
           </button>
-          <div>
-            <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-            <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">{name}</h1>
-            <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Joined {fmtDate(user.createdAt)}</p>
+          <div className="min-w-0 flex-1">
+            <AdminPageHeader
+              title={name}
+              description={`${user.email} \u00b7 joined ${fmtDate(user.createdAt)}`}
+            />
           </div>
         </div>
 
@@ -431,6 +433,36 @@ export default function UserDetailPage() {
         </div>
       </div>
 
+      {/* What this account has done. Counts come from the user payload the
+          route already returns, so nothing extra is fetched. */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatTile
+          label="Enrolments" value={user._count.enrollments}
+          motif="dots" accent="text-[#6655DF]" tone="bg-[#EEECFF] text-[#6655DF]"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>}
+          hint="Programmes joined"
+        />
+        <StatTile
+          label="Lessons done" value={user._count.lessonCompletions}
+          motif="waves" accent="text-sky-600" tone="bg-sky-50 text-sky-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>}
+          hint="Across every programme"
+        />
+        <StatTile
+          label="Certificates" value={user._count.certificates}
+          motif="rings" accent="text-amber-600" tone="bg-amber-50 text-amber-600"
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5"/></svg>}
+          hint="Earned on completion"
+        />
+        <StatTile
+          label="Account" value={user.status === "ACTIVE" ? "Active" : "Disabled"}
+          motif="hatch" accent={user.status === "ACTIVE" ? "text-emerald-600" : "text-rose-500"}
+          tone={user.status === "ACTIVE" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-500"}
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}
+          hint={user.emailVerified ? "Email verified" : "Email not verified"}
+        />
+      </div>
+
       {/* Content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
@@ -439,8 +471,8 @@ export default function UserDetailPage() {
 
           {/* Identity card */}
           <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
-              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Profile</p>
+            <div className="px-5 py-4 border-b border-[#F0EFFA]">
+              <h2 className="text-[14px] font-bold text-[#171C35]">Profile</h2>
             </div>
             <div className="px-5 py-4 flex items-center gap-4 border-b border-[#F0EFFA]">
               {user.profile?.avatar ? (
@@ -483,8 +515,8 @@ export default function UserDetailPage() {
 
           {/* Interests & onboarding */}
           <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
-              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Onboarding & Interests</p>
+            <div className="px-5 py-4 border-b border-[#F0EFFA]">
+              <h2 className="text-[14px] font-bold text-[#171C35]">Onboarding & Interests</h2>
             </div>
             <div className="px-5">
               <InfoRow label="Profile set up"    value={
@@ -525,8 +557,8 @@ export default function UserDetailPage() {
 
           {/* Stats */}
           <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
-              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Activity</p>
+            <div className="px-5 py-4 border-b border-[#F0EFFA]">
+              <h2 className="text-[14px] font-bold text-[#171C35]">Activity</h2>
             </div>
             <div className="p-5 space-y-4">
               {[
@@ -544,8 +576,8 @@ export default function UserDetailPage() {
 
           {/* Account */}
           <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
-              <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Account</p>
+            <div className="px-5 py-4 border-b border-[#F0EFFA]">
+              <h2 className="text-[14px] font-bold text-[#171C35]">Account</h2>
             </div>
             <div className="px-5 divide-y-0">
               <InfoRow label="Email"         value={user.email} />

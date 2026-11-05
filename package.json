@@ -14,7 +14,8 @@
     "postinstall": "prisma generate",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:exec": "prisma db execute --file"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",

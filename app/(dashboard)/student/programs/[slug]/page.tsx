@@ -763,6 +763,7 @@ const StudentCoursePlayerPage = () => {
                         blocks={bodyBlocks}
                         quizProgress={passedQuizIds}
                         onQuizAnswer={handleQuizAnswer}
+                        programSlug={slug}
                       />
                     )}
                     {!selectedHasContent && (

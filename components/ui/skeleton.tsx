@@ -466,77 +466,98 @@ export function SettingsSkeleton() {
       <div className="px-4 sm:px-6 lg:px-8 pb-10 pt-5">
         <div className="max-w-400 mx-auto">
 
-          {/* Identity banner */}
-          <div className="overflow-hidden rounded-[16px] border border-[#DFE2ED] bg-white">
-            <div className="h-24 bg-[#0E1230]" />
-            <div className="px-4 sm:px-5 pb-5">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div className="flex min-w-0 items-end gap-4">
-                  <Skeleton className="relative z-10 -mt-8 h-16 w-16 shrink-0 rounded-[18px] ring-4 ring-white" />
-                  <div className="min-w-0 pb-0.5 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Skeleton className="h-6 w-48 max-w-full" />
-                      <Skeleton className="h-6 w-24 rounded-full" />
-                    </div>
-                    <Skeleton className="h-3.5 w-44 max-w-full" />
-                  </div>
+          {/* Hero — filled band, logo tile, name, chip row */}
+          <div className="rounded-[16px] bg-[#0E1230] px-5 sm:px-7 py-6 sm:py-7">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-5">
+              <Skeleton className="h-16 w-16 shrink-0 rounded-[14px] bg-white/10" />
+              <div className="min-w-0 flex-1 space-y-2.5">
+                <Skeleton className="h-2.5 w-16 bg-white/10" />
+                <Skeleton className="h-7 w-64 max-w-full bg-white/10" />
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Skeleton className="h-7 w-48 rounded-full bg-white/10" />
+                  <Skeleton className="h-7 w-28 rounded-full bg-white/10" />
                 </div>
-                <Skeleton className="h-9 w-32 shrink-0 self-start rounded-[10px] sm:self-auto" />
               </div>
-
-              <div className="mt-5 grid grid-cols-2 gap-4 border-t border-[#F0EFFA] pt-4 sm:grid-cols-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="min-w-0 space-y-2">
-                    <Skeleton className="h-2.5 w-16" />
-                    <Skeleton className="h-4 w-24 max-w-full" />
-                  </div>
-                ))}
-              </div>
+              <Skeleton className="h-9 w-28 shrink-0 self-start rounded-[10px] bg-white/10" />
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="mt-5 flex w-full gap-1 rounded-[14px] border border-[#DFE2ED] bg-white p-1 sm:inline-flex sm:w-auto">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="min-w-0 flex-1 rounded-[11px] px-3 py-2 sm:w-36 sm:flex-none sm:px-4 space-y-1.5">
-                <Skeleton className="h-3.5 w-20 max-w-full" />
-                <Skeleton className="h-3 w-28 max-w-full" />
-              </div>
-            ))}
-          </div>
+          {/* Two columns: panels left, rail right */}
+          <div className="mt-5 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
 
-          {/* Profile panel */}
-          <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-            {[0, 1].map(col => (
-              <div key={col} className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
-                <div className="flex items-start gap-3 px-4 sm:px-5 py-4 border-b border-[#F0EFFA]">
-                  <Skeleton className="h-9 w-9 shrink-0 rounded-[11px]" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-28" />
-                    <Skeleton className="h-3 w-44 max-w-full" />
+            <div className="min-w-0 space-y-5">
+              {[0, 1].map(i => (
+                <div key={i} className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+                  <div className="px-5 sm:px-6 pt-5">
+                    <div className="space-y-2.5">
+                      <Skeleton className="h-2.5 w-24" />
+                      <Skeleton className="h-6 w-72 max-w-full" />
+                      <Skeleton className="h-3.5 w-full max-w-prose" />
+                    </div>
+                    <div className="mt-5 border-t border-dashed border-[#DFE2ED]" />
                   </div>
-                  {col === 0 && <Skeleton className="h-22 w-22 rounded-full shrink-0" />}
-                </div>
-                <div className="px-4 sm:px-5 py-5">
-                  {col === 0 ? (
+                  <div className="px-5 sm:px-6 py-5">
                     <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
-                      {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="min-w-0 space-y-2">
+                      {Array.from({ length: 6 }).map((_, j) => (
+                        <div key={j} className="min-w-0 space-y-2">
                           <Skeleton className="h-2.5 w-16" />
                           <Skeleton className="h-4 w-24 max-w-full" />
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <div className="grid gap-2.5">
-                      {Array.from({ length: 3 }).map((_, i) => (
-                        <Skeleton key={i} className="h-16 w-full rounded-[12px]" />
-                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="min-w-0 space-y-5">
+              {/* Identity */}
+              <div className="rounded-[16px] border border-[#DFE2ED] bg-white p-5">
+                <div className="flex items-center gap-3.5">
+                  <Skeleton className="h-12 w-12 shrink-0 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-36 max-w-full" />
+                    <Skeleton className="h-2.5 w-20" />
+                  </div>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex items-center justify-between gap-3 border-b border-[#F0EFFA] pb-2.5 last:border-none">
+                      <Skeleton className="h-3.5 w-28" />
+                      <Skeleton className="h-3.5 w-20" />
                     </div>
-                  )}
+                  ))}
+                </div>
+                <div className="mt-4 flex items-center gap-3.5 border-t border-dashed border-[#DFE2ED] pt-4">
+                  <Skeleton className="h-22 w-22 shrink-0 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-40 max-w-full" />
+                  </div>
                 </div>
               </div>
-            ))}
+
+              {/* Change password */}
+              <div className="rounded-[16px] border border-[#DFE2ED] bg-white p-5 space-y-3">
+                <Skeleton className="h-5 w-44" />
+                <Skeleton className="h-3.5 w-full" />
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="space-y-1.5 pt-1">
+                    <Skeleton className="h-2.5 w-28" />
+                    <Skeleton className="h-9 w-full rounded-[10px]" />
+                  </div>
+                ))}
+                <Skeleton className="h-10 w-full rounded-[10px] mt-1" />
+              </div>
+
+              {/* Need a change? */}
+              <div className="rounded-[16px] border border-dashed border-[#DFE2ED] bg-white p-5 space-y-3">
+                <Skeleton className="h-4 w-32" />
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-full rounded-[9px]" />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

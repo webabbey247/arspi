@@ -5,6 +5,7 @@ import dynamic from "next/dynamic"
 import Image from "next/image"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
+import { AdminPageHeader, RowActions, RowIcon, StatTile } from "@/components/admin/AdminKit"
 
 // Load Tiptap editor client-side only (uses browser APIs)
 const RichTextEditor = dynamic(() => import("@/components/ui/RichTextEditor"), { ssr: false })
@@ -773,19 +774,22 @@ export default function AdminInsightsPage() {
   const totalAuthorPages     = Math.max(1, Math.ceil(filteredAuthors.length / PAGE_SIZE))
   const paginatedAuthors     = filteredAuthors.slice((authorsPage - 1) * PAGE_SIZE, authorsPage * PAGE_SIZE)
 
+  const insightStats = {
+    published: insights.filter(i => i.published).length,
+    draft:     insights.filter(i => !i.published).length,
+    featured:  insights.filter(i => i.featured).length,
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
 
       {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Insights</h1>
-          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage articles, categories, and visibility</p>
-        </div>
-        <button
+      <AdminPageHeader
+        title="Insights"
+        description="Articles, their authors and the categories they sit in."
+        actions={<button
           onClick={() => {
             if (tab === "insights") setInsightModal("create")
             else if (tab === "authors") setAuthorModal("create")
@@ -795,8 +799,37 @@ export default function AdminInsightsPage() {
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           {tab === "insights" ? "New Insight" : tab === "authors" ? "New Author" : "New Category"}
-        </button>
-      </div>
+        </button>}
+      />
+
+      {tab === "insights" && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">
+          <StatTile
+            label="Articles" value={insights.length} loading={insightsLoading}
+            motif="dots"  accent="text-[#6655DF]" tone="bg-[#EEECFF] text-[#6655DF]"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>}
+            breakdown={[{ label: "live", value: insightStats.published, tone: "emerald" }, { label: "draft", value: insightStats.draft, tone: "amber" }]}
+          />
+          <StatTile
+            label="Published" value={insightStats.published} loading={insightsLoading}
+            motif="hatch" accent="text-emerald-600" tone="bg-emerald-50 text-emerald-600"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>}
+            hint="Visible on the public site"
+          />
+          <StatTile
+            label="Featured" value={insightStats.featured} loading={insightsLoading}
+            motif="rings" accent="text-amber-600" tone="bg-amber-50 text-amber-600"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
+            hint="Pinned to the top of the feed"
+          />
+          <StatTile
+            label="Categories" value={categories.length} loading={insightsLoading}
+            motif="waves" accent="text-sky-600" tone="bg-sky-50 text-sky-600"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>}
+            hint="Used to filter the feed"
+          />
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-5 bg-[#F5F6FB] rounded-[12px] p-1 w-fit">
@@ -900,14 +933,15 @@ export default function AdminInsightsPage() {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-[#69708A]">{fmtDate(ins.createdAt)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setInsightModal(ins)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                        <button onClick={() => setDeleteInsight(ins)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                        </button>
-                      </div>
+                      <RowActions
+                        label={`Actions for ${ins.title}`}
+                        items={[
+                          { label: "View public page", icon: RowIcon.view,  onSelect: () => window.open(`/insights/${ins.slug}`, "_blank", "noopener,noreferrer") },
+                          { label: "Edit insight",     icon: RowIcon.edit,  onSelect: () => setInsightModal(ins) },
+                          { type: "separator" },
+                          { label: "Delete insight",   icon: RowIcon.trash, danger: true, onSelect: () => setDeleteInsight(ins) },
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -973,14 +1007,15 @@ export default function AdminInsightsPage() {
                   </div>
                 </dl>
 
-                <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <button onClick={() => setInsightModal(ins)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button onClick={() => setDeleteInsight(ins)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                  </button>
-                </div>
+                <RowActions
+                  label={`Actions for ${ins.title}`}
+                  items={[
+                    { label: "View public page", icon: RowIcon.view,  onSelect: () => window.open(`/insights/${ins.slug}`, "_blank", "noopener,noreferrer") },
+                    { label: "Edit insight",     icon: RowIcon.edit,  onSelect: () => setInsightModal(ins) },
+                    { type: "separator" },
+                    { label: "Delete insight",   icon: RowIcon.trash, danger: true, onSelect: () => setDeleteInsight(ins) },
+                  ]}
+                />
               </div>
             ))}
           </div>
@@ -1048,14 +1083,14 @@ export default function AdminInsightsPage() {
                     </td>
                     <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDate(a.createdAt)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setAuthorModal(a)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                        <button onClick={() => setDeleteAuthor(a)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                        </button>
-                      </div>
+                      <RowActions
+                        label={`Actions for ${a.name}`}
+                        items={[
+                          { label: "Edit author",   icon: RowIcon.edit,  onSelect: () => setAuthorModal(a) },
+                          { type: "separator" },
+                          { label: "Delete author", icon: RowIcon.trash, danger: true, onSelect: () => setDeleteAuthor(a) },
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -1100,14 +1135,14 @@ export default function AdminInsightsPage() {
                   </div>
                 </dl>
 
-                <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <button onClick={() => setAuthorModal(a)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button onClick={() => setDeleteAuthor(a)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                  </button>
-                </div>
+                <RowActions
+                  label={`Actions for ${a.name}`}
+                  items={[
+                    { label: "Edit author",   icon: RowIcon.edit,  onSelect: () => setAuthorModal(a) },
+                    { type: "separator" },
+                    { label: "Delete author", icon: RowIcon.trash, danger: true, onSelect: () => setDeleteAuthor(a) },
+                  ]}
+                />
               </div>
             ))}
           </div>
@@ -1162,14 +1197,14 @@ export default function AdminInsightsPage() {
                     <td className="px-4 py-3 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A] text-[11px] font-semibold">{cat._count.insights}</span></td>
                     <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDate(cat.createdAt)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setCategoryModal(cat)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                        <button onClick={() => setDeleteCategory(cat)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                        </button>
-                      </div>
+                      <RowActions
+                        label={`Actions for ${cat.name}`}
+                        items={[
+                          { label: "Edit category",   icon: RowIcon.edit,  onSelect: () => setCategoryModal(cat) },
+                          { type: "separator" },
+                          { label: "Delete category", icon: RowIcon.trash, danger: true, onSelect: () => setDeleteCategory(cat) },
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -1203,14 +1238,14 @@ export default function AdminInsightsPage() {
                   </div>
                 </dl>
 
-                <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <button onClick={() => setCategoryModal(cat)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button onClick={() => setDeleteCategory(cat)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                  </button>
-                </div>
+                <RowActions
+                  label={`Actions for ${cat.name}`}
+                  items={[
+                    { label: "Edit category",   icon: RowIcon.edit,  onSelect: () => setCategoryModal(cat) },
+                    { type: "separator" },
+                    { label: "Delete category", icon: RowIcon.trash, danger: true, onSelect: () => setDeleteCategory(cat) },
+                  ]}
+                />
               </div>
             ))}
           </div>

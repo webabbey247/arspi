@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import Link from "next/link"
 import Image from "next/image"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import { useForm, Controller, useFieldArray } from "react-hook-form"
@@ -13,6 +12,7 @@ import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import LinkExtension from "@tiptap/extension-link"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
+import { AdminPageHeader, StatTile, EmptyState, RowActions, RowIcon } from "@/components/admin/AdminKit"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -887,12 +887,14 @@ function TaxonomyTab({
             </dl>
 
             <div className="flex items-center justify-end gap-1.5 pt-1">
-              <button onClick={() => onEdit(item)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              </button>
-              <button onClick={() => onDelete(item)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-              </button>
+              <RowActions
+                label={`Actions for ${item.name}`}
+                items={[
+                  { label: "Edit",   icon: RowIcon.edit,  onSelect: () => onEdit(item) },
+                  { type: "separator" },
+                  { label: "Delete", icon: RowIcon.trash, danger: true, onSelect: () => onDelete(item) },
+                ]}
+              />
             </div>
           </div>
         ))}
@@ -1094,6 +1096,19 @@ export default function AdminProjectsPage() {
 
   // ── Derived ───────────────────────────────────────────────────────────────
 
+  // "Running now" counts projects whose window contains today — a project
+  // marked ACTIVE with an end date in the past is active in name only.
+  const todayMs = Date.now()
+  const projStats = {
+    active:   projects.filter(p => p.status === "ACTIVE").length,
+    complete: projects.filter(p => p.status !== "ACTIVE").length,
+    clients:  new Set(projects.map(p => p.client).filter(Boolean)).size,
+    running:  projects.filter(p =>
+      p.status === "ACTIVE" &&
+      (!p.startDate || new Date(p.startDate).getTime() <= todayMs) &&
+      (!p.endDate   || new Date(p.endDate).getTime()   >= todayMs)).length,
+  }
+
   const filteredProjects = projects.filter(p => {
     const matchStatus = statusFilter === "All" || p.status === statusFilter
     const q = search.toLowerCase()
@@ -1132,20 +1147,57 @@ export default function AdminProjectsPage() {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Research Projects</h1>
-          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage projects, divisions, departments and services</p>
+      <AdminPageHeader
+        title="Research Projects"
+        description="Projects and the taxonomy that organises them \u2014 divisions, departments and services."
+        actions={
+          <button
+            onClick={cta.onClick}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[14px] font-bold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            {cta.label}
+          </button>
+        }
+      />
+
+      {/* Stat strip — projects tab only; the taxonomy tabs are short lists
+          where their own tab counts already say everything. */}
+      {tab === "projects" && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">
+          <StatTile
+            label="Projects" value={projects.length} loading={loading}
+            motif="grid"  accent="text-[#6655DF]"
+            tone="bg-[#EEECFF] text-[#6655DF]"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>}
+            breakdown={[
+              { label: "active",   value: projStats.active,   tone: "emerald" },
+              { label: "complete", value: projStats.complete, tone: "slate" },
+            ]}
+          />
+          <StatTile
+            label="Clients" value={projStats.clients} loading={loading}
+            motif="waves" accent="text-sky-600"
+            hint="Distinct organisations"
+            tone="bg-sky-50 text-sky-600"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>}
+          />
+          <StatTile
+            label="Divisions" value={divisions.length} loading={loading}
+            motif="rings" accent="text-amber-600"
+            hint="Top level of the taxonomy"
+            tone="bg-amber-50 text-amber-600"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>}
+          />
+          <StatTile
+            label="Running now" value={projStats.running} loading={loading}
+            motif="hatch" accent="text-emerald-600"
+            hint="Active, and inside its date window"
+            tone="bg-emerald-50 text-emerald-600"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
+          />
         </div>
-        <button
-          onClick={cta.onClick}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer self-start sm:self-auto"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          {cta.label}
-        </button>
-      </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-5 bg-[#F5F6FB] rounded-[12px] p-1 overflow-x-auto sm:overflow-x-visible sm:w-fit sm:flex-wrap">
@@ -1216,7 +1268,9 @@ export default function AdminProjectsPage() {
                 {loading ? (
                   <TableSkeletonRows colSpan={7} />
                 ) : filteredProjects.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#8A90A6]">No projects found.</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-12 text-center text-[14px] font-bold text-[#8A90A6]">
+                    {search.trim() || statusFilter !== "All" ? "No projects match those filters." : "No projects yet."}
+                  </td></tr>
                 ) : paginatedProjects.map(p => (
                   <tr key={p.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
                     <td className="px-4 py-3">
@@ -1254,17 +1308,15 @@ export default function AdminProjectsPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <Link href={`/our-research/research-projects/${p.slug}`} target="_blank" title="View public page" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        </Link>
-                        <button onClick={() => setProjectDrawer(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                        <button onClick={() => setDeleteProj(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                        </button>
-                      </div>
+                      <RowActions
+                        label={`Actions for ${p.title}`}
+                        items={[
+                          { label: "View public page", icon: RowIcon.view,  onSelect: () => window.open(`/our-research/research-projects/${p.slug}`, "_blank", "noopener,noreferrer") },
+                          { label: "Edit project",     icon: RowIcon.edit,  onSelect: () => setProjectDrawer(p) },
+                          { type: "separator" },
+                          { label: "Delete project",   icon: RowIcon.trash, danger: true, onSelect: () => setDeleteProj(p) },
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -1277,7 +1329,12 @@ export default function AdminProjectsPage() {
             {loading ? (
               <SkeletonCardList />
             ) : filteredProjects.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No projects found.</div>
+              <EmptyState
+                className="border-0 rounded-none"
+                title={search.trim() || statusFilter !== "All" ? "No projects match those filters." : "No projects yet."}
+                hint="Add a project to publish it on the public research pages."
+                icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>}
+              />
             ) : paginatedProjects.map(p => (
               <div key={p.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                 <div className="flex items-start gap-3">
@@ -1326,15 +1383,15 @@ export default function AdminProjectsPage() {
                 </dl>
 
                 <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <Link href={`/our-research/research-projects/${p.slug}`} target="_blank" aria-label="View public page" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  </Link>
-                  <button onClick={() => setProjectDrawer(p)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button onClick={() => setDeleteProj(p)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                  </button>
+                  <RowActions
+                    label={`Actions for ${p.title}`}
+                    items={[
+                      { label: "View public page", icon: RowIcon.view,  onSelect: () => window.open(`/our-research/research-projects/${p.slug}`, "_blank", "noopener,noreferrer") },
+                      { label: "Edit project",     icon: RowIcon.edit,  onSelect: () => setProjectDrawer(p) },
+                      { type: "separator" },
+                      { label: "Delete project",   icon: RowIcon.trash, danger: true, onSelect: () => setDeleteProj(p) },
+                    ]}
+                  />
                 </div>
               </div>
             ))}

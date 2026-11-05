@@ -21,6 +21,17 @@ export type AccountProfile = {
   language:     string | null
   timezone:     string | null
   emailOptIn:   boolean
+
+  /** Account-level facts, as distinct from the editable profile. None of this
+   *  is writable here: the role is set in user administration, and the rest is
+   *  a record of what happened to the account. */
+  role:          string
+  status:        string
+  emailVerified: boolean
+  createdAt:     string
+  /** Linked OAuth identities, lower-cased provider names. Empty means this
+   *  account signs in with a password only. */
+  providers:     string[]
 }
 
 export type AccountUpdateInput = {
@@ -66,7 +77,12 @@ export async function getAccountProfile(userId: string): Promise<AccountProfile 
   const user = await db.user.findUnique({
     where:  { id: userId },
     select: {
-      email:   true,
+      email:         true,
+      role:          true,
+      status:        true,
+      emailVerified: true,
+      createdAt:     true,
+      accounts: { select: { provider: true } },
       profile: {
         select: {
           firstName:    true,
@@ -112,6 +128,12 @@ export async function getAccountProfile(userId: string): Promise<AccountProfile 
     language:     user.profile?.language     ?? null,
     timezone:     user.profile?.timezone     ?? null,
     emailOptIn:   user.profile?.emailOptIn   ?? true,
+
+    role:          user.role,
+    status:        user.status,
+    emailVerified: user.emailVerified,
+    createdAt:     user.createdAt.toISOString(),
+    providers:     user.accounts.map(a => a.provider.toLowerCase()),
   }
 }
 

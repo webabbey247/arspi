@@ -5,6 +5,7 @@ import Image from "next/image"
 import { sanitizeHtml } from "@/lib/sanitize"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
 import MermaidDiagram from "@/components/ui/MermaidDiagram"
+import AssignmentSubmitter from "@/components/programs/AssignmentSubmitter"
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -239,7 +240,13 @@ function QuestionSetView({ title, kicker, items }: { title: string; kicker: stri
   )
 }
 
-function AssignmentBlockView({ block }: { block: Extract<ContentBlock, { type: "assignment" }> }) {
+function AssignmentBlockView({
+  block, slug,
+}: {
+  block: Extract<ContentBlock, { type: "assignment" }>
+  /** Present only in the student player; the admin preview renders read-only. */
+  slug?: string
+}) {
   return (
     <div className={panelCls}>
       <div className={labelCls}>Assignment{block.dueInDays ? ` · due in ${block.dueInDays} day${block.dueInDays === "1" ? "" : "s"}` : ""}{block.points ? ` · ${block.points} pts` : ""}</div>
@@ -249,6 +256,14 @@ function AssignmentBlockView({ block }: { block: Extract<ContentBlock, { type: "
           <div
             className={`${proseCls} text-[#69708A]`}
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.instructions) }}
+          />
+        )}
+        {slug && block.id && (
+          <AssignmentSubmitter
+            slug={slug}
+            blockId={block.id}
+            submissionType={block.submissionType ?? "none"}
+            points={block.points}
           />
         )}
       </div>
@@ -264,13 +279,16 @@ function AssignmentBlockView({ block }: { block: Extract<ContentBlock, { type: "
  *  they render read-only, same as questionnaire/assignment/survey blocks,
  *  whose grading/submissions still aren't tracked. */
 export function ContentBlockViewer({
-  blocks, quizProgress, onQuizAnswer,
+  blocks, quizProgress, onQuizAnswer, programSlug,
 }: {
   blocks: ContentBlock[]
   /** Quiz content-block ids this student has already answered correctly. */
   quizProgress?: Set<string>
   /** Submits an answer for a quiz block; resolves to whether it was correct. */
   onQuizAnswer?: (blockId: string, selectedIndex: number, variantIndex: number) => Promise<boolean>
+  /** Programme slug. Supplied by the student player; when absent, assignment
+   *  blocks render read-only (the admin curriculum preview). */
+  programSlug?: string
 }) {
   if (!Array.isArray(blocks) || blocks.length === 0) return null
   return (
@@ -308,7 +326,7 @@ export function ContentBlockViewer({
           case "questionnaire":
             return <QuestionSetView key={block.id} kicker="Questionnaire" title={block.title} items={block.questions ?? []} />
           case "assignment":
-            return <AssignmentBlockView key={block.id} block={block} />
+            return <AssignmentBlockView key={block.id} block={block} slug={programSlug} />
           default:
             return null
         }

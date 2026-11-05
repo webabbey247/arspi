@@ -1,8 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { createPortal } from "react-dom"
-import Link from "next/link"
 import Image from "next/image"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import { useForm, useFieldArray, Controller, useWatch, useController } from "react-hook-form"
@@ -18,6 +16,10 @@ import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
 import { toast } from "sonner"
 import { buildCourse, regenerateLesson, type Progress } from "@/lib/ai-course-client"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
+import { AdminPageHeader, EmptyState, RowActions, RowIcon, StatTile } from "@/components/admin/AdminKit"
+import type { DropdownItem } from "@/components/ui/DropdownMenu"
+import { TickProgress } from "@/components/ui/TickProgress"
+import { useRouter } from "next/navigation"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -191,7 +193,7 @@ function AiBuilderTrigger({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-1 text-[10.5px] font-bold text-[#6655DF] hover:text-[#2C2368] uppercase tracking-[0.4px] cursor-pointer"
+      className="flex items-center gap-1 text-[11px] font-bold text-[#6655DF] hover:text-[#2C2368] uppercase tracking-[0.4px] cursor-pointer"
     >
       <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
       AI Builder
@@ -224,137 +226,10 @@ function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onCo
   )
 }
 
-// ── Row actions dropdown ──────────────────────────────────────────────────────
 
-const ACTION_ICONS = {
-  analytics: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
-  external:  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
-  edit:      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
-  approve:   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
-  archive:   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg>,
-  trash:     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
-}
 
-type RowAction = {
-  label:     string
-  icon:      React.ReactNode
-  /** Set to render the item as a link; otherwise it is a button. */
-  href?:     string
-  target?:   "_blank"
-  onSelect?: () => void
-  /** Tints the item red and separates it from the group above. */
-  danger?:   boolean
-}
 
-const MENU_WIDTH   = 212
-const MENU_ROW_H   = 36   // keep in step with the py-2 + text-[13px] items below
-const MENU_PADDING = 12
 
-/** Per-row "⋯" actions menu. The panel goes through a portal and is positioned
- *  `fixed` rather than `absolute` inside the row: the desktop table sits in an
- *  `overflow-x-auto` wrapper, which would otherwise clip the panel and stretch
- *  the horizontal scroll area. Flips above the trigger when there is no room
- *  below, and dismisses on scroll, since a fixed panel can't follow its row. */
-function RowActionsMenu({ actions, label }: { actions: RowAction[]; label: string }) {
-  const [open, setOpen] = useState(false)
-  const [pos, setPos]   = useState<{ top: number; left: number } | null>(null)
-  const triggerRef      = useRef<HTMLButtonElement>(null)
-  const panelRef        = useRef<HTMLDivElement>(null)
-
-  /** Measured on open rather than in an effect: the trigger's box is what the
-   *  panel hangs off, and it is already laid out by the time the click lands. */
-  function toggle() {
-    if (open) { setOpen(false); return }
-    const rect = triggerRef.current?.getBoundingClientRect()
-    if (!rect) return
-    const height    = actions.length * MENU_ROW_H + MENU_PADDING
-    const roomBelow = window.innerHeight - rect.bottom
-    const flip      = roomBelow < height + 12 && rect.top > height + 12
-    setPos({
-      top:  flip ? rect.top - height - 6 : rect.bottom + 6,
-      left: Math.max(8, Math.min(rect.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - 8)),
-    })
-    setOpen(true)
-  }
-
-  useEffect(() => {
-    if (!open) return
-
-    function onPointerDown(e: MouseEvent) {
-      if (triggerRef.current?.contains(e.target as Node)) return
-      if (panelRef.current?.contains(e.target as Node)) return
-      setOpen(false)
-    }
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") { setOpen(false); triggerRef.current?.focus() }
-    }
-    function dismiss() { setOpen(false) }
-
-    document.addEventListener("mousedown", onPointerDown)
-    document.addEventListener("keydown", onKeyDown)
-    window.addEventListener("resize", dismiss)
-    window.addEventListener("scroll", dismiss, true)
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown)
-      document.removeEventListener("keydown", onKeyDown)
-      window.removeEventListener("resize", dismiss)
-      window.removeEventListener("scroll", dismiss, true)
-    }
-  }, [open])
-
-  const itemClass = (danger?: boolean) =>
-    `w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] font-medium text-left no-underline transition-colors cursor-pointer ${
-      danger ? "text-red-600 hover:bg-red-50" : "text-[#171C35] hover:bg-[#F5F6FB]"
-    }`
-
-  return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={toggle}
-        aria-label={label}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        className={`w-8 h-8 flex items-center justify-center rounded-[8px] border cursor-pointer transition-colors ${
-          open
-            ? "border-[#6655DF] bg-[#EEECFF] text-[#6655DF]"
-            : "border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF]"
-        }`}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>
-      </button>
-
-      {open && pos && createPortal(
-        <div
-          ref={panelRef}
-          role="menu"
-          aria-label={label}
-          style={{ top: pos.top, left: pos.left, width: MENU_WIDTH }}
-          className="fixed z-50 bg-white border border-[#DFE2ED] rounded-xl shadow-[0_12px_32px_rgba(23,28,53,0.16)] py-1.5"
-        >
-          {actions.map((a, i) => (
-            <div key={a.label}>
-              {a.danger && i > 0 && <div className="my-1 h-px bg-[#F0EFFA]" />}
-              {a.href ? (
-                <Link href={a.href} target={a.target} role="menuitem" onClick={() => setOpen(false)} className={itemClass(a.danger)}>
-                  <span className="shrink-0 text-[#8A90A6]">{a.icon}</span>
-                  {a.label}
-                </Link>
-              ) : (
-                <button type="button" role="menuitem" onClick={() => { setOpen(false); a.onSelect?.() }} className={`${itemClass(a.danger)} bg-transparent border-none`}>
-                  <span className={`shrink-0 ${a.danger ? "text-red-400" : "text-[#8A90A6]"}`}>{a.icon}</span>
-                  {a.label}
-                </button>
-              )}
-            </div>
-          ))}
-        </div>,
-        document.body,
-      )}
-    </>
-  )
-}
 
 
 // ── Thumbnail upload ───────────────────────────────────────────────────────────
@@ -920,18 +795,18 @@ function RegenerateLessonButton({
   }
 
   if (busy) {
-    return <span className="text-[10.5px] font-bold text-[#8A90A6] uppercase tracking-[0.4px]">Regenerating…</span>
+    return <span className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-[0.4px]">Regenerating…</span>
   }
 
   if (confirming) {
     return (
       <span className="flex items-center gap-2">
         <button type="button" onClick={run}
-          className="text-[10.5px] font-bold text-red-600 hover:text-red-700 uppercase tracking-[0.4px] cursor-pointer">
+          className="text-[11px] font-bold text-red-600 hover:text-red-700 uppercase tracking-[0.4px] cursor-pointer">
           Replace
         </button>
         <button type="button" onClick={() => setConfirming(false)}
-          className="text-[10.5px] font-bold text-[#8A90A6] hover:text-[#69708A] uppercase tracking-[0.4px] cursor-pointer">
+          className="text-[11px] font-bold text-[#8A90A6] hover:text-[#69708A] uppercase tracking-[0.4px] cursor-pointer">
           Cancel
         </button>
       </span>
@@ -943,7 +818,7 @@ function RegenerateLessonButton({
       type="button"
       onClick={() => setConfirming(true)}
       disabled={!lesson.title.trim()}
-      className="flex items-center gap-1 text-[10.5px] font-bold text-[#6655DF] hover:text-[#2C2368] uppercase tracking-[0.4px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+      className="flex items-center gap-1 text-[11px] font-bold text-[#6655DF] hover:text-[#2C2368] uppercase tracking-[0.4px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
     >
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
       Regenerate
@@ -1894,16 +1769,16 @@ function AiCourseBuilderModal({
             <div className="py-6 flex flex-col items-center text-center gap-3">
               <div className="w-8 h-8 border-2 border-[#6655DF]/25 border-t-[#6655DF] rounded-full animate-spin" />
               <p className="text-[13px] font-medium text-[#171C35] min-h-[18px]">{progress?.message ?? "Starting…"}</p>
+              {/* Ticks rather than a smooth fill: the work really is discrete
+                  — one tick per lesson written — so a continuous bar would
+                  imply progress between lessons that doesn't exist. */}
               {progress?.total ? (
-                <div className="w-full max-w-[240px]">
-                  <div className="h-1.5 rounded-full bg-[#F0EFFA] overflow-hidden">
-                    <div
-                      className="h-full bg-[#6655DF] transition-all duration-300"
-                      style={{ width: `${Math.round(((progress.done ?? 0) / progress.total) * 100)}%` }}
-                    />
-                  </div>
-                  <p className="text-[11px] text-[#8A90A6] mt-1.5">{progress.done ?? 0} / {progress.total} lessons written</p>
-                </div>
+                <TickProgress
+                  value={((progress.done ?? 0) / progress.total) * 100}
+                  ticks={Math.min(progress.total, 36)}
+                  label={`${progress.done ?? 0} of ${progress.total} lessons written`}
+                  className="w-full max-w-[260px]"
+                />
               ) : null}
             </div>
           ) : (
@@ -2198,22 +2073,14 @@ function LookupTab({
               </div>
             </dl>
 
-            <div className="flex items-center justify-end gap-1.5 pt-1">
-              <button
-                onClick={() => onEdit(item)}
-                aria-label="Edit"
-                className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors"
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              </button>
-              <button
-                onClick={() => onDelete(item)}
-                aria-label="Delete"
-                className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-              </button>
-            </div>
+            <RowActions
+              label={`Actions for ${item.name}`}
+              items={[
+                { label: "Edit",   icon: RowIcon.edit,  onSelect: () => onEdit(item) },
+                { type: "separator" },
+                { label: "Delete", icon: RowIcon.trash, danger: true, onSelect: () => onDelete(item) },
+              ]}
+            />
           </div>
         ))}
       </div>
@@ -2288,6 +2155,7 @@ export default function AdminProgramsPage() {
   const [pricingSearch, setPricingSearch]     = useState("")
   const [pricingModal, setPricingModal]       = useState<"create" | Lookup | null>(null)
   const [deletePricing, setDeletePricing]     = useState<Lookup | null>(null)
+  const router = useRouter()
   const [pricingPage, setPricingPage]         = useState(1)
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
@@ -2504,26 +2372,29 @@ export default function AdminProgramsPage() {
   /** Menu contents depend on where the programme sits in its lifecycle:
    *  a draft can be approved to go live, and a live programme can be archived
    *  straight back to draft — so the pair is a round trip, not a dead end. */
-  function programActions(p: Program): RowAction[] {
-    const actions: RowAction[] = [
-      { label: "View Analytics", href: `/administrator/programs/${p.slug}`, icon: ACTION_ICONS.analytics },
-      { label: "View Program",   href: `/programs/${p.slug}`, target: "_blank", icon: ACTION_ICONS.external },
-      { label: "Edit Program",   onSelect: () => setProgramModal(p), icon: ACTION_ICONS.edit },
+  function programActions(p: Program): DropdownItem[] {
+    // Navigation items use onSelect rather than an href: the shared menu takes
+    // one item shape, and routing here keeps every row menu identical.
+    const actions: DropdownItem[] = [
+      { label: "View analytics", onSelect: () => router.push(`/administrator/programs/${p.slug}`), icon: RowIcon.analytics },
+      { label: "View public page", onSelect: () => window.open(`/programs/${p.slug}`, "_blank", "noopener,noreferrer"), icon: RowIcon.view },
+      { label: "Edit programme", onSelect: () => setProgramModal(p), icon: RowIcon.edit },
     ]
     if (p.status === "DRAFT") {
       actions.push({
-        label:    "Approve Program",
+        label:    "Approve programme",
         onSelect: () => handleSetProgramStatus(p, "PUBLISHED"),
-        icon:     ACTION_ICONS.approve,
+        icon:     RowIcon.publish,
       })
     } else {
       actions.push({
-        label:    "Archive Program",
+        label:    "Archive programme",
         onSelect: () => handleSetProgramStatus(p, "DRAFT"),
-        icon:     ACTION_ICONS.archive,
+        icon:     RowIcon.archive,
       })
     }
-    actions.push({ label: "Delete Program", onSelect: () => setDeleteProgram(p), icon: ACTION_ICONS.trash, danger: true })
+    actions.push({ type: "separator" })
+    actions.push({ label: "Delete programme", onSelect: () => setDeleteProgram(p), icon: RowIcon.trash, danger: true })
     return actions
   }
 
@@ -2635,6 +2506,12 @@ export default function AdminProgramsPage() {
   const paginatedFormats  = filteredFormats.slice((formatsPage - 1) * PAGE_SIZE, formatsPage * PAGE_SIZE)
   const paginatedPricing  = filteredPricing.slice((pricingPage - 1) * PAGE_SIZE, pricingPage * PAGE_SIZE)
 
+  const statusCounts = {
+    published: programs.filter(p => p.status === "PUBLISHED").length,
+    draft:     programs.filter(p => p.status === "DRAFT").length,
+  }
+  const totalEnrolments = programs.reduce((sum, p) => sum + (p._count?.enrollments ?? 0), 0)
+
   const counts = {
     all:      programs.length,
     free:     programs.filter(p => p.pricing === "free").length,
@@ -2648,13 +2525,10 @@ export default function AdminProgramsPage() {
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
 
       {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-          <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-          <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Programs</h1>
-          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage learning programs and categories</p>
-        </div>
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+      <AdminPageHeader
+        title="Programs"
+        description="Learning programmes and the lookups that classify them."
+        actions={<>
           {tab === "programs" && (
             <button
               onClick={() => setAiBuilderOpen(true)}
@@ -2681,8 +2555,46 @@ export default function AdminProgramsPage() {
              : tab === "formats"    ? "New Format"
              :                        "New Pricing"}
           </button>
+        </>}
+      />
+
+      {/* Stat strip — only on the programmes tab; the lookup tabs are short
+          lists where a counts row would say less than the list itself. */}
+      {tab === "programs" && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">
+          <StatTile
+            label="Programmes" value={programs.length} loading={programsLoading}
+            motif="dots"  accent="text-[#6655DF]"
+            tone="bg-[#EEECFF] text-[#6655DF]"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>}
+            breakdown={[
+              { label: "live",  value: statusCounts.published, tone: "emerald" },
+              { label: "draft", value: statusCounts.draft,     tone: "amber" },
+            ]}
+          />
+          <StatTile
+            label="Enrolments" value={totalEnrolments} loading={programsLoading}
+            motif="waves" accent="text-sky-600"
+            hint="Across every programme"
+            tone="bg-sky-50 text-sky-600"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>}
+          />
+          <StatTile
+            label="Pricing" value={`${counts.free} free`} loading={programsLoading}
+            motif="hatch" accent="text-emerald-600"
+            tone="bg-emerald-50 text-emerald-600"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
+            breakdown={[{ label: "paid", value: counts.paid, tone: "slate" }]}
+          />
+          <StatTile
+            label="Featured" value={counts.featured} loading={programsLoading}
+            motif="rings" accent="text-amber-600"
+            hint="Shown first on the public site"
+            tone="bg-amber-50 text-amber-600"
+            icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
+          />
         </div>
-      </div>
+      )}
 
       {/* Tabs — formats / pricing intentionally hidden until those features ship */}
       <div className="flex gap-1 mb-5 bg-[#F5F6FB] rounded-[12px] p-1 overflow-x-auto sm:overflow-x-visible sm:w-fit sm:flex-wrap">
@@ -2789,7 +2701,11 @@ export default function AdminProgramsPage() {
                 {programsLoading ? (
                   <TableSkeletonRows colSpan={7} />
                 ) : filteredPrograms.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-10 text-center text-[#8A90A6]">No programs found.</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-12 text-center text-[14px] font-bold text-[#8A90A6]">
+                    {search.trim() || pricingFilter !== "All" || levelFilter !== "All"
+                      ? "No programmes match those filters."
+                      : "No programmes yet."}
+                  </td></tr>
                 ) : paginatedPrograms.map(p => (
                   <tr key={p.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
 
@@ -2864,7 +2780,7 @@ export default function AdminProgramsPage() {
 
                     {/* Actions */}
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <RowActionsMenu actions={programActions(p)} label={`Actions for ${p.title}`} />
+                      <RowActions items={programActions(p)} label={`Actions for ${p.title}`} />
                     </td>
                   </tr>
                 ))}
@@ -2877,7 +2793,14 @@ export default function AdminProgramsPage() {
             {programsLoading ? (
               <SkeletonCardList />
             ) : filteredPrograms.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No programs found.</div>
+              <EmptyState
+                className="border-0 rounded-none"
+                title={search.trim() || pricingFilter !== "All" || levelFilter !== "All"
+                  ? "No programmes match those filters."
+                  : "No programmes yet."}
+                hint="Create one by hand, or let the AI Program Builder draft the whole curriculum."
+                icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>}
+              />
             ) : paginatedPrograms.map(p => (
               <div key={p.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
                 <div className="flex items-start gap-3">
@@ -2940,7 +2863,7 @@ export default function AdminProgramsPage() {
                 </dl>
 
                 <div className="flex items-center justify-end pt-1">
-                  <RowActionsMenu actions={programActions(p)} label={`Actions for ${p.title}`} />
+                  <RowActions items={programActions(p)} label={`Actions for ${p.title}`} />
                 </div>
               </div>
             ))}
@@ -3038,22 +2961,14 @@ export default function AdminProgramsPage() {
                   </div>
                 </dl>
 
-                <div className="flex items-center justify-end gap-1.5 pt-1">
-                  <button
-                    onClick={() => setCategoryModal(cat)}
-                    aria-label="Edit"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors"
-                  >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button
-                    onClick={() => setDeleteCategory(cat)}
-                    aria-label="Delete"
-                    className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                  </button>
-                </div>
+                <RowActions
+                  label={`Actions for ${cat.name}`}
+                  items={[
+                    { label: "Edit category",   icon: RowIcon.edit,  onSelect: () => setCategoryModal(cat) },
+                    { type: "separator" },
+                    { label: "Delete category", icon: RowIcon.trash, danger: true, onSelect: () => setDeleteCategory(cat) },
+                  ]}
+                />
               </div>
             ))}
           </div>

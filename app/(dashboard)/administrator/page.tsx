@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  AdminPageHeader, StatTile, Panel, PanelLink, Pill, metaCls,
+  type StatBreakdown, type PillTone,
+} from "@/components/admin/AdminKit"
+import { cn } from "@/lib/utils"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 // Lean shapes matching what each admin GET route already returns —
@@ -27,7 +32,6 @@ type ProjectRow = {
 }
 
 type Section = "programs" | "insights" | "workshops" | "projects"
-type Tone    = "emerald" | "amber" | "slate"
 
 // ── Section config (icon paths lifted from DashboardSidebar for consistency) ──
 
@@ -50,11 +54,6 @@ const SECTION_CONFIG: Record<Section, { label: string; href: string; color: stri
   },
 }
 
-const TONE_CLASSES: Record<Tone, string> = {
-  emerald: "bg-emerald-50 text-emerald-700",
-  amber:   "bg-amber-50 text-amber-700",
-  slate:   "bg-[#F0EFFA] text-[#69708A]",
-}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -101,47 +100,27 @@ function StatCard({
   section:   Section
   loading:   boolean
   total:     number
-  breakdown: { label: string; value: number; tone: Tone }[]
+  breakdown: StatBreakdown[]
 }) {
   const cfg = SECTION_CONFIG[section]
   return (
-    <Link
+    <StatTile
       href={cfg.href}
-      className="group flex flex-col gap-3 p-4 rounded-[16px] border border-[#DFE2ED] bg-white hover:border-[#6655DF] hover:shadow-sm transition-all"
-    >
-      <div className="flex items-center justify-between">
-        <div className="w-9 h-9 rounded-[10px] flex items-center justify-center" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
+      label={cfg.label}
+      value={total.toLocaleString()}
+      loading={loading}
+      breakdown={breakdown}
+      tone=""
+      icon={
+        <span className="grid place-items-center w-full h-full rounded-[11px]" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
           <Icon className="w-4.5 h-4.5">{cfg.icon}</Icon>
-        </div>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[#8A90A6] group-hover:text-[#6655DF] group-hover:translate-x-0.5 transition-all">
-          <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
-        </svg>
-      </div>
-      <div>
-        <p className="text-[24px] font-extrabold text-[#171C35] leading-none">
-          {loading ? <Skeleton className="inline-block w-10 h-6" /> : total.toLocaleString()}
-        </p>
-        <p className="text-[13px] font-semibold text-[#69708A] mt-1.5">{cfg.label}</p>
-      </div>
-      {loading ? (
-        <div className="flex flex-wrap gap-1.5">
-          <Skeleton className="h-4.5 w-16 rounded-full" />
-          <Skeleton className="h-4.5 w-14 rounded-full" />
-        </div>
-      ) : (
-        <div className="flex flex-wrap gap-1.5">
-          {breakdown.map(b => (
-            <span key={b.label} className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${TONE_CLASSES[b.tone]}`}>
-              {b.value} {b.label}
-            </span>
-          ))}
-        </div>
-      )}
-    </Link>
+        </span>
+      }
+    />
   )
 }
 
-type RecentEntry = { title: string; meta: string; statusLabel: string; statusTone: Tone }
+type RecentEntry = { title: string; meta: string; statusLabel: string; statusTone: PillTone }
 
 function RecentPanel({
   section, loading, items, emptyLabel,
@@ -153,50 +132,50 @@ function RecentPanel({
 }) {
   const cfg = SECTION_CONFIG[section]
   return (
-    <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#DFE2ED] bg-[#FAFAFF]">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-[7px] flex items-center justify-center" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
-            <Icon className="w-3 h-3">{cfg.icon}</Icon>
-          </div>
-          <h2 className="text-[13px] font-bold text-[#171C35]">{section === "workshops" ? "Upcoming Workshops" : `Recent ${cfg.label}`}</h2>
+    <Panel
+      title={section === "workshops" ? "Upcoming workshops" : `Recent ${cfg.label.toLowerCase()}`}
+      note={section === "workshops" ? "Next five by date" : "Five most recently created"}
+      action={<PanelLink href={cfg.href}>View all</PanelLink>}
+      bodyClassName="p-0"
+      icon={
+        <span className="grid place-items-center w-full h-full rounded-[11px]" style={{ backgroundColor: cfg.bg, color: cfg.color }}>
+          <Icon className="w-4 h-4">{cfg.icon}</Icon>
+        </span>
+      }
+    >
+      {loading ? (
+        <div className="flex flex-col gap-3 px-4 sm:px-5 py-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-2/3" />
+                <Skeleton className="h-2.5 w-1/3" />
+              </div>
+              <Skeleton className="h-5 w-16 rounded-full shrink-0" />
+            </div>
+          ))}
         </div>
-        <Link href={cfg.href} className="text-[11px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors">View all</Link>
-      </div>
-      <div className="flex-1">
-        {loading ? (
-          <div className="flex flex-col gap-2.5 px-4 py-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <div className="min-w-0 flex-1 space-y-1.5">
-                  <Skeleton className="h-3 w-2/3" />
-                  <Skeleton className="h-2.5 w-1/3" />
-                </div>
-                <Skeleton className="h-4.5 w-14 rounded-full shrink-0" />
-              </div>
-            ))}
-          </div>
-        ) : items.length === 0 ? (
-          <div className="px-4 py-8 text-center text-[#8A90A6] text-[12px]">{emptyLabel}</div>
-        ) : (
-          items.map((item, i) => (
-            <Link
-              key={i}
-              href={cfg.href}
-              className="flex items-center gap-2 px-4 py-2.5 border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-[12.5px] font-semibold text-[#171C35] truncate">{item.title}</p>
-                <p className="text-[11px] text-[#8A90A6] mt-0.5">{item.meta}</p>
-              </div>
-              <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${TONE_CLASSES[item.statusTone]}`}>
-                {item.statusLabel}
-              </span>
-            </Link>
-          ))
-        )}
-      </div>
-    </div>
+      ) : items.length === 0 ? (
+        <p className="px-4 sm:px-5 py-10 text-center text-[14px] font-bold text-[#8A90A6]">{emptyLabel}</p>
+      ) : (
+        <ul className="divide-y divide-[#F0EFFA]">
+          {items.map((item, i) => (
+            <li key={i}>
+              <Link
+                href={cfg.href}
+                className="flex items-center gap-3 px-4 sm:px-5 py-3 hover:bg-[#FAFAFF] transition-colors no-underline"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14px] font-bold text-[#171C35] truncate">{item.title}</span>
+                  <span className={cn(metaCls, "block mt-1 truncate")}>{item.meta}</span>
+                </span>
+                <Pill tone={item.statusTone}>{item.statusLabel}</Pill>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
   )
 }
 
@@ -241,6 +220,12 @@ const AdministratorDashboardPage = () => {
   const projectsActive    = projects.filter(p => p.status === "ACTIVE").length
   const projectsComplete  = projects.length - projectsActive
 
+  // Header figures: what the public can see, and what is still unfinished.
+  // Workshops and projects have no draft state, so only the two that do
+  // contribute to the draft count — otherwise it would read as zero-inflated.
+  const livePublished = programsPublished + insightsPublished + workshops.filter(w => w.published).length
+  const totalDrafts   = programsDraft + insightsDraft
+
   const sortedByCreated = <T extends { createdAt: string }>(rows: T[]) =>
     [...rows].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
@@ -274,11 +259,15 @@ const AdministratorDashboardPage = () => {
 
   return (
     <div className="max-w-350 mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      <div className="mb-6">
-        <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Administrator</span>
-        <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">Dashboard</h1>
-        <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">An overview of your platform&apos;s content</p>
-      </div>
+      <AdminPageHeader
+        tone="band"
+        title="Dashboard"
+        description="Everything published across the platform, and what needs attention."
+        stats={loading ? undefined : [
+          { label: "Live",   value: livePublished },
+          { label: "Drafts", value: totalDrafts },
+        ]}
+      />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <StatCard

@@ -72,19 +72,22 @@ model User {
   emailVerificationExpires DateTime?
 
   // Relations
-  profile             Profile?
-  enrollments         Enrollment[]
-  lessonCompletions   LessonCompletion[]
-  lessonProgress      LessonProgress[]
-  certificates        Certificate[]
-  taughtCourses       Course[]             @relation("CourseInstructor")
-  taughtWorkshops     Workshop[]           @relation("WorkshopInstructor")
-  passwordResetTokens PasswordResetToken[]
-  createdInsights     Insight[]            @relation("InsightAuthor")
-  assessmentAttempts  AssessmentAttempt[]  @relation("AttemptStudent")
-  gradedAttempts      AssessmentAttempt[]  @relation("AttemptGrader")
-  courseGrades        CourseGrade[]
-  studyPlans          StudyPlan[]
+  profile               Profile?
+  enrollments           Enrollment[]
+  lessonCompletions     LessonCompletion[]
+  lessonProgress        LessonProgress[]
+  certificates          Certificate[]
+  taughtCourses         Course[]               @relation("CourseInstructor")
+  taughtWorkshops       Workshop[]             @relation("WorkshopInstructor")
+  passwordResetTokens   PasswordResetToken[]
+  createdInsights       Insight[]              @relation("InsightAuthor")
+  assessmentAttempts    AssessmentAttempt[]    @relation("AttemptStudent")
+  gradedAttempts        AssessmentAttempt[]    @relation("AttemptGrader")
+  courseGrades          CourseGrade[]
+  assignmentSubmissions AssignmentSubmission[] @relation("SubmissionStudent")
+  gradedSubmissions     AssignmentSubmission[] @relation("SubmissionGrader")
+  studyPlans            StudyPlan[]
+  userSessions          UserSession[]
 
   @@map("users")
 }
@@ -128,6 +131,28 @@ model Profile {
 // Linked OAuth identities — one row per (provider, providerAccountId) a user
 // has signed in with. This app's own session cookies (lib/session.ts) are the
 // only session mechanism; there is no separate NextAuth-style Session table.
+/// One sign-in on one device. The refresh token carries this row's id as its
+/// `sid` claim, so revoking the row kills that device at its next refresh —
+/// within the access token's 15-minute life at worst. Without this table the
+/// JWTs are entirely stateless and nothing can be listed or revoked.
+model UserSession {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Raw UA string; parsed for display only, never trusted.
+  userAgent String?
+  ipAddress String?
+
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+
+  @@index([userId, revokedAt])
+  @@map("user_sessions")
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -230,14 +255,15 @@ model Course {
   maxProjectResubmissions Int     @default(2)
 
   // Relations
-  sections       Section[]
-  enrollments    Enrollment[]
-  lessonProgress LessonProgress[]
-  certificates   Certificate[]
-  tags           CourseTag[]
-  assessments    Assessment[]
-  grades         CourseGrade[]
-  studyPlans     StudyPlan[]
+  sections              Section[]
+  enrollments           Enrollment[]
+  lessonProgress        LessonProgress[]
+  certificates          Certificate[]
+  tags                  CourseTag[]
+  assessments           Assessment[]
+  grades                CourseGrade[]
+  studyPlans            StudyPlan[]
+  assignmentSubmissions AssignmentSubmission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -593,6 +619,57 @@ model StudySession {
 
   @@index([planId, date])
   @@map("study_sessions")
+}
+
+enum AssignmentSubmissionStatus {
+  SUBMITTED // waiting on a reviewer
+  RETURNED // changes requested; the student may resubmit
+  ACCEPTED // done
+}
+
+/// A student's response to an in-lesson assignment block.
+///
+/// Keyed on the content-block id from Course.curriculum rather than a row of
+/// its own, matching how LessonProgress and the quiz blocks already work —
+/// lesson content lives in JSON, so a submission can only point at it by id.
+model AssignmentSubmission {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation("SubmissionStudent", fields: [userId], references: [id], onDelete: Cascade)
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  /// Content-block id of the assignment inside Course.curriculum.
+  blockId     String
+  /// Denormalised so a reviewer can see where the work came from without
+  /// walking the curriculum JSON.
+  lessonId    String?
+  lessonTitle String?
+  blockTitle  String?
+
+  /// Whichever of these the block's submissionType asks for.
+  text    String?
+  linkUrl String?
+  files   Json? // [{ url, name, size }]
+
+  status   AssignmentSubmissionStatus @default(SUBMITTED)
+  feedback String?
+  /// Marks awarded out of the block's own `points`. Not part of the course
+  /// grade — in-lesson assignments are practice, the graded instruments are
+  /// chapter quizzes and the project.
+  points   Float?
+
+  gradedById String?
+  gradedBy   User?   @relation("SubmissionGrader", fields: [gradedById], references: [id])
+
+  submittedAt DateTime  @default(now())
+  gradedAt    DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([userId, blockId])
+  @@index([courseId, blockId])
+  @@index([courseId, status])
+  @@map("assignment_submissions")
 }
 
 // ============================================================
