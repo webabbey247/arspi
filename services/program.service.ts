@@ -310,6 +310,84 @@ export type ProgramListingRow = {
  *  curriculum JSON, facilitators, FAQs and overview) just to render related
  *  cards. Across ~190 prerendered pages that was the single biggest cost in
  *  the build, and it costs the same on every runtime revalidation. */
+/** What the administrator's programme table actually renders.
+ *
+ *  Deliberately excludes curriculum, overview, faqs, facilitators and the
+ *  other long-form JSON columns. Those are the bulk of a course row — the
+ *  curriculum alone is 562 kB across the catalogue, and a single programme's
+ *  reaches 228 kB — and the list shows none of it. Including them made
+ *  GET /api/programs ship 1.3 MB; this shape is 62 kB.
+ *
+ *  Anything that edits a programme must re-fetch the full record by id first,
+ *  or it will save a form that was populated from fields it never received. */
+export type ProgramListRow = {
+  id:           string
+  title:        string
+  slug:         string
+  excerpt:      string
+  thumbnail:    string | null
+  price:        number
+  pricing:      string
+  paymentType:  string | null
+  level:        CourseLevel
+  featured:     boolean
+  predefinedAnalytics: boolean
+  status:       CourseStatus
+  duration:     string | null
+  startDate:    string | null
+  endDate:      string | null
+  instructorId: string
+  instructor:   { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null }
+  categoryId:   string | null
+  category:     ProgramCategoryRow | null
+  programLevelId:   string | null
+  programLevel:     { id: string; name: string; slug: string } | null
+  programFormatId:  string | null
+  programFormat:    { id: string; name: string; slug: string } | null
+  programPricingId: string | null
+  programPricing:   { id: string; name: string; slug: string } | null
+  createdAt:    Date
+  updatedAt:    Date
+  _count:       { enrollments: number }
+}
+
+export async function getProgramList(filters?: {
+  categoryId?:   string
+  level?:        CourseLevel
+  featured?:     boolean
+  instructorId?: string
+  status?:       CourseStatus
+}): Promise<ProgramListRow[]> {
+  const rows = await db.course.findMany({
+    where: {
+      ...(filters?.categoryId   !== undefined && { categoryId:   filters.categoryId }),
+      ...(filters?.level        !== undefined && { level:        filters.level }),
+      ...(filters?.featured     !== undefined && { featured:     filters.featured }),
+      ...(filters?.instructorId !== undefined && { instructorId: filters.instructorId }),
+      ...(filters?.status       !== undefined && { status:       filters.status }),
+    },
+    select: {
+      id: true, title: true, slug: true, excerpt: true, thumbnail: true,
+      price: true, pricing: true, paymentType: true, level: true, featured: true,
+      predefinedAnalytics: true, status: true, duration: true,
+      startDate: true, endDate: true,
+      instructorId: true, categoryId: true,
+      programLevelId: true, programFormatId: true, programPricingId: true,
+      createdAt: true, updatedAt: true,
+      instructor: {
+        select: { id: true, email: true, profile: { select: { firstName: true, lastName: true } } },
+      },
+      category:       { include: { _count: { select: { courses: true } } } },
+      programLevel:   { select: { id: true, name: true, slug: true } },
+      programFormat:  { select: { id: true, name: true, slug: true } },
+      programPricing: { select: { id: true, name: true, slug: true } },
+      _count:         { select: { enrollments: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+  return rows as unknown as ProgramListRow[]
+}
+
 export type ProgramCardRow = {
   slug:        string
   title:       string

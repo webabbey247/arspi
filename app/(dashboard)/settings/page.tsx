@@ -9,6 +9,9 @@ import { Check, X, ShieldCheck, GraduationCap, User as UserIcon } from "lucide-r
 import { cn } from "@/lib/utils"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import { SettingsSkeleton, InlineSkeleton } from "@/components/ui/skeleton"
+import { PhoneCodeSelect } from "@/components/ui/PhoneCodeSelect"
+import { DatePicker, toISODate } from "@/components/ui/DatePicker"
+import { COUNTRIES } from "@/lib/countries"
 import type { AccountProfile } from "@/services/profile.service"
 import type { DeviceSession } from "@/services/session.service"
 
@@ -133,33 +136,17 @@ const TIMEZONE_OPTIONS: string[] = (() => {
   }
 })()
 
-// Country codes for phone picker. Listed longest-first so that splitPhone
-// matches "+234" before it would match "+2".
-const COUNTRY_CODES = [
-  { code: "+971", flag: "🇦🇪", country: "United Arab Emirates" },
-  { code: "+254", flag: "🇰🇪", country: "Kenya" },
-  { code: "+234", flag: "🇳🇬", country: "Nigeria" },
-  { code: "+233", flag: "🇬🇭", country: "Ghana" },
-  { code: "+91",  flag: "🇮🇳", country: "India" },
-  { code: "+86",  flag: "🇨🇳", country: "China" },
-  { code: "+81",  flag: "🇯🇵", country: "Japan" },
-  { code: "+61",  flag: "🇦🇺", country: "Australia" },
-  { code: "+55",  flag: "🇧🇷", country: "Brazil" },
-  { code: "+49",  flag: "🇩🇪", country: "Germany" },
-  { code: "+44",  flag: "🇬🇧", country: "United Kingdom" },
-  { code: "+34",  flag: "🇪🇸", country: "Spain" },
-  { code: "+33",  flag: "🇫🇷", country: "France" },
-  { code: "+27",  flag: "🇿🇦", country: "South Africa" },
-  { code: "+20",  flag: "🇪🇬", country: "Egypt" },
-  { code: "+1",   flag: "🇺🇸", country: "USA / Canada" },
-] as const
+/** Dial codes longest-first, so "+1268" is matched before "+1". Built once:
+ *  the list is static and this runs on every profile load. */
+const DIAL_CODES_LONGEST_FIRST = Array.from(new Set(COUNTRIES.map(c => c.dialCode)))
+  .sort((a, b) => b.length - a.length)
 
 function splitPhone(phone: string | null | undefined): { code: string; number: string } {
   const trimmed = (phone ?? "").trim()
   if (!trimmed) return { code: "+234", number: "" }
-  for (const c of COUNTRY_CODES) {
-    if (trimmed.startsWith(c.code)) {
-      return { code: c.code, number: trimmed.slice(c.code.length).trim() }
+  for (const code of DIAL_CODES_LONGEST_FIRST) {
+    if (trimmed.startsWith(code)) {
+      return { code, number: trimmed.slice(code.length).trim() }
     }
   }
   return { code: "+234", number: trimmed }
@@ -1201,17 +1188,17 @@ npm run db:exec -- prisma/manual-migrations/add_user_sessions.sql{"\n"}npx prism
                     <div>
                       <label className={labelCls}>Phone</label>
                       <div className="flex">
-                        <select
-                          {...profileForm.register("phoneCountryCode")}
-                          disabled={loading}
-                          className="px-2 py-2.5 rounded-l-[10px] border border-r-0 border-[#DFE2ED] text-[13px] text-[#171C35] bg-[#FAFAFF] focus:outline-none focus:ring-2 focus:ring-[#6655DF]/20 focus:border-[#6655DF] transition-colors disabled:opacity-50 cursor-pointer"
-                        >
-                          {COUNTRY_CODES.map(c => (
-                            <option key={c.code} value={c.code}>
-                              {c.flag} {c.code}
-                            </option>
-                          ))}
-                        </select>
+                        <Controller
+                          control={profileForm.control}
+                          name="phoneCountryCode"
+                          render={({ field }) => (
+                            <PhoneCodeSelect
+                              value={field.value || "+234"}
+                              onChange={field.onChange}
+                              disabled={loading}
+                            />
+                          )}
+                        />
                         <input
                           {...profileForm.register("phone")}
                           className={`${inputCls} rounded-l-none min-w-0`}
@@ -1226,7 +1213,24 @@ npm run db:exec -- prisma/manual-migrations/add_user_sessions.sql{"\n"}npx prism
                     </div>
                     <div>
                       <label className={labelCls}>Date of birth</label>
-                      <input type="date" {...profileForm.register("dateOfBirth")} className={inputCls} disabled={loading} />
+                      <Controller
+                        control={profileForm.control}
+                        name="dateOfBirth"
+                        render={({ field }) => (
+                          <DatePicker
+                            label="Date of birth"
+                            value={field.value ?? ""}
+                            onChange={field.onChange}
+                            disabled={loading}
+                            placeholder="Select your date of birth"
+                            /* Nobody signing up here was born before 1920, and
+                               a birth date cannot be in the future. */
+                            fromYear={1920}
+                            toYear={new Date().getFullYear()}
+                            max={toISODate(new Date())}
+                          />
+                        )}
+                      />
                     </div>
                   </div>
 

@@ -73,13 +73,18 @@ type Program = {
   reviewCount:        number | null
   enrolledCount:      number | null
   countriesCount:     number | null
-  overview:           string | null
-  targetAudience:     unknown | null
-  learningObjectives: unknown | null
-  curriculum:         unknown | null
-  whatIsIncluded:     unknown | null
-  faqs:               unknown | null
-  facilitators:       unknown | null
+  // Long-form columns. GET /api/programs does NOT return these — it would
+  // ship 1.3 MB instead of 62 KB — so they are absent on a list row and
+  // present only on a record fetched by id. Optional on purpose: the modal's
+  // defaults fall back to "" / [], so reading them off a list row would
+  // silently blank the programme on save rather than fail loudly.
+  overview?:           string | null
+  targetAudience?:     unknown | null
+  learningObjectives?: unknown | null
+  curriculum?:         unknown | null
+  whatIsIncluded?:     unknown | null
+  faqs?:               unknown | null
+  facilitators?:       unknown | null
 }
 
 type Tab = "programs" | "categories" | "levels" | "formats" | "pricing"
@@ -2117,6 +2122,8 @@ export default function AdminProgramsPage() {
   const [levelFilter, setLevelFilter]         = useState<CourseLevel | "All">("All")
   const [pricingFilter, setPricingFilter]     = useState<"All" | "Free" | "Paid" | "Featured">("All")
   const [programModal, setProgramModal]       = useState<"create" | "ai" | Program | null>(null)
+  // Set while the full record for the editor is being fetched.
+  const [hydratingId, setHydratingId]         = useState<string | null>(null)
   const [aiDraft, setAiDraft]                 = useState<Partial<ProgramFormValues> | null>(null)
   const [aiBuilderOpen, setAiBuilderOpen]     = useState(false)
   const [deleteProgram, setDeleteProgram]     = useState<Program | null>(null)
@@ -2350,6 +2357,30 @@ export default function AdminProgramsPage() {
     await fetchPrograms()
   }
 
+  /** Opens the editor on the *full* record.
+   *
+   *  The table is loaded from a narrow query that omits curriculum, overview,
+   *  faqs and facilitators. Handing that row to the modal would populate the
+   *  form with empty values for all of them and then write those blanks back
+   *  on save — losing the content silently. So fetch by id first. */
+  async function openProgramEditor(p: Program) {
+    setHydratingId(p.id)
+    try {
+      const res = await fetch(`/api/programs/${p.id}`)
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        toast.error(d.error ?? "Could not open that programme for editing.")
+        return
+      }
+      const { program } = await res.json()
+      setProgramModal(program as Program)
+    } catch {
+      toast.error("Could not open that programme for editing.")
+    } finally {
+      setHydratingId(null)
+    }
+  }
+
   async function handleSetProgramStatus(p: Program, status: CourseStatus) {
     const res = await fetch(`/api/programs/${p.id}`, {
       method:  "PUT",
@@ -2378,7 +2409,13 @@ export default function AdminProgramsPage() {
     const actions: DropdownItem[] = [
       { label: "View analytics", onSelect: () => router.push(`/administrator/programs/${p.slug}`), icon: RowIcon.analytics },
       { label: "View public page", onSelect: () => window.open(`/programs/${p.slug}`, "_blank", "noopener,noreferrer"), icon: RowIcon.view },
-      { label: "Edit programme", onSelect: () => setProgramModal(p), icon: RowIcon.edit },
+      {
+        // The editor needs a round trip to fetch the full record, so say so
+        // rather than appearing to do nothing on a slow connection.
+        label:    hydratingId === p.id ? "Opening…" : "Edit programme",
+        onSelect: () => openProgramEditor(p),
+        icon:     RowIcon.edit,
+      },
     ]
     if (p.status === "DRAFT") {
       actions.push({

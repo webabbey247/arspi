@@ -439,7 +439,7 @@ const DashboardSidebar = ({
 
       <aside
         className={cn(
-          "bg-white border-r border-[#DFE2ED] px-4 py-6 flex flex-col overflow-hidden shrink-0 w-[270px] h-screen",
+          "bg-white border-r border-[#DFE2ED] px-4 pt-6 pb-4 flex flex-col overflow-hidden shrink-0 w-[270px] h-dvh",
           // Mobile: fixed drawer
           "fixed top-0 left-0 z-150 transform transition-transform duration-200",
           isOpen ? "translate-x-0" : "-translate-x-full",
@@ -523,13 +523,13 @@ const DashboardSidebar = ({
 
         {/* Signed-in user — the whole row is the menu trigger, so the account
             actions live in one place instead of a link plus a stray button. */}
-        <div className="mt-4 border-t border-[#DFE2ED] p-2">
+        <div className="mt-3 shrink-0 border-t border-[#DFE2ED] pt-3">
           <DropdownMenu
             triggerLabel="Account menu"
             side="top"
             menuWidth="w-56"
             className="w-full"
-            triggerClassName="flex w-full items-center gap-3 rounded-[11px] px-2.5 py-2 transition-colors hover:bg-[#EEECFF] cursor-pointer"
+            triggerClassName="flex w-full items-center gap-3 rounded-[10px] px-[13px] py-[10px] transition-colors hover:bg-[#EEECFF] cursor-pointer"
             activeTriggerClassName="bg-[#EEECFF]"
             trigger={
               <>

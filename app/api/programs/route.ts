@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { createProgram, getPrograms, slugify, CourseLevel } from "@/services/program.service"
+import { createProgram, slugify, CourseLevel, getProgramList } from "@/services/program.service"
 import { z } from "zod"
 
 const facilitatorSchema = z.object({
@@ -92,7 +92,8 @@ export async function GET(req: NextRequest) {
     const levelRaw    = searchParams.get("level")       ?? undefined
     const featuredRaw = searchParams.get("featured")
 
-    const programs = await getPrograms({
+    // Narrow by design — see ProgramListRow. Editing re-fetches by id.
+    const programs = await getProgramList({
       ...(categoryId           && { categoryId }),
       ...(levelRaw             && { level: levelRaw as CourseLevel }),
       ...(featuredRaw !== null && { featured: featuredRaw === "true" }),
