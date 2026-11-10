@@ -374,6 +374,82 @@ export function SearchInput({
 }
 
 /** Filter chips with counts — the pattern used across the learner workspace. */
+/** The filter glyph: three rules of decreasing width. Used on every filter
+ *  trigger so a filter is recognisable before its label is read. */
+export const filterGlyph = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       strokeWidth="2.2" strokeLinecap="round" aria-hidden>
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="6" y1="12" x2="18" y2="12" />
+    <line x1="10" y1="18" x2="14" y2="18" />
+  </svg>
+)
+
+/**
+ * A filter as a labelled pill: glyph, the current selection, chevron.
+ *
+ * The trigger shows what is *selected* rather than the field name plus a
+ * badge — "All states" reads as a state at a glance, where "Status · Active"
+ * makes you assemble it. Built on the portal DropdownMenu, so it escapes a
+ * scrolling ancestor's overflow and gets outside-click and Escape for free
+ * instead of each screen hand-rolling its own listener.
+ */
+export function FilterSelect<T extends string>({
+  label, value, options, onChange, menuWidth = "w-52", className,
+}: {
+  /** Describes the filter for screen readers, e.g. "Filter by status". */
+  label: string
+  value: T
+  options: readonly { value: T; label: string }[]
+  onChange: (value: T) => void
+  menuWidth?: string
+  className?: string
+}) {
+  const selected = options.find(o => o.value === value)
+  // The first option is the "all" case by convention, so a non-default
+  // selection can be shown as active without each caller saying which is which.
+  const isDefault = options.length > 0 && options[0].value === value
+
+  return (
+    <DropdownMenu
+      triggerLabel={label}
+      align="left"
+      menuWidth={menuWidth}
+      className={className}
+      triggerClassName={cn(
+        "flex items-center gap-2 rounded-[10px] border bg-white px-3 py-2 text-[13px] font-bold",
+        "cursor-pointer transition-colors whitespace-nowrap",
+        isDefault
+          ? "border-[#DFE2ED] text-[#171C35] hover:border-[#6655DF]"
+          : "border-[#6655DF] text-[#6655DF]",
+      )}
+      activeTriggerClassName="border-[#6655DF]"
+      trigger={
+        <>
+          <span className={isDefault ? "text-[#8A90A6]" : "text-[#6655DF]"}>{filterGlyph}</span>
+          <span>{selected?.label ?? label}</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-[#8A90A6]" aria-hidden>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </>
+      }
+      items={options.map(option => ({
+        label:    option.label,
+        onSelect: () => onChange(option.value),
+        trailing: option.value === value
+          ? (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6655DF"
+                 strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )
+          : undefined,
+      }))}
+    />
+  )
+}
+
 export function FilterChips<T extends string>({
   options, value, onChange,
 }: {
@@ -442,6 +518,24 @@ export const RowIcon = {
   publish:   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
   archive:   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg>,
   trash:     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
+  download:  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  copy:      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
+  mail:      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2 7 12 13 22 7"/></svg>,
+  key:       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.5 12.5 7-7"/><path d="m16 7 2 2"/><path d="m19 4 2 2"/></svg>,
+  user:      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  ban:       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg>,
+}
+
+/** Copies text and reports the outcome. Clipboard access can be refused (a
+ *  non-secure origin, or a denied permission), so the failure is surfaced
+ *  rather than leaving the menu looking as though it worked. */
+export async function copyToClipboard(text: string, onOk: () => void, onFail: () => void) {
+  try {
+    await navigator.clipboard.writeText(text)
+    onOk()
+  } catch {
+    onFail()
+  }
 }
 
 /**

@@ -4,6 +4,7 @@ import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import Link from "@tiptap/extension-link"
+import { LINK_EXTENSION_OPTIONS, promptForLink } from "@/lib/editor-link"
 import { useEffect } from "react"
 
 // ── Toolbar button ────────────────────────────────────────────────────────────
@@ -26,7 +27,7 @@ function ToolbarBtn({
       title={title}
       className={`p-1.5 rounded-[6px] transition-colors cursor-pointer ${
         active
-          ? "bg-[#C07C0A] text-white"
+          ? "bg-[#6655DF] text-white"
           : "text-[#69708A] hover:bg-[#F5F6FB] hover:text-[#171C35]"
       }`}
     >
@@ -50,6 +51,10 @@ type RichTextEditorProps = {
   onChange: (html: string) => void
   placeholder?: string
   minHeight?: number
+  /** Right-aligned slot in the toolbar, for an action that belongs to the
+   *  field rather than to the text — the content blocks put "Expand with AI"
+   *  here. Kept as a slot so there is still only one toolbar to maintain. */
+  toolbarExtra?: React.ReactNode
 }
 
 export default function RichTextEditor({
@@ -57,18 +62,34 @@ export default function RichTextEditor({
   onChange,
   placeholder = "Write article content here…",
   minHeight = 300,
+  toolbarExtra,
 }: RichTextEditorProps) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({ link: false }),
       Placeholder.configure({ placeholder }),
-      Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-[#6655DF] underline" } }),
+      Link.configure(LINK_EXTENSION_OPTIONS),
     ],
     content: value || "",
     editorProps: {
       attributes: {
-        class: "outline-none prose prose-sm max-w-none text-[#171C35] text-[13px] leading-relaxed",
+        class: [
+          "outline-none max-w-none text-[#171C35] text-[13px] leading-relaxed",
+          "[&_h1]:text-[20px] [&_h1]:font-extrabold [&_h1]:mt-4 [&_h1]:mb-1.5",
+          "[&_h2]:text-[17px] [&_h2]:font-bold [&_h2]:mt-3.5 [&_h2]:mb-1.5",
+          "[&_h3]:text-[15px] [&_h3]:font-bold [&_h3]:mt-3 [&_h3]:mb-1",
+          "[&_p]:mb-2.5 [&_p:last-child]:mb-0",
+          "[&_ul]:list-disc [&_ul]:ml-5 [&_ul]:space-y-1 [&_ul]:mb-2.5",
+          "[&_ol]:list-decimal [&_ol]:ml-5 [&_ol]:space-y-1 [&_ol]:mb-2.5",
+          "[&_li]:pl-0.5",
+          "[&_blockquote]:border-l-2 [&_blockquote]:border-[#6655DF] [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-[#69708A]",
+          "[&_a]:text-[#6655DF] [&_a]:underline [&_a]:underline-offset-2",
+          "[&_code]:rounded [&_code]:bg-[#F0EFFA] [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[12px]",
+          "[&_pre]:rounded-[8px] [&_pre]:bg-[#171C35] [&_pre]:text-white [&_pre]:p-3 [&_pre]:text-[12px] [&_pre]:overflow-x-auto",
+          "[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-inherit",
+          "[&_hr]:my-4 [&_hr]:border-[#DFE2ED]",
+        ].join(" "),
       },
     },
     onUpdate: ({ editor }) => {
@@ -88,9 +109,10 @@ export default function RichTextEditor({
   if (!editor) return null
 
   return (
-    <div className="border border-[#DFE2ED] rounded-[10px] overflow-hidden focus-within:border-[#C07C0A] transition-colors">
+    <div className="border border-[#DFE2ED] rounded-[10px] overflow-hidden focus-within:border-[#6655DF] transition-colors">
       {/* Toolbar */}
-      <div className="flex items-center gap-0.5 flex-wrap px-2 py-1.5 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+      <div className="flex items-start justify-between gap-2 px-2 py-1.5 border-b border-[#DFE2ED] bg-[#FAFAFF]">
+        <div className="flex items-center gap-0.5 flex-wrap">
         {/* Headings */}
         <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive("heading", { level: 1 })} title="Heading 1">
           <span className="text-[11px] font-bold leading-none">H1</span>
@@ -152,6 +174,27 @@ export default function RichTextEditor({
 
         <span className="w-px h-4 bg-[#DFE2ED] mx-1" />
 
+        {/* Link — the extension was configured but nothing could invoke it,
+            so a hyperlink could only ever arrive by pasting one. */}
+        <ToolbarBtn
+          onClick={() => { if (promptForLink(editor) === "invalid") alert("That does not look like a web address.") }}
+          active={editor.isActive("link")}
+          title="Add or edit link"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()}
+          active={false}
+          title="Remove link"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 0 1 3.5 8.5"/><line x1="2" y1="2" x2="22" y2="22"/>
+          </svg>
+        </ToolbarBtn>
+
+        <span className="w-px h-4 bg-[#DFE2ED] mx-1" />
+
         {/* Extras */}
         <ToolbarBtn onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal rule">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="2" y1="12" x2="22" y2="12"/></svg>
@@ -162,6 +205,9 @@ export default function RichTextEditor({
         <ToolbarBtn onClick={() => editor.chain().focus().redo().run()} active={false} title="Redo">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
         </ToolbarBtn>
+        </div>
+
+        {toolbarExtra}
       </div>
 
       {/* Editor area */}

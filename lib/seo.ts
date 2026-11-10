@@ -8,7 +8,7 @@
  *  results. */
 export const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://www.iarps.com").replace(/\/+$/, "")
 
-export const SITE_NAME = "ARPS Institute"
+export const SITE_NAME = "IARPS Institute"
 
 export const SITE_DESCRIPTION =
   "Global professional certification programs, research training, software solutions, and institutional consulting for scholars and practitioners worldwide."

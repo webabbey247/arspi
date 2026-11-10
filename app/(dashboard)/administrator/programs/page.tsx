@@ -11,6 +11,8 @@ import Placeholder from "@tiptap/extension-placeholder"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import ContentBlockEditor from "@/components/forms/ContentBlockEditor"
+import FullRichTextEditor from "@/components/ui/RichTextEditor"
+import { SITE_NAME } from "@/lib/seo"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
 import { toast } from "sonner"
@@ -58,6 +60,15 @@ type Program = {
   programFormat:    { id: string; name: string; slug: string } | null
   programPricingId: string | null
   programPricing:   { id: string; name: string; slug: string } | null
+
+  gradingEnabled?:          boolean
+  quizWeight?:              number
+  projectWeight?:           number
+  passMark?:                number
+  componentPassMark?:       number
+  maxQuizAttempts?:         number
+  attemptCooldownHours?:    number
+  maxProjectResubmissions?: number
 
   createdAt:    string
   updatedAt:    string
@@ -293,6 +304,10 @@ type Lesson = {
   id:          string
   title:       string
   description: string
+  /** Optional rich-text intro shown to learners above the lesson content,
+   *  answering "why does this lesson matter". HTML from the same editor as
+   *  the short description; absent on lessons authored before it existed. */
+  orientation?: string
   blocks:      ContentBlock[]
   /** Planning metadata from the chapter agent. Persisted with the lesson so
    *  "regenerate this lesson" still has the anti-overlap context after a save;
@@ -353,8 +368,19 @@ type ProgramFormValues = {
   // Step 3 — Curriculum
   curriculum: CurriculumItem[]
 
-  // Step 4 — Facilitators
+  // Carried in form state but no longer authored: see the note on the
+  // grading step. Existing facilitators round-trip so a save cannot drop them.
   facilitators: FacilitatorItem[]
+
+  // Step 4 — Grading
+  gradingEnabled:          boolean
+  quizWeight:              string
+  projectWeight:           string
+  passMark:                string
+  componentPassMark:       string
+  maxQuizAttempts:         string
+  attemptCooldownHours:    string
+  maxProjectResubmissions: string
 
   // Step 5 — FAQs
   faqs: FaqItem[]
@@ -369,6 +395,11 @@ const EMPTY_FORM: ProgramFormValues = {
   programLevelId: "", programFormatId: "", programPricingId: "",
   overview: "", targetAudience: [], learningObjectives: [], whatIsIncluded: [],
   curriculum: [], facilitators: [], faqs: [],
+  // Mirrors the column defaults in prisma/schema.prisma.
+  gradingEnabled: false,
+  quizWeight: "50", projectWeight: "50",
+  passMark: "50", componentPassMark: "50",
+  maxQuizAttempts: "3", attemptCooldownHours: "24", maxProjectResubmissions: "2",
 }
 
 // ── Format config ─────────────────────────────────────────────────────────────
@@ -380,7 +411,6 @@ type FormatCfg = {
   showCohortSize: boolean
   endEditable:   boolean
   endHint:       string
-  facilitatorRequired: boolean
 }
 
 const FORMAT_CONFIGS: Record<string, FormatCfg> = {
@@ -391,7 +421,6 @@ const FORMAT_CONFIGS: Record<string, FormatCfg> = {
     showCohortSize: false,
     endEditable:    false,
     endHint:        "",
-    facilitatorRequired: false,
   },
   "Cohort Based": {
     durationLabel: "Duration",
@@ -400,7 +429,6 @@ const FORMAT_CONFIGS: Record<string, FormatCfg> = {
     showCohortSize: true,
     endEditable:    false,
     endHint:        "Auto-calculated from start date + duration",
-    facilitatorRequired: true,
   },
   "Live Online": {
     durationLabel: "Session Duration",
@@ -409,7 +437,6 @@ const FORMAT_CONFIGS: Record<string, FormatCfg> = {
     showCohortSize: false,
     endEditable:    true,
     endHint:        "Date of last session",
-    facilitatorRequired: true,
   },
   "Blended": {
     durationLabel: "Programme Length",
@@ -418,7 +445,6 @@ const FORMAT_CONFIGS: Record<string, FormatCfg> = {
     showCohortSize: false,
     endEditable:    false,
     endHint:        "Auto-calculated from start date + duration",
-    facilitatorRequired: true,
   },
 }
 
@@ -429,7 +455,6 @@ const DEFAULT_FORMAT_CFG: FormatCfg = {
   showCohortSize: false,
   endEditable:    false,
   endHint:        "",
-  facilitatorRequired: false,
 }
 
 // ── Step definitions ──────────────────────────────────────────────────────────
@@ -438,9 +463,54 @@ const STEPS = [
   { label: "Basic Info",   desc: "Title, pricing & schedule"    },
   { label: "Objectives",   desc: "Outcomes & target audience"   },
   { label: "Curriculum",   desc: "Programme outline"            },
-  { label: "Facilitators", desc: "Programme facilitators"       },
+  { label: "Grading",      desc: "Marks, pass marks & attempts" },
   { label: "FAQs",         desc: "Frequently asked questions"   },
 ]
+
+/** The facilitator every programme is credited to. Taken from SITE_NAME so
+ *  the institute is named in one place rather than typed into each
+ *  programme — rename it there and new saves follow. */
+const INSTITUTE_FACILITATOR = {
+  name:        SITE_NAME,
+  imageUrl:    null,
+  title:       "Programme Faculty",
+  bio:         `Delivered by the faculty of ${SITE_NAME}.`,
+  credentials: null,
+}
+
+/** Collapses generated HTML to plain text, keeping paragraph and list breaks
+ *  as newlines. For fields rendered as text rather than markup. */
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<\/(p|div|li|h[1-6])>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "• ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+}
+
+/** Parses a numeric form field, falling back rather than writing NaN. */
+function intOr(value: string | undefined, fallback: number): number {
+  if (value === undefined || value.trim() === "") return fallback
+  const n = Number(value)
+  return Number.isInteger(n) ? n : fallback
+}
+
+/** Numeric-string validators for the grading step. Empty is allowed — the
+ *  save falls back to the column default rather than refusing. */
+function inRange(value: string | undefined, min: number, max: number): boolean {
+  if (value === undefined || value.trim() === "") return true
+  const n = Number(value)
+  return Number.isInteger(n) && n >= min && n <= max
+}
+const pct = (value: string | undefined) => inRange(value, 0, 100)
 
 // ── Validation schema ─────────────────────────────────────────────────────────
 
@@ -495,6 +565,7 @@ const programSchema = yup.object({
       id:          yup.string(),
       title:       yup.string().required("Lesson title is required"),
       description: yup.string(),
+      orientation: yup.string(),
       blocks:      yup.array(yup.mixed()).default([]),
       estimatedMinutes: yup.number().min(1).max(600).nullable().transform(v => (Number.isNaN(v) ? null : v)),
       focus:        yup.string(),
@@ -511,10 +582,26 @@ const programSchema = yup.object({
     title:       yup.string().required("Title / Role is required"),
     bio:         yup.string().required("Biography is required").max(2000, "Biography is too long"),
     credentials: yup.string(),
-  })).when("format", {
-    is:   (f: string) => ["Cohort Based", "Live Online", "Blended"].includes(f),
-    then: s => s.min(1, "At least one facilitator is required for this format"),
-  }),
+  })),
+
+  // Step 4 — Grading
+  gradingEnabled: yup.boolean().default(false),
+  quizWeight:     yup.string().test("0-100", "Must be between 0 and 100", pct),
+  projectWeight:  yup.string()
+    .test("0-100", "Must be between 0 and 100", pct)
+    // A grade is quizWeight% + projectWeight% of 100, so anything else scores
+    // out of the wrong total and the pass mark stops meaning what it says.
+    .test("sums-to-100", "Quiz and project weights must add up to 100", function (value) {
+      const quiz = Number(this.parent.quizWeight ?? 0)
+      const project = Number(value ?? 0)
+      if (Number.isNaN(quiz) || Number.isNaN(project)) return true
+      return quiz + project === 100
+    }),
+  passMark:          yup.string().test("0-100", "Must be between 0 and 100", pct),
+  componentPassMark: yup.string().test("0-100", "Must be between 0 and 100", pct),
+  maxQuizAttempts:      yup.string().test("range", "Must be between 0 and 20", n => inRange(n, 0, 20)),
+  attemptCooldownHours: yup.string().test("range", "Must be between 0 and 168", n => inRange(n, 0, 168)),
+  maxProjectResubmissions: yup.string().test("range", "Must be between 0 and 20", n => inRange(n, 0, 20)),
 
   // Step 5
   faqs: yup.array(yup.object({
@@ -706,56 +793,6 @@ function StarRating({ value, onChange }: { value: string; onChange: (v: string) 
 
 // ── Facilitator avatar upload ─────────────────────────────────────────────────
 
-function FacilitatorAvatarUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
-  const [uploading, setUploading] = useState(false)
-  const { startUpload } = useUploadThing("imageUploader")
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    try {
-      const res = await startUpload([file])
-      if (res?.[0]?.url) onChange(res[0].url)
-    } finally {
-      setUploading(false)
-      if (inputRef.current) inputRef.current.value = ""
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-3">
-      {value ? (
-        <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-[#DFE2ED] shrink-0 group">
-          <Image src={value} alt="Facilitator" fill className="object-cover" />
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            className="absolute inset-0 bg-[#171C35]/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer"
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-      ) : (
-        <div className="w-14 h-14 rounded-full border-2 border-dashed border-[#DFE2ED] flex items-center justify-center shrink-0 text-[#8A90A6]">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={uploading}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border border-[#DFE2ED] rounded-[8px] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 transition-colors cursor-pointer"
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        {uploading ? "Uploading…" : value ? "Change photo" : "Upload photo"}
-      </button>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-    </div>
-  )
-}
-
 // ── Lessons editor (nested within a chapter) ──────────────────────────────────
 
 /** Rewrites one lesson through the same agent that wrote it during the build.
@@ -831,6 +868,82 @@ function RegenerateLessonButton({
   )
 }
 
+/** Writes a whole FAQ set from what the author has already filled in.
+ *
+ *  Confirms before running, because it replaces the list rather than adding
+ *  to it — the same two-step the lesson regenerate uses, for the same reason:
+ *  the destructive reading of "regenerate" is the one people do not expect. */
+function RegenerateFaqsButton({
+  context, existing, onGenerated,
+}: {
+  context: {
+    title: string; excerpt?: string; overview?: string; level?: string
+    format?: string; duration?: string; price?: string
+    audience?: string[]; objectives?: string[]
+  }
+  existing: FaqItem[]
+  onGenerated: (faqs: FaqItem[]) => void
+}) {
+  const [confirming, setConfirming] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  const written = existing.filter(f => f.q.trim())
+
+  async function run() {
+    setBusy(true)
+    setConfirming(false)
+    try {
+      const res = await fetch("/api/programs/ai-generate/faqs", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ ...context, existing: written, provider: "anthropic" }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? "Could not generate FAQs.")
+      onGenerated(data.faqs as FaqItem[])
+      toast.success(`${(data.faqs as FaqItem[]).length} FAQs generated.`)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not generate FAQs.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (busy) {
+    return <span className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-[0.4px]">Generating…</span>
+  }
+
+  if (confirming) {
+    return (
+      <span className="flex items-center gap-2">
+        <button type="button" onClick={run}
+          className="text-[11px] font-bold text-red-600 hover:text-red-700 uppercase tracking-[0.4px] cursor-pointer">
+          Replace {written.length}
+        </button>
+        <button type="button" onClick={() => setConfirming(false)}
+          className="text-[11px] font-bold text-[#8A90A6] hover:text-[#69708A] uppercase tracking-[0.4px] cursor-pointer">
+          Cancel
+        </button>
+      </span>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      // Straight to work when there is nothing to lose; confirm first when
+      // there is.
+      onClick={() => (written.length ? setConfirming(true) : run())}
+      disabled={!context.title.trim()}
+      title={context.title.trim() ? undefined : "Add a programme title first"}
+      className="flex items-center gap-1 text-[11px] font-bold text-[#6655DF] hover:text-[#2C2368] uppercase tracking-[0.4px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+    >
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+      {written.length ? "Regenerate all" : "Generate with AI"}
+    </button>
+  )
+}
+
 function LessonItem({
   control, register, errors, moduleIndex, lessonIndex, onRemove, courseTitle, chapterTitle,
 }: {
@@ -851,6 +964,11 @@ function LessonItem({
     name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.description` as any,
   })
   const lessonSummary = descriptionField.value as string | undefined
+  const { field: orientationField } = useController({
+    control,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.orientation` as any,
+  })
   const { field: blocksField } = useController({
     control,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -863,6 +981,7 @@ function LessonItem({
   const level = (useWatch({ control, name: "level" }) as CourseLevel | undefined) ?? "BEGINNER"
   const levelLabel = level.charAt(0) + level.slice(1).toLowerCase()
   const [aiOpen, setAiOpen] = useState(false)
+  const [orientationAiOpen, setOrientationAiOpen] = useState(false)
 
   return (
     <div className="border border-[#DFE2ED] rounded-[10px] bg-white overflow-hidden">
@@ -905,6 +1024,30 @@ function LessonItem({
             currentValue={lessonSummary ?? ""}
             onGenerated={html => descriptionField.onChange(html)}
             onClose={() => setAiOpen(false)}
+          />
+        )}
+        <Field
+          label="Lesson Orientation"
+          hint="Optional. Shown to learners above the lesson content, under “Why this lesson matters”."
+          action={<AiBuilderTrigger onClick={() => setOrientationAiOpen(true)} />}
+        >
+          {/* The shared editor, not this file's cut-down one: orientation is
+              prose a learner reads, so it needs headings, links and lists. */}
+          <FullRichTextEditor
+            value={(orientationField.value as string) ?? ""}
+            onChange={orientationField.onChange}
+            placeholder="Why this lesson matters, and what it sets up…"
+            minHeight={160}
+          />
+        </Field>
+        {orientationAiOpen && (
+          <AiFieldBuilderModal
+            title="AI Builder — Lesson Orientation"
+            kind="lesson-orientation"
+            context={{ courseTitle, chapterTitle, lessonTitle: lessonTitle || undefined }}
+            currentValue={(orientationField.value as string) ?? ""}
+            onGenerated={html => orientationField.onChange(html)}
+            onClose={() => setOrientationAiOpen(false)}
           />
         )}
         <Field
@@ -1079,110 +1222,20 @@ function CurriculumEditor({
 
 // ── Facilitators editor ───────────────────────────────────────────────────────
 
-function FacilitatorsEditor({
-  control, register, errors,
-}: {
-  control:  Control<ProgramFormValues>
-  register: UseFormRegister<ProgramFormValues>
-  errors:   FieldErrors<ProgramFormValues>
-}) {
-  const { fields, append, remove } = useFieldArray({ control, name: "facilitators" })
-  return (
-    <div className="space-y-4">
-      {fields.length === 0 && (
-        <p className="text-[12px] text-[#8A90A6] italic">No facilitators added yet.</p>
-      )}
-      {fields.map((field, i) => (
-        <div key={field.id} className="border border-[#DFE2ED] rounded-[12px] overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAFF] border-b border-[#DFE2ED]">
-            <span className="text-[11px] font-bold text-[#6655DF] uppercase tracking-wide">Facilitator {i + 1}</span>
-            <button type="button" onClick={() => remove(i)} className="w-6 h-6 flex items-center justify-center rounded-full text-[#8A90A6] hover:bg-red-50 hover:text-red-500 cursor-pointer">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-          <div className="px-4 py-4 space-y-3">
-            <Field label="Photo" hint="optional">
-              <Controller
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                name={`facilitators.${i}.imageUrl` as any}
-                control={control}
-                render={({ field }) => (
-                  <FacilitatorAvatarUpload
-                    value={(field.value as string) ?? ""}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Full Name" required>
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <input {...register(`facilitators.${i}.name` as any)} className={inputCls} placeholder="e.g. Dr. Rachel Osei" />
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <FieldError msg={(errors.facilitators?.[i] as any)?.name?.message} />
-              </Field>
-              <Field label="Title / Role" required>
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <input {...register(`facilitators.${i}.title` as any)} className={inputCls} placeholder="e.g. Senior Researcher & M&E Specialist" />
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <FieldError msg={(errors.facilitators?.[i] as any)?.title?.message} />
-              </Field>
-            </div>
-            <Field label="Biography" required hint="max 2000 characters">
-              <Controller
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                name={`facilitators.${i}.bio` as any}
-                control={control}
-                render={({ field }) => (
-                  <RichTextEditor
-                    value={(field.value as string) ?? ""}
-                    onChange={field.onChange}
-                    placeholder="Short biography of the programme facilitator…"
-                  />
-                )}
-              />
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <FieldError msg={(errors.facilitators?.[i] as any)?.bio?.message} />
-            </Field>
-            <Field label="Credentials" hint="optional — separate by line">
-              <textarea
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                {...register(`facilitators.${i}.credentials` as any)}
-                rows={2}
-                className={inputCls}
-                placeholder="e.g. PhD Research Methods — University of Ghana"
-              />
-            </Field>
-          </div>
-        </div>
-      ))}
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      {(errors.facilitators as any)?.message && (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        <p className="text-[11px] text-red-600">{(errors.facilitators as any).message}</p>
-      )}
-      <button
-        type="button"
-        onClick={() => append({ name: "", imageUrl: "", title: "", bio: "", credentials: "" })}
-        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer"
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Facilitator
-      </button>
-    </div>
-  )
-}
-
 // ── FAQ editor ────────────────────────────────────────────────────────────────
 
 function FaqEditor({
-  control, register, errors,
+  control, register, errors, courseTitle,
 }: {
   control:  Control<ProgramFormValues>
   register: UseFormRegister<ProgramFormValues>
   errors:   FieldErrors<ProgramFormValues>
+  courseTitle: string
 }) {
   const { fields, append, remove } = useFieldArray({ control, name: "faqs" })
+  /** Which row has its AI modal open, by index. */
+  const [aiRow, setAiRow] = useState<number | null>(null)
+  const watchedFaqs = useWatch({ control, name: "faqs" }) as FaqItem[] | undefined
   return (
     <div className="space-y-3">
       {fields.map((field, i) => (
@@ -1202,12 +1255,32 @@ function FaqEditor({
               <input {...register(`faqs.${i}.q`)} className={inputCls} placeholder="e.g. Do I need prior M&E experience to enrol?" />
               <FieldError msg={errors.faqs?.[i]?.q?.message} />
             </Field>
-            <Field label="Answer">
+            <Field label="Answer" action={<AiBuilderTrigger onClick={() => setAiRow(i)} />}>
               <textarea {...register(`faqs.${i}.a`)} rows={3} className={inputCls} placeholder="Provide a clear, helpful answer…" />
             </Field>
           </div>
         </div>
       ))}
+      {aiRow !== null && (
+        <Controller
+          control={control}
+          name={`faqs.${aiRow}.a`}
+          render={({ field }) => (
+            <AiFieldBuilderModal
+              title="AI Builder — FAQ Answer"
+              kind="faq-answer"
+              context={{ courseTitle, question: watchedFaqs?.[aiRow]?.q || undefined }}
+              currentValue={(field.value as string) ?? ""}
+              // This field stores plain text — both renderers print it as text
+              // rather than HTML — so the generated markup is flattened rather
+              // than written through and shown as literal tags.
+              onGenerated={html => field.onChange(htmlToPlainText(html))}
+              onClose={() => setAiRow(null)}
+            />
+          )}
+        />
+      )}
+
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {(errors.faqs as any)?.message && (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1267,6 +1340,15 @@ function ProgramModal({
     programLevelId:   program.programLevelId   ?? "",
     programFormatId:  program.programFormatId  ?? "",
     programPricingId: program.programPricingId ?? "",
+
+    gradingEnabled:          program.gradingEnabled ?? false,
+    quizWeight:              String(program.quizWeight              ?? 50),
+    projectWeight:           String(program.projectWeight           ?? 50),
+    passMark:                String(program.passMark                ?? 50),
+    componentPassMark:       String(program.componentPassMark       ?? 50),
+    maxQuizAttempts:         String(program.maxQuizAttempts         ?? 3),
+    attemptCooldownHours:    String(program.attemptCooldownHours    ?? 24),
+    maxProjectResubmissions: String(program.maxProjectResubmissions ?? 2),
     overview:           program.overview ?? "",
     targetAudience:     Array.isArray(program.targetAudience)     ? (program.targetAudience as string[])     : [],
     learningObjectives: Array.isArray(program.learningObjectives) ? (program.learningObjectives as string[]) : [],
@@ -1289,6 +1371,7 @@ function ProgramModal({
                 // read back so regeneration still works after a reload.
                 focus:        typeof l.focus === "string" ? l.focus as LessonFocus : undefined,
                 brief:        typeof l.brief === "string" ? l.brief : undefined,
+                orientation:  typeof l.orientation === "string" ? l.orientation : undefined,
                 mustCover:    Array.isArray(l.mustCover)    ? l.mustCover    as string[] : undefined,
                 mustNotCover: Array.isArray(l.mustNotCover) ? l.mustNotCover as string[] : undefined,
               }))
@@ -1616,22 +1699,89 @@ function ProgramModal({
             <CurriculumEditor control={control} register={register} errors={errors} />
           </>}
 
-          {/* Step 4 — Facilitators */}
+          {/* Step 4 — Grading */}
           {step === 4 && <>
-            {formatCfg.facilitatorRequired && (
-              <p className="text-[12px] text-[#6655DF] bg-[#EEECFF] rounded-[10px] px-3 py-2">
-                At least one facilitator is required for <strong>{watchedFormat}</strong> programmes.
-              </p>
-            )}
-            <FacilitatorsEditor control={control} register={register} errors={errors} />
+            <p className="text-[13px] text-[#69708A] leading-relaxed">
+              How this programme is marked. Leave grading off for a programme that is read-only or
+              certificate-on-completion; the settings below then have no effect.
+            </p>
+
+            <label className="flex items-start gap-3 rounded-[10px] border border-[#DFE2ED] bg-[#FAFAFF] px-3.5 py-3 cursor-pointer">
+              <input
+                type="checkbox"
+                {...register("gradingEnabled")}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[#6655DF] cursor-pointer"
+              />
+              <span className="min-w-0">
+                <span className="block text-[13px] font-bold text-[#171C35]">Grade this programme</span>
+                <span className="block text-[12px] text-[#69708A] mt-0.5">
+                  Computes an overall mark from quizzes and the project, and decides who passes.
+                </span>
+              </span>
+            </label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Quiz weight (%)" hint="Share of the overall mark that comes from chapter quizzes">
+                <input type="number" min={0} max={100} {...register("quizWeight")} className={inputCls} />
+                <FieldError msg={errors.quizWeight?.message} />
+              </Field>
+              <Field label="Project weight (%)" hint="Must add up to 100 with the quiz weight">
+                <input type="number" min={0} max={100} {...register("projectWeight")} className={inputCls} />
+                <FieldError msg={errors.projectWeight?.message} />
+              </Field>
+              <Field label="Pass mark" hint="Overall marks needed to pass, out of 100">
+                <input type="number" min={0} max={100} {...register("passMark")} className={inputCls} />
+                <FieldError msg={errors.passMark?.message} />
+              </Field>
+              <Field label="Component pass mark (%)" hint="Minimum needed within each component on its own">
+                <input type="number" min={0} max={100} {...register("componentPassMark")} className={inputCls} />
+                <FieldError msg={errors.componentPassMark?.message} />
+              </Field>
+              <Field label="Quiz attempts" hint="0 for unlimited">
+                <input type="number" min={0} max={20} {...register("maxQuizAttempts")} className={inputCls} />
+                <FieldError msg={errors.maxQuizAttempts?.message} />
+              </Field>
+              <Field label="Cooldown between attempts (hours)" hint="0 for no waiting period">
+                <input type="number" min={0} max={168} {...register("attemptCooldownHours")} className={inputCls} />
+                <FieldError msg={errors.attemptCooldownHours?.message} />
+              </Field>
+              <Field label="Project resubmissions" hint="0 means one submission only">
+                <input type="number" min={0} max={20} {...register("maxProjectResubmissions")} className={inputCls} />
+                <FieldError msg={errors.maxProjectResubmissions?.message} />
+              </Field>
+            </div>
+
+            <p className="text-[12px] text-[#8A90A6] leading-relaxed">
+              Facilitation is credited to {SITE_NAME}. Programme-specific facilitators are no longer
+              authored here; any already saved against this programme are kept.
+            </p>
           </>}
 
           {/* Step 5 — FAQs */}
           {step === 5 && <>
-            <p className="text-[13px] text-[#69708A] leading-relaxed">
-              Add frequently asked questions shown in an accordion on the programme page. At least one FAQ is required.
-            </p>
-            <FaqEditor control={control} register={register} errors={errors} />
+            <div className="flex items-start justify-between gap-4">
+              <p className="text-[13px] text-[#69708A] leading-relaxed">
+                Add frequently asked questions shown in an accordion on the programme page. At least one FAQ is required.
+              </p>
+              <span className="shrink-0 pt-0.5">
+                <RegenerateFaqsButton
+                  context={{
+                    title:    watchedTitle ?? "",
+                    excerpt:  watch("excerpt"),
+                    overview: watch("overview"),
+                    level:    watch("level"),
+                    format:   watch("format"),
+                    duration: watch("duration"),
+                    price:    watch("pricing") === "free" ? "Free" : watch("price"),
+                    audience:   (watch("targetAudience") ?? []).filter(Boolean),
+                    objectives: (watch("learningObjectives") ?? []).filter(Boolean),
+                  }}
+                  existing={watch("faqs") ?? []}
+                  onGenerated={faqs => setValue("faqs", faqs, { shouldValidate: true, shouldDirty: true })}
+                />
+              </span>
+            </div>
+            <FaqEditor control={control} register={register} errors={errors} courseTitle={watchedTitle || "this programme"} />
           </>}
         </div>
 
@@ -2276,7 +2426,11 @@ export default function AdminProgramsPage() {
             id:          l.id || crypto.randomUUID(),
             title:       l.title,
             description: l.description || null,
+            orientation: l.orientation || null,
             blocks:      l.blocks ?? [],
+            // Was omitted here, so an authored duration was discarded on every
+            // save and the player silently fell back to its estimate.
+            estimatedMinutes: l.estimatedMinutes ?? null,
             ...(l.focus        && { focus:        l.focus }),
             ...(l.brief        && { brief:        l.brief }),
             ...(l.mustCover?.length    && { mustCover:    l.mustCover }),
@@ -2330,7 +2484,18 @@ export default function AdminProgramsPage() {
       learningObjectives: filterArr(values.learningObjectives),
       whatIsIncluded:     filterArr(values.whatIsIncluded),
       curriculum:         curriculumPayload.length   > 0 ? curriculumPayload   : null,
-      facilitators:       facilitatorsPayload.length > 0 ? facilitatorsPayload : null,
+      // Never null: a programme without authored facilitators is credited to
+      // the institute rather than showing nobody.
+      facilitators:       facilitatorsPayload.length > 0 ? facilitatorsPayload : [INSTITUTE_FACILITATOR],
+
+      gradingEnabled:          values.gradingEnabled,
+      quizWeight:              intOr(values.quizWeight, 50),
+      projectWeight:           intOr(values.projectWeight, 50),
+      passMark:                intOr(values.passMark, 50),
+      componentPassMark:       intOr(values.componentPassMark, 50),
+      maxQuizAttempts:         intOr(values.maxQuizAttempts, 3),
+      attemptCooldownHours:    intOr(values.attemptCooldownHours, 24),
+      maxProjectResubmissions: intOr(values.maxProjectResubmissions, 2),
       faqs:               faqsPayload.length         > 0 ? faqsPayload         : null,
     }
     const res  = await fetch(editing ? `/api/programs/${editing.id}` : "/api/programs", {
@@ -2669,7 +2834,7 @@ export default function AdminProgramsPage() {
                   onClick={() => setStatusOpen(o => !o)}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${pricingFilter !== "All" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
                   Pricing
                   {pricingFilter !== "All" && <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{pricingFilter}</span>}
                 </button>
@@ -2698,7 +2863,7 @@ export default function AdminProgramsPage() {
                   onClick={() => setFilterOpen(o => !o)}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${levelFilter !== "All" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
                   Level
                   {levelFilter !== "All" && <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{LEVEL_LABELS[levelFilter]}</span>}
                 </button>

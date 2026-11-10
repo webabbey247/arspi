@@ -1,13 +1,11 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { useEditor, EditorContent } from "@tiptap/react"
-import StarterKit from "@tiptap/starter-kit"
-import Placeholder from "@tiptap/extension-placeholder"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import Image from "next/image"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
 import MermaidDiagram from "@/components/ui/MermaidDiagram"
+import RichTextEditor from "@/components/ui/RichTextEditor"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -62,6 +60,15 @@ const inputCls = "w-full px-3 py-2 text-[13px] bg-white border border-[#DFE2ED] 
 
 // ── Mini rich-text editor ─────────────────────────────────────────────────────
 
+/**
+ * The text editor used inside content blocks.
+ *
+ * Delegates to the shared RichTextEditor rather than carrying a reduced
+ * toolbar of its own. It previously offered bold, italic and a bullet list —
+ * no headings, no links, no numbered lists, no quote — which meant lesson
+ * prose was the least capable text in the product despite being the text
+ * learners actually read. One editor, one toolbar, one place to change it.
+ */
 function MiniRTE({
   value, onChange, placeholder, onAiExpand,
 }: {
@@ -72,59 +79,23 @@ function MiniRTE({
    *  not here. */
   onAiExpand?: () => void
 }) {
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions: [
-      StarterKit,
-      Placeholder.configure({ placeholder: placeholder ?? "Write content…" }),
-    ],
-    content: value,
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
-    editorProps: {
-      attributes: {
-        class: "px-3 py-2.5 min-h-[100px] text-[13px] text-[#171C35] outline-none [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_p]:leading-relaxed",
-      },
-    },
-  })
-
-  useEffect(() => {
-    if (editor && !editor.isFocused && value !== editor.getHTML()) {
-      editor.commands.setContent(value || "")
-    }
-  }, [value, editor])
-
-  function tb(active: boolean, label: React.ReactNode, action: () => void) {
-    return (
-      <button type="button" onClick={action} className={`w-6 h-6 flex items-center justify-center rounded text-[11px] transition-colors cursor-pointer ${active ? "bg-[#6655DF] text-white" : "text-[#69708A] hover:bg-[#DFE2ED]"}`}>
-        {label}
-      </button>
-    )
-  }
-
   return (
-    <div className="border border-[#DFE2ED] rounded-[10px] overflow-hidden focus-within:border-[#6655DF] transition-colors">
-      <div className="flex items-center justify-between gap-1 px-2 py-1 border-b border-[#DFE2ED] bg-[#FAFAFF]">
-        <div className="flex items-center gap-0.5">
-          {tb(!!editor?.isActive("bold"),   <b>B</b>,   () => editor?.chain().focus().toggleBold().run())}
-          {tb(!!editor?.isActive("italic"), <em>I</em>, () => editor?.chain().focus().toggleItalic().run())}
-          {tb(!!editor?.isActive("bulletList"),
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/><circle cx="4" cy="18" r="1.5" fill="currentColor"/></svg>,
-            () => editor?.chain().focus().toggleBulletList().run()
-          )}
-        </div>
-        {onAiExpand && (
-          <button
-            type="button"
-            onClick={onAiExpand}
-            className="flex items-center gap-1 px-2 py-1 rounded-[6px] text-[10.5px] font-semibold text-[#6655DF] hover:bg-[#6655DF]/10 cursor-pointer transition-colors shrink-0"
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
-            {value.trim() ? "Expand with AI" : "Write with AI"}
-          </button>
-        )}
-      </div>
-      <EditorContent editor={editor} />
-    </div>
+    <RichTextEditor
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder ?? "Write content…"}
+      minHeight={160}
+      toolbarExtra={onAiExpand && (
+        <button
+          type="button"
+          onClick={onAiExpand}
+          className="mt-0.5 flex shrink-0 items-center gap-1 rounded-[6px] px-2 py-1 text-[10.5px] font-semibold text-[#6655DF] transition-colors hover:bg-[#6655DF]/10 cursor-pointer"
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
+          {value.trim() ? "Expand with AI" : "Write with AI"}
+        </button>
+      )}
+    />
   )
 }
 

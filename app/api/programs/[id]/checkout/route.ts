@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
+import { isStaffRole, STAFF_ENROLMENT_MESSAGE } from "@/lib/enrolment"
 import { getProgramById, enrollInProgram } from "@/services/program.service"
 import { stripe } from "@/lib/stripe"
 import { db } from "@/lib/db"
@@ -26,6 +27,11 @@ export async function POST(req: NextRequest, { params }: Context) {
     const session = await getSession()
     if (!session) {
       return NextResponse.json({ error: "Sign in to enroll in this program." }, { status: 401 })
+    }
+    // Before anything is charged or created: staff do not enrol, because an
+    // enrolment is counted in completion rates, revenue and certificates.
+    if (isStaffRole(session.role)) {
+      return NextResponse.json({ error: STAFF_ENROLMENT_MESSAGE }, { status: 403 })
     }
 
     const { id }  = await params

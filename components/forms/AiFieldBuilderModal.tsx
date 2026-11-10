@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 
-export type AiFieldBuilderKind = "module" | "lesson-summary" | "lesson" | "assignment"
+export type AiFieldBuilderKind =
+  | "module" | "lesson-summary" | "lesson-orientation" | "lesson" | "assignment" | "faq-answer"
 
 type Props = {
   title:   string   // modal header, e.g. "AI Builder — Module Description"
@@ -16,6 +17,8 @@ type Props = {
     lessonSummary?: string
     /** Assignment blocks only — the block's own title. */
     blockTitle?:    string
+    /** FAQ answers only — the question being answered. */
+    question?:      string
   }
   currentValue: string
   onGenerated:  (html: string) => void
@@ -49,6 +52,7 @@ export default function AiFieldBuilderModal({ title, kind, context, currentValue
           lessonTitle:    context.lessonTitle,
           lessonSummary:  context.lessonSummary,
           blockTitle:     context.blockTitle,
+          question:       context.question,
           currentContent: currentValue || undefined,
           instruction:    prompt.trim() || undefined,
         }),

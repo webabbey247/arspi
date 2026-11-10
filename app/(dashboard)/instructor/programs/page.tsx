@@ -12,6 +12,7 @@ import Placeholder from "@tiptap/extension-placeholder"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import ContentBlockEditor from "@/components/forms/ContentBlockEditor"
+import FullRichTextEditor from "@/components/ui/RichTextEditor"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
@@ -226,6 +227,8 @@ type Lesson = {
   id:          string
   title:       string
   description: string
+  /** Optional rich-text intro shown to learners above the lesson content. */
+  orientation?: string
   blocks:      ContentBlock[]
 }
 type CurriculumItem = {
@@ -400,6 +403,7 @@ const programSchema = yup.object({
       id:          yup.string(),
       title:       yup.string().required("Lesson title is required"),
       description: yup.string(),
+      orientation: yup.string(),
       blocks:      yup.array(yup.mixed()).default([]),
     })),
   })),
@@ -655,7 +659,13 @@ function LessonItem({
     name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.description` as any,
   })
   const lessonSummary = descriptionField.value as string | undefined
+  const { field: orientationField } = useController({
+    control,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    name: `curriculum.${moduleIndex}.lessons.${lessonIndex}.orientation` as any,
+  })
   const [aiOpen, setAiOpen] = useState(false)
+  const [orientationAiOpen, setOrientationAiOpen] = useState(false)
 
   return (
     <div className="border border-[#DFE2ED] rounded-[10px] bg-white overflow-hidden">
@@ -687,6 +697,30 @@ function LessonItem({
             currentValue={lessonSummary ?? ""}
             onGenerated={html => descriptionField.onChange(html)}
             onClose={() => setAiOpen(false)}
+          />
+        )}
+        <Field
+          label="Lesson Orientation"
+          hint="Optional. Shown to learners above the lesson content, under “Why this lesson matters”."
+          action={<AiBuilderTrigger onClick={() => setOrientationAiOpen(true)} />}
+        >
+          {/* The shared editor, not this file's cut-down one: orientation is
+              prose a learner reads, so it needs headings, links and lists. */}
+          <FullRichTextEditor
+            value={(orientationField.value as string) ?? ""}
+            onChange={orientationField.onChange}
+            placeholder="Why this lesson matters, and what it sets up…"
+            minHeight={160}
+          />
+        </Field>
+        {orientationAiOpen && (
+          <AiFieldBuilderModal
+            title="AI Builder — Lesson Orientation"
+            kind="lesson-orientation"
+            context={{ courseTitle, chapterTitle, lessonTitle: lessonTitle || undefined }}
+            currentValue={(orientationField.value as string) ?? ""}
+            onGenerated={html => orientationField.onChange(html)}
+            onClose={() => setOrientationAiOpen(false)}
           />
         )}
         <Field label="Embedded Content">
@@ -1041,6 +1075,7 @@ function ProgramModal({
                 id:          typeof l.id === "string" && l.id ? l.id : crypto.randomUUID(),
                 title:       String(l.title       ?? ""),
                 description: String(l.description ?? ""),
+                orientation: String(l.orientation ?? ""),
                 blocks:      Array.isArray(l.blocks) ? l.blocks as ContentBlock[] : [],
               }))
             : [],
@@ -1506,6 +1541,7 @@ export default function InstructorProgramsPage() {
             id:          l.id || crypto.randomUUID(),
             title:       l.title,
             description: l.description || null,
+            orientation: l.orientation || null,
             blocks:      l.blocks ?? [],
           })),
       }))
@@ -1638,7 +1674,7 @@ export default function InstructorProgramsPage() {
                 onClick={() => setStatusOpen(o => !o)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${pricingFilter !== "All" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
                 Pricing
                 {pricingFilter !== "All" && <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{pricingFilter}</span>}
               </button>
@@ -1667,7 +1703,7 @@ export default function InstructorProgramsPage() {
                 onClick={() => setFilterOpen(o => !o)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${levelFilter !== "All" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
                 Level
                 {levelFilter !== "All" && <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{LEVEL_LABELS[levelFilter]}</span>}
               </button>

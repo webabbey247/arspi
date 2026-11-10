@@ -8,12 +8,13 @@ import { z } from "zod"
 
 const requestSchema = z.object({
   provider:       z.enum(["anthropic", "openai"]).default("anthropic"),
-  kind:           z.enum(["lesson", "assignment", "module", "lesson-summary"]).default("lesson"),
+  kind:           z.enum(["lesson", "assignment", "module", "lesson-summary", "lesson-orientation", "faq-answer"]).default("lesson"),
   courseTitle:    z.string().min(1).max(255),
   chapterTitle:   z.string().max(255).optional(),
   lessonTitle:    z.string().max(255).optional(),
   lessonSummary:  z.string().max(1000).optional(),
   blockTitle:     z.string().max(255).optional(),
+  question:       z.string().max(500).optional(),
   currentContent: z.string().max(5000).optional(),
   instruction:    z.string().max(500).optional(),
 })
@@ -33,8 +34,10 @@ function buildPrompt(input: z.infer<typeof requestSchema>): { system: string; us
   const context = [
     `Course: "${input.courseTitle}"`,
     input.chapterTitle && `Module: "${input.chapterTitle}"`,
-    (input.kind === "lesson" || input.kind === "lesson-summary") ? input.lessonTitle && `Lesson: "${input.lessonTitle}"`
+    (input.kind === "lesson" || input.kind === "lesson-summary" || input.kind === "lesson-orientation")
+      ? input.lessonTitle && `Lesson: "${input.lessonTitle}"`
       : input.kind === "assignment" ? input.blockTitle && `Assignment: "${input.blockTitle}"`
+      : input.kind === "faq-answer" ? input.question && `Question: "${input.question}"`
       : null,
     // Only relevant for the content-block cases, where the lesson's own short
     // description is extra context distinct from what's being generated —
@@ -52,6 +55,16 @@ function buildPrompt(input: z.infer<typeof requestSchema>): { system: string; us
       "how it will be assessed (aim for roughly 100-250 words). The assignment's title is shown separately " +
       "in the UI, so do not repeat it as an opening line or use section headers like 'Task'/'Submit' as " +
       "their own paragraph — write it as flowing instructions instead."
+    : input.kind === "faq-answer"
+    ? "Answer the prospective learner's question directly and honestly, in two to four sentences " +
+      "(roughly 30-70 words). Plain prose, no bullet points and no headings \u2014 this is shown in an " +
+      "accordion on the programme page. Do not restate the question, and do not promise outcomes, " +
+      "accreditations or timescales that were not given to you."
+    : input.kind === "lesson-orientation"
+    ? "Write a short orientation that tells the learner why this lesson matters: what problem it helps " +
+      "them with, what it sets up for later, and what they should have in mind while reading (roughly " +
+      "50-90 words, one or two paragraphs). Address the learner directly. Do not summarise the lesson's " +
+      "content \u2014 the short description already does that \u2014 and do not repeat the lesson title."
     : input.kind === "module"
     ? "Write a short, engaging overview of this module for the programme outline — 1-2 sentences " +
       "(roughly 20-40 words). This is shown as the module's own summary, not the full lesson content."

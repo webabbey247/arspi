@@ -1,10 +1,12 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type { ContactStatus, ContactSubject } from "@/services/contact.service"
 import { downloadCsv } from "@/lib/csv"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 import { AdminPageHeader, StatTile } from "@/components/admin/AdminKit"
+import { RowActions, RowIcon, copyToClipboard, FilterSelect } from "@/components/admin/AdminKit"
+import { toast } from "sonner"
 
 type EnquiryRow = {
   id: string
@@ -46,75 +48,23 @@ function previewMessage(message: string) {
   return message.length > 72 ? `${message.slice(0, 72)}...` : message
 }
 
+/** Thin wrapper so the existing call sites keep their shape; the pill and all
+ *  its behaviour come from the kit. */
 function FilterDropdown<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
+  label, value, options, onChange,
 }: {
   label: string
   value: T | "ALL"
   options: Array<{ value: T | "ALL"; label: string }>
   onChange: (value: T | "ALL") => void
 }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false)
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
-
-  const activeLabel = options.find((option) => option.value === value)?.label ?? label
-
   return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((current) => !current)}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${
-          value !== "ALL"
-            ? "bg-[#6655DF] text-white border-[#6655DF]"
-            : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"
-        }`}
-      >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-        </svg>
-        {label}
-        {value !== "ALL" && (
-          <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-            {activeLabel}
-          </span>
-        )}
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-36">
-          {options.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => {
-                onChange(option.value)
-                setOpen(false)
-              }}
-              className={`w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${
-                value === option.value ? "bg-[#EEECFF] text-[#6655DF]" : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"
-              }`}
-            >
-              {option.label}
-              {value === option.value && (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <FilterSelect
+      label={`Filter by ${label.toLowerCase()}`}
+      value={value}
+      options={options}
+      onChange={onChange}
+    />
   )
 }
 
@@ -126,6 +76,8 @@ export default function AdminEnquiriesPage() {
   const [subjectFilter, setSubjectFilter] = useState<ContactSubject | "ALL">("ALL")
   const PAGE_SIZE = 20
   const [page, setPage] = useState(1)
+  /** The enquiry whose full message is open; the table truncates it. */
+  const [reading, setReading] = useState<EnquiryRow | null>(null)
 
   const fetchEnquiries = useCallback(async () => {
     setLoading(true)
@@ -264,16 +216,16 @@ export default function AdminEnquiriesPage() {
           <table className="w-full text-[13px]">
             <thead>
               <tr className="bg-[#FAFAFF] border-b border-[#DFE2ED]">
-                {["Sender", "Subject", "Message", "Phone", "Status", "Received"].map((col) => (
+                {["Sender", "Subject", "Message", "Phone", "Status", "Received", ""].map((col) => (
                   <th key={col} className="px-4 py-2.5 text-left text-[11px] font-bold text-[#8A90A6] tracking-[0.5px] uppercase whitespace-nowrap">{col}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <TableSkeletonRows colSpan={6} />
+                <TableSkeletonRows colSpan={7} />
               ) : enquiries.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-[#8A90A6]">No enquiries found.</td></tr>
+                <tr><td colSpan={7} className="px-4 py-10 text-center text-[#8A90A6]">No enquiries found.</td></tr>
               ) : paginated.map((enquiry) => (
                 <tr key={enquiry.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors align-top">
                   <td className="px-4 py-3 min-w-56">
@@ -293,6 +245,46 @@ export default function AdminEnquiriesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDate(enquiry.createdAt)}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end">
+                      {/* The enquiries API is read-only — GET only, with no
+                          status update or delete — so no action here pretends
+                          to change the record. "Read full message" exists
+                          because the column is truncated by previewMessage. */}
+                      <RowActions
+                        label={`Actions for ${fullName(enquiry)}`}
+                        items={[
+                          { label: "Read full message", icon: RowIcon.view, onSelect: () => setReading(enquiry) },
+                          {
+                            label: "Reply by email",
+                            icon: RowIcon.mail,
+                            onSelect: () => {
+                              const subject = encodeURIComponent(`Re: ${SUBJECT_LABELS[enquiry.subject]}`)
+                              window.location.href = `mailto:${enquiry.email}?subject=${subject}`
+                            },
+                          },
+                          {
+                            label: "Copy email",
+                            icon: RowIcon.copy,
+                            onSelect: () => copyToClipboard(
+                              enquiry.email,
+                              () => toast.success("Email copied."),
+                              () => toast.error("Could not copy the email."),
+                            ),
+                          },
+                          {
+                            label: "Copy message",
+                            icon: RowIcon.copy,
+                            onSelect: () => copyToClipboard(
+                              enquiry.message,
+                              () => toast.success("Message copied."),
+                              () => toast.error("Could not copy the message."),
+                            ),
+                          },
+                        ]}
+                      />
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -369,6 +361,49 @@ export default function AdminEnquiriesPage() {
           )}
         </div>
       </div>
+
+      {reading && (
+        <div
+          className="fixed inset-0 z-100 flex items-center justify-center bg-[#171C35]/40 px-4"
+          onClick={() => setReading(null)}
+        >
+          <div
+            className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-[#DFE2ED] px-5 py-4">
+              <div className="min-w-0">
+                <h2 className="text-[15px] font-extrabold text-[#171C35]">{fullName(reading)}</h2>
+                <p className="mt-0.5 truncate text-[12.5px] text-[#69708A]">{reading.email}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReading(null)}
+                aria-label="Close"
+                className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div className="px-5 py-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-[#EEECFF] px-2 py-0.5 text-[11px] font-semibold text-[#6655DF]">
+                  {SUBJECT_LABELS[reading.subject]}
+                </span>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[reading.status]}`}>
+                  {reading.status}
+                </span>
+                <span className="text-[11.5px] text-[#8A90A6]">{fmtDate(reading.createdAt)}</span>
+              </div>
+              {/* Plain text from a public form: rendered as text, never as
+                  markup, so a submitted tag cannot become one. */}
+              <p className="mt-3 max-h-80 overflow-y-auto whitespace-pre-wrap text-[13.5px] leading-relaxed text-[#171C35]">
+                {reading.message}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

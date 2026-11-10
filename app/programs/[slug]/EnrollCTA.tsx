@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { isStaffRole, STAFF_ENROLMENT_MESSAGE } from "@/lib/enrolment"
 
 /** Handles the actual "Enrol Now" action for a program: not signed in → send to
  *  login and back; free program → enrolls immediately and drops the student
@@ -21,7 +22,21 @@ export default function EnrollCTA({
   children:    React.ReactNode
 }) {
   const [loading, setLoading] = useState(false)
+  // Staff cannot enrol. The server refuses it either way; this is so the
+  // button says so up front instead of failing after a click.
+  const [isStaff, setIsStaff] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/auth/me")
+      .then(r => (r.ok ? r.json() : null))
+      .then(me => { if (!cancelled) setIsStaff(isStaffRole(me?.role)) })
+      // A signed-out visitor is not staff, and a failed check must not block
+      // enrolment — the server is the one that decides.
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   async function handleEnroll() {
     setLoading(true)
@@ -59,6 +74,15 @@ export default function EnrollCTA({
     } finally {
       setLoading(false)
     }
+  }
+
+  if (isStaff) {
+    return (
+      <div className={className}>
+        <Button disabled className="w-full cursor-not-allowed">Not available to staff</Button>
+        <p className="mt-2 text-[12.5px] leading-relaxed text-[#69708A]">{STAFF_ENROLMENT_MESSAGE}</p>
+      </div>
+    )
   }
 
   return (

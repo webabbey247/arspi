@@ -1149,7 +1149,7 @@ export default function AdminProjectsPage() {
     <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-350 mx-auto">
       <AdminPageHeader
         title="Research Projects"
-        description="Projects and the taxonomy that organises them \u2014 divisions, departments and services."
+        description="Projects and the taxonomy that organises them — divisions, departments and services."
         actions={
           <button
             onClick={cta.onClick}
@@ -1226,7 +1226,7 @@ export default function AdminProjectsPage() {
                   onClick={() => setStatusOpen(o => !o)}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${statusFilter !== "All" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
                   Project Status
                   {statusFilter !== "All" && <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{STATUS_LABELS[statusFilter]}</span>}
                 </button>

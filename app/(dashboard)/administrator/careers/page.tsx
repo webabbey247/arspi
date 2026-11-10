@@ -857,7 +857,7 @@ export default function AdminCareersPage() {
             <div className="sm:ml-auto flex flex-wrap items-center gap-2">
               <FilterDropdown
                 label="Department"
-                icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>}
+                icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>}
                 active={departmentFilter !== "All"}
                 value={departmentFilter}
                 onChange={setDeptF}
@@ -865,7 +865,7 @@ export default function AdminCareersPage() {
               />
               <FilterDropdown
                 label="Experience"
-                icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>}
+                icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>}
                 active={experienceFilter !== "All"}
                 value={experienceFilter}
                 onChange={setExpF}
@@ -873,7 +873,7 @@ export default function AdminCareersPage() {
               />
               <FilterDropdown
                 label="Location"
-                icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>}
+                icon={<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>}
                 active={locationFilter !== "All"}
                 value={locationFilter}
                 onChange={setLocF}

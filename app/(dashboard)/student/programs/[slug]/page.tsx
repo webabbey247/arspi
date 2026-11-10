@@ -16,7 +16,14 @@ import { TickProgress } from "@/components/ui/TickProgress"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type Lesson = { id?: string; title: string; description?: string | null; blocks?: ContentBlock[] }
+type Lesson = {
+  id?: string
+  title: string
+  description?: string | null
+  /** Optional rich-text intro, rendered above the lesson content. */
+  orientation?: string | null
+  blocks?: ContentBlock[]
+}
 type Chapter = { id?: string; title: string; desc?: string | null; lessons?: Lesson[] }
 
 type Facilitator = {
@@ -752,6 +759,17 @@ const StudentCoursePlayerPage = () => {
 
                 {tab === "lesson" && (
                   <div className="space-y-5">
+                    {selected.lesson.orientation && (
+                      <section className="rounded-[14px] border border-[#DFE2ED] bg-[#FAFAFF] px-4 py-4 sm:px-5">
+                        <h3 className="text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF]">
+                          Why this lesson matters
+                        </h3>
+                        <div
+                          className={cn(proseCls, "mt-2 text-[#2C2368]")}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(selected.lesson.orientation) }}
+                        />
+                      </section>
+                    )}
                     {selected.lesson.description && (
                       <div className={proseCls} dangerouslySetInnerHTML={{ __html: sanitizeHtml(selected.lesson.description) }} />
                     )}

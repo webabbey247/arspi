@@ -1,12 +1,13 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import Link from "next/link"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 import {
   AdminPageHeader, StatTile, SearchInput, EmptyState, metaCls,
 } from "@/components/admin/AdminKit"
 import { cn } from "@/lib/utils"
+import { RowActions, RowIcon, copyToClipboard } from "@/components/admin/AdminKit"
+import { toast } from "sonner"
 
 type Certificate = {
   id:         string
@@ -19,6 +20,39 @@ type Certificate = {
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+}
+
+/** The actions available on a certificate, as one menu shared by the table
+ *  row and the mobile card — previously three loose icon buttons in each. */
+function CertificateActions({ cert, onRevoke }: { cert: Certificate; onRevoke: () => void }) {
+  return (
+    <RowActions
+      label={`Actions for ${cert.verifyCode}`}
+      items={[
+        {
+          label: "View certificate",
+          icon: RowIcon.view,
+          onSelect: () => window.open(`/verify/${cert.verifyCode}`, "_blank", "noopener,noreferrer"),
+        },
+        {
+          label: "Download PDF",
+          icon: RowIcon.download,
+          onSelect: () => window.open(`/api/certificates/verify/${cert.verifyCode}/download`, "_blank", "noopener,noreferrer"),
+        },
+        {
+          label: "Copy verify link",
+          icon: RowIcon.copy,
+          onSelect: () => copyToClipboard(
+            `${window.location.origin}/verify/${cert.verifyCode}`,
+            () => toast.success("Verify link copied."),
+            () => toast.error("Could not copy the link."),
+          ),
+        },
+        { type: "separator" },
+        { label: "Revoke certificate", icon: RowIcon.trash, danger: true, onSelect: onRevoke },
+      ]}
+    />
+  )
 }
 
 function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) {
@@ -169,17 +203,7 @@ const AdminCertificatesPage = () => {
                   <td className="px-4 py-3 text-[#69708A] whitespace-nowrap">{fmtDate(c.issuedAt)}</td>
                   <td className="px-4 py-3 text-[#69708A] font-mono text-[11px] whitespace-nowrap">{c.verifyCode.slice(0, 12)}…</td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="flex items-center gap-1">
-                      <Link href={`/verify/${c.verifyCode}`} target="_blank" title="View certificate" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-blue-50 transition-colors">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
-                      </Link>
-                      <a href={`/api/certificates/verify/${c.verifyCode}/download`} target="_blank" rel="noopener noreferrer" title="Download PDF" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-blue-50 transition-colors">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                      </a>
-                      <button onClick={() => setRevokeTarget(c)} title="Revoke" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                      </button>
-                    </div>
+                    <CertificateActions cert={c} onRevoke={() => setRevokeTarget(c)} />
                   </td>
                 </tr>
               ))}
@@ -217,15 +241,7 @@ const AdminCertificatesPage = () => {
                 </div>
               </dl>
               <div className="flex items-center justify-end gap-1.5 pt-1">
-                <Link href={`/verify/${c.verifyCode}`} target="_blank" aria-label="View certificate" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-blue-50 transition-colors">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
-                </Link>
-                <a href={`/api/certificates/verify/${c.verifyCode}/download`} target="_blank" rel="noopener noreferrer" aria-label="Download PDF" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-blue-50 transition-colors">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                </a>
-                <button onClick={() => setRevokeTarget(c)} aria-label="Revoke" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                </button>
+                <CertificateActions cert={c} onRevoke={() => setRevokeTarget(c)} />
               </div>
             </div>
           ))}

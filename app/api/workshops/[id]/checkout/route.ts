@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { getSession } from "@/lib/session"
+import { isStaffRole, STAFF_REGISTRATION_MESSAGE } from "@/lib/enrolment"
 import { getWorkshopById } from "@/services/workshop.service"
 import { stripe } from "@/lib/stripe"
 import { db } from "@/lib/db"
@@ -23,6 +24,9 @@ export async function POST(req: NextRequest, { params }: Context) {
     const session = await getSession()
     if (!session) {
       return NextResponse.json({ error: "Sign in to register for this workshop." }, { status: 401 })
+    }
+    if (isStaffRole(session.role)) {
+      return NextResponse.json({ error: STAFF_REGISTRATION_MESSAGE }, { status: 403 })
     }
 
     const { id } = await params

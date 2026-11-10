@@ -26,7 +26,15 @@ type EnrollStatus = "ACTIVE" | "COMPLETED" | "DROPPED"
 /** The curriculum JSON, as the editor writes it. Chapters hold lessons, and a
  *  lesson's real content is its block list — the same shape the student player
  *  reads, so the rail and the lesson preview here can mirror it exactly. */
-type Lesson  = { id?: string; title: string; description?: string | null; blocks?: ContentBlock[]; estimatedMinutes?: number | null }
+type Lesson  = {
+  id?: string
+  title: string
+  description?: string | null
+  /** Optional rich-text intro, rendered above the lesson content. */
+  orientation?: string | null
+  blocks?: ContentBlock[]
+  estimatedMinutes?: number | null
+}
 type Chapter = { id?: string; week?: string; title: string; desc?: string | null; lessons?: Lesson[] }
 
 type Facilitator = {
@@ -1011,6 +1019,18 @@ export default function ProgramDetailPage() {
                         ))}
                       </ul>
                     </div>
+                  )}
+
+                  {selected.lesson.orientation && (
+                    <section className="rounded-[14px] border border-[#DFE2ED] bg-[#FAFAFF] px-4 py-4 sm:px-5">
+                      <h3 className="text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF]">
+                        Why this lesson matters
+                      </h3>
+                      <div
+                        className={cn(proseCls, "mt-2 text-[#2C2368]")}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(selected.lesson.orientation) }}
+                      />
+                    </section>
                   )}
 
                   {selected.lesson.description && (

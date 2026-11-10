@@ -134,6 +134,18 @@ export type ProgramInput = {
   faqs?:                 unknown | null
 
   facilitators?:         unknown | null
+
+  /** Assessment & grading policy. Previously absent from this type, so the
+   *  columns existed and were read by the assessment service but nothing
+   *  could ever write them — every programme sat on the schema defaults. */
+  gradingEnabled?:          boolean
+  quizWeight?:              number
+  projectWeight?:           number
+  passMark?:                number
+  componentPassMark?:       number
+  maxQuizAttempts?:         number
+  attemptCooldownHours?:    number
+  maxProjectResubmissions?: number
 }
 
 export type ProgramServiceResult<T> =
@@ -532,6 +544,15 @@ export async function createProgram(
       whatIsIncluded:       (input.whatIsIncluded       ?? null) as never,
       faqs:                 (input.faqs                 ?? null) as never,
       facilitators:         (input.facilitators         ?? null) as never,
+
+      gradingEnabled:          input.gradingEnabled          ?? false,
+      quizWeight:              input.quizWeight              ?? 50,
+      projectWeight:           input.projectWeight           ?? 50,
+      passMark:                input.passMark                ?? 50,
+      componentPassMark:       input.componentPassMark       ?? 50,
+      maxQuizAttempts:         input.maxQuizAttempts         ?? 3,
+      attemptCooldownHours:    input.attemptCooldownHours    ?? 24,
+      maxProjectResubmissions: input.maxProjectResubmissions ?? 2,
     },
     include: programInclude,
   })
@@ -590,6 +611,14 @@ export async function updateProgram(
       ...(input.whatIsIncluded      !== undefined && { whatIsIncluded:      input.whatIsIncluded      as never }),
       ...(input.faqs                !== undefined && { faqs:                input.faqs                as never }),
       ...(input.facilitators        !== undefined && { facilitators:        input.facilitators        as never }),
+      ...(input.gradingEnabled !== undefined && { gradingEnabled: input.gradingEnabled }),
+      ...(input.quizWeight !== undefined && { quizWeight: input.quizWeight }),
+      ...(input.projectWeight !== undefined && { projectWeight: input.projectWeight }),
+      ...(input.passMark !== undefined && { passMark: input.passMark }),
+      ...(input.componentPassMark !== undefined && { componentPassMark: input.componentPassMark }),
+      ...(input.maxQuizAttempts !== undefined && { maxQuizAttempts: input.maxQuizAttempts }),
+      ...(input.attemptCooldownHours !== undefined && { attemptCooldownHours: input.attemptCooldownHours }),
+      ...(input.maxProjectResubmissions !== undefined && { maxProjectResubmissions: input.maxProjectResubmissions }),
     },
     include: programInclude,
   })

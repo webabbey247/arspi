@@ -3,9 +3,18 @@ import { workshopSchema } from "@/lib/validators/workshop"
 import { registerForWorkshop, getWorkshopById, computeDurationHours, normalizeFacilitators } from "@/services/workshop.service"
 import type { WorkshopRegistrationPayload } from "@/lib/validators/workshop"
 import { sendWorkshopConfirmationEmail } from "@/lib/email"
+import { getSession } from "@/lib/session"
+import { isStaffRole, STAFF_REGISTRATION_MESSAGE } from "@/lib/enrolment"
 
 export async function POST(req: NextRequest) {
   try {
+    // The form itself is public — a visitor needs no account — so this only
+    // catches the case of a signed-in staff member using it.
+    const session = await getSession()
+    if (session && isStaffRole(session.role)) {
+      return NextResponse.json({ error: STAFF_REGISTRATION_MESSAGE }, { status: 403 })
+    }
+
     const body = await req.json()
 
     const { workshopId, workshopTitle, workshopDate, workshopTime, fee, ...userFields } = body

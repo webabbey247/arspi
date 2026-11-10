@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useForm, type Resolver } from "react-hook-form"
@@ -10,6 +10,8 @@ import { Check, ShieldCheck, GraduationCap, User as UserIcon, X } from "lucide-r
 import { cn } from "@/lib/utils"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 import { AdminPageHeader, StatTile } from "@/components/admin/AdminKit"
+import { RowActions, RowIcon, copyToClipboard, FilterSelect } from "@/components/admin/AdminKit"
+import { toast } from "sonner"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -196,6 +198,42 @@ function SetPasswordDialog({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+/** One menu for a user row, replacing the view / set-password / disable
+ *  trio of icon buttons. */
+function UserActions({
+  user, onView, onSetPassword, onToggleStatus,
+}: {
+  user: { id: string; email: string; status: string }
+  onView: () => void
+  onSetPassword: () => void
+  onToggleStatus: () => void
+}) {
+  const active = user.status === "ACTIVE"
+  return (
+    <RowActions
+      label={`Actions for ${user.email}`}
+      items={[
+        { label: "View user", icon: RowIcon.view, onSelect: onView },
+        {
+          label: "Copy email",
+          icon: RowIcon.copy,
+          onSelect: () => copyToClipboard(
+            user.email,
+            () => toast.success("Email copied."),
+            () => toast.error("Could not copy the email."),
+          ),
+        },
+        { label: "Email user", icon: RowIcon.mail, onSelect: () => { window.location.href = `mailto:${user.email}` } },
+        { label: "Set password", icon: RowIcon.key, onSelect: onSetPassword },
+        { type: "separator" },
+        active
+          ? { label: "Disable account", icon: RowIcon.ban, danger: true, onSelect: onToggleStatus }
+          : { label: "Approve account", icon: RowIcon.publish, onSelect: onToggleStatus },
+      ]}
+    />
+  )
+}
+
 export default function UsersPage() {
   const router = useRouter()
 
@@ -204,30 +242,15 @@ export default function UsersPage() {
   const [search,       setSearch]       = useState("")
   const [roleFilter,   setRoleFilter]   = useState<UserRole | "ALL">("ALL")
   const [statusFilter, setStatusFilter] = useState<UserStatus | "ALL">("ALL")
-  const [roleOpen,     setRoleOpen]     = useState(false)
-  const [statusOpen,   setStatusOpen]   = useState(false)
   const [pwdUser,      setPwdUser]      = useState<UserRow | null>(null)
   const [toast,        setToast]        = useState<{ msg: string; ok: boolean } | null>(null)
   const PAGE_SIZE                       = 20
   const [page,         setPage]         = useState(1)
 
-  const roleRef   = useRef<HTMLDivElement>(null)
-  const statusRef = useRef<HTMLDivElement>(null)
-
   function showToast(msg: string, ok = true) {
     setToast({ msg, ok })
     setTimeout(() => setToast(null), 3500)
   }
-
-  // Close dropdowns on outside click
-  useEffect(() => {
-    function h(e: MouseEvent) {
-      if (roleRef.current   && !roleRef.current.contains(e.target as Node))   setRoleOpen(false)
-      if (statusRef.current && !statusRef.current.contains(e.target as Node)) setStatusOpen(false)
-    }
-    document.addEventListener("mousedown", h)
-    return () => document.removeEventListener("mousedown", h)
-  }, [])
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
@@ -372,96 +395,29 @@ export default function UsersPage() {
           <div className="sm:ml-auto flex flex-wrap items-center gap-2">
 
             {/* Role filter */}
-            <div ref={roleRef} className="relative">
-              <button
-                onClick={() => { setRoleOpen(o => !o); setStatusOpen(false) }}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors",
-                  roleFilter !== "ALL"
-                    ? "bg-[#6655DF] text-white border-[#6655DF]"
-                    : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"
-                )}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                </svg>
-                Role
-                {roleFilter !== "ALL" && (
-                  <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                    {ROLE_LABELS[roleFilter]}
-                  </span>
-                )}
-              </button>
-              {roleOpen && (
-                <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-36">
-                  {(["ALL", "ADMIN", "INSTRUCTOR", "USER"] as const).map(r => (
-                    <button
-                      key={r}
-                      onClick={() => { setRoleFilter(r); setRoleOpen(false) }}
-                      className={cn(
-                        "w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors",
-                        roleFilter === r
-                          ? "bg-[#EEECFF] text-[#6655DF]"
-                          : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"
-                      )}
-                    >
-                      {r === "ALL" ? "All Roles" : ROLE_LABELS[r]}
-                      {roleFilter === r && (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <FilterSelect
+              label="Filter by role"
+              value={roleFilter}
+              onChange={setRoleFilter}
+              options={[
+                { value: "ALL", label: "All roles" },
+                { value: "ADMIN", label: "Admin" },
+                { value: "INSTRUCTOR", label: "Instructor" },
+                { value: "USER", label: "User" },
+              ] as const}
+            />
 
             {/* Status filter */}
-            <div ref={statusRef} className="relative">
-              <button
-                onClick={() => { setStatusOpen(o => !o); setRoleOpen(false) }}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors",
-                  statusFilter !== "ALL"
-                    ? "bg-[#6655DF] text-white border-[#6655DF]"
-                    : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"
-                )}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
-                </svg>
-                Status
-                {statusFilter !== "ALL" && (
-                  <span className="ml-1 bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                    {statusFilter === "ACTIVE" ? "Active" : "Disabled"}
-                  </span>
-                )}
-              </button>
-              {statusOpen && (
-                <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-36">
-                  {(["ALL", "ACTIVE", "DISABLED"] as const).map(s => (
-                    <button
-                      key={s}
-                      onClick={() => { setStatusFilter(s); setStatusOpen(false) }}
-                      className={cn(
-                        "w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors",
-                        statusFilter === s
-                          ? "bg-[#EEECFF] text-[#6655DF]"
-                          : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"
-                      )}
-                    >
-                      {s === "ALL" ? "All Status" : s === "ACTIVE" ? "Active" : "Disabled"}
-                      {statusFilter === s && (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <FilterSelect
+              label="Filter by status"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: "ALL", label: "All statuses" },
+                { value: "ACTIVE", label: "Active" },
+                { value: "DISABLED", label: "Disabled" },
+              ] as const}
+            />
 
             {/* Export CSV */}
             <button
@@ -556,47 +512,13 @@ export default function UsersPage() {
 
                   {/* Actions */}
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        onClick={() => router.push(`/administrator/users/${user.id}`)}
-                        title="View"
-                        className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                          <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => setPwdUser(user)}
-                        title="Set Password"
-                        className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] transition-colors cursor-pointer"
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => toggleStatus(user)}
-                        title={user.status === "ACTIVE" ? "Disable account" : "Approve account"}
-                        className={cn(
-                          "w-7 h-7 flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer",
-                          user.status === "ACTIVE"
-                            ? "border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300"
-                            : "border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:border-emerald-300"
-                        )}
-                      >
-                        {user.status === "ACTIVE" ? (
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-                          </svg>
-                        ) : (
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        )}
-                      </button>
+                    <div className="flex justify-end">
+                      <UserActions
+                        user={user}
+                        onView={() => router.push(`/administrator/users/${user.id}`)}
+                        onSetPassword={() => setPwdUser(user)}
+                        onToggleStatus={() => toggleStatus(user)}
+                      />
                     </div>
                   </td>
                 </tr>

@@ -57,6 +57,8 @@ const updateSchema = z.object({
       id:          z.string().optional(),
       title:       z.string(),
       description: z.string().nullable().optional(),
+      /** Optional rich-text intro shown above the lesson content. */
+      orientation: z.string().nullable().optional(),
       // z.any() already carries `variants` through; spelled out here only as a
       // reminder that quiz blocks now hold alternative phrasings.
       blocks:      z.array(z.any()).optional(),
@@ -77,6 +79,17 @@ const updateSchema = z.object({
 
   // Facilitators (replaces standalone instructor columns)
   facilitators:       z.array(facilitatorSchema).nullable().optional(),
+
+  /** Assessment & grading policy (services/assessment.service.ts). */
+  gradingEnabled:          z.boolean().optional(),
+  quizWeight:              z.number().int().min(0).max(100).optional(),
+  projectWeight:           z.number().int().min(0).max(100).optional(),
+  passMark:                z.number().int().min(0).max(100).optional(),
+  componentPassMark:       z.number().int().min(0).max(100).optional(),
+  maxQuizAttempts:         z.number().int().min(0).max(20).optional(),
+  attemptCooldownHours:    z.number().int().min(0).max(168).optional(),
+  maxProjectResubmissions: z.number().int().min(0).max(20).optional(),
+
 })
 
 type Context = { params: Promise<{ id: string }> }
