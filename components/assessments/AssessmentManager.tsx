@@ -5,6 +5,8 @@ import { toast } from "sonner"
 import { Plus, Trash2, Pencil, X, ClipboardCheck, FolderUp, GripVertical, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
+import RubricPicker, { useRubricLibrary } from "@/components/rubrics/RubricPicker"
+import { RubricScopeProvider } from "@/components/rubrics/RubricScope"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -23,6 +25,7 @@ type Assessment = {
   chapterId: string | null
   questions: Question[] | null
   rubric: Criterion[] | null
+  rubricId: string | null
   drawCount: number | null
   shuffleOptions: boolean
   orderIndex: number
@@ -284,6 +287,13 @@ function AssessmentModal({
   const [chapterId, setChapterId]       = useState(isNew ? (chapters[0]?.id ?? "") : existing.chapterId ?? "")
   const [questions, setQuestions]       = useState<Question[]>(isNew ? [] : existing.questions ?? [])
   const [rubric, setRubric]             = useState<Criterion[]>(isNew ? [] : existing.rubric ?? [])
+  const [rubricId, setRubricId]         = useState<string | null>(isNew ? null : existing.rubricId ?? null)
+  // A new project starts on the default rubric (the generic written-
+  // assignment rubric) until the author picks something else.
+  const library = useRubricLibrary()
+  const [rubricTouched, setRubricTouched] = useState(false)
+  const defaultRubricId = library?.find(r => r.isDefault && r.status === "ACTIVE")?.id ?? null
+  const effectiveRubricId = isNew && kind === "PROJECT" && !rubricTouched ? defaultRubricId : rubricId
   const [drawCount, setDrawCount]       = useState<string>(isNew ? "" : existing.drawCount?.toString() ?? "")
   const [shuffle, setShuffle]           = useState(isNew ? true : existing.shuffleOptions)
   const [saving, setSaving]             = useState(false)
@@ -298,7 +308,7 @@ function AssessmentModal({
       if (drawCount && Number(drawCount) > questions.length) {
         return toast.error("Questions per attempt can't exceed the pool size.")
       }
-    } else if (rubric.length === 0 || rubric.some(c => !c.criterion.trim())) {
+    } else if (!effectiveRubricId && (rubric.length === 0 || rubric.some(c => !c.criterion.trim()))) {
       return toast.error("Add at least one rubric criterion, with a name.")
     }
 
@@ -309,7 +319,11 @@ function AssessmentModal({
           chapterId: chapterId || null, questions,
           drawCount: drawCount ? Number(drawCount) : null, shuffleOptions: shuffle,
         }
-      : { kind, title: title.trim(), instructions: instructions.trim() || null, rubric }
+      : {
+          kind, title: title.trim(), instructions: instructions.trim() || null, rubricId: effectiveRubricId,
+          // The inline list is only sent when it's what the project is marked on.
+          ...(!effectiveRubricId && { rubric }),
+        }
 
     const res = await fetch(
       isNew
@@ -447,6 +461,22 @@ function AssessmentModal({
             </>
           ) : (
             <>
+              <div>
+                <label className={cn(metaCls, "block mb-1.5")}>Marking rubric</label>
+                <RubricPicker
+                  value={effectiveRubricId}
+                  onChange={id => { setRubricTouched(true); setRubricId(id) }}
+                  selectCls={inputCls}
+                  emptyLabel="Simple criteria (set below)"
+                />
+                <p className="text-[12px] text-[#8A90A6] mt-1">
+                  {effectiveRubricId
+                    ? "Marked level by level against the library rubric. Its pass mark applies as well as the course's."
+                    : "Pick a library rubric for level descriptors and grade bands, or list simple criteria below."}
+                </p>
+              </div>
+
+              {!effectiveRubricId && (<>
               <div className="flex items-center justify-between">
                 <label className={metaCls}>Rubric</label>
                 <span className={metaCls}>{rubricMarks} marks total</span>
@@ -482,6 +512,7 @@ function AssessmentModal({
               >
                 + Add criterion
               </button>
+              </>)}
             </>
           )}
         </div>
@@ -517,7 +548,17 @@ type Policy = {
  *  Takes only the programme id: chapters and the grading policy come back
  *  from the same endpoint, so neither page has to thread the curriculum
  *  through to get here. */
+/** Scopes the rubric pickers in here to this programme, so a project can use
+ *  (and create) a rubric customised for this programme only. */
 export default function AssessmentManager({ programId }: { programId: string }) {
+  return (
+    <RubricScopeProvider value={{ courseId: programId }}>
+      <AssessmentManagerInner programId={programId} />
+    </RubricScopeProvider>
+  )
+}
+
+function AssessmentManagerInner({ programId }: { programId: string }) {
   const [rows, setRows]         = useState<Assessment[]>([])
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [policy, setPolicy]     = useState<Policy | null>(null)
@@ -649,7 +690,7 @@ export default function AssessmentManager({ programId }: { programId: string }) 
           {[...quizzes, ...(project ? [project] : [])].map(a => {
             const marks = a.kind === "CHAPTER_QUIZ"
               ? `${a.questions?.length ?? 0} questions`
-              : `${a.rubric?.length ?? 0} criteria`
+              : a.rubricId ? "Rubric" : `${a.rubric?.length ?? 0} criteria`
             const chapter = chapters.find(c => c.id === a.chapterId)
             return (
               <li key={a.id} className="px-5 py-3.5 flex items-center gap-3.5">

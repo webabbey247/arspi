@@ -3,6 +3,8 @@ import { requireApiRole } from "@/lib/guard"
 import { db } from "@/lib/db"
 import { getProgramBySlug } from "@/services/program.service"
 import { checkCanAttempt, parseQuestions, parseRubric } from "@/services/assessment.service"
+import { getCurrentVersions, getVersionsById } from "@/services/rubric.service"
+import { learnerPreview, releasedMarks } from "@/services/rubric-marking.service"
 
 type Context = { params: Promise<{ slug: string }> }
 
@@ -36,6 +38,15 @@ export async function GET(_req: NextRequest, { params }: Context) {
       db.courseGrade.findUnique({ where: { userId_courseId: { userId: session.sub, courseId: program.id } } }),
     ])
 
+    // Library rubrics: the current version (for "how you'll be marked", only
+    // when the author allows it) and every version a released mark used.
+    const currentRubrics = await getCurrentVersions(
+      assessments.map(a => a.rubricId).filter((x): x is string => !!x),
+    )
+    const markedVersions = await getVersionsById(
+      attempts.filter(t => releasedMarks(t)).map(t => t.rubricVersionId).filter((x): x is string => !!x),
+    )
+
     const rows = await Promise.all(assessments.map(async a => {
       const mine    = attempts.filter(t => t.assessmentId === a.id)
       const counted = mine.filter(t => !t.voided)
@@ -55,7 +66,11 @@ export async function GET(_req: NextRequest, { params }: Context) {
         questionCount: a.kind === "CHAPTER_QUIZ"
           ? (a.drawCount ?? parseQuestions(a.questions).length)
           : null,
-        rubric: a.kind === "PROJECT" ? parseRubric(a.rubric) : null,
+        // A library rubric replaces the legacy criterion list.
+        rubric: a.kind === "PROJECT" && !a.rubricId ? parseRubric(a.rubric) : null,
+        rubricDetail: a.kind === "PROJECT" && a.rubricId
+          ? learnerPreview(currentRubrics[a.rubricId] ?? null)
+          : null,
         attemptsUsed: counted.length,
         bestPct:      bestPct === null ? null : Math.round(bestPct * 100) / 100,
         passed:       counted.some(t => t.passed),
@@ -64,6 +79,10 @@ export async function GET(_req: NextRequest, { params }: Context) {
         attempts: mine.map(t => ({
           id: t.id, attemptNo: t.attemptNo, status: t.status, voided: t.voided,
           score: t.score, maxScore: t.maxScore, passed: t.passed, feedback: t.feedback,
+          // Released marks only — the marker's draft is never selected here.
+          gradeBand: t.gradeBand,
+          marks: releasedMarks(t),
+          rubricVersionId: releasedMarks(t) ? t.rubricVersionId : null,
           submittedAt: t.submittedAt?.toISOString() ?? null,
           gradedAt:    t.gradedAt?.toISOString() ?? null,
         })),
@@ -82,6 +101,7 @@ export async function GET(_req: NextRequest, { params }: Context) {
         maxProjectResubmissions: program.maxProjectResubmissions,
       },
       assessments: rows,
+      rubricVersions: markedVersions,
       grade: grade ?? null,
     })
   } catch (error) {

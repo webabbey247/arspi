@@ -4,11 +4,13 @@ import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import {
   ClipboardCheck, FolderUp, Lock, CheckCircle2, Clock, AlertTriangle,
-  FileText, X, Upload, Trophy,
+  FileText, X, Upload, Trophy, ListChecks,
 } from "lucide-react"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
+import { RubricGrid, RubricSidePanel } from "@/components/rubrics/RubricGrid"
+import type { RubricMarks, RubricVersionView } from "@/lib/rubric"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -26,6 +28,8 @@ type AttemptRow = {
   id: string; attemptNo: number; status: string; voided: boolean
   score: number | null; maxScore: number | null; passed: boolean | null
   feedback: string | null; submittedAt: string | null; gradedAt: string | null
+  /** Released rubric marks and the version they were made against. */
+  gradeBand?: string | null; marks?: RubricMarks | null; rubricVersionId?: string | null
 }
 
 type AssessmentRow = {
@@ -36,6 +40,8 @@ type AssessmentRow = {
   instructions: string | null
   questionCount: number | null
   rubric: Criterion[] | null
+  /** Library rubric, when the author lets learners see it before submitting. */
+  rubricDetail?: RubricVersionView | null
   attemptsUsed: number
   bestPct: number | null
   passed: boolean
@@ -52,6 +58,7 @@ type Board = {
     attemptCooldownHours: number; maxProjectResubmissions: number
   }
   assessments: AssessmentRow[]
+  rubricVersions?: Record<string, RubricVersionView>
   grade: {
     quizMarks: number; projectMarks: number; finalMarks: number
     quizPct: number; projectPct: number; passed: boolean
@@ -188,11 +195,13 @@ function QuizRunner({
 // ── Project submitter ────────────────────────────────────────────────────────
 
 function ProjectSubmitter({
-  slug, attemptId, rubric, onDone, onCancel,
+  slug, attemptId, rubric, rubricDetail, onDone, onCancel,
 }: {
   slug: string; attemptId: string; rubric: Criterion[] | null
+  rubricDetail?: RubricVersionView | null
   onDone: () => void; onCancel: () => void
 }) {
+  const [rubricOpen, setRubricOpen] = useState(false)
   const [files, setFiles]   = useState<{ url: string; name: string; size?: number }[]>([])
   const [note, setNote]     = useState("")
   const [busy, setBusy]     = useState(false)
@@ -228,6 +237,23 @@ function ProjectSubmitter({
       </div>
 
       <div className="px-5 py-5 space-y-4">
+        {rubricDetail && (
+          <>
+            <button
+              type="button" onClick={() => setRubricOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[9px] border border-[#DFE2ED] text-[13px] font-bold text-[#6655DF] hover:border-[#6655DF] cursor-pointer"
+            >
+              <ListChecks className="w-3.5 h-3.5" /> How this is marked
+            </button>
+            <RubricSidePanel
+              open={rubricOpen} onOpenChange={setRubricOpen}
+              title={rubricDetail.title}
+              subtitle={`${rubricDetail.totalPoints} points · pass mark ${rubricDetail.passMark}`}
+            >
+              <RubricGrid rubric={rubricDetail} />
+            </RubricSidePanel>
+          </>
+        )}
         {rubric && rubric.length > 0 && (
           <div className="rounded-[12px] bg-[#FAFAFF] border border-[#F0EFFA] px-4 py-3">
             <p className={cn(metaCls, "mb-2")}>You&apos;ll be marked on</p>
@@ -295,38 +321,63 @@ function ProjectSubmitter({
   )
 }
 
+/** "How this is marked" link that opens the full rubric in a side panel. */
+function RubricPeek({ rubric }: { rubric: RubricVersionView }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button
+        type="button" onClick={() => setOpen(true)}
+        className="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-bold text-[#6655DF] hover:underline underline-offset-2 cursor-pointer"
+      >
+        <ListChecks className="w-3.5 h-3.5" /> How this is marked
+      </button>
+      <RubricSidePanel open={open} onOpenChange={setOpen} title={rubric.title} subtitle={`${rubric.totalPoints} points · pass mark ${rubric.passMark}`}>
+        <RubricGrid rubric={rubric} />
+      </RubricSidePanel>
+    </>
+  )
+}
+
 // ── Board ────────────────────────────────────────────────────────────────────
 
-export default function StudentAssessments({ slug }: { slug: string }) {
+/** `preview`: staff viewing the learner's board. Reads from the preview API
+ *  (no enrolment, no attempts) and never starts an attempt. */
+export default function StudentAssessments({ slug, preview = false }: { slug: string; preview?: boolean }) {
   const [board, setBoard]   = useState<Board | null>(null)
   const [loading, setLoading] = useState(true)
   const [active, setActive] = useState<
     | { kind: "quiz"; attemptId: string; questions: ServedQuestion[] }
-    | { kind: "project"; attemptId: string; rubric: Criterion[] | null }
+    | { kind: "project"; attemptId: string; rubric: Criterion[] | null; rubricDetail: RubricVersionView | null }
     | null
   >(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/student/programs/${slug}/assessments`)
+      const res = await fetch(preview ? `/api/preview/programs/${slug}/assessments` : `/api/student/programs/${slug}/assessments`)
       const d   = await res.json()
       if (res.ok) setBoard(d)
     } finally {
       setLoading(false)
     }
-  }, [slug])
+  }, [slug, preview])
 
   useEffect(() => { load() }, [load])
 
   async function start(a: AssessmentRow) {
+    if (preview) {
+      return toast.info(a.kind === "CHAPTER_QUIZ"
+        ? "Attempts aren't recorded in preview. The questions are in the programme's assessment editor."
+        : "Submissions are turned off in preview.")
+    }
     const res = await fetch(`/api/student/programs/${slug}/assessments/${a.id}/attempts`, { method: "POST" })
     const d   = await res.json().catch(() => ({}))
     if (!res.ok) return toast.error(d.error ?? "Could not start.")
     if (a.kind === "CHAPTER_QUIZ") {
       setActive({ kind: "quiz", attemptId: d.attempt.id, questions: (d.attempt.questions ?? []) as ServedQuestion[] })
     } else {
-      setActive({ kind: "project", attemptId: d.attempt.id, rubric: a.rubric })
+      setActive({ kind: "project", attemptId: d.attempt.id, rubric: a.rubric, rubricDetail: a.rubricDetail ?? null })
     }
   }
 
@@ -348,11 +399,12 @@ export default function StudentAssessments({ slug }: { slug: string }) {
     return active.kind === "quiz"
       ? <QuizRunner slug={slug} attemptId={active.attemptId} questions={active.questions}
           onDone={() => { setActive(null); load() }} onCancel={() => { setActive(null); load() }} />
-      : <ProjectSubmitter slug={slug} attemptId={active.attemptId} rubric={active.rubric}
+      : <ProjectSubmitter slug={slug} attemptId={active.attemptId} rubric={active.rubric} rubricDetail={active.rubricDetail}
           onDone={() => { setActive(null); load() }} onCancel={() => { setActive(null); load() }} />
   }
 
   const { policy, grade } = board
+  const versions = board.rubricVersions ?? {}
 
   return (
     <div className="space-y-5">
@@ -396,6 +448,7 @@ export default function StudentAssessments({ slug }: { slug: string }) {
           {board.assessments.map(a => {
             const maxAttempts = a.kind === "PROJECT" ? policy.maxProjectResubmissions + 1 : policy.maxQuizAttempts
             const latest = [...a.attempts].reverse().find(t => !t.voided)
+            const marked = [...a.attempts].reverse().find(t => !t.voided && t.marks && t.rubricVersionId)
             return (
               <li key={a.id} className="rounded-[16px] border border-[#DFE2ED] bg-white p-4">
                 <div className="flex items-start gap-3.5">
@@ -417,7 +470,26 @@ export default function StudentAssessments({ slug }: { slug: string }) {
                     </p>
                     {a.instructions && <p className="text-[13.5px] text-[#69708A] mt-2 leading-snug">{a.instructions}</p>}
 
-                    {latest?.feedback && (
+                    {/* Released rubric marks for the latest attempt. */}
+                    {marked?.marks && marked.rubricVersionId && versions[marked.rubricVersionId] && (
+                      <div className="mt-3">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <p className={metaCls}>Attempt {marked.attemptNo} marks</p>
+                          {marked.gradeBand && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.08em] bg-[#EEECFF] text-[#6655DF]">
+                              {marked.gradeBand}
+                            </span>
+                          )}
+                        </div>
+                        <RubricGrid rubric={versions[marked.rubricVersionId]} marks={marked.marks} />
+                      </div>
+                    )}
+
+                    {!marked && a.rubricDetail && (
+                      <RubricPeek rubric={a.rubricDetail} />
+                    )}
+
+                    {latest?.feedback && !marked && (
                       <div className="mt-2.5 rounded-[10px] bg-[#FAFAFF] border border-[#F0EFFA] px-3 py-2">
                         <p className={cn(metaCls, "mb-1")}>Instructor feedback</p>
                         <p className="text-[13.5px] text-[#171C35] whitespace-pre-line">{latest.feedback}</p>

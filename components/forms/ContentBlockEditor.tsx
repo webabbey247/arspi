@@ -6,6 +6,7 @@ import Image from "next/image"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
 import MermaidDiagram from "@/components/ui/MermaidDiagram"
 import RichTextEditor from "@/components/ui/RichTextEditor"
+import RubricPicker, { useRubricLibrary } from "@/components/rubrics/RubricPicker"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -18,7 +19,9 @@ export type ImageBlock        = { id: string; type: "image";         url: string
 export type QuizVariant       = { question: string; options: string[]; correctIndex: number }
 export type QuizBlock         = { id: string; type: "quiz";          question: string; options: string[]; correctIndex: number; variants?: QuizVariant[] }
 export type QuestionnaireBlock= { id: string; type: "questionnaire"; title: string; questions: string[] }
-export type AssignmentBlock   = { id: string; type: "assignment";    title: string; instructions: string; submissionType: "text" | "file" | "link" | "none"; dueInDays: string; points: string }
+/** `rubricId` points at a library rubric; when set, `points` mirrors the
+ *  rubric's total and the submission is marked level by level against it. */
+export type AssignmentBlock   = { id: string; type: "assignment";    title: string; instructions: string; submissionType: "text" | "file" | "link" | "none"; dueInDays: string; points: string; rubricId?: string }
 export type DocumentBlock     = { id: string; type: "document";      url: string; title: string }
 export type PdfBlock          = { id: string; type: "pdf";           url: string; title: string; fileName: string; fileSize: string }
 export type SurveyBlock       = { id: string; type: "survey";        url: string; title: string }
@@ -447,6 +450,17 @@ function AssignmentBlockEditor({
   aiContext?: AiExpandContext
 }) {
   const [aiOpen, setAiOpen] = useState(false)
+  const library = useRubricLibrary()
+  const rubric = block.rubricId ? library?.find(r => r.id === block.rubricId) ?? null : null
+
+  // A rubric's total can change when it's edited into a new version. Keep the
+  // block's points in step so learners see the right figure.
+  useEffect(() => {
+    if (rubric && block.points !== String(rubric.totalPoints)) {
+      onChange({ ...block, points: String(rubric.totalPoints) })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rubric?.totalPoints])
 
   return (
     <div className="space-y-2">
@@ -487,16 +501,36 @@ function AssignmentBlockEditor({
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] font-bold text-[#69708A] uppercase tracking-[0.4px]">Points (optional)</label>
+          <label className="text-[10px] font-bold text-[#69708A] uppercase tracking-[0.4px]">
+            Points {block.rubricId ? "(from rubric)" : "(optional)"}
+          </label>
           <input
             type="number"
             min="0"
             value={block.points}
+            readOnly={!!block.rubricId}
             onChange={e => onChange({ ...block, points: e.target.value })}
-            className={inputCls}
+            className={`${inputCls} ${block.rubricId ? "bg-[#F5F6FB] text-[#69708A] cursor-not-allowed" : ""}`}
             placeholder="e.g. 100"
           />
         </div>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-[10px] font-bold text-[#69708A] uppercase tracking-[0.4px]">Rubric (optional)</label>
+        <RubricPicker
+          value={block.rubricId}
+          selectCls={inputCls}
+          emptyLabel="No rubric — accept or return by hand"
+          onChange={(rubricId, picked) => {
+            if (!rubricId) {
+              const rest: AssignmentBlock = { ...block }
+              delete rest.rubricId
+              onChange(rest)
+            } else {
+              onChange({ ...block, rubricId, points: picked ? String(picked.totalPoints) : block.points })
+            }
+          }}
+        />
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-[10px] font-bold text-[#69708A] uppercase tracking-[0.4px]">Due (days after lesson — optional)</label>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { requireCourseEditor } from "@/lib/guard"
 import { db } from "@/lib/db"
+import { rubricUsableBy } from "@/services/rubric.service"
 
 type Context = { params: Promise<{ id: string }> }
 
@@ -28,6 +29,7 @@ const createSchema = z.object({
   chapterId:      z.string().nullable().optional(),
   questions:      z.array(questionSchema).optional(),
   rubric:         z.array(criterionSchema).optional(),
+  rubricId:       z.string().min(1).nullable().optional(),
   drawCount:      z.number().int().min(1).nullable().optional(),
   shuffleOptions: z.boolean().optional(),
   orderIndex:     z.number().int().min(0).optional(),
@@ -40,8 +42,8 @@ const createSchema = z.object({
       ctx.addIssue({ code: "custom", message: "drawCount cannot exceed the number of questions." })
     }
   }
-  if (v.kind === "PROJECT" && !v.rubric?.length) {
-    ctx.addIssue({ code: "custom", message: "A project needs at least one rubric criterion." })
+  if (v.kind === "PROJECT" && !v.rubricId && !v.rubric?.length) {
+    ctx.addIssue({ code: "custom", message: "A project needs a rubric, or at least one rubric criterion." })
   }
 })
 
@@ -168,6 +170,11 @@ export async function POST(req: NextRequest, { params }: Context) {
       }
     }
 
+    if (data.kind === "PROJECT" && data.rubricId) {
+      const usable = await rubricUsableBy(data.rubricId, id)
+      if (!usable.ok) return NextResponse.json({ error: usable.error }, { status: 400 })
+    }
+
     const assessment = await db.assessment.create({
       data: {
         courseId:       id,
@@ -177,6 +184,7 @@ export async function POST(req: NextRequest, { params }: Context) {
         chapterId:      data.kind === "CHAPTER_QUIZ" ? data.chapterId ?? null : null,
         questions:      data.kind === "CHAPTER_QUIZ" ? data.questions : undefined,
         rubric:         data.kind === "PROJECT"      ? data.rubric    : undefined,
+        rubricId:       data.kind === "PROJECT"      ? data.rubricId ?? null : null,
         drawCount:      data.drawCount ?? null,
         shuffleOptions: data.shuffleOptions ?? true,
         orderIndex:     data.orderIndex ?? 0,

@@ -241,11 +241,13 @@ function QuestionSetView({ title, kicker, items }: { title: string; kicker: stri
 }
 
 function AssignmentBlockView({
-  block, slug,
+  block, slug, preview,
 }: {
   block: Extract<ContentBlock, { type: "assignment" }>
   /** Present only in the student player; the admin preview renders read-only. */
   slug?: string
+  /** Staff "preview as student": show the form and rubric, submit nothing. */
+  preview?: boolean
 }) {
   return (
     <div className={panelCls}>
@@ -264,6 +266,7 @@ function AssignmentBlockView({
             blockId={block.id}
             submissionType={block.submissionType ?? "none"}
             points={block.points}
+            preview={preview}
           />
         )}
       </div>
@@ -279,7 +282,7 @@ function AssignmentBlockView({
  *  they render read-only, same as questionnaire/assignment/survey blocks,
  *  whose grading/submissions still aren't tracked. */
 export function ContentBlockViewer({
-  blocks, quizProgress, onQuizAnswer, programSlug,
+  blocks, quizProgress, onQuizAnswer, programSlug, preview,
 }: {
   blocks: ContentBlock[]
   /** Quiz content-block ids this student has already answered correctly. */
@@ -289,6 +292,8 @@ export function ContentBlockViewer({
   /** Programme slug. Supplied by the student player; when absent, assignment
    *  blocks render read-only (the admin curriculum preview). */
   programSlug?: string
+  /** Staff preview of the student player — submissions are disabled. */
+  preview?: boolean
 }) {
   if (!Array.isArray(blocks) || blocks.length === 0) return null
   return (
@@ -326,7 +331,7 @@ export function ContentBlockViewer({
           case "questionnaire":
             return <QuestionSetView key={block.id} kicker="Questionnaire" title={block.title} items={block.questions ?? []} />
           case "assignment":
-            return <AssignmentBlockView key={block.id} block={block} slug={programSlug} />
+            return <AssignmentBlockView key={block.id} block={block} slug={programSlug} preview={preview} />
           default:
             return null
         }

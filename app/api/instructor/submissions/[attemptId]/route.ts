@@ -42,6 +42,12 @@ export async function PATCH(req: NextRequest, { params }: Context) {
     const auth = await authorise(attemptId)
     if (!auth.ok) return auth.response
 
+    // A project marked against a library rubric goes through the rubric
+    // route, which enforces each level's score range.
+    if (auth.attempt.assessment.rubricId) {
+      return NextResponse.json({ error: "This project uses a rubric — mark it level by level." }, { status: 409 })
+    }
+
     if (auth.attempt.status !== "SUBMITTED") {
       return NextResponse.json({ error: "This submission isn't awaiting grading." }, { status: 409 })
     }

@@ -12,6 +12,7 @@ import Placeholder from "@tiptap/extension-placeholder"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import ContentBlockEditor from "@/components/forms/ContentBlockEditor"
+import { RubricScopeProvider } from "@/components/rubrics/RubricScope"
 import FullRichTextEditor from "@/components/ui/RichTextEditor"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
@@ -1030,7 +1031,18 @@ function FaqEditor({
   )
 }
 
-function ProgramModal({
+/** Gives every rubric picker inside the editor (assignment blocks) this
+ *  programme's scope, so it can offer and create programme-specific rubrics.
+ *  A programme that hasn't been saved yet has no id, so no scope. */
+function ProgramModal(props: React.ComponentProps<typeof ProgramModalInner>) {
+  return (
+    <RubricScopeProvider value={props.program ? { courseId: props.program.id, courseTitle: props.program.title } : null}>
+      <ProgramModalInner {...props} />
+    </RubricScopeProvider>
+  )
+}
+
+function ProgramModalInner({
   program, categories, onSave, onClose,
 }: {
   program:    Program | null

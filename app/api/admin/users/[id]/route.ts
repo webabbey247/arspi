@@ -3,10 +3,13 @@ import { getSession } from "@/lib/session"
 import { getUserDetail, updateUser } from "@/services/user.service"
 import { z } from "zod"
 
+/** Status only. Changing a user's role from the dashboard is switched off: an
+ *  admin could demote their own account (or the last admin) and lock
+ *  themselves out with no way back in the UI. `.strict()` rejects a `role`
+ *  field outright rather than silently ignoring it. */
 const patchSchema = z.object({
-  role:   z.enum(["ADMIN", "INSTRUCTOR", "USER"]).optional(),
   status: z.enum(["ACTIVE", "DISABLED"]).optional(),
-})
+}).strict()
 
 type Context = { params: Promise<{ id: string }> }
 
@@ -31,7 +34,7 @@ export async function GET(_req: NextRequest, { params }: Context) {
   }
 }
 
-/** PATCH /api/admin/users/[id] — update role or status (admin only) */
+/** PATCH /api/admin/users/[id] — update status (admin only). Role changes are disabled. */
 export async function PATCH(req: NextRequest, { params }: Context) {
   try {
     const session = await getSession()
@@ -41,6 +44,9 @@ export async function PATCH(req: NextRequest, { params }: Context) {
 
     const { id } = await params
     const body   = await req.json()
+    if (body && typeof body === "object" && "role" in body) {
+      return NextResponse.json({ error: "Changing roles is disabled." }, { status: 403 })
+    }
     const parsed = patchSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json(

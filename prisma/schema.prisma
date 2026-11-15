@@ -264,6 +264,8 @@ model Course {
   grades                CourseGrade[]
   studyPlans            StudyPlan[]
   assignmentSubmissions AssignmentSubmission[]
+  /// Rubrics customised for this programme only.
+  rubrics               Rubric[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -462,8 +464,14 @@ model Assessment {
   /// CHAPTER_QUIZ: [{ id, prompt, options: string[], correctIndex, points }]
   /// The answer key never leaves the server — see stripAssessmentAnswers().
   questions Json?
-  /// PROJECT: [{ id, criterion, maxPoints }]
+  /// PROJECT: [{ id, criterion, maxPoints }] — the legacy inline rubric.
+  /// Ignored once `rubricId` is set.
   rubric    Json?
+
+  /// PROJECT: a reusable rubric from the library. When set, the project is
+  /// marked level-by-level against the rubric's current version.
+  rubricId  String?
+  rubricRef Rubric? @relation(fields: [rubricId], references: [id], onDelete: SetNull)
 
   /// Questions to draw per attempt (null = serve all). Drawing a subset from a
   /// larger pool is what stops a retake from being a memory test.
@@ -518,6 +526,17 @@ model AssessmentAttempt {
   /// PROJECT: { [criterionId]: points }
   rubricScores Json?
   feedback     String?
+
+  /// Rubric marking. `rubricVersionId` pins the exact version used, so a
+  /// later edit to the rubric never changes how this work was marked.
+  /// `rubricMarks` and `gradeBand` are written only on release; until then the
+  /// marker's work lives in `markingDraft`, which never leaves staff routes.
+  rubricVersionId String?
+  rubricVersion   RubricVersion? @relation(fields: [rubricVersionId], references: [id], onDelete: SetNull)
+  /// { criteria: [{ key, level, score, comment }], overallComment, total, gradeBand }
+  rubricMarks     Json?
+  gradeBand       String?
+  markingDraft    Json?
 
   gradedById String?
   gradedBy   User?   @relation("AttemptGrader", fields: [gradedById], references: [id])
@@ -621,6 +640,81 @@ model StudySession {
   @@map("study_sessions")
 }
 
+// ============================================================
+// RUBRICS
+// ============================================================
+
+enum RubricStatus {
+  DRAFT // being written; not offered when attaching to an assignment
+  ACTIVE
+  ARCHIVED // kept for past marks; hidden from pickers
+}
+
+enum RubricType {
+  ANALYTIC // one level + score per criterion
+  HOLISTIC // one overall level — not built yet
+}
+
+/// A reusable marking rubric. This row is the stable identity that assignment
+/// blocks (by id, inside Course.curriculum) and project assessments point at.
+/// The content lives in RubricVersion: editing a rubric that has already been
+/// used to mark work creates a new version instead of rewriting past marks.
+model Rubric {
+  id             String          @id @default(cuid())
+  /// Mirrors the current version's title so listings don't need a join.
+  title          String
+  status         RubricStatus    @default(DRAFT)
+  currentVersion Int             @default(1)
+  versions       RubricVersion[]
+  assessments    Assessment[]
+
+  /// Null = a library rubric any programme can use. Set = a copy customised
+  /// for one programme: only that programme sees it, and its editors (the
+  /// programme's instructor, or an admin) can change it.
+  courseId  String?
+  course    Course? @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  /// The library rubric offered first and pre-selected for new projects —
+  /// the generic written-assignment rubric from the ARPS build guide.
+  isDefault Boolean @default(false)
+
+  createdById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([courseId])
+  @@map("rubrics")
+}
+
+model RubricVersion {
+  id       String @id @default(cuid())
+  rubricId String
+  rubric   Rubric @relation(fields: [rubricId], references: [id], onDelete: Cascade)
+  version  Int
+
+  title             String
+  description       String?
+  type              RubricType @default(ANALYTIC)
+  totalPoints       Float
+  passMark          Float
+  /// [{ key, label, order }]
+  levels            Json
+  /// [{ key, title, maxPoints, cells: [{ level, minPoints, maxPoints, descriptor }] }]
+  criteria          Json
+  /// [{ label, min, max, meaning? }]
+  gradeBands        Json
+  visibleToLearners Boolean    @default(true)
+
+  assignmentSubmissions AssignmentSubmission[]
+  assessmentAttempts    AssessmentAttempt[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([rubricId, version])
+  @@map("rubric_versions")
+}
+
 enum AssignmentSubmissionStatus {
   SUBMITTED // waiting on a reviewer
   RETURNED // changes requested; the student may resubmit
@@ -658,6 +752,17 @@ model AssignmentSubmission {
   /// grade — in-lesson assignments are practice, the graded instruments are
   /// chapter quizzes and the project.
   points   Float?
+
+  /// Rubric marking. `rubricVersionId` pins the exact version used, so a
+  /// later edit to the rubric never changes how this work was marked.
+  /// `rubricMarks` and `gradeBand` are written only on release; until then the
+  /// marker's work lives in `markingDraft`, which never leaves staff routes.
+  rubricVersionId String?
+  rubricVersion   RubricVersion? @relation(fields: [rubricVersionId], references: [id], onDelete: SetNull)
+  /// { criteria: [{ key, level, score, comment }], overallComment, total, gradeBand }
+  rubricMarks     Json?
+  gradeBand       String?
+  markingDraft    Json?
 
   gradedById String?
   gradedBy   User?   @relation("SubmissionGrader", fields: [gradedById], references: [id])

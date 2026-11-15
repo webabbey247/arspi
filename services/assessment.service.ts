@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import type { AssessmentKind, AttemptStatus } from "@prisma/client"
+import type { AssessmentKind, AttemptStatus, Prisma } from "@prisma/client"
 
 /** Authoring shape for a quiz question. `correctIndex` is the answer key and
  *  must never reach a browser — everything that leaves this module for a
@@ -290,18 +290,47 @@ export async function gradeProjectAttempt(
     score += Math.min(Math.max(rubricScores[c.id] ?? 0, 0), c.maxPoints)
   }
 
+  return applyProjectGrade(graderId, attempt, { score, maxScore, rubricScores, feedback })
+}
+
+type AttemptWithCourse = Prisma.AssessmentAttemptGetPayload<{
+  include: { assessment: { include: { course: true } } }
+}>
+
+/** Records a project grade and rolls the course grade forward. Shared by the
+ *  legacy inline rubric and library rubrics so both follow the same pass,
+ *  resubmission and certificate rules.
+ *
+ *  `minScore` lets a library rubric add its own pass mark on top of the
+ *  course's componentPassMark: the work must clear both. */
+export async function applyProjectGrade(
+  graderId: string,
+  attempt: AttemptWithCourse,
+  input: {
+    score: number
+    maxScore: number
+    rubricScores: Record<string, number>
+    feedback: string
+    minScore?: number
+    extra?: Prisma.AssessmentAttemptUpdateInput
+  },
+) {
+  const { score, maxScore, rubricScores, feedback } = input
   const pct    = maxScore > 0 ? (score / maxScore) * 100 : 0
-  const passed = pct >= attempt.assessment.course.componentPassMark
+  const passed = pct >= attempt.assessment.course.componentPassMark &&
+    (input.minScore === undefined || score >= input.minScore)
 
   const used      = await db.assessmentAttempt.count({ where: { assessmentId: attempt.assessmentId, userId: attempt.userId, voided: false } })
   const mayResubmit = !passed && used <= attempt.assessment.course.maxProjectResubmissions
 
   await db.assessmentAttempt.update({
-    where: { id: attemptId },
+    where: { id: attempt.id },
     data: {
+      ...input.extra,
       status: mayResubmit ? "CHANGES_REQUESTED" : "GRADED",
       rubricScores, feedback, score, maxScore, passed,
-      gradedById: graderId, gradedAt: new Date(),
+      gradedBy: { connect: { id: graderId } },
+      gradedAt: new Date(),
     },
   })
 

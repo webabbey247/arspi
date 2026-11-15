@@ -16,6 +16,8 @@ import ProgramProgress from "@/components/admin/ProgramProgress"
 import { TickProgress } from "@/components/ui/TickProgress"
 import { Panel, TabScroller, metaCls } from "@/components/admin/AdminKit"
 import { DropdownMenu, type DropdownItem } from "@/components/ui/DropdownMenu"
+import PreviewAsSwitch from "@/components/programs/PreviewAsSwitch"
+import { publicPreviewHref, studentPreviewHref } from "@/lib/program-preview-links"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -602,10 +604,16 @@ export default function ProgramDetailPage() {
 
   const menuItems: DropdownItem[] = [
     {
-      label: "View public page",
-      description: live ? "Opens the live listing" : "Draft — not on the public site",
+      label: "Preview as public visitor",
+      description: live ? "The public page, with your latest changes" : "Draft — preview it before publishing",
       icon: Icon.external,
-      onSelect: () => window.open(`/programs/${program.slug}`, "_blank", "noopener,noreferrer"),
+      onSelect: () => window.open(publicPreviewHref(program.slug), "_blank", "noopener"),
+    },
+    {
+      label: "Preview as student",
+      description: "The learner's player, read-only",
+      icon: Icon.external,
+      onSelect: () => router.push(studentPreviewHref("ADMIN", program.slug)),
     },
     {
       label: "Edit programme",
@@ -826,6 +834,8 @@ export default function ProgramDetailPage() {
             </div>
           )}
         </div>
+
+        <PreviewAsSwitch slug={program.slug} role="ADMIN" tone="dark" className="hidden md:inline-flex shrink-0" />
 
         <DropdownMenu
           triggerLabel="Programme actions"

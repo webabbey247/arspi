@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireApiSession } from "@/lib/guard"
 import { db } from "@/lib/db"
+import { getCurrentVersions, getVersionsById } from "@/services/rubric.service"
 
 /** GET /api/instructor/submissions — the project grading queue.
  *
@@ -31,19 +32,34 @@ export async function GET(req: NextRequest) {
         },
       },
       include: {
-        assessment: { select: { id: true, title: true, rubric: true, course: { select: { id: true, title: true, slug: true, componentPassMark: true } } } },
+        assessment: { select: { id: true, title: true, rubric: true, rubricId: true, course: { select: { id: true, title: true, slug: true, componentPassMark: true } } } },
         user:       { select: { id: true, email: true, profile: { select: { firstName: true, lastName: true } } } },
       },
       orderBy: { submittedAt: "asc" },
       take: 100,
     })
 
+    const current = await getCurrentVersions(
+      submissions.map(s => s.assessment.rubricId).filter((x): x is string => !!x),
+    )
+    const pinned = await getVersionsById(
+      submissions.map(s => s.rubricVersionId).filter((x): x is string => !!x),
+    )
+    const rubrics = { ...pinned, ...Object.fromEntries(Object.values(current).map(v => [v.id, v])) }
+
     return NextResponse.json({
+      rubrics,
       submissions: submissions.map(s => ({
         id: s.id, attemptNo: s.attemptNo, status: s.status,
         files: s.files, note: s.note,
         score: s.score, maxScore: s.maxScore, passed: s.passed,
         rubricScores: s.rubricScores, feedback: s.feedback,
+        // Pinned version if marking has started, else the rubric's current one.
+        rubricVersionId: s.rubricVersionId
+          ?? (s.assessment.rubricId ? current[s.assessment.rubricId]?.id ?? null : null),
+        rubricMarks:  s.rubricMarks,
+        gradeBand:    s.gradeBand,
+        markingDraft: s.markingDraft,
         submittedAt: s.submittedAt?.toISOString() ?? null,
         gradedAt:    s.gradedAt?.toISOString() ?? null,
         assessment:  s.assessment,

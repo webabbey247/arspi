@@ -6,6 +6,7 @@ import { useParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { DetailPageSkeleton, InlineSkeleton } from "@/components/ui/skeleton"
 import AssessmentManager from "@/components/assessments/AssessmentManager"
+import PreviewAsSwitch from "@/components/programs/PreviewAsSwitch"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -236,14 +237,7 @@ export default function InstructorProgramDetailPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href={`/programs/${program.slug}`}
-            target="_blank"
-            className="h-8 px-3.5 rounded-[8px] border border-[#DFE2ED] bg-white text-[#69708A] text-[13px] font-medium hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center gap-1.5"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            View Public Page
-          </Link>
+          <PreviewAsSwitch slug={program.slug} role="INSTRUCTOR" />
           {enrollments.length > 0 && (
             <button
               onClick={() => exportCSV(enrollments, program.title)}

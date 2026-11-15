@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { draftMode } from "next/headers"
 import Link from "next/link"
 import Image from "next/image"
 import { programCategories } from "@/lib/data"
@@ -15,6 +16,8 @@ import FaqAccordion from "./FaqAccordion"
 import InstructorProfileModal, { type InstructorProgramStat } from "./InstructorProfileModal"
 import JsonLd from "@/components/seo/JsonLd"
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, absoluteUrl, metaDescription } from "@/lib/seo"
+import { getSession } from "@/lib/session"
+import PreviewBanner from "@/components/programs/PreviewBanner"
 
 // Belt-and-braces cache safety net: program create/update/delete already call
 // bumpProgramDetailCache() to invalidate this exact path immediately, but this
@@ -268,9 +271,26 @@ function pickFirstFacilitator(v: unknown): {
  *  go stale between revalidations. */
 const publishedCards = cache(() => getProgramCards({ status: "PUBLISHED" }))
 
-async function resolveProgram(slug: string): Promise<PageProgram | null> {
+/**
+ * Who is previewing, when Draft Mode is on. The Draft Mode cookie alone isn't
+ * trusted: it outlives a logout, so the viewer must still be an admin, or the
+ * instructor who teaches this programme. Only runs in Draft Mode, so regular
+ * visitors keep getting the cached static page.
+ */
+async function resolvePreviewer(slug: string): Promise<{ role: string; isDraft: boolean } | null> {
+  const { isEnabled } = await draftMode()
+  if (!isEnabled) return null
+  const session = await getSession()
+  if (!session || (session.role !== "ADMIN" && session.role !== "INSTRUCTOR")) return null
   const dbProg = await getProgramBySlug(slug)
-  if (!dbProg || dbProg.status !== "PUBLISHED") return null
+  if (!dbProg) return null
+  if (session.role === "INSTRUCTOR" && dbProg.instructorId !== session.sub) return null
+  return { role: session.role, isDraft: dbProg.status !== "PUBLISHED" }
+}
+
+async function resolveProgram(slug: string, allowDraft = false): Promise<PageProgram | null> {
+  const dbProg = await getProgramBySlug(slug)
+  if (!dbProg || (dbProg.status !== "PUBLISHED" && !allowDraft)) return null
 
   const cat = catMetaFor(dbProg.category?.name)
 
@@ -401,7 +421,8 @@ export async function generateMetadata({
 
 const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = await params
-  const prog = await resolveProgram(slug)
+  const previewer = await resolvePreviewer(slug)
+  const prog = await resolveProgram(slug, previewer !== null)
   if (!prog) notFound()
 
   const priceLabel = prog.price > 0 ? `$${prog.price.toLocaleString()}` : "Free"
@@ -463,6 +484,11 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
 
   return (
     <div className="w-full overflow-x-clip">
+      {previewer && (
+        <div className="sticky top-17 z-40">
+          <PreviewBanner slug={prog.slug} role={previewer.role} current="public" isDraft={previewer.isDraft} />
+        </div>
+      )}
       <JsonLd data={courseJsonLd} />
       <div className="w-full max-w-[1240px] mx-auto px-7 max-[760px]:px-5 grid grid-cols-1 min-[901px]:grid-cols-[minmax(0,1fr)_minmax(320px,372px)] min-[901px]:gap-x-14 items-start">
 

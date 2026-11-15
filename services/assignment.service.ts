@@ -1,5 +1,6 @@
 import "server-only"
 import { db } from "@/lib/db"
+import { Prisma } from "@prisma/client"
 
 export type SubmissionFile = { url: string; name: string; size?: number }
 
@@ -12,6 +13,8 @@ export type AssignmentBlockShape = {
   submissionType?: "text" | "file" | "link" | "none"
   dueInDays?: string
   points?: string
+  /** Library rubric this assignment is marked against, if any. */
+  rubricId?: string
 }
 
 export type LocatedAssignment = {
@@ -22,6 +25,7 @@ export type LocatedAssignment = {
   chapterTitle: string
   submissionType: "text" | "file" | "link" | "none"
   points: number | null
+  rubricId: string | null
 }
 
 /** Walks the curriculum JSON and returns every assignment block in order.
@@ -49,6 +53,7 @@ export function collectAssignments(curriculum: unknown): LocatedAssignment[] {
           chapterTitle:   chapter?.title ?? "Untitled chapter",
           submissionType: b.submissionType ?? "none",
           points:         Number.isFinite(pts) && pts > 0 ? pts : null,
+          rubricId:       typeof b.rubricId === "string" && b.rubricId ? b.rubricId : null,
         })
       }
     }
@@ -119,6 +124,12 @@ export async function submitAssignment(
     gradedById:  null,
     gradedAt:    null,
     submittedAt: new Date(),
+    // Released rubric marks belong to the work they were given for. A marker's
+    // unreleased draft is kept (with the version it was started on) so their
+    // progress isn't lost if the learner tweaks the submission mid-marking.
+    rubricMarks:     Prisma.DbNull,
+    gradeBand:       null,
+    rubricVersionId: existing?.markingDraft ? existing.rubricVersionId : null,
   }
 
   const submission = await db.assignmentSubmission.upsert({

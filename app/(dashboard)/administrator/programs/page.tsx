@@ -11,6 +11,7 @@ import Placeholder from "@tiptap/extension-placeholder"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import ContentBlockEditor from "@/components/forms/ContentBlockEditor"
+import { RubricScopeProvider } from "@/components/rubrics/RubricScope"
 import FullRichTextEditor from "@/components/ui/RichTextEditor"
 import { SITE_NAME } from "@/lib/seo"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
@@ -22,6 +23,7 @@ import { AdminPageHeader, EmptyState, RowActions, RowIcon, StatTile } from "@/co
 import type { DropdownItem } from "@/components/ui/DropdownMenu"
 import { TickProgress } from "@/components/ui/TickProgress"
 import { useRouter } from "next/navigation"
+import RubricManager from "@/components/rubrics/RubricManager"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -98,7 +100,7 @@ type Program = {
   facilitators?:       unknown | null
 }
 
-type Tab = "programs" | "categories" | "levels" | "formats" | "pricing"
+type Tab = "programs" | "categories" | "levels" | "rubrics" | "formats" | "pricing"
 
 type Lookup = {
   id: string
@@ -1298,7 +1300,18 @@ function FaqEditor({
   )
 }
 
-function ProgramModal({
+/** Gives every rubric picker inside the editor (assignment blocks) this
+ *  programme's scope, so it can offer and create programme-specific rubrics.
+ *  A programme that hasn't been saved yet has no id, so no scope. */
+function ProgramModal(props: React.ComponentProps<typeof ProgramModalInner>) {
+  return (
+    <RubricScopeProvider value={props.program ? { courseId: props.program.id, courseTitle: props.program.title } : null}>
+      <ProgramModalInner {...props} />
+    </RubricScopeProvider>
+  )
+}
+
+function ProgramModalInner({
   program, initialValues, aiGenerated, categories, levels, formats, pricingOptions, onSave, onClose,
 }: {
   program:        Program | null
@@ -2264,6 +2277,9 @@ function LookupTab({
 
 export default function AdminProgramsPage() {
   const [tab, setTab] = useState<Tab>("programs")
+  // Rubrics manage their own data; the header button bumps this to open the builder.
+  const [rubricCreate, setRubricCreate] = useState(0)
+  const [rubricCount, setRubricCount]   = useState<number | null>(null)
 
   // Programs
   const [programs, setPrograms]               = useState<Program[]>([])
@@ -2271,6 +2287,10 @@ export default function AdminProgramsPage() {
   const [search, setSearch]                   = useState("")
   const [levelFilter, setLevelFilter]         = useState<CourseLevel | "All">("All")
   const [pricingFilter, setPricingFilter]     = useState<"All" | "Free" | "Paid" | "Featured">("All")
+  // "All", a category id, or "none" for programmes with no category.
+  const [categoryFilter, setCategoryFilter]   = useState<string>("All")
+  const [categoryOpen, setCategoryOpen]       = useState(false)
+  const categoryRef                           = useRef<HTMLDivElement>(null)
   const [programModal, setProgramModal]       = useState<"create" | "ai" | Program | null>(null)
   // Set while the full record for the editor is being fetched.
   const [hydratingId, setHydratingId]         = useState<string | null>(null)
@@ -2368,12 +2388,13 @@ export default function AdminProgramsPage() {
     function h(e: MouseEvent) {
       if (filterRef.current && !filterRef.current.contains(e.target as Node)) setFilterOpen(false)
       if (statusRef.current && !statusRef.current.contains(e.target as Node)) setStatusOpen(false)
+      if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) setCategoryOpen(false)
     }
     document.addEventListener("mousedown", h)
     return () => document.removeEventListener("mousedown", h)
   }, [])
 
-  useEffect(() => { setPage(1) }, [search, levelFilter, pricingFilter])
+  useEffect(() => { setPage(1) }, [search, levelFilter, pricingFilter, categoryFilter])
   useEffect(() => { setCategoriesPage(1) }, [categorySearch])
   useEffect(() => { setLevelsPage(1) },     [levelSearch])
   useEffect(() => { setFormatsPage(1) },    [formatSearch])
@@ -2641,8 +2662,13 @@ export default function AdminProgramsPage() {
 
     const matchLevel = levelFilter === "All" || p.level === levelFilter
 
+    const matchCategory =
+      categoryFilter === "All"  ? true :
+      categoryFilter === "none" ? !p.categoryId :
+      p.categoryId === categoryFilter
+
     const q = search.toLowerCase()
-    return matchPricing && matchLevel && (
+    return matchPricing && matchLevel && matchCategory && (
       !q ||
       p.title.toLowerCase().includes(q) ||
       instructorName(p).toLowerCase().includes(q) ||
@@ -2745,6 +2771,7 @@ export default function AdminProgramsPage() {
               if (tab === "programs")   setProgramModal("create")
               else if (tab === "categories") setCategoryModal("create")
               else if (tab === "levels")     setLevelModal("create")
+              else if (tab === "rubrics")    setRubricCreate(n => n + 1)
               else if (tab === "formats")    setFormatModal("create")
               else                           setPricingModal("create")
             }}
@@ -2754,6 +2781,7 @@ export default function AdminProgramsPage() {
             {tab === "programs"   ? "New Program"
              : tab === "categories" ? "New Category"
              : tab === "levels"     ? "New Level"
+             : tab === "rubrics"    ? "New Rubric"
              : tab === "formats"    ? "New Format"
              :                        "New Pricing"}
           </button>
@@ -2800,11 +2828,12 @@ export default function AdminProgramsPage() {
 
       {/* Tabs — formats / pricing intentionally hidden until those features ship */}
       <div className="flex gap-1 mb-5 bg-[#F5F6FB] rounded-[12px] p-1 overflow-x-auto sm:overflow-x-visible sm:w-fit sm:flex-wrap">
-        {(["programs", "categories", "levels"] as Tab[]).map(t => {
+        {(["programs", "categories", "levels", "rubrics"] as Tab[]).map(t => {
           const count =
             t === "programs"   ? programs.length :
             t === "categories" ? categories.length :
             t === "levels"     ? levels.length :
+            t === "rubrics"    ? (rubricCount ?? "…") :
             t === "formats"    ? formats.length :
                                  pricingList.length
           return (
@@ -2851,6 +2880,42 @@ export default function AdminProgramsPage() {
                       >
                         <span>{label === "All" ? "All Programs" : label}</span>
                         <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A]">{count}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Category filter */}
+              <div ref={categoryRef} className="relative">
+                <button
+                  onClick={() => setCategoryOpen(o => !o)}
+                  aria-haspopup="listbox" aria-expanded={categoryOpen}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${categoryFilter !== "All" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+                  Category
+                  {categoryFilter !== "All" && (
+                    <span className="ml-1 max-w-28 truncate bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                      {categoryFilter === "none" ? "None" : categories.find(c => c.id === categoryFilter)?.name ?? "—"}
+                    </span>
+                  )}
+                </button>
+                {categoryOpen && (
+                  <div role="listbox" className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-52 max-h-72 overflow-y-auto">
+                    {[
+                      { id: "All",  name: "All Categories", count: programs.length },
+                      ...categories.map(c => ({ id: c.id, name: c.name, count: programs.filter(p => p.categoryId === c.id).length })),
+                      ...(programs.some(p => !p.categoryId)
+                        ? [{ id: "none", name: "No category", count: programs.filter(p => !p.categoryId).length }]
+                        : []),
+                    ].map(opt => (
+                      <button key={opt.id} role="option" aria-selected={categoryFilter === opt.id}
+                        onClick={() => { setCategoryFilter(opt.id); setCategoryOpen(false) }}
+                        className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${categoryFilter === opt.id ? "bg-[#EEECFF] text-[#6655DF]" : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"}`}
+                      >
+                        <span className="truncate">{opt.name}</span>
+                        <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A]">{opt.count}</span>
                       </button>
                     ))}
                   </div>
@@ -2904,7 +2969,7 @@ export default function AdminProgramsPage() {
                   <TableSkeletonRows colSpan={7} />
                 ) : filteredPrograms.length === 0 ? (
                   <tr><td colSpan={7} className="px-4 py-12 text-center text-[14px] font-bold text-[#8A90A6]">
-                    {search.trim() || pricingFilter !== "All" || levelFilter !== "All"
+                    {search.trim() || pricingFilter !== "All" || levelFilter !== "All" || categoryFilter !== "All"
                       ? "No programmes match those filters."
                       : "No programmes yet."}
                   </td></tr>
@@ -2997,7 +3062,7 @@ export default function AdminProgramsPage() {
             ) : filteredPrograms.length === 0 ? (
               <EmptyState
                 className="border-0 rounded-none"
-                title={search.trim() || pricingFilter !== "All" || levelFilter !== "All"
+                title={search.trim() || pricingFilter !== "All" || levelFilter !== "All" || categoryFilter !== "All"
                   ? "No programmes match those filters."
                   : "No programmes yet."}
                 hint="Create one by hand, or let the AI Program Builder draft the whole curriculum."
@@ -3207,6 +3272,12 @@ export default function AdminProgramsPage() {
           onDelete={(item) => setDeleteLevel(item)}
         />
       )}
+
+      {/* Always mounted (hidden off-tab) so the tab shows its count and the
+          builder's state survives tab switches. */}
+      <div hidden={tab !== "rubrics"}>
+        <RubricManager createRequest={rubricCreate} onCount={setRubricCount} />
+      </div>
 
       {tab === "formats" && (
         <LookupTab

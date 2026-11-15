@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
-import { FileText, Upload, X, Check, RotateCcw, Clock } from "lucide-react"
+import { FileText, Upload, X, Check, RotateCcw, Clock, ListChecks } from "lucide-react"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import { cn } from "@/lib/utils"
+import { RubricGrid, RubricSidePanel } from "@/components/rubrics/RubricGrid"
+import type { RubricMarks, RubricVersionView } from "@/lib/rubric"
 
 type SubmissionFile = { url: string; name: string; size?: number }
 type Status = "SUBMITTED" | "RETURNED" | "ACCEPTED"
@@ -17,6 +19,9 @@ type Submission = {
   status: Status
   feedback: string | null
   points: number | null
+  gradeBand: string | null
+  /** Released rubric marks — the server never sends a marker's draft. */
+  marks: RubricMarks | null
   submittedAt: string
   gradedAt: string | null
 }
@@ -42,14 +47,21 @@ function fmtWhen(iso: string) {
  * renders no form at all.
  */
 export default function AssignmentSubmitter({
-  slug, blockId, submissionType, points,
+  slug, blockId, submissionType, points, preview,
 }: {
   slug: string
   blockId: string
   submissionType: "text" | "file" | "link" | "none"
   points?: string
+  /** Staff preview: loads the rubric from the preview API and never submits. */
+  preview?: boolean
 }) {
+  const endpoint = preview
+    ? `/api/preview/programs/${slug}/assignments/${blockId}`
+    : `/api/student/programs/${slug}/assignments/${blockId}`
   const [submission, setSubmission] = useState<Submission | null>(null)
+  const [rubric, setRubric]         = useState<RubricVersionView | null>(null)
+  const [rubricOpen, setRubricOpen] = useState(false)
   const [loading, setLoading]       = useState(true)
   const [editing, setEditing]       = useState(false)
   const [busy, setBusy]             = useState(false)
@@ -62,8 +74,9 @@ export default function AssignmentSubmitter({
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/student/programs/${slug}/assignments/${blockId}`)
+      const res = await fetch(endpoint)
       const d   = await res.json()
+      if (res.ok) setRubric(d.rubric ?? null)
       if (res.ok && d.submission) {
         setSubmission(d.submission)
         setText(d.submission.text ?? "")
@@ -73,7 +86,7 @@ export default function AssignmentSubmitter({
     } finally {
       setLoading(false)
     }
-  }, [slug, blockId])
+  }, [endpoint])
 
   useEffect(() => { if (submissionType !== "none") load() }, [load, submissionType])
 
@@ -81,12 +94,14 @@ export default function AssignmentSubmitter({
 
   async function pick(list: FileList | null) {
     if (!list?.length) return
+    if (preview) return toast.info("Uploads are turned off in preview.")
     const uploaded = await startUpload(Array.from(list))
     if (!uploaded?.length) return toast.error("Upload failed.")
     setFiles(f => [...f, ...uploaded.map(u => ({ url: u.url, name: u.name, size: u.size }))])
   }
 
   async function submit() {
+    if (preview) return toast.info("Preview only — nothing was submitted.")
     setBusy(true)
     const res = await fetch(`/api/student/programs/${slug}/assignments/${blockId}`, {
       method:  "PUT",
@@ -102,6 +117,8 @@ export default function AssignmentSubmitter({
     if (!res.ok) return toast.error(d.error ?? "Could not submit.")
     setSubmission(d.submission)
     setEditing(false)
+    // A resubmission clears released marks; refresh which rubric applies.
+    load()
     toast.success(submission ? "Resubmitted for review." : "Submitted for review.")
   }
 
@@ -111,6 +128,8 @@ export default function AssignmentSubmitter({
 
   const locked   = submission?.status === "ACCEPTED"
   const showForm = editing || !submission
+  const marked   = submission?.marks && rubric ? submission.marks : null
+  const maxPoints = rubric?.totalPoints ?? points
 
   return (
     <div className="mt-4 pt-4 border-t border-[#F0EFFA]">
@@ -124,13 +143,46 @@ export default function AssignmentSubmitter({
             {STATUS[submission.status].label}
           </span>
           <span className={metaCls}>Submitted {fmtWhen(submission.submittedAt)}</span>
-          {submission.points != null && points && (
-            <span className="text-[12px] font-bold text-[#171C35]">{submission.points} / {points} marks</span>
+          {submission.points != null && maxPoints && (
+            <span className="text-[12px] font-bold text-[#171C35]">{submission.points} / {maxPoints} marks</span>
+          )}
+          {submission.gradeBand && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.08em] bg-[#EEECFF] text-[#6655DF]">
+              {submission.gradeBand}
+            </span>
           )}
         </div>
       )}
 
-      {submission?.feedback && (
+      {/* Released rubric marks: the chosen level in each row, scores, comments,
+          total and band. */}
+      {marked && rubric && (
+        <div className="mb-3">
+          <p className={cn(metaCls, "mb-2")}>Your marks</p>
+          <RubricGrid rubric={rubric} marks={marked} />
+        </div>
+      )}
+
+      {/* Before marking, show how the work will be assessed. */}
+      {!marked && rubric && (
+        <button
+          type="button" onClick={() => setRubricOpen(true)}
+          className="mb-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[9px] border border-[#DFE2ED] text-[13px] font-bold text-[#6655DF] hover:border-[#6655DF] cursor-pointer"
+        >
+          <ListChecks className="w-3.5 h-3.5" /> How this is marked
+        </button>
+      )}
+      {rubric && (
+        <RubricSidePanel
+          open={rubricOpen} onOpenChange={setRubricOpen}
+          title={rubric.title}
+          subtitle={`${rubric.totalPoints} points · pass mark ${rubric.passMark}`}
+        >
+          <RubricGrid rubric={rubric} />
+        </RubricSidePanel>
+      )}
+
+      {submission?.feedback && !marked && (
         <div className="mb-3 rounded-[10px] bg-[#FAFAFF] border border-[#F0EFFA] px-3 py-2.5">
           <p className={cn(metaCls, "mb-1")}>Reviewer feedback</p>
           <p className="text-[13.5px] text-[#171C35] whitespace-pre-line">{submission.feedback}</p>
@@ -227,6 +279,9 @@ export default function AssignmentSubmitter({
             >
               {busy ? "Submitting…" : submission ? "Resubmit" : "Submit"}
             </button>
+            {preview && (
+              <span className="text-[12px] font-bold text-[#8A90A6]">Preview: submitting is turned off.</span>
+            )}
             {submission && (
               <button
                 type="button" onClick={() => setEditing(false)}

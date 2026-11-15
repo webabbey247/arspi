@@ -247,22 +247,6 @@ export default function UserDetailPage() {
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  async function changeRole(role: UserRole) {
-    setMenuOpen(false)
-    const res = await fetch(`/api/admin/users/${id}`, {
-      method:  "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ role }),
-    })
-    if (res.ok) {
-      setUser(prev => prev ? { ...prev, role } : prev)
-      showToast(`Role updated to ${ROLE_LABELS[role]}`)
-    } else {
-      const err = await res.json().catch(() => ({}))
-      showToast(err.error ?? "Failed to update role", false)
-    }
-  }
-
   async function toggleStatus() {
     if (!user) return
     setMenuOpen(false)
@@ -361,32 +345,6 @@ export default function UserDetailPage() {
 
           {menuOpen && (
             <div className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 w-52">
-
-              {/* Update Role section */}
-              <p className="px-3.5 pt-1 pb-1 text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">
-                Update Role
-              </p>
-              {(["USER", "INSTRUCTOR", "ADMIN"] as UserRole[]).map(r => (
-                <button
-                  key={r}
-                  onClick={() => changeRole(r)}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors",
-                    user.role === r
-                      ? "bg-[#EEECFF] text-[#6655DF]"
-                      : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"
-                  )}
-                >
-                  {ROLE_LABELS[r]}
-                  {user.role === r && (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                  )}
-                </button>
-              ))}
-
-              <div className="my-1.5 border-t border-[#F0EFFA]" />
 
               {/* Change Password */}
               <button

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { requireCourseEditor } from "@/lib/guard"
 import { db } from "@/lib/db"
+import { rubricUsableBy } from "@/services/rubric.service"
 
 type Context = { params: Promise<{ id: string; assessmentId: string }> }
 
@@ -23,6 +24,7 @@ const updateSchema = z.object({
   rubric:         z.array(z.object({
     id: z.string().min(1), criterion: z.string().min(1), maxPoints: z.number().min(1).max(100),
   })).optional(),
+  rubricId:       z.string().min(1).nullable().optional(),
   drawCount:      z.number().int().min(1).nullable().optional(),
   shuffleOptions: z.boolean().optional(),
   orderIndex:     z.number().int().min(0).optional(),
@@ -44,6 +46,23 @@ export async function PATCH(req: NextRequest, { params }: Context) {
     }
     const d = parsed.data
 
+    if (d.rubricId !== undefined && existing.kind !== "PROJECT") {
+      return NextResponse.json({ error: "Only a project can use a rubric." }, { status: 400 })
+    }
+    // Attaching a different rubric is allowed; archived ones are kept only for
+    // the work already marked with them.
+    if (d.rubricId && d.rubricId !== existing.rubricId) {
+      const usable = await rubricUsableBy(d.rubricId, id)
+      if (!usable.ok) return NextResponse.json({ error: usable.error }, { status: 400 })
+    }
+    // Detaching must leave something to mark against.
+    if (d.rubricId === null && existing.kind === "PROJECT") {
+      const legacy = d.rubric ?? (Array.isArray(existing.rubric) ? existing.rubric : [])
+      if (legacy.length === 0) {
+        return NextResponse.json({ error: "Add at least one criterion, or choose a rubric." }, { status: 400 })
+      }
+    }
+
     // Attempts pin their own questions at start, so editing here can't corrupt
     // an in-flight attempt — but it does change what later attempts sit, and
     // it reshuffles the best-of comparison. Warn rather than block.
@@ -59,6 +78,7 @@ export async function PATCH(req: NextRequest, { params }: Context) {
         ...(d.chapterId      !== undefined && { chapterId: d.chapterId }),
         ...(d.questions      !== undefined && { questions: d.questions }),
         ...(d.rubric         !== undefined && { rubric: d.rubric }),
+        ...(d.rubricId       !== undefined && { rubricId: d.rubricId }),
         ...(d.drawCount      !== undefined && { drawCount: d.drawCount }),
         ...(d.shuffleOptions !== undefined && { shuffleOptions: d.shuffleOptions }),
         ...(d.orderIndex     !== undefined && { orderIndex: d.orderIndex }),

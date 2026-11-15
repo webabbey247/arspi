@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { requireStaff } from "@/lib/guard"
 import { db } from "@/lib/db"
-import { reviewAssignment } from "@/services/assignment.service"
+import { findAssignment, reviewAssignment } from "@/services/assignment.service"
 
 type Context = { params: Promise<{ id: string }> }
 
@@ -22,13 +22,19 @@ export async function PATCH(req: NextRequest, { params }: Context) {
     const { id } = await params
     const existing = await db.assignmentSubmission.findUnique({
       where:   { id },
-      include: { course: { select: { instructorId: true } } },
+      include: { course: { select: { instructorId: true, curriculum: true } } },
     })
     if (!existing) return NextResponse.json({ error: "Submission not found." }, { status: 404 })
 
     // An instructor may only review work on programmes they teach.
     if (session.role === "INSTRUCTOR" && existing.course.instructorId !== session.sub) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    // Assignments with a rubric are marked through the rubric route so scores
+    // stay inside each level's range.
+    if (findAssignment(existing.course.curriculum, existing.blockId)?.rubricId) {
+      return NextResponse.json({ error: "This assignment uses a rubric — mark it level by level." }, { status: 409 })
     }
 
     const parsed = reviewSchema.safeParse(await req.json())

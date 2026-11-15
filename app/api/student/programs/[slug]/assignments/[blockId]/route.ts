@@ -4,6 +4,9 @@ import { requireApiRole } from "@/lib/guard"
 import { db } from "@/lib/db"
 import { getProgramBySlug } from "@/services/program.service"
 import { findAssignment, validateSubmission, submitAssignment } from "@/services/assignment.service"
+import { getCurrentVersion, getVersionById } from "@/services/rubric.service"
+import { learnerPreview, releasedMarks } from "@/services/rubric-marking.service"
+import type { AssignmentSubmission } from "@prisma/client"
 
 type Context = { params: Promise<{ slug: string; blockId: string }> }
 
@@ -16,6 +19,31 @@ const bodySchema = z.object({
     size: z.number().int().min(0).optional(),
   })).max(10).optional(),
 })
+
+/** The learner's view of a submission. Built field by field so the marker's
+ *  unreleased draft (`markingDraft`) can never reach the browser. */
+function forLearner(s: AssignmentSubmission | null) {
+  if (!s) return null
+  return {
+    id: s.id, text: s.text, linkUrl: s.linkUrl, files: s.files,
+    status: s.status, feedback: s.feedback, points: s.points,
+    gradeBand: s.gradeBand,
+    marks: releasedMarks(s),
+    submittedAt: s.submittedAt.toISOString(),
+    gradedAt: s.gradedAt?.toISOString() ?? null,
+  }
+}
+
+/** The rubric to show alongside a submission: the exact version the work was
+ *  marked against once marks are released, otherwise the current version if
+ *  the author lets learners see it before submitting. */
+async function rubricFor(rubricId: string | null, s: AssignmentSubmission | null) {
+  if (s && releasedMarks(s) && s.rubricVersionId) {
+    const marked = await getVersionById(s.rubricVersionId)
+    if (marked) return marked
+  }
+  return rubricId ? learnerPreview(await getCurrentVersion(rubricId)) : null
+}
 
 async function enrolled(slug: string, userId: string) {
   const program = await getProgramBySlug(slug)
@@ -41,7 +69,9 @@ export async function GET(_req: NextRequest, { params }: Context) {
     const submission = await db.assignmentSubmission.findUnique({
       where: { userId_blockId: { userId: session.sub, blockId } },
     })
-    return NextResponse.json({ submission })
+    const assignment = findAssignment(found.program.curriculum, blockId)
+    const rubric = await rubricFor(assignment?.rubricId ?? null, submission)
+    return NextResponse.json({ submission: forLearner(submission), rubric })
   } catch (error) {
     console.error("[GET .../assignments/[blockId]]", error)
     return NextResponse.json({ error: "Something went wrong." }, { status: 500 })
@@ -77,7 +107,7 @@ export async function PUT(req: NextRequest, { params }: Context) {
     const result = await submitAssignment(session.sub, program.id, assignment, parsed.data)
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 409 })
 
-    return NextResponse.json({ submission: result.submission })
+    return NextResponse.json({ submission: forLearner(result.submission) })
   } catch (error) {
     console.error("[PUT .../assignments/[blockId]]", error)
     return NextResponse.json({ error: "Something went wrong." }, { status: 500 })
