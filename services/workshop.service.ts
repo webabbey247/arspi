@@ -1,6 +1,8 @@
 import { db } from "@/lib/db"
 import { WorkshopPaymentMethod, WorkshopType, WorkshopCategory, WorkshopRegistrationStatus } from "@prisma/client"
 import type { WorkshopRegistrationPayload } from "@/lib/validators/workshop"
+import { notifySafely } from "@/services/notification.service"
+import { notifyWorkshopRegistration } from "@/services/notification-events.service"
 
 export type { WorkshopType, WorkshopCategory, WorkshopRegistrationStatus }
 export { computeDurationHours, normalizeFacilitators } from "@/lib/workshop-helpers"
@@ -32,8 +34,16 @@ export async function registerForWorkshop(
       status:     input.fee === 0 ? "CONFIRMED" : "PENDING",
       workshopId: input.workshopId ?? null,
     },
-    select: { id: true },
+    select: { id: true, status: true },
   })
+  // Free registrations are confirmed now; paid ones alert from the Stripe
+  // webhook once payment succeeds.
+  if (registration.status === "CONFIRMED") {
+    notifySafely(() => notifyWorkshopRegistration({
+      workshopId: input.workshopId ?? null, workshopTitle: input.workshopTitle,
+      firstName: input.firstName, lastName: input.lastName, email: input.email, paid: false,
+    }))
+  }
 
   return { success: true, id: registration.id }
 }

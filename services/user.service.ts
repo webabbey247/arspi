@@ -24,6 +24,14 @@ export type UserRow = {
   _count: { enrollments: number }
 }
 
+/** A row for the Students / Staff directories. */
+export type DirectoryRow = Omit<UserRow, "_count"> & {
+  invitedAt: Date | null
+  /** Invited as staff but hasn't set a password yet. */
+  invitePending: boolean
+  _count: { enrollments: number; taughtCourses: number }
+}
+
 export type UserDetail = {
   id:            string
   email:         string
@@ -62,12 +70,15 @@ export type UserServiceResult<T> =
 
 export async function getUsers(filters?: {
   role?:   Role
+  /** Any of these roles — e.g. ADMIN + INSTRUCTOR for the staff directory. */
+  roles?:  Role[]
   status?: UserStatus
   search?: string
-}): Promise<UserRow[]> {
-  return db.user.findMany({
+}): Promise<DirectoryRow[]> {
+  const rows = await db.user.findMany({
     where: {
       ...(filters?.role   !== undefined && { role:   filters.role }),
+      ...(filters?.roles  !== undefined && { role:   { in: filters.roles } }),
       ...(filters?.status !== undefined && { status: filters.status }),
       ...(filters?.search && {
         OR: [
@@ -94,10 +105,14 @@ export async function getUsers(filters?: {
           jobTitle:     true,
         },
       },
-      _count: { select: { enrollments: true } },
+      invitedAt: true,
+      // Only to derive invitePending below — never returned.
+      password:  true,
+      _count: { select: { enrollments: true, taughtCourses: true } },
     },
     orderBy: { createdAt: "desc" },
   })
+  return rows.map(({ password, ...u }) => ({ ...u, invitePending: !!u.invitedAt && !password }))
 }
 
 export async function getUserById(id: string): Promise<UserRow | null> {

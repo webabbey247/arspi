@@ -1,41 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { createWorkshop, getWorkshops, slugify, WorkshopCategory, WorkshopType } from "@/services/workshop.service"
-import { z } from "zod"
+import { getWorkshops, WorkshopCategory, WorkshopType } from "@/services/workshop.service"
 
-const createSchema = z.object({
-  title:       z.string().min(2).max(255),
-  slug:        z.string().min(2).max(255)
-    .check(z.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase with hyphens only"))
-    .optional(),
-  description: z.string().min(10),
-  type:        z.enum(["FREE", "PAID"]).optional(),
-  category:    z.enum(["SHORT_COURSE", "WEBINAR", "MASTERCLASS", "CONFERENCE", "WORKSHOP"]).optional(),
-  fee:         z.number().min(0).optional(),
-  featured:    z.boolean().optional(),
-  published:   z.boolean().optional(),
-  date:        z.string().nullable().optional(),
-  startTime:      z.string().max(20).optional(),
-  endTime:        z.string().max(20).optional(),
-  timezone:       z.string().max(100).optional(),
-  level:          z.enum(["ALL", "BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
-  facilitator:    z.string().max(255).optional(),
-  facilitators:   z.array(z.object({
-    fullName: z.string().min(1).max(255),
-    jobTitle: z.string().max(255).default(""),
-    company:  z.string().max(255).default(""),
-    image:    z.string().nullable().optional(),
-  })).nullable().optional(),
-  medium:         z.enum(["ONLINE", "IN_PERSON"]).optional(),
-  onlinePlatform: z.string().nullable().optional(),
-  onlineLink:     z.string().nullable().optional(),
-  venueAddress:   z.string().nullable().optional(),
-  venueCity:      z.string().nullable().optional(),
-  venueState:     z.string().nullable().optional(),
-  venueCountry:   z.string().nullable().optional(),
-  capacity:       z.number().int().positive().nullable().optional(),
-  coverImage:     z.string().nullable().optional(),
-})
 
 /** GET /api/instructor/workshops — list workshops belonging to the logged-in instructor */
 export async function GET(req: NextRequest) {
@@ -66,34 +32,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/** POST /api/instructor/workshops — create a workshop owned by the instructor */
-export async function POST(req: NextRequest) {
-  try {
-    const session = await getSession()
-    if (!session || session.role !== "INSTRUCTOR") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-
-    const body   = await req.json()
-    const parsed = createSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400 }
-      )
-    }
-
-    const input = parsed.data
-    const slug  = input.slug ?? slugify(input.title)
-
-    const result = await createWorkshop({ ...input, slug, instructorId: session.sub })
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 409 })
-    }
-
-    return NextResponse.json({ workshop: result.data }, { status: 201 })
-  } catch (error) {
-    console.error("[POST /api/instructor/workshops]", error)
-    return NextResponse.json({ error: "Something went wrong." }, { status: 500 })
-  }
+/** POST /api/instructor/workshops — disabled. Instructors can't create
+ *  workshops for now; refused here as well as hidden in the UI. */
+export async function POST() {
+  return NextResponse.json({ error: "Instructors can't create workshops." }, { status: 403 })
 }

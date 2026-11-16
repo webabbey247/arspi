@@ -1,11 +1,13 @@
 "use client"
 
+import RichText from "@/components/ui/RichText"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { DetailPageSkeleton, InlineSkeleton } from "@/components/ui/skeleton"
 import AssessmentManager from "@/components/assessments/AssessmentManager"
+import SubmitForApprovalDialog from "@/components/programs/SubmitForApprovalDialog"
 import PreviewAsSwitch from "@/components/programs/PreviewAsSwitch"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -14,6 +16,8 @@ type CourseLevel  = "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
 type EnrollStatus = "ACTIVE" | "COMPLETED" | "DROPPED"
 
 type Program = {
+  /** Set while this programme awaits an admin's approval. */
+  submittedForReviewAt?: string | null
   id:           string
   title:        string
   slug:         string
@@ -151,6 +155,7 @@ export default function InstructorProgramDetailPage() {
   const { slug } = useParams<{ slug: string }>()
 
   const [program,       setProgram]       = useState<Program | null>(null)
+  const [submitOpen,    setSubmitOpen]    = useState(false)
   const [enrollments,   setEnrollments]   = useState<Enrollment[]>([])
   const [loading,       setLoading]       = useState(true)
   const [enrollLoading, setEnrollLoading] = useState(true)
@@ -238,6 +243,15 @@ export default function InstructorProgramDetailPage() {
 
         <div className="flex flex-wrap items-center gap-2">
           <PreviewAsSwitch slug={program.slug} role="INSTRUCTOR" />
+          <button
+            type="button" onClick={() => setSubmitOpen(true)}
+            className="h-8 px-3.5 rounded-[8px] bg-[#6655DF] text-white text-[13px] font-semibold hover:bg-[#2C2368] transition-colors cursor-pointer"
+          >
+            {program.submittedForReviewAt ? "Resubmit for approval" : "Submit for approval"}
+          </button>
+          {program.submittedForReviewAt && (
+            <span className="px-2 py-1 rounded-full bg-[#EEECFF] text-[#6655DF] text-[11px] font-bold">Awaiting approval</span>
+          )}
           {enrollments.length > 0 && (
             <button
               onClick={() => exportCSV(enrollments, program.title)}
@@ -480,7 +494,7 @@ export default function InstructorProgramDetailPage() {
                       )}
                       <span className="text-[13px] font-semibold text-[#171C35]">{mod.title}</span>
                     </div>
-                    {mod.desc && <p className="text-[12px] text-[#69708A] leading-relaxed mb-2">{mod.desc}</p>}
+                    <RichText value={mod.desc} className="text-[12px] text-[#69708A] leading-relaxed mb-2" />
                     {mod.lessons && mod.lessons.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         {mod.lessons.map((l, j) => (
@@ -503,7 +517,7 @@ export default function InstructorProgramDetailPage() {
                 {faqs.map((faq, i) => (
                   <div key={i} className="px-5 py-4">
                     <p className="text-[13px] font-semibold text-[#171C35] mb-1">{faq.q}</p>
-                    <p className="text-[12px] text-[#69708A] leading-relaxed">{faq.a}</p>
+                    <RichText value={faq.a} className="text-[12px] text-[#69708A] leading-relaxed" />
                   </div>
                 ))}
               </div>
@@ -594,6 +608,16 @@ export default function InstructorProgramDetailPage() {
 
       <AssessmentManager programId={program.id} />
 
+      {submitOpen && program && (
+        <SubmitForApprovalDialog
+          program={program}
+          onClose={() => setSubmitOpen(false)}
+          onDone={() => {
+            setSubmitOpen(false)
+            setProgram(p => (p ? { ...p, submittedForReviewAt: new Date().toISOString() } : p))
+          }}
+        />
+      )}
     </div>
   )
 }

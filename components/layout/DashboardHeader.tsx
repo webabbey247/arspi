@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Menu } from 'lucide-react'
+import NotificationBell from './NotificationBell'
 import type { SessionPayload } from "@/types/session"
 
 async function logout() {
@@ -99,6 +100,8 @@ const DashboardHeader = ({
         <b className="text-[16px] leading-[1.1] text-[#171C35] truncate">ARPS Institute</b>
       </div>
 
+      <div className="flex items-center gap-1.5">
+      <NotificationBell />
       <div ref={dropdownRef} className="relative">
         <button
           onClick={() => setDropdownOpen(o => !o)}
@@ -115,6 +118,13 @@ const DashboardHeader = ({
               <span className="block text-[12px] text-[#69708A] capitalize">{user.role.toLowerCase()}</span>
             </div>
             <Link
+              href="/notifications"
+              onClick={() => setDropdownOpen(false)}
+              className="flex items-center px-3 py-2 rounded-[8px] text-[14px] font-bold text-[#60677E] hover:bg-[#EEECFF] hover:text-[#6655DF]"
+            >
+              Notifications
+            </Link>
+            <Link
               href="/settings"
               onClick={() => setDropdownOpen(false)}
               className="flex items-center px-3 py-2 rounded-[8px] text-[14px] font-bold text-[#60677E] hover:bg-[#EEECFF] hover:text-[#6655DF]"
@@ -129,6 +139,7 @@ const DashboardHeader = ({
             </button>
           </div>
         )}
+      </div>
       </div>
     </header>
   )

@@ -13,6 +13,7 @@ import * as yup from "yup"
 import ContentBlockEditor from "@/components/forms/ContentBlockEditor"
 import { RubricScopeProvider } from "@/components/rubrics/RubricScope"
 import FullRichTextEditor from "@/components/ui/RichTextEditor"
+import { SearchableSelect } from "@/components/ui/SearchableSelect"
 import { SITE_NAME } from "@/lib/seo"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
@@ -24,6 +25,7 @@ import type { DropdownItem } from "@/components/ui/DropdownMenu"
 import { TickProgress } from "@/components/ui/TickProgress"
 import { useRouter } from "next/navigation"
 import RubricManager from "@/components/rubrics/RubricManager"
+import AssignReviewModal from "@/components/admin/AssignReviewModal"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -51,8 +53,12 @@ type Program = {
   featured:     boolean
   predefinedAnalytics: boolean
   status:       CourseStatus
-  instructorId: string
-  instructor:   { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null }
+  /** Null until assigned for review. */
+  instructorId: string | null
+  instructor:   { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null } | null
+  /** Set while the assigned instructor's submission awaits approval. */
+  submittedForReviewAt?: string | null
+  submissionNote?:       string | null
   categoryId:   string | null
   category:     Category | null
 
@@ -92,6 +98,7 @@ type Program = {
   // defaults fall back to "" / [], so reading them off a list row would
   // silently blank the programme on save rather than fail loudly.
   overview?:           string | null
+  outlineIntro?:        string | null
   targetAudience?:     unknown | null
   learningObjectives?: unknown | null
   curriculum?:         unknown | null
@@ -172,6 +179,7 @@ function fmtPrice(price: number, pricing: string) {
 }
 
 function instructorName(p: Program) {
+  if (!p.instructor) return "Unassigned"
   const prof = p.instructor.profile
   if (prof?.firstName || prof?.lastName) {
     return [prof.firstName, prof.lastName].filter(Boolean).join(" ")
@@ -363,6 +371,7 @@ type ProgramFormValues = {
 
   // Step 2 — Objectives
   overview:           string
+  outlineIntro:       string
   targetAudience:     string[]
   learningObjectives: string[]
   whatIsIncluded:     string[]
@@ -395,7 +404,7 @@ const EMPTY_FORM: ProgramFormValues = {
   format: "", duration: "", startDate: "", endDate: "", cohortSize: "",
   rating: "", reviewCount: "", enrolledCount: "", countriesCount: "",
   programLevelId: "", programFormatId: "", programPricingId: "",
-  overview: "", targetAudience: [], learningObjectives: [], whatIsIncluded: [],
+  overview: "", outlineIntro: "", targetAudience: [], learningObjectives: [], whatIsIncluded: [],
   curriculum: [], facilitators: [], faqs: [],
   // Mirrors the column defaults in prisma/schema.prisma.
   gradingEnabled: false,
@@ -449,6 +458,11 @@ const FORMAT_CONFIGS: Record<string, FormatCfg> = {
     endHint:        "Auto-calculated from start date + duration",
   },
 }
+
+// The Formats lookup names "Hybrid" and "In Person"; both run on dates like a
+// blended cohort does.
+FORMAT_CONFIGS["Hybrid"]    = FORMAT_CONFIGS["Blended"]
+FORMAT_CONFIGS["In Person"] = FORMAT_CONFIGS["Blended"]
 
 const DEFAULT_FORMAT_CFG: FormatCfg = {
   durationLabel: "Duration",
@@ -554,6 +568,7 @@ const programSchema = yup.object({
 
   // Step 2
   overview:           yup.string(),
+  outlineIntro:       yup.string().max(5000, "Keep the outline introduction under 5,000 characters"),
   targetAudience:     yup.array(yup.string().default("")).min(1, "Add at least one target audience entry"),
   learningObjectives: yup.array(yup.string().default("")).min(1, "Add at least one learning objective"),
   whatIsIncluded:     yup.array(yup.string().default("")).min(1, "Add at least one item"),
@@ -615,7 +630,7 @@ const programSchema = yup.object({
 const STEP_FIELDS: Record<number, (keyof ProgramFormValues)[]> = {
   1: ["title", "slug", "excerpt", "thumbnail", "pricing", "paymentType", "price", "level", "categoryId", "tagline", "featured", "predefinedAnalytics", "rating", "reviewCount", "enrolledCount", "countriesCount"],
   2: ["overview", "targetAudience", "learningObjectives", "whatIsIncluded"],
-  3: ["curriculum"],
+  3: ["outlineIntro", "curriculum"],
   4: ["facilitators"],
   5: ["faqs"],
 }
@@ -1363,6 +1378,7 @@ function ProgramModalInner({
     attemptCooldownHours:    String(program.attemptCooldownHours    ?? 24),
     maxProjectResubmissions: String(program.maxProjectResubmissions ?? 2),
     overview:           program.overview ?? "",
+    outlineIntro:       program.outlineIntro ?? "",
     targetAudience:     Array.isArray(program.targetAudience)     ? (program.targetAudience as string[])     : [],
     learningObjectives: Array.isArray(program.learningObjectives) ? (program.learningObjectives as string[]) : [],
     whatIsIncluded:     Array.isArray(program.whatIsIncluded)     ? (program.whatIsIncluded as string[])     : [],
@@ -1548,50 +1564,46 @@ function ProgramModalInner({
               <textarea {...register("excerpt")} rows={3} className={inputCls} placeholder="A concise summary of this programme…" />
               <FieldError msg={errors.excerpt?.message} />
             </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Category" required>
-                <select {...register("categoryId")} className={inputCls}>
-                  <option value="">— Select —</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-                <FieldError msg={errors.categoryId?.message} />
-              </Field>
-              <Field label="Level" required>
-                <select {...register("level")} className={inputCls}>
-                  <option value="BEGINNER">Beginner</option>
-                  <option value="INTERMEDIATE">Intermediate</option>
-                  <option value="ADVANCED">Advanced</option>
-                </select>
-                <FieldError msg={errors.level?.message} />
-              </Field>
-            </div>
-
-            {/* Pricing block */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Category · Level / Programme type · Pricing */}
+            <ClassificationRow control={control} setValue={setValue} errors={errors} categories={categories} formats={formats}>
               <Field label="Pricing" required>
-                <select {...register("pricing")} className={inputCls}>
-                  <option value="free">Free</option>
-                  <option value="paid">Paid</option>
-                </select>
+                <Controller
+                  control={control} name="pricing"
+                  render={({ field }) => (
+                    <SearchableSelect
+                      label="Pricing" searchPlaceholder="Search pricing"
+                      options={PRICING_OPTIONS}
+                      value={field.value ?? ""} onChange={field.onChange}
+                      invalid={!!errors.pricing}
+                    />
+                  )}
+                />
                 <FieldError msg={errors.pricing?.message} />
               </Field>
-              {watchedPricing === "paid" && (
+            </ClassificationRow>
+
+            {/* Payment type · Price — only for paid programmes */}
+            {watchedPricing === "paid" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Payment Type" required>
-                  <select {...register("paymentType")} className={inputCls}>
-                    <option value="">— Select —</option>
-                    <option value="one-time">One-time payment</option>
-                    <option value="subscription">Subscription / Membership</option>
-                    <option value="monthly">Monthly Payment Plan</option>
-                  </select>
+                  <Controller
+                    control={control} name="paymentType"
+                    render={({ field }) => (
+                      <SearchableSelect
+                        label="Payment type" placeholder="— Select —" searchPlaceholder="Search payment types"
+                        options={PAYMENT_TYPE_OPTIONS}
+                        value={field.value ?? ""} onChange={field.onChange}
+                        invalid={!!errors.paymentType}
+                      />
+                    )}
+                  />
                   <FieldError msg={errors.paymentType?.message} />
                 </Field>
-              )}
-            </div>
-            {watchedPricing === "paid" && (
-              <Field label="Price (USD)" required>
-                <input type="number" min="0" step="0.01" {...register("price")} className={inputCls} placeholder="e.g. 499" />
-                <FieldError msg={errors.price?.message} />
-              </Field>
+                <Field label="Price (USD)" required>
+                  <input type="number" min="0" step="0.01" {...register("price")} className={inputCls} placeholder="e.g. 499" />
+                  <FieldError msg={errors.price?.message} />
+                </Field>
+              </div>
             )}
 
             <div className="flex items-center gap-6 pt-1 flex-wrap">
@@ -1709,6 +1721,15 @@ function ProgramModalInner({
             <p className="text-[13px] text-[#69708A] leading-relaxed">
               Build the programme outline. Each module appears as an accordion on the public page.
             </p>
+            <Field label="Outline introduction" hint="Shown under “Programme Outline” on the public page. Leave empty to use a default sentence based on the number of modules.">
+              <textarea
+                {...register("outlineIntro")}
+                rows={3}
+                className={inputCls}
+                placeholder="e.g. The programme runs over 7 modules. Each combines short videos, worked examples and a practical assignment…"
+              />
+              <FieldError msg={errors.outlineIntro?.message} />
+            </Field>
             <CurriculumEditor control={control} register={register} errors={errors} />
           </>}
 
@@ -2144,6 +2165,95 @@ function LookupModal({
   )
 }
 
+// ── Category · Level · Programme type ────────────────────────────────────────
+
+const PRICING_OPTIONS = [
+  { value: "free", label: "Free" },
+  { value: "paid", label: "Paid" },
+]
+
+const PAYMENT_TYPE_OPTIONS = [
+  { value: "one-time",     label: "One-time payment" },
+  { value: "subscription", label: "Subscription / Membership" },
+  { value: "monthly",      label: "Monthly Payment Plan" },
+]
+
+const LEVEL_OPTIONS = [
+  { value: "BEGINNER",     label: "Beginner" },
+  { value: "INTERMEDIATE", label: "Intermediate" },
+  { value: "ADVANCED",     label: "Advanced" },
+]
+
+/** The programme's classification on one row, each a searchable select.
+ *  Programme type sets both `programFormatId` (the Formats lookup) and the
+ *  `format` name the public page and the date fields key off. */
+function ClassificationRow({ control, setValue, errors, categories, formats, children }: {
+  control:    Control<ProgramFormValues>
+  setValue:   (name: "format" | "programFormatId", value: string, opts?: { shouldDirty?: boolean; shouldValidate?: boolean }) => void
+  errors:     FieldErrors<ProgramFormValues>
+  categories: Category[]
+  formats:    Lookup[]
+  /** Rendered after Programme type, sharing its row (the Pricing field). */
+  children?:  React.ReactNode
+}) {
+  const format = useWatch({ control, name: "format" })
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <Field label="Category" required>
+        <Controller
+          control={control} name="categoryId"
+          render={({ field }) => (
+            <SearchableSelect
+              label="Category" placeholder="— Select —" searchPlaceholder="Search categories"
+              emptyMessage="No categories yet — add one in the Categories tab."
+              options={categories.map(c => ({ value: c.id, label: c.name }))}
+              value={field.value ?? ""} onChange={field.onChange}
+              invalid={!!errors.categoryId}
+            />
+          )}
+        />
+        <FieldError msg={errors.categoryId?.message} />
+      </Field>
+      <Field label="Level" required>
+        <Controller
+          control={control} name="level"
+          render={({ field }) => (
+            <SearchableSelect
+              label="Level" searchPlaceholder="Search levels"
+              options={LEVEL_OPTIONS}
+              value={field.value ?? ""} onChange={field.onChange}
+              invalid={!!errors.level}
+            />
+          )}
+        />
+        <FieldError msg={errors.level?.message} />
+      </Field>
+      <Field label="Programme type">
+        <Controller
+          control={control} name="programFormatId"
+          render={({ field }) => {
+            // Older programmes carry only the name; match it to a lookup row.
+            const current = field.value || formats.find(f => f.name === format)?.id || ""
+            return (
+              <SearchableSelect
+                label="Programme type" placeholder="— Select —" searchPlaceholder="Search types"
+                emptyMessage="No programme types yet."
+                options={formats.map(f => ({ value: f.id, label: f.name }))}
+                value={current}
+                onChange={id => {
+                  field.onChange(id)
+                  setValue("format", formats.find(f => f.id === id)?.name ?? "", { shouldDirty: true, shouldValidate: true })
+                }}
+              />
+            )
+          }}
+        />
+      </Field>
+      {children}
+    </div>
+  )
+}
+
 // ── Lookup tab panel (Levels / Formats / Pricing) ─────────────────────────────
 
 function LookupTab({
@@ -2297,6 +2407,7 @@ export default function AdminProgramsPage() {
   const [aiDraft, setAiDraft]                 = useState<Partial<ProgramFormValues> | null>(null)
   const [aiBuilderOpen, setAiBuilderOpen]     = useState(false)
   const [deleteProgram, setDeleteProgram]     = useState<Program | null>(null)
+  const [assignProgram, setAssignProgram]     = useState<Program | null>(null)
   const [filterOpen, setFilterOpen]           = useState(false)
   const [statusOpen, setStatusOpen]           = useState(false)
   const filterRef                             = useRef<HTMLDivElement>(null)
@@ -2501,6 +2612,7 @@ export default function AdminProgramsPage() {
       countriesCount: values.predefinedAnalytics && values.countriesCount ? parseInt(values.countriesCount) : null,
 
       overview:           values.overview || null,
+      outlineIntro:       values.outlineIntro?.trim() || null,
       targetAudience:     filterArr(values.targetAudience),
       learningObjectives: filterArr(values.learningObjectives),
       whatIsIncluded:     filterArr(values.whatIsIncluded),
@@ -2601,6 +2713,11 @@ export default function AdminProgramsPage() {
         label:    hydratingId === p.id ? "Opening…" : "Edit programme",
         onSelect: () => openProgramEditor(p),
         icon:     RowIcon.edit,
+      },
+      {
+        label:       p.instructorId ? "Reassign…" : "Assign for review…",
+        onSelect:    () => setAssignProgram(p),
+        icon:        RowIcon.user,
       },
     ]
     if (p.status === "DRAFT") {
@@ -2997,8 +3114,13 @@ export default function AdminProgramsPage() {
                             {p.status === "DRAFT" && (
                               <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Draft</span>
                             )}
+                            {p.submittedForReviewAt && (
+                              <span title={p.submissionNote ?? undefined} className="shrink-0 px-1.5 py-0.5 rounded-full bg-[#EEECFF] text-[#6655DF] text-[9px] font-bold uppercase tracking-wide">Awaiting approval</span>
+                            )}
                           </div>
-                          <p className="text-[11px] text-[#8A90A6] mt-0.5">{instructorName(p)}</p>
+                          <p className={`text-[11px] mt-0.5 ${p.instructor ? "text-[#8A90A6]" : "text-amber-700 font-semibold"}`}>
+                            {p.instructor ? instructorName(p) : "Unassigned — use “Assign for review”"}
+                          </p>
                           {p.featured && (
                             <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#6655DF] mt-0.5">
                               <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -3089,8 +3211,13 @@ export default function AdminProgramsPage() {
                       {p.status === "DRAFT" && (
                         <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Draft</span>
                       )}
+                      {p.submittedForReviewAt && (
+                              <span title={p.submissionNote ?? undefined} className="shrink-0 px-1.5 py-0.5 rounded-full bg-[#EEECFF] text-[#6655DF] text-[9px] font-bold uppercase tracking-wide">Awaiting approval</span>
+                            )}
                     </div>
-                    <p className="text-[12px] text-[#8A90A6] mt-0.5 truncate">{instructorName(p)}</p>
+                    <p className={`text-[12px] mt-0.5 truncate ${p.instructor ? "text-[#8A90A6]" : "text-amber-700 font-semibold"}`}>
+                      {p.instructor ? instructorName(p) : "Unassigned"}
+                    </p>
                     {p.featured && (
                       <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#6655DF] mt-0.5">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -3343,6 +3470,9 @@ export default function AdminProgramsPage() {
       )}
       {pricingModal !== null && (
         <LookupModal kind="pricing" item={pricingModal === "create" ? null : pricingModal} onSave={(name) => handleSaveLookup("pricing", name)} onClose={() => setPricingModal(null)} />
+      )}
+      {assignProgram && (
+        <AssignReviewModal program={assignProgram} onClose={() => setAssignProgram(null)} onDone={fetchPrograms} />
       )}
       {deleteProgram && (
         <ConfirmDialog message={`Delete "${deleteProgram.title}"? This cannot be undone.`} onConfirm={handleDeleteProgram} onCancel={() => setDeleteProgram(null)} />

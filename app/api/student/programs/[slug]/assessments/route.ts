@@ -3,6 +3,7 @@ import { requireApiRole } from "@/lib/guard"
 import { db } from "@/lib/db"
 import { getProgramBySlug } from "@/services/program.service"
 import { checkCanAttempt, parseQuestions, parseRubric } from "@/services/assessment.service"
+import { collectAssignments, isMarkedAssignment } from "@/services/assignment.service"
 import { getCurrentVersions, getVersionsById } from "@/services/rubric.service"
 import { learnerPreview, releasedMarks } from "@/services/rubric-marking.service"
 
@@ -89,7 +90,33 @@ export async function GET(_req: NextRequest, { params }: Context) {
       }
     }))
 
+    // Assignments that count towards the grade: module assignments when the
+    // programme turns them on, plus any block flagged as the final project.
+    // Only released marks are shown — highest of this and earlier attempts.
+    const marked = collectAssignments(program.curriculum).filter(isMarkedAssignment)
+    const counted = marked.filter(a => a.isFinalProject || program.assignmentsInCoursework)
+    const subs = counted.length > 0
+      ? await db.assignmentSubmission.findMany({
+          where:  { userId: session.sub, courseId: program.id, blockId: { in: counted.map(a => a.blockId) } },
+          select: { blockId: true, status: true, scorePct: true, priorBestPct: true },
+        })
+      : []
+    const subBy = new Map(subs.map(s => [s.blockId, s]))
+    const assignmentItems = counted.map(a => {
+      const s = subBy.get(a.blockId)
+      const best = s && (s.scorePct !== null || s.priorBestPct !== null)
+        ? Math.round(Math.max(s.scorePct ?? 0, s.priorBestPct ?? 0) * 10) / 10
+        : null
+      return {
+        blockId: a.blockId, title: a.blockTitle, chapterTitle: a.chapterTitle,
+        half: a.isFinalProject ? "project" as const : "coursework" as const,
+        status: s?.status ?? null, bestPct: best,
+      }
+    })
+
     return NextResponse.json({
+      assignmentItems,
+      assignmentsInCoursework: program.assignmentsInCoursework,
       gradingEnabled: program.gradingEnabled,
       policy: {
         quizWeight:    program.quizWeight,

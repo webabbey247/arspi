@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireStaff } from "@/lib/guard"
 import { markingBodySchema } from "@/lib/marking-schema"
 import { assignmentRubricContext, markAssignment } from "@/services/rubric-marking.service"
+import { recomputeCourseGrade } from "@/services/assessment.service"
+import { syncCourseCompletion } from "@/services/course-completion.service"
 
 type Context = { params: Promise<{ id: string }> }
 
@@ -27,6 +29,13 @@ export async function PUT(req: NextRequest, { params }: Context) {
 
     const result = await markAssignment(session.sub, id, parsed.data)
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
+
+    // A released mark can move the course grade (module assignments in
+    // coursework, or the final project) — and with it the certificate.
+    if (parsed.data.action === "release") {
+      await recomputeCourseGrade(ctx.sub.userId, ctx.sub.courseId)
+      await syncCourseCompletion(ctx.sub.userId, ctx.sub.courseId)
+    }
     return NextResponse.json({
       marks:     result.marks,
       released:  parsed.data.action === "release",

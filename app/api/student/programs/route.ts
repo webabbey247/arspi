@@ -49,8 +49,10 @@ export async function GET() {
           thumbnail: e.course.thumbnail, tagline: e.course.tagline, excerpt: e.course.excerpt,
           level: e.course.level,
           instructor: {
-            name: [e.course.instructor.profile?.firstName, e.course.instructor.profile?.lastName]
-              .filter(Boolean).join(" ") || e.course.instructor.email,
+            name: e.course.instructor
+              ? [e.course.instructor.profile?.firstName, e.course.instructor.profile?.lastName]
+                  .filter(Boolean).join(" ") || e.course.instructor.email
+              : "ARPS Institute",
           },
         },
         totalLessons:     allLessonIds.length,

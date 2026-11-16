@@ -1,4 +1,6 @@
 import { db } from "@/lib/db"
+import { notifySafely } from "@/services/notification.service"
+import { notifyNewApplication } from "@/services/notification-events.service"
 
 export type CareerApplicationInput = {
   careerId:        string
@@ -59,6 +61,7 @@ export async function createCareerApplication(
     data:  { applications: { increment: 1 } },
   })
 
+  notifySafely(() => notifyNewApplication(input))
   return { success: true, data: application }
 }
 

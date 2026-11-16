@@ -13,18 +13,21 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = req.nextUrl
-    const role   = searchParams.get("role")   as Role       | null
+    // role=STAFF → admins and instructors together (the Staff & Roles page).
+    const roleParam = searchParams.get("role")
+    const role   = roleParam && roleParam !== "STAFF" ? roleParam as Role : null
     const status = searchParams.get("status") as UserStatus | null
     const search = searchParams.get("search") ?? undefined
 
     const users = await getUsers({
       role:   role   ?? undefined,
+      ...(roleParam === "STAFF" && { roles: ["ADMIN", "INSTRUCTOR"] as Role[] }),
       status: status ?? undefined,
       search,
     })
 
     return NextResponse.json(
-      users.map(u => ({ ...u, createdAt: u.createdAt.toISOString() }))
+      users.map(u => ({ ...u, createdAt: u.createdAt.toISOString(), invitedAt: u.invitedAt?.toISOString() ?? null }))
     )
   } catch (error) {
     console.error("[GET /api/admin/users]", error)

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
+import { recomputeCourseGradesForAll } from "@/services/assessment.service"
+import { onProgramPublished } from "@/services/program-review.service"
 import { getSession } from "@/lib/session"
 import { getProgramById, getProgramBySlug, updateProgram, deleteProgram, slugify } from "@/services/program.service"
 import { z } from "zod"
@@ -47,6 +49,7 @@ const updateSchema = z.object({
 
   // Rich content (JSON)
   overview:           z.string().nullable().optional(),
+  outlineIntro:       z.string().max(5000).nullable().optional(),
   targetAudience:     z.array(z.string()).nullable().optional(),
   learningObjectives: z.array(z.string()).nullable().optional(),
   curriculum:         z.array(z.object({
@@ -142,6 +145,18 @@ export async function PUT(req: NextRequest, { params }: Context) {
     if (!result.success) {
       const status = result.error === "Program not found." ? 404 : 409
       return NextResponse.json({ error: result.error }, { status })
+    }
+
+    // A curriculum edit can change what's graded (a block flagged as the final
+    // project, assignments added or removed), so refresh learners' grades.
+    if (input.curriculum !== undefined && result.data.gradingEnabled) {
+      await recomputeCourseGradesForAll(id).catch(e => console.error("[grade recompute]", e))
+    }
+
+    // Publishing is the admin's approval: close any pending submission and
+    // tell the instructor who submitted it.
+    if (input.status === "PUBLISHED") {
+      await onProgramPublished(id).catch(e => console.error("[program approval notice]", e))
     }
 
     return NextResponse.json({ program: result.data })

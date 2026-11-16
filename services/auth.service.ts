@@ -2,6 +2,8 @@ import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 import type { Role } from "@prisma/client"
 import type { BasicInfoInput } from "@/lib/validators/onboarding"
+import { notifySafely } from "@/services/notification.service"
+import { notifyNewStudent } from "@/services/notification-events.service"
 
 export type CreateUserResult =
   | { success: true; userId: string }
@@ -23,6 +25,7 @@ export async function createUser(input: BasicInfoInput): Promise<CreateUserResul
     data: { email, password: hashedPassword, role: "USER" },
     select: { id: true },
   })
+  notifySafely(() => notifyNewStudent({ id: user.id, email }))
 
   return { success: true, userId: user.id }
 }

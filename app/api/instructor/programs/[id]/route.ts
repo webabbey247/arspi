@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
+import { recomputeCourseGradesForAll } from "@/services/assessment.service"
 import { getSession } from "@/lib/session"
-import { getProgramById, getProgramBySlug, updateProgram, deleteProgram, slugify } from "@/services/program.service"
+import { getProgramById, getProgramBySlug, updateProgram, slugify } from "@/services/program.service"
 import { z } from "zod"
 
 const facilitatorSchema = z.object({
@@ -28,6 +29,7 @@ const updateSchema = z.object({
   tagline:        z.string().nullable().optional(),
   duration:       z.string().nullable().optional(),
   format:         z.string().nullable().optional(),
+  programFormatId: z.string().nullable().optional(),
   startDate:      z.string().nullable().optional(),
   endDate:        z.string().nullable().optional(),
   cohortSize:     z.number().int().positive().nullable().optional(),
@@ -36,6 +38,7 @@ const updateSchema = z.object({
   enrolledCount:  z.number().int().min(0).nullable().optional(),
   countriesCount: z.number().int().min(0).nullable().optional(),
   overview:           z.string().nullable().optional(),
+  outlineIntro:       z.string().max(5000).nullable().optional(),
   targetAudience:     z.array(z.string()).nullable().optional(),
   learningObjectives: z.array(z.string()).nullable().optional(),
   curriculum:         z.array(z.object({
@@ -108,6 +111,12 @@ export async function PUT(req: NextRequest, { params }: Context) {
       const status = result.error === "Program not found." ? 404 : 409
       return NextResponse.json({ error: result.error }, { status })
     }
+
+    // A curriculum edit can change what's graded (a block flagged as the final
+    // project, assignments added or removed), so refresh learners' grades.
+    if (input.curriculum !== undefined && result.data.gradingEnabled) {
+      await recomputeCourseGradesForAll(id).catch(e => console.error("[grade recompute]", e))
+    }
     return NextResponse.json({ program: result.data })
   } catch (error) {
     console.error("[PUT /api/instructor/programs/[id]]", error)
@@ -115,25 +124,8 @@ export async function PUT(req: NextRequest, { params }: Context) {
   }
 }
 
-/** DELETE /api/instructor/programs/[id] */
-export async function DELETE(_req: NextRequest, { params }: Context) {
-  try {
-    const session = await getSession()
-    if (!session || session.role !== "INSTRUCTOR") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-    const { id } = await params
-    const check  = await assertOwnership(id, session.sub)
-    if (!check.ok) return NextResponse.json({ error: check.error }, { status: check.status })
-
-    const result = await deleteProgram(id)
-    if (!result.success) {
-      const status = result.error === "Program not found." ? 404 : 409
-      return NextResponse.json({ error: result.error }, { status })
-    }
-    return new NextResponse(null, { status: 204 })
-  } catch (error) {
-    console.error("[DELETE /api/instructor/programs/[id]]", error)
-    return NextResponse.json({ error: "Something went wrong." }, { status: 500 })
-  }
+/** DELETE /api/instructor/programs/[id] — disabled. An instructor edits and
+ *  submits the programmes assigned to them; deleting is for admins. */
+export async function DELETE() {
+  return NextResponse.json({ error: "Only an administrator can delete a programme." }, { status: 403 })
 }

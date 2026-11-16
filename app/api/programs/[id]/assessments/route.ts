@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { requireCourseEditor } from "@/lib/guard"
 import { db } from "@/lib/db"
+import { recomputeCourseGradesForAll } from "@/services/assessment.service"
 import { rubricUsableBy } from "@/services/rubric.service"
 
 type Context = { params: Promise<{ id: string }> }
@@ -82,6 +83,7 @@ export async function GET(_req: NextRequest, { params }: Context) {
         maxQuizAttempts:         course.maxQuizAttempts,
         attemptCooldownHours:    course.attemptCooldownHours,
         maxProjectResubmissions: course.maxProjectResubmissions,
+        assignmentsInCoursework: course.assignmentsInCoursework,
       },
     })
   } catch (error) {
@@ -99,6 +101,7 @@ const policySchema = z.object({
   maxQuizAttempts:         z.number().int().min(1).max(20).optional(),
   attemptCooldownHours:    z.number().int().min(0).max(720).optional(),
   maxProjectResubmissions: z.number().int().min(0).max(20).optional(),
+  assignmentsInCoursework: z.boolean().optional(),
 })
 
 /** PATCH /api/programs/[id]/assessments — the course's grading policy.
@@ -123,6 +126,9 @@ export async function PATCH(req: NextRequest, { params }: Context) {
     }
 
     const course = await db.course.update({ where: { id }, data: d })
+    // Weights, pass marks or what counts may have changed: rebuild every
+    // enrolled learner's cached grade so dashboards and certificates agree.
+    if (course.gradingEnabled) await recomputeCourseGradesForAll(id)
     return NextResponse.json({
       policy: {
         gradingEnabled: course.gradingEnabled, quizWeight: course.quizWeight,
@@ -130,6 +136,7 @@ export async function PATCH(req: NextRequest, { params }: Context) {
         componentPassMark: course.componentPassMark, maxQuizAttempts: course.maxQuizAttempts,
         attemptCooldownHours: course.attemptCooldownHours,
         maxProjectResubmissions: course.maxProjectResubmissions,
+        assignmentsInCoursework: course.assignmentsInCoursework,
       },
     })
   } catch (error) {

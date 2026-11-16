@@ -21,7 +21,7 @@ export type QuizBlock         = { id: string; type: "quiz";          question: s
 export type QuestionnaireBlock= { id: string; type: "questionnaire"; title: string; questions: string[] }
 /** `rubricId` points at a library rubric; when set, `points` mirrors the
  *  rubric's total and the submission is marked level by level against it. */
-export type AssignmentBlock   = { id: string; type: "assignment";    title: string; instructions: string; submissionType: "text" | "file" | "link" | "none"; dueInDays: string; points: string; rubricId?: string }
+export type AssignmentBlock   = { id: string; type: "assignment";    title: string; instructions: string; submissionType: "text" | "file" | "link" | "none"; dueInDays: string; points: string; rubricId?: string; isFinalProject?: boolean }
 export type DocumentBlock     = { id: string; type: "document";      url: string; title: string }
 export type PdfBlock          = { id: string; type: "pdf";           url: string; title: string; fileName: string; fileSize: string }
 export type SurveyBlock       = { id: string; type: "survey";        url: string; title: string }
@@ -515,6 +515,20 @@ function AssignmentBlockEditor({
           />
         </div>
       </div>
+      <label className="flex items-start gap-2 rounded-[10px] border border-[#DFE2ED] bg-[#FAFAFF] px-3 py-2.5 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={!!block.isFinalProject}
+          onChange={e => onChange({ ...block, isFinalProject: e.target.checked || undefined })}
+          className="mt-0.5 w-4 h-4 accent-[#6655DF] cursor-pointer"
+        />
+        <span>
+          <span className="block text-[12.5px] font-bold text-[#171C35]">Final project</span>
+          <span className="block text-[11.5px] text-[#69708A]">
+            When grading is on, this assignment&apos;s mark forms the project half of the course grade.
+          </span>
+        </span>
+      </label>
       <div className="flex flex-col gap-1">
         <label className="text-[10px] font-bold text-[#69708A] uppercase tracking-[0.4px]">Rubric (optional)</label>
         <RubricPicker

@@ -1,6 +1,8 @@
 import { db } from "@/lib/db"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { CourseLevel, CourseStatus } from "@prisma/client"
+import { notifySafely } from "@/services/notification.service"
+import { notifyEnrolment } from "@/services/notification-events.service"
 
 export type { CourseLevel, CourseStatus }
 
@@ -57,6 +59,7 @@ export type ProgramRow = {
   countriesCount:       number | null
 
   overview:             string | null
+  outlineIntro:         string | null
   targetAudience:       unknown | null
   learningObjectives:   unknown | null
   curriculum:           unknown | null
@@ -74,13 +77,15 @@ export type ProgramRow = {
   maxQuizAttempts:         number
   attemptCooldownHours:    number
   maxProjectResubmissions: number
+  assignmentsInCoursework: boolean
 
-  instructorId: string
+  /** Null until an admin assigns the programme to an instructor. */
+  instructorId: string | null
   instructor:  {
     id:      string
     email:   string
     profile: { firstName: string | null; lastName: string | null } | null
-  }
+  } | null
   categoryId: string | null
   category:   ProgramCategoryRow | null
 
@@ -127,6 +132,7 @@ export type ProgramInput = {
   countriesCount?:       number | null
 
   overview?:             string | null
+  outlineIntro?:         string | null
   targetAudience?:       unknown | null
   learningObjectives?:   unknown | null
   curriculum?:           unknown | null
@@ -308,7 +314,7 @@ export type ProgramListingRow = {
   instructor:  {
     email:   string
     profile: { firstName: string | null; lastName: string | null } | null
-  }
+  } | null
   category:        { id: string; name: string; slug: string } | null
   programLevel:    { id: string; name: string; slug: string } | null
   programFormat:   { id: string; name: string; slug: string } | null
@@ -333,6 +339,9 @@ export type ProgramListingRow = {
  *  Anything that edits a programme must re-fetch the full record by id first,
  *  or it will save a form that was populated from fields it never received. */
 export type ProgramListRow = {
+  /** Set while the assigned instructor's submission awaits an admin. */
+  submittedForReviewAt: Date | null
+  submissionNote:       string | null
   id:           string
   title:        string
   slug:         string
@@ -348,8 +357,8 @@ export type ProgramListRow = {
   duration:     string | null
   startDate:    string | null
   endDate:      string | null
-  instructorId: string
-  instructor:   { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null }
+  instructorId: string | null
+  instructor:   { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null } | null
   categoryId:   string | null
   category:     ProgramCategoryRow | null
   programLevelId:   string | null
@@ -386,6 +395,7 @@ export async function getProgramList(filters?: {
       instructorId: true, categoryId: true,
       programLevelId: true, programFormatId: true, programPricingId: true,
       createdAt: true, updatedAt: true,
+      submittedForReviewAt: true, submissionNote: true,
       instructor: {
         select: { id: true, email: true, profile: { select: { firstName: true, lastName: true } } },
       },
@@ -499,9 +509,11 @@ export async function getProgramBySlug(slug: string): Promise<ProgramRow | null>
   return row as unknown as ProgramRow | null
 }
 
+/** Creates a programme. It starts unassigned unless `input.instructorId` is
+ *  given — an admin then assigns it for review with "Assign for review". The
+ *  creator is no longer made its instructor by default. */
 export async function createProgram(
-  input:        ProgramInput,
-  instructorId: string
+  input: ProgramInput,
 ): Promise<ProgramServiceResult<ProgramRow>> {
   const slug     = input.slug ?? slugify(input.title)
   const existing = await db.course.findUnique({ where: { slug } })
@@ -521,7 +533,7 @@ export async function createProgram(
       predefinedAnalytics: input.predefinedAnalytics ?? false,
       status:       input.status       ?? "PUBLISHED",
       categoryId:   input.categoryId   ?? null,
-      instructorId: input.instructorId ?? instructorId,
+      instructorId: input.instructorId ?? null,
 
       programLevelId:   input.programLevelId   ?? null,
       programFormatId:  input.programFormatId  ?? null,
@@ -538,6 +550,7 @@ export async function createProgram(
       enrolledCount:        input.enrolledCount         ?? null,
       countriesCount:       input.countriesCount        ?? null,
       overview:             input.overview              ?? null,
+      outlineIntro:         input.outlineIntro          ?? null,
       targetAudience:       (input.targetAudience        ?? null) as never,
       learningObjectives:   (input.learningObjectives   ?? null) as never,
       curriculum:           (input.curriculum           ?? null) as never,
@@ -605,6 +618,7 @@ export async function updateProgram(
       ...(input.enrolledCount       !== undefined && { enrolledCount:       input.enrolledCount }),
       ...(input.countriesCount      !== undefined && { countriesCount:      input.countriesCount }),
       ...(input.overview            !== undefined && { overview:            input.overview }),
+      ...(input.outlineIntro        !== undefined && { outlineIntro:        input.outlineIntro }),
       ...(input.targetAudience      !== undefined && { targetAudience:      input.targetAudience      as never }),
       ...(input.learningObjectives  !== undefined && { learningObjectives:  input.learningObjectives  as never }),
       ...(input.curriculum          !== undefined && { curriculum:          input.curriculum          as never }),
@@ -683,5 +697,20 @@ export async function enrollInProgram(
     data:   { userId, courseId, status: "ACTIVE" },
     select: { id: true },
   })
+  notifySafely(() => notifyEnrolment({ userId, courseId }))
   return { success: true, data: row }
+}
+
+/** Published programmes with their facilitators, for the public page's
+ *  "Meet your instructors" cards: each facilitator's programme count, rating
+ *  and profile list come from the programmes that name them. Narrow select —
+ *  the facilitators JSON plus what a programme row in the profile needs. */
+export async function getPublishedProgramFacilitators() {
+  return db.course.findMany({
+    where:  { status: "PUBLISHED" },
+    select: {
+      slug: true, title: true, duration: true, level: true, price: true,
+      rating: true, reviewCount: true, facilitators: true,
+    },
+  })
 }

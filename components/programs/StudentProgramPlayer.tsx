@@ -40,7 +40,8 @@ type ProgramDetail = {
   learningObjectives: unknown; targetAudience: unknown; facilitators: unknown
   category: { name: string } | null
   curriculum: unknown
-  instructor: { email: string; profile: { firstName: string | null; lastName: string | null } | null }
+  /** Null while the programme has no assigned instructor. */
+  instructor: { email: string; profile: { firstName: string | null; lastName: string | null } | null } | null
 }
 
 type ApiResponse = {
@@ -107,6 +108,7 @@ function isChapterDoneWith(chapter: Chapter, completed: Set<string>, passed: Set
 }
 
 function instructorName(program: ProgramDetail): string {
+  if (!program.instructor) return "ARPS Institute"
   const prof = program.instructor.profile
   if (prof?.firstName || prof?.lastName) return [prof.firstName, prof.lastName].filter(Boolean).join(" ")
   return program.instructor.email
@@ -1027,7 +1029,7 @@ export default function StudentProgramPlayer({ slug, preview }: { slug: string; 
                     <div className="rounded-[14px] border border-[#DFE2ED] bg-white p-4">
                       <p className="text-[10px] font-bold uppercase tracking-[0.5px] text-[#8A90A6]">Programme lead</p>
                       <p className="text-[15px] font-extrabold text-[#171C35] mt-1">{instructorName(program)}</p>
-                      <p className="text-[12.5px] text-[#69708A] mt-0.5">{program.instructor.email}</p>
+                      {program.instructor && <p className="text-[12.5px] text-[#69708A] mt-0.5">{program.instructor.email}</p>}
                     </div>
 
                     {facilitators.map((f, i) => (

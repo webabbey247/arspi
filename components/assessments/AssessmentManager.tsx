@@ -539,6 +539,7 @@ type Policy = {
   gradingEnabled: boolean; quizWeight: number; projectWeight: number
   passMark: number; componentPassMark: number; maxQuizAttempts: number
   attemptCooldownHours: number; maxProjectResubmissions: number
+  assignmentsInCoursework: boolean
 }
 
 /** Assessment authoring for one programme. Mounted on both the administrator
@@ -596,6 +597,8 @@ function AssessmentManagerInner({ programId }: { programId: string }) {
     toast.success(
       patch.gradingEnabled === true  ? "Grading is on — students can now sit these."
       : patch.gradingEnabled === false ? "Grading is off."
+      : patch.assignmentsInCoursework === true  ? "Module assignments now count towards coursework. Learners' grades were updated."
+      : patch.assignmentsInCoursework === false ? "Module assignments no longer count. Learners' grades were updated."
       : "Policy saved.",
     )
   }
@@ -675,6 +678,36 @@ function AssessmentManagerInner({ programId }: { programId: string }) {
         </p>
       </div>
 
+      {/* What counts: module assignments can join chapter quizzes in the
+          coursework half. Assignment blocks flagged "Final project" in the
+          curriculum always form part of the project half. */}
+      {policy?.gradingEnabled && (
+        <div className="px-5 py-3 border-b border-[#F0EFFA] flex flex-wrap items-start gap-3">
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => savePolicy({ assignmentsInCoursework: !policy.assignmentsInCoursework })}
+            role="switch"
+            aria-checked={policy.assignmentsInCoursework}
+            aria-label="Count module assignments in coursework"
+            className="mt-0.5 cursor-pointer disabled:opacity-50"
+          >
+            <span className={cn("relative block w-9 h-5 rounded-full transition-colors", policy.assignmentsInCoursework ? "bg-[#6655DF]" : "bg-[#C9CCDD]")}>
+              <span className={cn("absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform", policy.assignmentsInCoursework ? "translate-x-4" : "translate-x-0")} />
+            </span>
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-bold text-[#171C35]">Count module assignments in coursework</p>
+            <p className="text-[12.5px] text-[#69708A] mt-0.5">
+              {policy.assignmentsInCoursework
+                ? `Marked in-lesson assignments count towards the ${policy.quizWeight}% coursework half alongside chapter quizzes, each item equally. Highest mark counts.`
+                : `Coursework (${policy.quizWeight}%) is chapter quizzes only; in-lesson assignments are practice.`}
+              {" "}An assignment flagged “Final project” in the curriculum forms the {policy.projectWeight}% project half.
+            </p>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="p-5 space-y-2.5">
           {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-[12px]" />)}
@@ -682,8 +715,12 @@ function AssessmentManagerInner({ programId }: { programId: string }) {
       ) : rows.length === 0 ? (
         <div className="px-5 py-12 text-center">
           <ClipboardCheck className="w-8 h-8 text-[#C9CCDD] mx-auto mb-2.5" />
-          <p className="text-[14px] font-bold text-[#171C35]">No assessments yet.</p>
-          <p className="text-[13px] text-[#69708A] mt-1">Add a quiz per chapter and one project to grade this programme out of 100.</p>
+          <p className="text-[14px] font-bold text-[#171C35]">No quiz or project assessments yet.</p>
+          <p className="text-[13px] text-[#69708A] mt-1">
+            {policy?.assignmentsInCoursework
+              ? "Coursework comes from the module assignments. Add chapter quizzes here and they'll count too; flag an assignment “Final project” in the curriculum for the project half."
+              : "Add a quiz per chapter and one project to grade this programme out of 100 — or count module assignments with the switch above."}
+          </p>
         </div>
       ) : (
         <ul className="divide-y divide-[#F0EFFA]">

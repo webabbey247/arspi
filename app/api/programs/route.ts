@@ -47,6 +47,7 @@ const createSchema = z.object({
 
   // Rich content (JSON)
   overview:           z.string().nullable().optional(),
+  outlineIntro:       z.string().max(5000).nullable().optional(),
   targetAudience:     z.array(z.string()).nullable().optional(),
   learningObjectives: z.array(z.string()).nullable().optional(),
   curriculum:         z.array(z.object({
@@ -139,7 +140,7 @@ export async function POST(req: NextRequest) {
     const input = parsed.data
     const slug  = input.slug ?? slugify(input.title)
 
-    const result = await createProgram({ ...input, slug }, session.sub)
+    const result = await createProgram({ ...input, slug })
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 409 })
     }

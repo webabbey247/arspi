@@ -1,6 +1,8 @@
 import { db } from "@/lib/db"
 import type { ContactInput } from "@/lib/validators/contact"
 import { ContactStatus, ContactSubject } from "@prisma/client"
+import { notifySafely } from "@/services/notification.service"
+import { notifyNewEnquiry } from "@/services/notification-events.service"
 
 export type { ContactStatus, ContactSubject }
 
@@ -33,6 +35,7 @@ export async function saveContactMessage(input: ContactInput): Promise<SaveConta
     select: { id: true },
   })
 
+  notifySafely(() => notifyNewEnquiry(input))
   return { success: true, id: message.id }
 }
 

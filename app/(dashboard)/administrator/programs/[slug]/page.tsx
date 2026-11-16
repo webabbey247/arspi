@@ -1,5 +1,6 @@
 "use client"
 
+import RichText from "@/components/ui/RichText"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
@@ -17,6 +18,7 @@ import { TickProgress } from "@/components/ui/TickProgress"
 import { Panel, TabScroller, metaCls } from "@/components/admin/AdminKit"
 import { DropdownMenu, type DropdownItem } from "@/components/ui/DropdownMenu"
 import PreviewAsSwitch from "@/components/programs/PreviewAsSwitch"
+import AssignReviewModal from "@/components/admin/AssignReviewModal"
 import { publicPreviewHref, studentPreviewHref } from "@/lib/program-preview-links"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -59,8 +61,12 @@ type Program = {
   featured:    boolean
   status:      CourseStatus
   predefinedAnalytics: boolean
-  instructorId: string
-  instructor:  { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null }
+  /** Null until assigned for review. */
+  instructorId: string | null
+  instructor:  { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null } | null
+  /** Set while the assigned instructor's submission awaits approval. */
+  submittedForReviewAt?: string | null
+  submissionNote?:       string | null
   categoryId:  string | null
   category:    { id: string; name: string; slug: string } | null
   createdAt:   string
@@ -223,6 +229,7 @@ function userName(e: Enrollment) {
 }
 
 function instructorName(p: Program) {
+  if (!p.instructor) return "Unassigned"
   const prof = p.instructor.profile
   if (prof?.firstName || prof?.lastName) return [prof.firstName, prof.lastName].filter(Boolean).join(" ")
   return p.instructor.email
@@ -338,6 +345,7 @@ export default function ProgramDetailPage() {
   const [error,         setError]         = useState<string | null>(null)
   const [actionId,      setActionId]      = useState<string | null>(null)
   const [statusSaving,  setStatusSaving]  = useState(false)
+  const [assignOpen,    setAssignOpen]    = useState(false)
 
   // Player chrome, mirroring the student page.
   const [tab, setTab]                           = useState<TabKey>("overview")
@@ -429,7 +437,8 @@ export default function ProgramDetailPage() {
         toast.error(d.error ?? "Failed to update programme status.")
         return
       }
-      setProgram(p => (p ? { ...p, status: next } : p))
+      // Publishing is the approval: the pending submission (if any) is closed.
+      setProgram(p => (p ? { ...p, status: next, ...(next === "PUBLISHED" && { submittedForReviewAt: null }) } : p))
       toast.success(next === "PUBLISHED"
         ? `"${program.title}" is now live.`
         : `"${program.title}" has been archived back to draft and is off the public site.`)
@@ -620,6 +629,11 @@ export default function ProgramDetailPage() {
       description: "Opens the editor on the programme list",
       icon: Icon.edit,
       onSelect: () => router.push("/administrator/programs"),
+    },
+    {
+      label: program.instructorId ? "Reassign…" : "Assign for review…",
+      icon: Icon.edit,
+      onSelect: () => setAssignOpen(true),
     },
     ...(enrollments.length > 0
       ? [{
@@ -1010,6 +1024,33 @@ export default function ProgramDetailPage() {
           {/* ── Tab panels ──────────────────────────────────────────────────── */}
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 pb-16">
 
+            {/* Awaiting approval — the assigned instructor has submitted it. */}
+            {program.submittedForReviewAt && (
+              <div role="status" className="mb-5 rounded-[14px] border border-[#D9D3FF] bg-[#F7F6FF] px-4 py-3.5 flex flex-wrap items-start gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14px] font-extrabold text-[#2C2368]">Submitted for approval</p>
+                  <p className="text-[13px] text-[#69708A] mt-0.5">
+                    By {instructorName(program)}
+                    {" · "}{new Date(program.submittedForReviewAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                  {program.submissionNote && (
+                    <p className="text-[13.5px] text-[#171C35] mt-2 whitespace-pre-line">&ldquo;{program.submissionNote}&rdquo;</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <a href={publicPreviewHref(program.slug)} target="_blank" rel="noopener" className="px-3.5 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] bg-white text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] no-underline">
+                    Preview
+                  </a>
+                  <button
+                    type="button" onClick={() => setStatus("PUBLISHED")} disabled={statusSaving}
+                    className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer"
+                  >
+                    {statusSaving ? "Approving…" : "Approve & publish"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Lesson — what a learner sees, read-only */}
             {tab === "lesson" && (
               !selected ? (
@@ -1207,7 +1248,7 @@ export default function ProgramDetailPage() {
                         }
                       >
                         {chapter.desc && (
-                          <p className="px-5 pt-4 text-[14px] text-[#69708A] leading-relaxed">{chapter.desc}</p>
+                          <RichText value={chapter.desc} className="px-5 pt-4 text-[14px] text-[#69708A] leading-relaxed" />
                         )}
                         {lessons.length === 0 ? (
                           <p className="px-5 py-4 text-[13px] text-[#8A90A6]">This section has no lessons.</p>
@@ -1515,14 +1556,23 @@ export default function ProgramDetailPage() {
             {/* Facilitators */}
             {tab === "facilitators" && (
               <div className="space-y-5">
-                <Card title="Instructor of record">
+                <Card title="Assigned instructor">
                   <div className="px-5">
-                    <InfoRow label="Name"  value={instructorName(program)} />
-                    <InfoRow label="Email" value={<span className="font-mono text-[12.5px] text-[#69708A]">{program.instructor.email}</span>} />
-                    <InfoRow label="Account" value={
-                      <Link href={`/administrator/users/${program.instructorId}`} className="text-[#6655DF] font-semibold hover:underline">
-                        Open user record
-                      </Link>
+                    {program.instructor ? <>
+                      <InfoRow label="Name"  value={instructorName(program)} />
+                      <InfoRow label="Email" value={<span className="font-mono text-[12.5px] text-[#69708A]">{program.instructor.email}</span>} />
+                      <InfoRow label="Account" value={
+                        <Link href={`/administrator/users/${program.instructorId}`} className="text-[#6655DF] font-semibold hover:underline">
+                          Open user record
+                        </Link>
+                      } />
+                    </> : (
+                      <InfoRow label="Status" value={<span className="text-amber-700 font-semibold">Unassigned</span>} />
+                    )}
+                    <InfoRow label={program.instructor ? "Change" : "Assign"} value={
+                      <button type="button" onClick={() => setAssignOpen(true)} className="text-[#6655DF] font-semibold hover:underline cursor-pointer">
+                        {program.instructor ? "Reassign to another instructor" : "Assign for review"}
+                      </button>
                     } />
                   </div>
                 </Card>
@@ -1563,7 +1613,7 @@ export default function ProgramDetailPage() {
                     {faqs.map((faq, i) => (
                       <div key={i} className="px-5 py-4">
                         <p className="text-[15px] font-bold text-[#171C35] mb-1">{faq.q}</p>
-                        <p className="text-[14px] text-[#69708A] leading-relaxed">{faq.a}</p>
+                        <RichText value={faq.a} className="text-[14px] text-[#69708A] leading-relaxed" />
                       </div>
                     ))}
                   </div>
@@ -1702,6 +1752,17 @@ export default function ProgramDetailPage() {
             {railBody}
           </div>
         </div>
+      )}
+      {assignOpen && (
+        <AssignReviewModal
+          program={program}
+          onClose={() => setAssignOpen(false)}
+          onDone={async () => {
+            // Pick up the new instructor (and the cleared submission).
+            const res = await fetch(`/api/programs/${slug}`)
+            if (res.ok) setProgram((await res.json()).program)
+          }}
+        />
       )}
     </div>
   )

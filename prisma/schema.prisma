@@ -66,6 +66,10 @@ model User {
   hasProfile   Boolean @default(false)
   hasInterests Boolean @default(false)
 
+  /// Set when an admin invites (or imports) this person as staff. Together
+  /// with a null password it means "invited, hasn't accepted yet".
+  invitedAt DateTime?
+
   // Email verification
   emailVerified            Boolean   @default(false)
   emailVerificationToken   String?   @unique
@@ -88,6 +92,8 @@ model User {
   gradedSubmissions     AssignmentSubmission[] @relation("SubmissionGrader")
   studyPlans            StudyPlan[]
   userSessions          UserSession[]
+  notifications         Notification[]
+  submittedPrograms     Course[]               @relation("CourseSubmitter")
 
   @@map("users")
 }
@@ -215,6 +221,9 @@ model Course {
 
   // Rich content (JSON)
   overview           String?
+  /// Intro paragraph under "Programme Outline" on the public page. Empty =
+  /// a generated sentence based on the module count.
+  outlineIntro       String?
   targetAudience     Json? // String[]
   learningObjectives Json? // String[]
   curriculum         Json? // { title, desc, lessons[] }[]
@@ -225,8 +234,10 @@ model Course {
   facilitators Json? // { name, imageUrl?, title, bio, credentials? }[]
 
   // Instructor (User relation)
-  instructorId String
-  instructor   User   @relation("CourseInstructor", fields: [instructorId], references: [id])
+  /// The instructor assigned to review, edit and grade this programme. Null
+  /// until an admin assigns one — new programmes start unassigned.
+  instructorId String?
+  instructor   User?   @relation("CourseInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
 
   // Category
   categoryId String?
@@ -242,6 +253,14 @@ model Course {
   programPricingId String?
   programPricing   ProgramPricing? @relation(fields: [programPricingId], references: [id])
 
+  // ── Review & approval ────────────────────────────────────────────────────
+  /// Set when the assigned instructor submits the programme for approval;
+  /// cleared when an admin approves (publishes) it.
+  submittedForReviewAt DateTime?
+  submittedById        String?
+  submittedBy          User?     @relation("CourseSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  submissionNote       String?
+
   // ── Assessment & grading ─────────────────────────────────────────────────
   // Off by default so every existing programme keeps the old "finish every
   // lesson" certificate rule until an admin deliberately turns grading on.
@@ -253,6 +272,10 @@ model Course {
   maxQuizAttempts         Int     @default(3)
   attemptCooldownHours    Int     @default(24)
   maxProjectResubmissions Int     @default(2)
+  /// When on, marked in-lesson assignments count towards the coursework
+  /// (quiz) half alongside chapter quizzes, each item weighted equally.
+  /// Off by default so existing programmes' grades don't change.
+  assignmentsInCoursework Boolean @default(false)
 
   // Relations
   sections              Section[]
@@ -641,6 +664,34 @@ model StudySession {
 }
 
 // ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+/// An in-app alert for one user, shown under the bell in their workspace.
+/// Created alongside the matching email, so nothing depends on email arriving.
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// e.g. "program_submitted", "program_assigned", "program_approved"
+  type   String
+  title  String
+  body   String?
+  /// In-app path to open, e.g. /administrator/programs/my-programme
+  link   String?
+  /// What it's about, shown as "Related to": a programme, a person, an
+  /// enquiry subject…
+  context String?
+  readAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+// ============================================================
 // RUBRICS
 // ============================================================
 
@@ -748,10 +799,16 @@ model AssignmentSubmission {
 
   status   AssignmentSubmissionStatus @default(SUBMITTED)
   feedback String?
-  /// Marks awarded out of the block's own `points`. Not part of the course
-  /// grade — in-lesson assignments are practice, the graded instruments are
-  /// chapter quizzes and the project.
+  /// Marks awarded out of the block's own `points` (or the rubric total).
+  /// Counts towards the course grade only when the programme turns on
+  /// `assignmentsInCoursework`, or the block is flagged as the final project.
   points   Float?
+  /// The released mark as a % of the maximum — what the course grade uses.
+  /// Cleared on resubmission along with `points`.
+  scorePct     Float?
+  /// Best % from earlier attempts, kept when the learner resubmits, so the
+  /// highest mark counts while a resubmission waits to be marked.
+  priorBestPct Float?
 
   /// Rubric marking. `rubricVersionId` pins the exact version used, so a
   /// later edit to the rubric never changes how this work was marked.

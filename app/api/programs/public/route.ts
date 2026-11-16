@@ -33,7 +33,9 @@ const getCachedProgramsPayload = unstable_cache(
       createdAt:   p.createdAt.toISOString(),
       category:    p.category,
       instructor:  {
-        name: [p.instructor.profile?.firstName, p.instructor.profile?.lastName].filter(Boolean).join(" ") || p.instructor.email,
+        name: p.instructor
+          ? [p.instructor.profile?.firstName, p.instructor.profile?.lastName].filter(Boolean).join(" ") || p.instructor.email
+          : "ARPS Institute",
       },
       programLevel:   p.programLevel,
       programFormat:  p.programFormat,

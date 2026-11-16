@@ -1,5 +1,8 @@
 import { db } from "@/lib/db"
+import { collectAssignments, isMarkedAssignment } from "@/services/assignment.service"
 import type { AssessmentKind, AttemptStatus, Prisma } from "@prisma/client"
+import { notifySafely } from "@/services/notification.service"
+import { notifyMarked, notifySubmission } from "@/services/notification-events.service"
 
 /** Authoring shape for a quiz question. `correctIndex` is the answer key and
  *  must never reach a browser — everything that leaves this module for a
@@ -264,6 +267,10 @@ export async function submitProjectAttempt(
     where: { id: attemptId },
     data:  { status: "SUBMITTED", files, note, submittedAt: new Date() },
   })
+  notifySafely(() => notifySubmission({
+    userId, courseId: attempt.assessment.courseId, itemTitle: attempt.assessment.title,
+    kind: "project", resubmitted: attempt.attemptNo > 1,
+  }))
   return { ok: true as const, attempt: updated }
 }
 
@@ -335,6 +342,11 @@ export async function applyProjectGrade(
   })
 
   const grade = await recomputeCourseGrade(attempt.userId, attempt.assessment.courseId)
+  notifySafely(() => notifyMarked({
+    userId: attempt.userId, courseId: attempt.assessment.courseId, itemTitle: attempt.assessment.title,
+    outcome: passed ? "passed" : mayResubmit ? "returned" : "graded",
+    scoreText: `${Math.round(pct)}%`,
+  }))
   return { ok: true as const, score, maxScore, pct, passed, mayResubmit, grade }
 }
 
@@ -342,22 +354,31 @@ export async function applyProjectGrade(
 
 /** Recomputes and caches a student's marks for one course.
  *
- *  Quiz component  = mean of the best attempt per chapter quiz, scaled to quizWeight
- *  Project component = best project attempt, scaled to projectWeight
- *  Final = the two, out of 100
+ *  Coursework (quiz) half = the average, item by item, of
+ *    - each chapter quiz (best attempt), and
+ *    - each marked module assignment, when the programme turns on
+ *      `assignmentsInCoursework` (its highest released mark)
+ *  Project half = the average of
+ *    - each PROJECT assessment (best attempt), and
+ *    - each assignment block flagged as the final project (highest mark)
+ *  Final = the two halves scaled to quizWeight / projectWeight, out of 100.
  *
- *  Grading best-of rewards mastery: a student who revises and retakes should
- *  not be punished for the attempt that prompted the revision. Unattempted
- *  assessments count as zero, so the mark reflects the whole course rather
- *  than only the parts someone chose to sit. */
+ *  Highest-counts rewards mastery: a learner who revises and retakes isn't
+ *  punished for the attempt that prompted the revision. Anything not yet
+ *  attempted or not yet marked counts as zero, so the mark reflects the whole
+ *  course rather than only the parts someone chose to do. */
 export async function recomputeCourseGrade(userId: string, courseId: string) {
   const course = await db.course.findUnique({ where: { id: courseId } })
   if (!course) return null
 
-  const [assessments, attempts] = await Promise.all([
+  const [assessments, attempts, submissions] = await Promise.all([
     db.assessment.findMany({ where: { courseId } }),
     db.assessmentAttempt.findMany({
       where: { userId, assessment: { courseId }, voided: false, status: { in: ["GRADED", "CHANGES_REQUESTED"] } },
+    }),
+    db.assignmentSubmission.findMany({
+      where:  { userId, courseId },
+      select: { blockId: true, scorePct: true, priorBestPct: true },
     }),
   ])
 
@@ -366,27 +387,39 @@ export async function recomputeCourseGrade(userId: string, courseId: string) {
     if (mine.length === 0) return 0
     return Math.max(...mine.map(a => ((a.score ?? 0) / (a.maxScore ?? 1)) * 100))
   }
+  const subByBlock = new Map(submissions.map(s => [s.blockId, s]))
+  const assignmentPct = (blockId: string): number => {
+    const sub = subByBlock.get(blockId)
+    return sub ? Math.min(100, Math.max(sub.scorePct ?? 0, sub.priorBestPct ?? 0)) : 0
+  }
 
-  const quizzes  = assessments.filter(a => a.kind === "CHAPTER_QUIZ")
-  const projects = assessments.filter(a => a.kind === "PROJECT")
+  const marked = collectAssignments(course.curriculum).filter(isMarkedAssignment)
+  const finalProjects = marked.filter(a => a.isFinalProject)
+  const moduleAssignments = course.assignmentsInCoursework ? marked.filter(a => !a.isFinalProject) : []
 
-  const quizPct = quizzes.length > 0
-    ? quizzes.reduce((sum, a) => sum + bestPct(a.id), 0) / quizzes.length
-    : 0
-  const projectPct = projects.length > 0
-    ? projects.reduce((sum, a) => sum + bestPct(a.id), 0) / projects.length
-    : 0
+  const courseworkItems = [
+    ...assessments.filter(a => a.kind === "CHAPTER_QUIZ").map(a => bestPct(a.id)),
+    ...moduleAssignments.map(a => assignmentPct(a.blockId)),
+  ]
+  const projectItems = [
+    ...assessments.filter(a => a.kind === "PROJECT").map(a => bestPct(a.id)),
+    ...finalProjects.map(a => assignmentPct(a.blockId)),
+  ]
+  const mean = (xs: number[]) => (xs.length > 0 ? xs.reduce((s, x) => s + x, 0) / xs.length : 0)
+
+  const quizPct    = mean(courseworkItems)
+  const projectPct = mean(projectItems)
 
   const quizMarks    = (quizPct / 100) * course.quizWeight
   const projectMarks = (projectPct / 100) * course.projectWeight
   const finalMarks   = quizMarks + projectMarks
 
   // Both halves must clear componentPassMark independently — otherwise a
-  // perfect quiz score and no project at all would pass on the average alone.
+  // perfect coursework score and no project at all would pass on the average.
   const passed =
     finalMarks >= course.passMark &&
-    (quizzes.length === 0  || quizPct    >= course.componentPassMark) &&
-    (projects.length === 0 || projectPct >= course.componentPassMark)
+    (courseworkItems.length === 0 || quizPct    >= course.componentPassMark) &&
+    (projectItems.length    === 0 || projectPct >= course.componentPassMark)
 
   const round = (n: number) => Math.round(n * 100) / 100
 
@@ -402,6 +435,14 @@ export async function recomputeCourseGrade(userId: string, courseId: string) {
       quizPct: round(quizPct), projectPct: round(projectPct), passed,
     },
   })
+}
+
+/** Rebuilds every enrolled learner's cached grade — after a change to how the
+ *  programme is graded (policy, final-project flag, assignments added). */
+export async function recomputeCourseGradesForAll(courseId: string) {
+  const enrolled = await db.enrollment.findMany({ where: { courseId }, select: { userId: true } })
+  for (const e of enrolled) await recomputeCourseGrade(e.userId, courseId)
+  return enrolled.length
 }
 
 /** The certificate gate. Courses with grading off keep the original rule

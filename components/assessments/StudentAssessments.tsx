@@ -58,6 +58,14 @@ type Board = {
     attemptCooldownHours: number; maxProjectResubmissions: number
   }
   assessments: AssessmentRow[]
+  /** In-lesson assignments that count towards the grade, with best mark. */
+  assignmentItems?: {
+    blockId: string; title: string; chapterTitle: string
+    half: "coursework" | "project"
+    status: "SUBMITTED" | "RETURNED" | "ACCEPTED" | null
+    bestPct: number | null
+  }[]
+  assignmentsInCoursework?: boolean
   rubricVersions?: Record<string, RubricVersionView>
   grade: {
     quizMarks: number; projectMarks: number; finalMarks: number
@@ -418,7 +426,7 @@ export default function StudentAssessments({ slug, preview = false }: { slug: st
         </div>
         <div className="px-5 py-4 grid grid-cols-3 gap-3">
           {[
-            { label: `Quizzes / ${policy.quizWeight}`,  marks: grade?.quizMarks ?? 0,    pct: grade?.quizPct ?? 0 },
+            { label: `${board.assignmentsInCoursework ? "Coursework" : "Quizzes"} / ${policy.quizWeight}`, marks: grade?.quizMarks ?? 0, pct: grade?.quizPct ?? 0 },
             { label: `Project / ${policy.projectWeight}`, marks: grade?.projectMarks ?? 0, pct: grade?.projectPct ?? 0 },
             { label: "Final / 100", marks: grade?.finalMarks ?? 0, pct: null },
           ].map(s => (
@@ -439,7 +447,39 @@ export default function StudentAssessments({ slug, preview = false }: { slug: st
         )}
       </div>
 
-      {board.assessments.length === 0 ? (
+      {(board.assignmentItems?.length ?? 0) > 0 && (
+        <div className="rounded-[16px] border border-[#DFE2ED] bg-white overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#F0EFFA]">
+            <h3 className="text-[14px] font-bold text-[#171C35]">Graded assignments</h3>
+            <p className="text-[12px] font-bold text-[#8A90A6] mt-0.5">
+              Submitted from the lessons. Your highest mark on each counts{board.assignmentsInCoursework ? " — module assignments make up the coursework half" : ""}.
+            </p>
+          </div>
+          <ul className="divide-y divide-[#F0EFFA]">
+            {board.assignmentItems!.map(it => (
+              <li key={it.blockId} className="px-5 py-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13.5px] font-bold text-[#171C35]">{it.title}</p>
+                  <p className={cn(metaCls, "mt-0.5 truncate")}>{it.chapterTitle}</p>
+                </div>
+                <span className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.08em]",
+                  it.half === "project" ? "bg-amber-50 text-amber-700" : "bg-[#EEECFF] text-[#6655DF]",
+                )}>
+                  {it.half === "project" ? "Final project" : "Coursework"}
+                </span>
+                <span className="w-28 text-right text-[13px] font-bold text-[#171C35]">
+                  {it.bestPct !== null ? `${it.bestPct}%`
+                    : it.status === "SUBMITTED" ? <span className="text-sky-700">Awaiting marking</span>
+                    : <span className="text-[#8A90A6]">Not submitted</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {board.assessments.length === 0 && (board.assignmentItems?.length ?? 0) > 0 ? null : board.assessments.length === 0 ? (
         <div className="rounded-[16px] border border-dashed border-[#DFE2ED] bg-white px-4 py-12 text-center">
           <p className="text-[14px] font-bold text-[#171C35]">No assessments published yet.</p>
         </div>

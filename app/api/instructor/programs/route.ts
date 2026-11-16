@@ -1,58 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { createProgram, getPrograms, slugify, CourseLevel } from "@/services/program.service"
-import { z } from "zod"
-
-const facilitatorSchema = z.object({
-  name:        z.string().min(1),
-  imageUrl:    z.string().nullable().optional(),
-  title:       z.string().min(1),
-  bio:         z.string().min(1),
-  credentials: z.string().nullable().optional(),
-})
-
-const createSchema = z.object({
-  title:        z.string().min(3).max(255),
-  slug:         z.string().min(2).max(255)
-    .check(z.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase with hyphens only"))
-    .optional(),
-  excerpt:      z.string().min(10),
-  thumbnail:    z.string().nullable().optional(),
-  pricing:      z.enum(["free", "paid"]).optional(),
-  paymentType:  z.string().nullable().optional(),
-  price:        z.number().min(0).optional(),
-  level:        z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
-  featured:     z.boolean().optional(),
-  predefinedAnalytics: z.boolean().optional(),
-  categoryId:   z.string().nullable().optional(),
-  tagline:        z.string().nullable().optional(),
-  duration:       z.string().nullable().optional(),
-  format:         z.string().nullable().optional(),
-  startDate:      z.string().nullable().optional(),
-  endDate:        z.string().nullable().optional(),
-  cohortSize:     z.number().int().positive().nullable().optional(),
-  rating:         z.number().min(0).max(5).nullable().optional(),
-  reviewCount:    z.number().int().min(0).nullable().optional(),
-  enrolledCount:  z.number().int().min(0).nullable().optional(),
-  countriesCount: z.number().int().min(0).nullable().optional(),
-  overview:           z.string().nullable().optional(),
-  targetAudience:     z.array(z.string()).nullable().optional(),
-  learningObjectives: z.array(z.string()).nullable().optional(),
-  curriculum:         z.array(z.object({
-    id:    z.string().optional(),
-    title: z.string(),
-    desc:  z.string().nullable().optional(),
-    lessons: z.array(z.object({
-      id:          z.string().optional(),
-      title:       z.string(),
-      description: z.string().nullable().optional(),
-      blocks:      z.array(z.any()).optional(),
-    })).optional(),
-  })).nullable().optional(),
-  whatIsIncluded:     z.array(z.string()).nullable().optional(),
-  faqs:               z.array(z.object({ q: z.string(), a: z.string() })).nullable().optional(),
-  facilitators:       z.array(facilitatorSchema).nullable().optional(),
-})
+import { getPrograms, CourseLevel } from "@/services/program.service"
 
 /** GET /api/instructor/programs — list programs belonging to the logged-in instructor */
 export async function GET(req: NextRequest) {
@@ -79,34 +27,12 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/** POST /api/instructor/programs — create a program owned by the instructor */
-export async function POST(req: NextRequest) {
-  try {
-    const session = await getSession()
-    if (!session || session.role !== "INSTRUCTOR") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-
-    const body   = await req.json()
-    const parsed = createSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
-        { status: 400 }
-      )
-    }
-
-    const input = parsed.data
-    const slug  = input.slug ?? slugify(input.title)
-
-    const result = await createProgram({ ...input, slug }, session.sub)
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 409 })
-    }
-
-    return NextResponse.json({ program: result.data }, { status: 201 })
-  } catch (error) {
-    console.error("[POST /api/instructor/programs]", error)
-    return NextResponse.json({ error: "Something went wrong." }, { status: 500 })
-  }
+/** POST /api/instructor/programs — disabled. Instructors don't create
+ *  programmes for now: an admin creates one and assigns it to them for review.
+ *  Refused here as well as hidden in the UI. */
+export async function POST() {
+  return NextResponse.json(
+    { error: "Instructors can't create programmes. An administrator assigns programmes to you." },
+    { status: 403 },
+  )
 }

@@ -376,6 +376,7 @@ export default function SettingsPage() {
   const [uploading, setUploading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editingName, setEditingName] = useState(false)
+  const [passwordOpen, setPasswordOpen] = useState(false)
   const [sessions, setSessions]               = useState<DeviceSession[]>([])
   const [sessionsLoading, setSessionsLoading] = useState(true)
   const [sessionsError, setSessionsError]     = useState<string | null>(null)
@@ -642,7 +643,13 @@ export default function SettingsPage() {
       return
     }
     passwordForm.reset({ currentPassword: "", newPassword: "", confirmPassword: "" })
+    setPasswordOpen(false)
     showToast("Password updated.")
+  }
+
+  function closePasswordModal() {
+    setPasswordOpen(false)
+    passwordForm.reset({ currentPassword: "", newPassword: "", confirmPassword: "" })
   }
 
   const loadSessions = useCallback(async () => {
@@ -845,14 +852,24 @@ export default function SettingsPage() {
                       {loading ? "…" : fullName || "—"}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setEditingName(v => !v)}
-                    className="flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-[#DFE2ED] bg-white px-3.5 text-[13px] font-bold text-[#171C35] hover:border-[#6655DF] hover:text-[#6655DF] cursor-pointer transition-colors"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    {editingName ? "Close" : "Edit name"}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingName(v => !v)}
+                      className="flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-[#DFE2ED] bg-white px-3.5 text-[13px] font-bold text-[#171C35] hover:border-[#6655DF] hover:text-[#6655DF] cursor-pointer transition-colors"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      {editingName ? "Close" : "Edit name"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPasswordOpen(true)}
+                      className="flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] border border-[#DFE2ED] bg-white px-3.5 text-[13px] font-bold text-[#171C35] hover:border-[#6655DF] hover:text-[#6655DF] cursor-pointer transition-colors"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      Change password
+                    </button>
+                  </div>
                 </div>
 
                 {editingName && (
@@ -923,58 +940,12 @@ export default function SettingsPage() {
                 <div className="mt-5 border-t border-dashed border-[#DFE2ED] pt-4">
                   <p className="text-[12.5px] leading-relaxed text-[#8A90A6]">
                     Your email is your sign-in and can&apos;t be changed here. Roles are set by an administrator
-                    under Users.
+                    under Staff &amp; Roles.
                   </p>
                 </div>
               </OpsCard>
 
               <div className="min-w-0 space-y-5">
-                <OpsCard
-                  title="Password"
-                  note="Use a long passphrase you don't use anywhere else."
-                >
-                  <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
-
-                    <PasswordInput
-                      label="Current password"
-                      inputClassName={inputCls}
-                      autoComplete="current-password"
-                      error={passwordForm.formState.errors.currentPassword?.message}
-                      {...passwordForm.register("currentPassword")}
-                    />
-
-                    <div className="grid grid-cols-1 gap-3">
-                      <PasswordInput
-                        label="New password"
-                        inputClassName={inputCls}
-                        autoComplete="new-password"
-                        error={passwordForm.formState.errors.newPassword?.message}
-                        {...passwordForm.register("newPassword")}
-                      />
-                      <PasswordInput
-                        label="Confirm new password"
-                        inputClassName={inputCls}
-                        autoComplete="new-password"
-                        error={passwordForm.formState.errors.confirmPassword?.message}
-                        {...passwordForm.register("confirmPassword")}
-                      />
-                    </div>
-
-                    <div>
-                      <button
-                        type="submit"
-                        disabled={passwordForm.formState.isSubmitting}
-                        className="w-full px-4 py-2.5 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
-                      >
-                        {passwordForm.formState.isSubmitting ? "Updating…" : "Update password"}
-                      </button>
-                    </div>
-                  </form>
-                  <p className="mt-4 border-t border-dashed border-[#DFE2ED] pt-4 text-[12.5px] text-[#8A90A6]">
-                    Changing it does not end your other sessions — use the Sessions card below for that.
-                  </p>
-                </OpsCard>
-
                 {/* Sessions — real rows from user_sessions, not a stand-in.
                     A revoked device keeps its unexpired access token until it
                     runs out, so the copy promises "within 15 minutes" rather
@@ -1069,6 +1040,72 @@ npm run db:exec -- prisma/manual-migrations/add_user_sessions.sql{"\n"}npx prism
             </div>
           )}
 
+
+          {/* Change password — opened from the Profile card. */}
+          {isOperator && passwordOpen && (
+            <div
+              className="fixed inset-0 z-100 flex items-center justify-center bg-[#171C35]/45 p-4"
+              role="dialog" aria-modal="true" aria-labelledby="pwd-title"
+              onKeyDown={e => { if (e.key === "Escape") closePasswordModal() }}
+            >
+              <div className="w-full max-w-md overflow-hidden rounded-[18px] bg-white shadow-2xl">
+                <div className="flex items-start justify-between gap-4 bg-[linear-gradient(135deg,#241C61,#6756DF)] px-5 py-4">
+                  <div>
+                    <h2 id="pwd-title" className="text-[16px] font-extrabold text-white">Change password</h2>
+                    <p className="mt-0.5 text-[12px] text-white/75">Use a long passphrase you don&apos;t use anywhere else.</p>
+                  </div>
+                  <button
+                    type="button" onClick={closePasswordModal} aria-label="Close"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 cursor-pointer"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+                <div className="px-5 py-5">
+                  <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
+
+                    <PasswordInput
+                      label="Current password"
+                      inputClassName={inputCls}
+                      autoComplete="current-password"
+                      error={passwordForm.formState.errors.currentPassword?.message}
+                      {...passwordForm.register("currentPassword")}
+                    />
+
+                    <div className="grid grid-cols-1 gap-3">
+                      <PasswordInput
+                        label="New password"
+                        inputClassName={inputCls}
+                        autoComplete="new-password"
+                        error={passwordForm.formState.errors.newPassword?.message}
+                        {...passwordForm.register("newPassword")}
+                      />
+                      <PasswordInput
+                        label="Confirm new password"
+                        inputClassName={inputCls}
+                        autoComplete="new-password"
+                        error={passwordForm.formState.errors.confirmPassword?.message}
+                        {...passwordForm.register("confirmPassword")}
+                      />
+                    </div>
+
+                    <div>
+                      <button
+                        type="submit"
+                        disabled={passwordForm.formState.isSubmitting}
+                        className="w-full px-4 py-2.5 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] disabled:opacity-50 cursor-pointer transition-colors"
+                      >
+                        {passwordForm.formState.isSubmitting ? "Updating…" : "Update password"}
+                      </button>
+                    </div>
+                  </form>
+                  <p className="mt-4 border-t border-dashed border-[#DFE2ED] pt-4 text-[12.5px] text-[#8A90A6]">
+                    Changing it does not end your other sessions — use the Sessions card for that.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Learner view — two columns from xl: everything editable on the
               left, a rail on the right. Below xl it collapses to one column,

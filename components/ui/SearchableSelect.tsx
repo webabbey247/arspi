@@ -310,7 +310,7 @@ export function SearchableSelect({
                   ? { top: box.top, left: box.left, width: box.width, maxHeight: box.maxHeight }
                   : { top: -9999, left: -9999 }
               }
-              className="fixed z-[70] flex flex-col overflow-hidden rounded-xl border border-[#DFE2ED] bg-white shadow-lg"
+              className="fixed z-[250] flex flex-col overflow-hidden rounded-xl border border-[#DFE2ED] bg-white shadow-lg"
             >
               <div className="flex shrink-0 items-center gap-2 border-b border-[#DFE2ED] px-3 py-2.5">
                 <SearchGlyph className="shrink-0 text-[#8A90A6]" />

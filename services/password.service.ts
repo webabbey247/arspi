@@ -67,7 +67,9 @@ export async function resetPassword(rawToken: string, newPassword: string): Prom
   await db.$transaction([
     db.user.update({
       where: { id: record.userId },
-      data:  { password: hashedPassword },
+      // Using a link sent to this address proves ownership of it — this is
+      // also how an invited instructor's email gets confirmed.
+      data:  { password: hashedPassword, emailVerified: true },
     }),
     db.passwordResetToken.update({
       where: { id: record.id },

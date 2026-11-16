@@ -3,6 +3,8 @@ import { z } from "zod"
 import { requireStaff } from "@/lib/guard"
 import { db } from "@/lib/db"
 import { findAssignment, reviewAssignment } from "@/services/assignment.service"
+import { recomputeCourseGrade } from "@/services/assessment.service"
+import { syncCourseCompletion } from "@/services/course-completion.service"
 
 type Context = { params: Promise<{ id: string }> }
 
@@ -33,7 +35,8 @@ export async function PATCH(req: NextRequest, { params }: Context) {
 
     // Assignments with a rubric are marked through the rubric route so scores
     // stay inside each level's range.
-    if (findAssignment(existing.course.curriculum, existing.blockId)?.rubricId) {
+    const block = findAssignment(existing.course.curriculum, existing.blockId)
+    if (block?.rubricId) {
       return NextResponse.json({ error: "This assignment uses a rubric — mark it level by level." }, { status: 409 })
     }
 
@@ -42,8 +45,12 @@ export async function PATCH(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input." }, { status: 400 })
     }
 
-    const result = await reviewAssignment(session.sub, id, parsed.data)
+    const result = await reviewAssignment(session.sub, id, parsed.data, block?.points ?? null)
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 409 })
+
+    // The mark may count towards the course grade — refresh it and the certificate.
+    await recomputeCourseGrade(existing.userId, existing.courseId)
+    await syncCourseCompletion(existing.userId, existing.courseId)
     return NextResponse.json({ submission: result.submission })
   } catch (error) {
     console.error("[PATCH /api/instructor/assignment-submissions/[id]]", error)

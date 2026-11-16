@@ -10,6 +10,7 @@ export default function ResetPasswordPage() {
   const searchParams = useSearchParams()
   const router       = useRouter()
   const token        = searchParams.get("token") ?? ""
+  const invite       = searchParams.get("invite") === "1"
 
   const [showPw, setShowPw] = useState(false)
   const [done,   setDone]   = useState(false)
@@ -37,15 +38,16 @@ export default function ResetPasswordPage() {
                 <CheckCircle className="h-6 w-6 text-emerald-600" />
               </div>
               <h1 className="text-[28px] tracking-[-0.035em] font-extrabold text-[#171C35] mb-2">
-                Password updated
+                {invite ? "You're all set" : "Password updated"}
               </h1>
               <p className="text-[15px] text-[#69708A]">
-                Your password has been changed. Redirecting you to sign in…
+                {invite ? "Your account is active." : "Your password has been changed."} Redirecting you to sign in…
               </p>
             </div>
           ) : (
             <ResetPasswordForm
               token={token}
+              invite={invite}
               showPw={showPw}
               setShowPw={setShowPw}
               onSuccess={handleSuccess}

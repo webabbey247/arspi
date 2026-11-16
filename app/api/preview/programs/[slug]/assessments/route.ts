@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { requireProgramPreview } from "@/lib/program-preview"
 import { parseQuestions, parseRubric } from "@/services/assessment.service"
+import { collectAssignments, isMarkedAssignment } from "@/services/assignment.service"
 import { getCurrentVersions } from "@/services/rubric.service"
 import { learnerPreview } from "@/services/rubric-marking.service"
 
@@ -45,6 +46,15 @@ export async function GET(_req: NextRequest, { params }: Context) {
       })),
       rubricVersions: {},
       grade: null,
+      // Same list a learner sees, as a new learner: nothing marked yet.
+      assignmentsInCoursework: program.assignmentsInCoursework,
+      assignmentItems: collectAssignments(program.curriculum)
+        .filter(isMarkedAssignment)
+        .filter(a => a.isFinalProject || program.assignmentsInCoursework)
+        .map(a => ({
+          blockId: a.blockId, title: a.blockTitle, chapterTitle: a.chapterTitle,
+          half: a.isFinalProject ? "project" : "coursework", status: null, bestPct: null,
+        })),
     })
   } catch (error) {
     console.error("[GET /api/preview/programs/[slug]/assessments]", error)

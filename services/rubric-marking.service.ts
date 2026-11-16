@@ -5,6 +5,8 @@ import { evaluateMarks, type CriterionMark, type RubricMarks, type RubricVersion
 import { findAssignment } from "@/services/assignment.service"
 import { applyProjectGrade } from "@/services/assessment.service"
 import { getCurrentVersion, getVersionById } from "@/services/rubric.service"
+import { notifySafely } from "@/services/notification.service"
+import { notifyMarked } from "@/services/notification-events.service"
 
 /**
  * Rubric marking for assignment submissions and project attempts.
@@ -84,12 +86,18 @@ export async function markAssignment(graderId: string, submissionId: string, inp
       rubricMarks:     marks as unknown as Prisma.InputJsonValue,
       gradeBand:       marks.gradeBand,
       points:          marks.total,
+      scorePct:        version.totalPoints > 0 ? Math.min(100, (marks.total / version.totalPoints) * 100) : null,
       feedback:        marks.overallComment.trim() || null,
       markingDraft:    Prisma.DbNull,
       gradedById:      graderId,
       gradedAt:        new Date(),
     },
   })
+  notifySafely(() => notifyMarked({
+    userId: updated.userId, courseId: updated.courseId, itemTitle: updated.blockTitle ?? "Assignment",
+    outcome: allowResubmit ? "returned" : "accepted",
+    scoreText: `${marks.total}/${version.totalPoints}${marks.gradeBand ? ` · ${marks.gradeBand}` : ""}`,
+  }))
   return { ok: true as const, marks, version, submission: updated }
 }
 

@@ -29,7 +29,10 @@ const ResetPasswordForm = ({
   showPw,
   setShowPw,
   onSuccess,
+  invite = false,
 }: {
+  /** Arrived from a staff invitation rather than a reset request. */
+  invite?: boolean
   token: string
   showPw: boolean
   setShowPw: (show: boolean) => void
@@ -75,10 +78,11 @@ const ResetPasswordForm = ({
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="mb-4">
         <h1 className="text-[clamp(30px,4vw,38px)] tracking-[-0.035em] leading-[1.1] font-extrabold text-[#171C35] mb-2">
-          Choose a New Password
+          {invite ? "Set Your Password" : "Choose a New Password"}
         </h1>
         <p className="text-[15px] leading-[1.55] text-[#69708A]">
-          Your new password must be at least 8 characters and include an uppercase letter and a number.
+          {invite && "Welcome to ARPS Institute. Choose a password to activate your instructor account. "}
+          Your {invite ? "" : "new "}password must be at least 8 characters and include an uppercase letter and a number.
         </p>
       </div>
 

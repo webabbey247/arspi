@@ -1,7 +1,12 @@
 import { db } from "@/lib/db"
+import { notifySafely } from "@/services/notification.service"
+import { notifyCertificate } from "@/services/notification-events.service"
 
 /** Formats a name from an optional first/last name pair, falling back to email. */
-export function displayName(person: { email: string; profile: { firstName: string | null; lastName: string | null } | null }): string {
+/** A person's name, else their email. No person (e.g. a programme with no
+ *  assigned instructor) reads as the institute itself. */
+export function displayName(person: { email: string; profile: { firstName: string | null; lastName: string | null } | null } | null): string {
+  if (!person) return "ARPS Institute"
   const profile = person.profile
   return profile?.firstName || profile?.lastName
     ? [profile.firstName, profile.lastName].filter(Boolean).join(" ")
@@ -27,7 +32,7 @@ export type CertificateRow = {
     id:         string
     title:      string
     slug:       string
-    instructor: { email: string; profile: { firstName: string | null; lastName: string | null } | null }
+    instructor: { email: string; profile: { firstName: string | null; lastName: string | null } | null } | null
   }
 }
 
@@ -76,6 +81,7 @@ export async function issueCertificate(
       data:    { userId, courseId },
       include: certInclude,
     })
+    notifySafely(() => notifyCertificate({ userId, courseId }))
     return { success: true, data: cert as unknown as CertificateRow }
   } catch {
     return { success: false, error: "Failed to issue certificate." }

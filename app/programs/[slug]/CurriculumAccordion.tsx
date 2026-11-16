@@ -1,5 +1,6 @@
 "use client"
 
+import RichText from "@/components/ui/RichText"
 import { useState } from "react"
 
 type Module = { week?: string; title: string; desc?: string; topics?: string[] }
@@ -41,7 +42,7 @@ export default function CurriculumAccordion({ modules }: { modules: Module[] }) 
               <div className="overflow-hidden">
                 <div className="px-5 pb-5 pt-0 bg-[#FAF6EF] border-t border-[#EFE9DE]">
                   {mod.desc && (
-                    <p className="mt-4 font-body text-[15px] leading-[1.6] text-[#3E4A59] max-w-[44em]">{mod.desc}</p>
+                    <RichText value={mod.desc} className="mt-4 font-body text-[15px] leading-[1.6] text-[#3E4A59] max-w-[44em]" />
                   )}
                   {mod.topics && mod.topics.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-3.5">

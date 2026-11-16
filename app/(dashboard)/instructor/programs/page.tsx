@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import Link from "next/link"
 import Image from "next/image"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import { useForm, useFieldArray, Controller, useWatch, useController } from "react-hook-form"
@@ -13,7 +12,12 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import ContentBlockEditor from "@/components/forms/ContentBlockEditor"
 import { RubricScopeProvider } from "@/components/rubrics/RubricScope"
+import SubmitForApprovalDialog from "@/components/programs/SubmitForApprovalDialog"
+import { RowActions, RowIcon } from "@/components/admin/AdminKit"
+import type { DropdownItem } from "@/components/ui/DropdownMenu"
+import { useRouter } from "next/navigation"
 import FullRichTextEditor from "@/components/ui/RichTextEditor"
+import { SearchableSelect } from "@/components/ui/SearchableSelect"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
@@ -41,6 +45,9 @@ type Program = {
   paymentType:  string | null
   level:        CourseLevel
   featured:     boolean
+  status?:      "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  /** Set while this programme awaits an admin's approval. */
+  submittedForReviewAt?: string | null
   instructorId: string
   instructor:   { id: string; email: string; profile: { firstName: string | null; lastName: string | null } | null }
   categoryId:   string | null
@@ -52,6 +59,7 @@ type Program = {
   tagline:            string | null
   duration:           string | null
   format:             string | null
+  programFormatId?:   string | null
   startDate:          string | null
   endDate:            string | null
   cohortSize:         number | null
@@ -60,6 +68,7 @@ type Program = {
   enrolledCount:      number | null
   countriesCount:     number | null
   overview:           string | null
+  outlineIntro:       string | null
   targetAudience:     unknown | null
   learningObjectives: unknown | null
   curriculum:         unknown | null
@@ -160,19 +169,6 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   )
 }
 
-function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171C35]/40">
-      <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
-        <p className="text-[14px] text-[#171C35] mb-5">{message}</p>
-        <div className="flex gap-2 justify-end">
-          <button onClick={onCancel} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[#DFE2ED] text-[#69708A] hover:bg-[#F5F6FB] cursor-pointer">Cancel</button>
-          <button onClick={onConfirm} className="px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-red-600 text-white hover:bg-red-700 cursor-pointer">Delete</button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ── Thumbnail upload ───────────────────────────────────────────────────────────
 
@@ -255,6 +251,7 @@ type ProgramFormValues = {
   featured:    boolean
 
   format:    string
+  programFormatId: string
   duration:  string
   startDate: string
   endDate:   string
@@ -262,6 +259,7 @@ type ProgramFormValues = {
 
   // Step 2 — Objectives
   overview:           string
+  outlineIntro:       string
   targetAudience:     string[]
   learningObjectives: string[]
   whatIsIncluded:     string[]
@@ -280,8 +278,8 @@ const EMPTY_FORM: ProgramFormValues = {
   title: "", slug: "", excerpt: "", thumbnail: "",
   pricing: "free", paymentType: "", price: "0",
   level: "BEGINNER", categoryId: "", tagline: "", featured: false,
-  format: "", duration: "", startDate: "", endDate: "", cohortSize: "",
-  overview: "", targetAudience: [], learningObjectives: [], whatIsIncluded: [],
+  format: "", programFormatId: "", duration: "", startDate: "", endDate: "", cohortSize: "",
+  overview: "", outlineIntro: "", targetAudience: [], learningObjectives: [], whatIsIncluded: [],
   curriculum: [], facilitators: [], faqs: [],
 }
 
@@ -336,6 +334,11 @@ const FORMAT_CONFIGS: Record<string, FormatCfg> = {
   },
 }
 
+// The Formats lookup names "Hybrid" and "In Person"; both run on dates like a
+// blended cohort does.
+FORMAT_CONFIGS["Hybrid"]    = FORMAT_CONFIGS["Blended"]
+FORMAT_CONFIGS["In Person"] = FORMAT_CONFIGS["Blended"]
+
 const DEFAULT_FORMAT_CFG: FormatCfg = {
   durationLabel: "Duration",
   durationHint:  "Weeks",
@@ -375,6 +378,7 @@ const programSchema = yup.object({
   featured:    yup.boolean().required(),
 
   format:    yup.string(),
+  programFormatId: yup.string(),
   duration:  yup.string(),
   startDate: yup.string().when("format", {
     is:   (f: string) => ["Cohort Based", "Live Online", "Blended"].includes(f),
@@ -391,6 +395,7 @@ const programSchema = yup.object({
 
   // Step 2
   overview:           yup.string(),
+  outlineIntro:       yup.string().max(5000, "Keep the outline introduction under 5,000 characters"),
   targetAudience:     yup.array(yup.string().default("")).min(1, "Add at least one target audience entry"),
   learningObjectives: yup.array(yup.string().default("")).min(1, "Add at least one learning objective"),
   whatIsIncluded:     yup.array(yup.string().default("")).min(1, "Add at least one item"),
@@ -431,7 +436,7 @@ const programSchema = yup.object({
 const STEP_FIELDS: Record<number, (keyof ProgramFormValues)[]> = {
   1: ["title", "slug", "excerpt", "thumbnail", "pricing", "paymentType", "price", "level", "categoryId", "tagline", "featured", "format", "duration", "startDate", "endDate", "cohortSize"],
   2: ["overview", "targetAudience", "learningObjectives", "whatIsIncluded"],
-  3: ["curriculum"],
+  3: ["outlineIntro", "curriculum"],
   4: ["facilitators"],
   5: ["faqs"],
 }
@@ -1042,11 +1047,97 @@ function ProgramModal(props: React.ComponentProps<typeof ProgramModalInner>) {
   )
 }
 
+// ── Category · Level · Programme type ────────────────────────────────────────
+
+const PRICING_OPTIONS = [
+  { value: "free", label: "Free" },
+  { value: "paid", label: "Paid" },
+]
+
+const PAYMENT_TYPE_OPTIONS = [
+  { value: "one-time",     label: "One-time payment" },
+  { value: "subscription", label: "Subscription / Membership" },
+  { value: "monthly",      label: "Monthly Payment Plan" },
+]
+
+const LEVEL_OPTIONS = [
+  { value: "BEGINNER",     label: "Beginner" },
+  { value: "INTERMEDIATE", label: "Intermediate" },
+  { value: "ADVANCED",     label: "Advanced" },
+]
+
+/** Same row as the admin editor: each a searchable select. Programme type
+ *  sets both `programFormatId` and the `format` name. */
+function ClassificationRow({ control, setValue, errors, categories, formats, children }: {
+  control:    Control<ProgramFormValues>
+  setValue:   (name: "format" | "programFormatId", value: string, opts?: { shouldDirty?: boolean; shouldValidate?: boolean }) => void
+  errors:     FieldErrors<ProgramFormValues>
+  categories: Category[]
+  formats:    { id: string; name: string }[]
+  /** Rendered after Programme type, sharing its row (the Pricing field). */
+  children?:  React.ReactNode
+}) {
+  const format = useWatch({ control, name: "format" })
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <Field label="Category" required>
+        <Controller
+          control={control} name="categoryId"
+          render={({ field }) => (
+            <SearchableSelect
+              label="Category" placeholder="— Select —" searchPlaceholder="Search categories"
+              emptyMessage="No categories available."
+              options={categories.map(c => ({ value: c.id, label: c.name }))}
+              value={field.value ?? ""} onChange={field.onChange}
+            />
+          )}
+        />
+      </Field>
+      <Field label="Level" required>
+        <Controller
+          control={control} name="level"
+          render={({ field }) => (
+            <SearchableSelect
+              label="Level" searchPlaceholder="Search levels"
+              options={LEVEL_OPTIONS}
+              value={field.value ?? ""} onChange={field.onChange}
+              invalid={!!errors.level}
+            />
+          )}
+        />
+        <FieldError msg={errors.level?.message} />
+      </Field>
+      <Field label="Programme type">
+        <Controller
+          control={control} name="programFormatId"
+          render={({ field }) => {
+            const current = field.value || formats.find(f => f.name === format)?.id || ""
+            return (
+              <SearchableSelect
+                label="Programme type" placeholder="— Select —" searchPlaceholder="Search types"
+                emptyMessage="No programme types available."
+                options={formats.map(f => ({ value: f.id, label: f.name }))}
+                value={current}
+                onChange={id => {
+                  field.onChange(id)
+                  setValue("format", formats.find(f => f.id === id)?.name ?? "", { shouldDirty: true, shouldValidate: true })
+                }}
+              />
+            )
+          }}
+        />
+      </Field>
+      {children}
+    </div>
+  )
+}
+
 function ProgramModalInner({
-  program, categories, onSave, onClose,
+  program, categories, formats, onSave, onClose,
 }: {
   program:    Program | null
   categories: Category[]
+  formats:    { id: string; name: string }[]
   onSave:     (values: ProgramFormValues) => Promise<void>
   onClose:    () => void
 }) {
@@ -1067,11 +1158,13 @@ function ProgramModalInner({
     tagline:     program.tagline     ?? "",
     featured:    program.featured,
     format:      program.format     ?? "",
+    programFormatId: program.programFormatId ?? "",
     duration:    program.duration   ?? "",
     startDate:   program.startDate  ?? "",
     endDate:     program.endDate    ?? "",
     cohortSize:  program.cohortSize != null ? String(program.cohortSize) : "",
     overview:           program.overview ?? "",
+    outlineIntro:       program.outlineIntro ?? "",
     targetAudience:     Array.isArray(program.targetAudience)     ? (program.targetAudience as string[])     : [],
     learningObjectives: Array.isArray(program.learningObjectives) ? (program.learningObjectives as string[]) : [],
     whatIsIncluded:     Array.isArray(program.whatIsIncluded)     ? (program.whatIsIncluded as string[])     : [],
@@ -1239,49 +1332,46 @@ function ProgramModalInner({
               <input {...register("tagline")} className={inputCls} placeholder="e.g. Master results-based frameworks and evaluation methods" />
               <FieldError msg={errors.tagline?.message} />
             </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Category" required>
-                <select {...register("categoryId")} className={inputCls}>
-                  <option value="">— None —</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </Field>
-              <Field label="Level" required>
-                <select {...register("level")} className={inputCls}>
-                  <option value="BEGINNER">Beginner</option>
-                  <option value="INTERMEDIATE">Intermediate</option>
-                  <option value="ADVANCED">Advanced</option>
-                </select>
-                <FieldError msg={errors.level?.message} />
-              </Field>
-            </div>
-
-            {/* Pricing block */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Category · Level / Programme type · Pricing */}
+            <ClassificationRow control={control} setValue={setValue} errors={errors} categories={categories} formats={formats}>
               <Field label="Pricing" required>
-                <select {...register("pricing")} className={inputCls}>
-                  <option value="free">Free</option>
-                  <option value="paid">Paid</option>
-                </select>
+                <Controller
+                  control={control} name="pricing"
+                  render={({ field }) => (
+                    <SearchableSelect
+                      label="Pricing" searchPlaceholder="Search pricing"
+                      options={PRICING_OPTIONS}
+                      value={field.value ?? ""} onChange={field.onChange}
+                      invalid={!!errors.pricing}
+                    />
+                  )}
+                />
                 <FieldError msg={errors.pricing?.message} />
               </Field>
-              {watchedPricing === "paid" && (
+            </ClassificationRow>
+
+            {/* Payment type · Price — only for paid programmes */}
+            {watchedPricing === "paid" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Payment Type" required>
-                  <select {...register("paymentType")} className={inputCls}>
-                    <option value="">— Select —</option>
-                    <option value="one-time">One-time payment</option>
-                    <option value="subscription">Subscription / Membership</option>
-                    <option value="monthly">Monthly Payment Plan</option>
-                  </select>
+                  <Controller
+                    control={control} name="paymentType"
+                    render={({ field }) => (
+                      <SearchableSelect
+                        label="Payment type" placeholder="— Select —" searchPlaceholder="Search payment types"
+                        options={PAYMENT_TYPE_OPTIONS}
+                        value={field.value ?? ""} onChange={field.onChange}
+                        invalid={!!errors.paymentType}
+                      />
+                    )}
+                  />
                   <FieldError msg={errors.paymentType?.message} />
                 </Field>
-              )}
-            </div>
-            {watchedPricing === "paid" && (
-              <Field label="Price (USD)" required>
-                <input type="number" min="0" step="0.01" {...register("price")} className={inputCls} placeholder="e.g. 499" />
-                <FieldError msg={errors.price?.message} />
-              </Field>
+                <Field label="Price (USD)" required>
+                  <input type="number" min="0" step="0.01" {...register("price")} className={inputCls} placeholder="e.g. 499" />
+                  <FieldError msg={errors.price?.message} />
+                </Field>
+              </div>
             )}
 
             <div className="flex items-center gap-6 pt-1">
@@ -1403,6 +1493,15 @@ function ProgramModalInner({
             <p className="text-[13px] text-[#69708A] leading-relaxed">
               Build the programme outline. Each module appears as an accordion on the public page.
             </p>
+            <Field label="Outline introduction" hint="Shown under “Programme Outline” on the public page. Leave empty to use a default sentence based on the number of modules.">
+              <textarea
+                {...register("outlineIntro")}
+                rows={3}
+                className={inputCls}
+                placeholder="e.g. The programme runs over 7 modules. Each combines short videos, worked examples and a practical assignment…"
+              />
+              <FieldError msg={errors.outlineIntro?.message} />
+            </Field>
             <CurriculumEditor control={control} register={register} errors={errors} />
           </>}
 
@@ -1472,8 +1571,13 @@ export default function InstructorProgramsPage() {
   const [search, setSearch]                   = useState("")
   const [levelFilter, setLevelFilter]         = useState<CourseLevel | "All">("All")
   const [pricingFilter, setPricingFilter]     = useState<"All" | "Free" | "Paid" | "Featured">("All")
+  // "All", a category id, or "none" for programmes with no category.
+  const [categoryFilter, setCategoryFilter]   = useState<string>("All")
+  const [categoryOpen, setCategoryOpen]       = useState(false)
+  const categoryRef                           = useRef<HTMLDivElement>(null)
+  const router = useRouter()
   const [programModal, setProgramModal]       = useState<"create" | Program | null>(null)
-  const [deleteProgram, setDeleteProgram]     = useState<Program | null>(null)
+  const [submitProgram, setSubmitProgram]     = useState<Program | null>(null)
   const [filterOpen, setFilterOpen]           = useState(false)
   const [statusOpen, setStatusOpen]           = useState(false)
   const filterRef                             = useRef<HTMLDivElement>(null)
@@ -1482,6 +1586,7 @@ export default function InstructorProgramsPage() {
   const [page, setPage]                       = useState(1)
 
   const [categories, setCategories] = useState<Category[]>([])
+  const [formats, setFormats]       = useState<{ id: string; name: string }[]>([])
 
   const fetchPrograms = useCallback(async () => {
     setProgramsLoading(true)
@@ -1495,9 +1600,10 @@ export default function InstructorProgramsPage() {
   }, [])
 
   const fetchCategories = useCallback(async () => {
-    const r = await fetch("/api/programs/categories")
-    const d = await r.json()
+    const [r, rf] = await Promise.all([fetch("/api/programs/categories"), fetch("/api/programs/formats")])
+    const [d, df] = await Promise.all([r.json().catch(() => ({})), rf.json().catch(() => ({}))])
     if (r.ok) setCategories(d.categories ?? [])
+    if (rf.ok) setFormats(df.formats ?? [])
   }, [])
 
   useEffect(() => { fetchPrograms(); fetchCategories() }, [fetchPrograms, fetchCategories])
@@ -1506,6 +1612,7 @@ export default function InstructorProgramsPage() {
     function h(e: MouseEvent) {
       if (filterRef.current && !filterRef.current.contains(e.target as Node)) setFilterOpen(false)
       if (statusRef.current && !statusRef.current.contains(e.target as Node)) setStatusOpen(false)
+      if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) setCategoryOpen(false)
     }
     document.addEventListener("mousedown", h)
     return () => document.removeEventListener("mousedown", h)
@@ -1585,11 +1692,13 @@ export default function InstructorProgramsPage() {
       tagline:    values.tagline    || null,
       duration:   values.duration   || null,
       format:     values.format     || null,
+      programFormatId: values.programFormatId || null,
       startDate:  values.startDate  || null,
       endDate:    values.endDate    || null,
       cohortSize: values.cohortSize  ? parseInt(values.cohortSize) : null,
 
       overview:           values.overview || null,
+      outlineIntro:       values.outlineIntro?.trim() || null,
       targetAudience:     filterArr(values.targetAudience),
       learningObjectives: filterArr(values.learningObjectives),
       whatIsIncluded:     filterArr(values.whatIsIncluded),
@@ -1608,19 +1717,9 @@ export default function InstructorProgramsPage() {
     await fetchPrograms()
   }
 
-  async function handleDeleteProgram() {
-    if (!deleteProgram) return
-    const res = await fetch(`/api/instructor/programs/${deleteProgram.id}`, { method: "DELETE" })
-    if (!res.ok) {
-      const d = await res.json().catch(() => ({}))
-      alert(d.error ?? "Failed to delete program.")
-      return
-    }
-    setDeleteProgram(null)
-    await fetchPrograms()
-  }
 
-  useEffect(() => { setPage(1) }, [search, levelFilter, pricingFilter])
+
+  useEffect(() => { setPage(1) }, [search, levelFilter, pricingFilter, categoryFilter])
 
   const filteredPrograms = programs.filter(p => {
     const matchPricing =
@@ -1630,15 +1729,37 @@ export default function InstructorProgramsPage() {
       pricingFilter === "Featured" ? p.featured : true
 
     const matchLevel = levelFilter === "All" || p.level === levelFilter
+    const matchCategory =
+      categoryFilter === "All"  ? true :
+      categoryFilter === "none" ? !p.categoryId :
+      p.categoryId === categoryFilter
 
     const q = search.toLowerCase()
-    return matchPricing && matchLevel && (
+    return matchPricing && matchLevel && matchCategory && (
       !q ||
       p.title.toLowerCase().includes(q) ||
       facilitatorSummary(p).toLowerCase().includes(q) ||
       (p.category?.name ?? "").toLowerCase().includes(q)
     )
   })
+
+  /** Same row menu as the admin's Programs list, minus what's admin-only:
+   *  assigning, approving and deleting. */
+  function programActions(p: Program): DropdownItem[] {
+    return [
+      { label: "View analytics", icon: RowIcon.analytics, onSelect: () => router.push(`/instructor/programs/${p.slug}`) },
+      // Same as the admin list. A draft 404s for the public, but the programme
+      // 404 page sends its own instructor straight into the draft preview.
+      { label: "View public page", icon: RowIcon.view, onSelect: () => window.open(`/programs/${p.slug}`, "_blank", "noopener,noreferrer") },
+      { label: "Edit programme", icon: RowIcon.edit, onSelect: () => setProgramModal(p) },
+      { type: "separator" },
+      {
+        label: p.submittedForReviewAt ? "Resubmit for approval" : "Submit for approval",
+        icon: RowIcon.publish,
+        onSelect: () => setSubmitProgram(p),
+      },
+    ]
+  }
 
   const counts = {
     all:      programs.length,
@@ -1658,15 +1779,10 @@ export default function InstructorProgramsPage() {
         <div>
           <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Instructor</span>
           <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">My Programs</h1>
-          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage your learning programs</p>
+          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">
+            Programmes assigned to you. Review and edit them, then submit them for approval.
+          </p>
         </div>
-        <button
-          onClick={() => setProgramModal("create")}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New Program
-        </button>
       </div>
 
       {/* Programs table card */}
@@ -1710,6 +1826,46 @@ export default function InstructorProgramsPage() {
             </div>
 
             {/* Level filter */}
+            {/* Category filter — options come from this instructor's own programmes */}
+            <div ref={categoryRef} className="relative">
+              <button
+                onClick={() => setCategoryOpen(o => !o)}
+                aria-haspopup="listbox" aria-expanded={categoryOpen}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-[13px] font-semibold border cursor-pointer transition-colors ${categoryFilter !== "All" ? "bg-[#6655DF] text-white border-[#6655DF]" : "bg-white text-[#69708A] border-[#DFE2ED] hover:border-[#6655DF] hover:text-[#6655DF]"}`}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+                Category
+                {categoryFilter !== "All" && (
+                  <span className="ml-1 max-w-28 truncate bg-white text-[#6655DF] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                    {categoryFilter === "none" ? "None" : programs.find(p => p.categoryId === categoryFilter)?.category?.name ?? "—"}
+                  </span>
+                )}
+              </button>
+              {categoryOpen && (
+                <div role="listbox" className="absolute right-0 top-[calc(100%+6px)] z-20 bg-white border border-[#DFE2ED] rounded-xl shadow-lg py-1.5 min-w-52 max-h-72 overflow-y-auto">
+                  {[
+                    { id: "All", name: "All Categories", count: programs.length },
+                    ...Array.from(
+                      new Map(programs.filter(p => p.categoryId && p.category).map(p => [p.categoryId!, p.category!.name])).entries(),
+                    )
+                      .sort((a, b) => a[1].localeCompare(b[1]))
+                      .map(([id, name]) => ({ id, name, count: programs.filter(p => p.categoryId === id).length })),
+                    ...(programs.some(p => !p.categoryId)
+                      ? [{ id: "none", name: "No category", count: programs.filter(p => !p.categoryId).length }]
+                      : []),
+                  ].map(opt => (
+                    <button key={opt.id} role="option" aria-selected={categoryFilter === opt.id}
+                      onClick={() => { setCategoryFilter(opt.id); setCategoryOpen(false) }}
+                      className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-[13px] font-medium text-left cursor-pointer border-none transition-colors ${categoryFilter === opt.id ? "bg-[#EEECFF] text-[#6655DF]" : "bg-transparent text-[#171C35] hover:bg-[#F5F6FB]"}`}
+                    >
+                      <span className="truncate">{opt.name}</span>
+                      <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#F5F6FB] text-[#69708A]">{opt.count}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div ref={filterRef} className="relative">
               <button
                 onClick={() => setFilterOpen(o => !o)}
@@ -1755,7 +1911,7 @@ export default function InstructorProgramsPage() {
               {programsLoading ? (
                 <TableSkeletonRows colSpan={7} />
               ) : filteredPrograms.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-10 text-center text-[#8A90A6]">No programs found.</td></tr>
+                <tr><td colSpan={7} className="px-4 py-10 text-center text-[#8A90A6]">{programs.length > 0 ? "No programmes match these filters." : "No programmes have been assigned to you yet."}</td></tr>
               ) : paginatedPrograms.map(p => (
                 <tr key={p.id} className="border-b border-[#F0EFFA] last:border-none hover:bg-[#FAFAFF] transition-colors">
 
@@ -1776,6 +1932,15 @@ export default function InstructorProgramsPage() {
                       )}
                       <div>
                         <p className="font-semibold text-[#171C35] leading-tight line-clamp-1">{p.title}</p>
+                        <span className="flex flex-wrap gap-1 mt-1">
+                          {p.submittedForReviewAt ? (
+                            <span className="px-1.5 py-0.5 rounded-full bg-[#EEECFF] text-[#6655DF] text-[9px] font-bold uppercase tracking-wide">Awaiting approval</span>
+                          ) : p.status === "PUBLISHED" ? (
+                            <span className="px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-bold uppercase tracking-wide">Live</span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Draft</span>
+                          )}
+                        </span>
                         {p.featured && (
                           <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#6655DF] mt-0.5">
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -1822,21 +1987,10 @@ export default function InstructorProgramsPage() {
                     {p._count.enrollments}
                   </td>
 
-                  {/* Actions */}
+                  {/* Actions — the admin's row menu, minus assign / approve / delete */}
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="flex items-center gap-1">
-                      <Link href={`/instructor/programs/${p.slug}`} title="Analytics &amp; details" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-blue-50 transition-colors">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                      </Link>
-                      <Link href={`/programs/${p.slug}`} target="_blank" title="View public page" className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                      </Link>
-                      <button onClick={() => setProgramModal(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      </button>
-                      <button onClick={() => setDeleteProgram(p)} className="w-7 h-7 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                      </button>
+                    <div className="flex justify-end">
+                      <RowActions label={`Actions for ${p.title}`} items={programActions(p)} />
                     </div>
                   </td>
                 </tr>
@@ -1850,7 +2004,7 @@ export default function InstructorProgramsPage() {
           {programsLoading ? (
             <SkeletonCardList />
           ) : filteredPrograms.length === 0 ? (
-            <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">No programs found.</div>
+            <div className="px-4 py-10 text-center text-[#8A90A6] text-[13px]">{programs.length > 0 ? "No programmes match these filters." : "No programmes have been assigned to you yet."}</div>
           ) : paginatedPrograms.map(p => (
             <div key={p.id} className="px-4 py-4 border-b border-[#F0EFFA] last:border-none flex flex-col gap-3">
               <div className="flex items-start gap-3">
@@ -1868,6 +2022,15 @@ export default function InstructorProgramsPage() {
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-[#171C35] text-[14px] leading-tight">{p.title}</p>
+                  <span className="flex flex-wrap gap-1 mt-1">
+                    {p.submittedForReviewAt ? (
+                      <span className="px-1.5 py-0.5 rounded-full bg-[#EEECFF] text-[#6655DF] text-[9px] font-bold uppercase tracking-wide">Awaiting approval</span>
+                    ) : p.status === "PUBLISHED" ? (
+                      <span className="px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-bold uppercase tracking-wide">Live</span>
+                    ) : (
+                      <span className="px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold uppercase tracking-wide">Draft</span>
+                    )}
+                  </span>
                   {p.featured && (
                     <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#6655DF] mt-0.5">
                       <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -1906,19 +2069,8 @@ export default function InstructorProgramsPage() {
                 )}
               </dl>
 
-              <div className="flex items-center justify-end gap-1.5 pt-1">
-                <Link href={`/instructor/programs/${p.slug}`} aria-label="Analytics & details" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-blue-50 transition-colors">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                </Link>
-                <Link href={`/programs/${p.slug}`} target="_blank" aria-label="View public page" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                </Link>
-                <button onClick={() => setProgramModal(p)} aria-label="Edit" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-[#DFE2ED] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] hover:bg-amber-50 cursor-pointer transition-colors">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                <button onClick={() => setDeleteProgram(p)} aria-label="Delete" className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-red-200 bg-red-50 text-red-500 hover:border-red-400 hover:text-red-600 hover:bg-red-100 cursor-pointer transition-colors">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                </button>
+              <div className="flex items-center justify-end pt-1">
+                <RowActions label={`Actions for ${p.title}`} items={programActions(p)} />
               </div>
             </div>
           ))}
@@ -1947,12 +2099,17 @@ export default function InstructorProgramsPage() {
         <ProgramModal
           program={programModal === "create" ? null : programModal}
           categories={categories}
+          formats={formats}
           onSave={handleSaveProgram}
           onClose={() => setProgramModal(null)}
         />
       )}
-      {deleteProgram && (
-        <ConfirmDialog message={`Delete "${deleteProgram.title}"? This cannot be undone.`} onConfirm={handleDeleteProgram} onCancel={() => setDeleteProgram(null)} />
+      {submitProgram && (
+        <SubmitForApprovalDialog
+          program={submitProgram}
+          onClose={() => setSubmitProgram(null)}
+          onDone={() => { setSubmitProgram(null); fetchPrograms() }}
+        />
       )}
     </div>
   )

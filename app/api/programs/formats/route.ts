@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { getProgramFormats, createProgramFormat } from "@/services/program-lookup.service"
 
-/** GET /api/programs/formats — list all program formats (admin only) */
+/** GET /api/programs/formats — list all program formats (staff) */
 export async function GET() {
   try {
     const session = await getSession()
-    if (!session || session.role !== "ADMIN") {
+    // Read-only list: staff need it to classify programmes (instructors edit
+    // the programmes assigned to them). Writes stay admin-only.
+    if (!session || (session.role !== "ADMIN" && session.role !== "INSTRUCTOR")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

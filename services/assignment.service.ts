@@ -1,6 +1,8 @@
 import "server-only"
 import { db } from "@/lib/db"
 import { Prisma } from "@prisma/client"
+import { notifySafely } from "@/services/notification.service"
+import { notifyMarked, notifySubmission } from "@/services/notification-events.service"
 
 export type SubmissionFile = { url: string; name: string; size?: number }
 
@@ -15,6 +17,9 @@ export type AssignmentBlockShape = {
   points?: string
   /** Library rubric this assignment is marked against, if any. */
   rubricId?: string
+  /** This block is the programme's final project: its mark forms the
+   *  project half of the course grade. */
+  isFinalProject?: boolean
 }
 
 export type LocatedAssignment = {
@@ -26,6 +31,13 @@ export type LocatedAssignment = {
   submissionType: "text" | "file" | "link" | "none"
   points: number | null
   rubricId: string | null
+  isFinalProject: boolean
+}
+
+/** An assignment that produces a mark: it takes a submission and has points
+ *  or a rubric. Only these can count towards a course grade. */
+export function isMarkedAssignment(a: LocatedAssignment): boolean {
+  return a.submissionType !== "none" && (a.points !== null || a.rubricId !== null)
 }
 
 /** Walks the curriculum JSON and returns every assignment block in order.
@@ -54,6 +66,7 @@ export function collectAssignments(curriculum: unknown): LocatedAssignment[] {
           submissionType: b.submissionType ?? "none",
           points:         Number.isFinite(pts) && pts > 0 ? pts : null,
           rubricId:       typeof b.rubricId === "string" && b.rubricId ? b.rubricId : null,
+          isFinalProject: b.isFinalProject === true,
         })
       }
     }
@@ -130,6 +143,13 @@ export async function submitAssignment(
     rubricMarks:     Prisma.DbNull,
     gradeBand:       null,
     rubricVersionId: existing?.markingDraft ? existing.rubricVersionId : null,
+    // The highest mark counts: fold the outgoing mark into the best-so-far
+    // before clearing it, so the grade doesn't drop while this resubmission
+    // waits to be marked.
+    scorePct:        null,
+    priorBestPct:    existing && (existing.priorBestPct !== null || existing.scorePct !== null)
+      ? Math.max(existing.priorBestPct ?? 0, existing.scorePct ?? 0)
+      : null,
   }
 
   const submission = await db.assignmentSubmission.upsert({
@@ -137,6 +157,9 @@ export async function submitAssignment(
     create: { userId, courseId, blockId: assignment.blockId, ...data },
     update: data,
   })
+  notifySafely(() => notifySubmission({
+    userId, courseId, itemTitle: assignment.blockTitle, kind: "assignment", resubmitted: !!existing,
+  }))
   return { ok: true as const, submission }
 }
 
@@ -145,6 +168,8 @@ export async function reviewAssignment(
   graderId: string,
   submissionId: string,
   input: { accept: boolean; feedback?: string; points?: number | null },
+  /** The block's maximum, to store the mark as a % for the course grade. */
+  maxPoints: number | null = null,
 ) {
   const existing = await db.assignmentSubmission.findUnique({ where: { id: submissionId } })
   if (!existing) return { ok: false as const, error: "Submission not found." }
@@ -155,10 +180,17 @@ export async function reviewAssignment(
       status:     input.accept ? "ACCEPTED" : "RETURNED",
       feedback:   input.feedback?.trim() || null,
       points:     input.points ?? null,
+      scorePct:   input.points != null && maxPoints ? Math.min(100, (input.points / maxPoints) * 100) : null,
       gradedById: graderId,
       gradedAt:   new Date(),
     },
   })
+  notifySafely(() => notifyMarked({
+    userId: submission.userId, courseId: submission.courseId,
+    itemTitle: submission.blockTitle ?? "Assignment",
+    outcome: input.accept ? "accepted" : "returned",
+    scoreText: input.points != null && maxPoints ? `${input.points}/${maxPoints}` : undefined,
+  }))
   return { ok: true as const, submission }
 }
 

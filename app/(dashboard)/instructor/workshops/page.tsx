@@ -1008,15 +1008,8 @@ export default function InstructorWorkshopsPage() {
         <div>
           <span className="block text-[12px] tracking-[0.12em] uppercase font-extrabold text-[#6655DF] mb-1.5">Instructor</span>
           <h1 className="text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.035em] font-extrabold text-[#171C35]">My Workshops</h1>
-          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Manage your workshops, webinars and masterclasses</p>
+          <p className="text-[#69708A] text-[15px] mt-1.5 max-w-180">Workshops, webinars and masterclasses assigned to you. New ones are created by an administrator.</p>
         </div>
-        <button
-          onClick={() => setModal("create")}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-[13px] font-semibold bg-[#6655DF] text-white hover:bg-[#2C2368] transition-colors cursor-pointer"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New Workshop
-        </button>
       </div>
 
       {/* Category filter tabs */}

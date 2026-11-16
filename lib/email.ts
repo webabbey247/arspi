@@ -379,3 +379,87 @@ export async function sendPasswordResetEmail(to: string, resetLink: string): Pro
 </html>`,
   })
 }
+
+// ── Generic notice (invites, programme review) ───────────────────────────────
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!))
+}
+
+export type NoticeEmail = {
+  to:         string | string[]
+  subject:    string
+  heading:    string
+  /** Plain-text paragraphs; escaped before going into the HTML. */
+  paragraphs: string[]
+  cta?:       { label: string; url: string }
+  /** Small print under the button, e.g. when a link expires. */
+  footnote?:  string
+}
+
+/** One branded layout for every short transactional notice, matching the
+ *  password-reset email. */
+export async function sendNoticeEmail(n: NoticeEmail): Promise<void> {
+  const text = [
+    ...n.paragraphs,
+    ...(n.cta ? [`${n.cta.label}: ${n.cta.url}`] : []),
+    ...(n.footnote ? [n.footnote] : []),
+  ].join("\n\n")
+
+  const body = n.paragraphs
+    .map(p => `<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#475569;">${escapeHtml(p)}</p>`)
+    .join("")
+
+  const cta = n.cta ? `
+              <table cellpadding="0" cellspacing="0" style="margin:8px 0 24px;">
+                <tr>
+                  <td style="background:#0474C4;border-radius:32px;">
+                    <a href="${escapeHtml(n.cta.url)}"
+                       style="display:inline-block;padding:14px 32px;font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+                      ${escapeHtml(n.cta.label)}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#64748B;">Or copy and paste this URL into your browser:</p>
+              <p style="margin:0 0 16px;font-size:12px;color:#0474C4;word-break:break-all;">${escapeHtml(n.cta.url)}</p>` : ""
+
+  const foot = n.footnote
+    ? `<p style="margin:0;font-size:12px;line-height:1.6;color:#94A3B8;">${escapeHtml(n.footnote)}</p>`
+    : ""
+
+  await transport.sendMail({
+    from: FROM,
+    to:   n.to,
+    subject: n.subject,
+    text,
+    html: `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background:#EBF3FC;font-family:'DM Sans',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" style="max-width:520px;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #BFDBF7;">
+          <tr>
+            <td style="background:#06457F;padding:28px 32px;">
+              <p style="margin:0;font-size:18px;font-weight:600;color:#ffffff;letter-spacing:-0.01em;">ARPS Institute</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:36px 32px 28px;">
+              <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#071639;letter-spacing:-0.015em;">${escapeHtml(n.heading)}</h1>
+              ${body}
+              ${cta}
+              ${foot}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+  })
+}

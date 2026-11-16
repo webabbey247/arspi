@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import RichText from "@/components/ui/RichText"
 import { notFound } from "next/navigation"
 import { draftMode } from "next/headers"
 import Link from "next/link"
@@ -6,7 +7,7 @@ import Image from "next/image"
 import { programCategories } from "@/lib/data"
 import { cache } from "react"
 import {
-  getProgramBySlug, getProgramCards, getPublishedProgramSlugs,
+  getProgramBySlug, getProgramCards, getPublishedProgramSlugs, getPublishedProgramFacilitators,
 } from "@/services/program.service"
 import withLayout from "@/hooks/useLayout"
 import EnrollCTA from "./EnrollCTA"
@@ -54,6 +55,7 @@ type PageProgram = {
   enrolledCount:  number | null
   countriesCount: number | null
   overview:       string | null
+  outlineIntro:   string | null
   objectives:     string[]
   audience:       string[]
   modules:        PageModule[]
@@ -69,10 +71,25 @@ type PageProgram = {
   cat: CatMeta
   related: RelatedProgram[]
   moreByInstructor: RelatedProgram[]
+  /** Everyone in the programme's facilitators list, each with their own
+   *  stats from the published programmes that name them. */
+  facilitators: FacilitatorCard[]
   instructorProgramCount:  number
   instructorPrograms:      InstructorProgramStat[]
   instructorAvgRating:     string | null
   instructorTotalReviews:  number
+}
+
+type FacilitatorCard = {
+  name:           string
+  title:          string | null
+  bio:            string | null
+  initials:       string
+  imageUrl:       string | null
+  programmeCount: number
+  avgRating:      string | null
+  totalReviews:   number
+  programs:       InstructorProgramStat[]
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -263,6 +280,56 @@ function pickFirstFacilitator(v: unknown): {
   }
 }
 
+/** Every named facilitator on a programme, in the order the editor lists them. */
+function parseFacilitators(v: unknown): Omit<FacilitatorCard, "programmeCount" | "avgRating" | "totalReviews" | "programs">[] {
+  if (!Array.isArray(v)) return []
+  return (v as Record<string, unknown>[]).flatMap(f => {
+    const name = typeof f?.name === "string" ? f.name.trim() : ""
+    if (!name) return []
+    return [{
+      name,
+      title:    typeof f.title === "string" && f.title.trim() ? f.title.trim() : null,
+      bio:      typeof f.bio === "string" && f.bio.trim() ? f.bio : null,
+      initials: name.split(/\s+/).filter(Boolean).map(w => w[0].toUpperCase()).join("").slice(0, 4),
+      imageUrl: typeof f.imageUrl === "string" && f.imageUrl ? f.imageUrl : null,
+    }]
+  })
+}
+
+const facilitatorKey = (name: string) => name.trim().toLowerCase().replace(/\s+/g, " ")
+
+/** Names on a programme's facilitators JSON, normalised for matching. */
+function facilitatorKeys(v: unknown): Set<string> {
+  return new Set(parseFacilitators(v).map(f => facilitatorKey(f.name)))
+}
+
+/** Profile stats for a set of programmes: count, review-weighted rating, and
+ *  the top 5 by rating for the profile modal. */
+function profileStats(rows: { slug: string; title: string; duration: string | null; level: string; price: number; rating: number | null; reviewCount: number | null }[]) {
+  const levelLabel = (lvl: string) => lvl.charAt(0) + lvl.slice(1).toLowerCase()
+  const programs: InstructorProgramStat[] = rows.map(p => ({
+    slug: p.slug, title: p.title,
+    meta: `${p.duration ?? "Self-Paced"} · ${levelLabel(p.level)}`,
+    price: p.price > 0 ? `$${p.price.toLocaleString()}` : "Free",
+    rating: p.rating, reviewCount: p.reviewCount,
+  }))
+  const rated = programs.filter(p => p.rating != null && p.reviewCount != null)
+  const totalReviews = rated.reduce((sum, p) => sum + (p.reviewCount ?? 0), 0)
+  const avgRating = totalReviews > 0
+    ? (rated.reduce((sum, p) => sum + (p.rating ?? 0) * (p.reviewCount ?? 0), 0) / totalReviews).toFixed(1)
+    : null
+  const top = [...programs].sort((a, b) => {
+    if (a.rating == null && b.rating == null) return (b.reviewCount ?? 0) - (a.reviewCount ?? 0)
+    if (a.rating == null) return 1
+    if (b.rating == null) return -1
+    if (b.rating !== a.rating) return b.rating - a.rating
+    return (b.reviewCount ?? 0) - (a.reviewCount ?? 0)
+  }).slice(0, 5)
+  return { programmeCount: programs.length, avgRating, totalReviews, programs: top }
+}
+
+const publishedFacilitatorRows = cache(() => getPublishedProgramFacilitators())
+
 /** The full published catalogue, fetched at most once per render.
  *
  *  React's cache() dedupes within a single render pass, which is what this
@@ -320,7 +387,11 @@ async function resolveProgram(slug: string, allowDraft = false): Promise<PagePro
   // "instructor stats" like Udemy's review/course counts, since this app doesn't
   // track those in aggregate). Full list kept for an accurate count; only the
   // first 3 are shown as cards.
-  const instructorRows = (await getProgramCards({ instructorId: dbProg.instructorId, status: "PUBLISHED" }))
+  // Unassigned programmes have no "more by" list — filtering on a null id
+  // would otherwise match every other unassigned programme.
+  const instructorRows = (dbProg.instructorId
+    ? await getProgramCards({ instructorId: dbProg.instructorId, status: "PUBLISHED" })
+    : [])
     .filter((p) => p.slug !== slug)
   const moreByInstructor = instructorRows.slice(0, 3).map(toRelated)
 
@@ -352,7 +423,18 @@ async function resolveProgram(slug: string, allowDraft = false): Promise<PagePro
     return (b.reviewCount ?? 0) - (a.reviewCount ?? 0)
   }).slice(0, 5)
 
+  // Each facilitator's own profile: this programme plus every other published
+  // programme that lists them (matched by name, since facilitators are
+  // free-text entries rather than accounts).
+  const catalogue = await publishedFacilitatorRows()
+  const facilitators: FacilitatorCard[] = parseFacilitators(dbProg.facilitators).map(f => {
+    const key = facilitatorKey(f.name)
+    const others = catalogue.filter(p => p.slug !== dbProg.slug && facilitatorKeys(p.facilitators).has(key))
+    return { ...f, ...profileStats([dbProg, ...others]) }
+  })
+
   return {
+    facilitators,
     id:             dbProg.id,
     title:          dbProg.title,
     slug:           dbProg.slug,
@@ -369,6 +451,7 @@ async function resolveProgram(slug: string, allowDraft = false): Promise<PagePro
     enrolledCount:  dbProg.enrolledCount,
     countriesCount: dbProg.countriesCount,
     overview:       dbProg.overview,
+    outlineIntro:   dbProg.outlineIntro,
     objectives:     toStrArr(dbProg.learningObjectives),
     audience:       toStrArr(dbProg.targetAudience),
     modules:        toModules(dbProg.curriculum),
@@ -578,7 +661,7 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
               <Kicker>Overview</Kicker>
               <div className="mt-3.5 mb-4.5"><SectionHeading>What You Will Learn</SectionHeading></div>
               {prog.overview && (
-                <p className="font-body text-[16.5px] leading-[1.68] text-[#3E4A59] text-pretty">{prog.overview}</p>
+                <RichText value={prog.overview} className="font-body text-[16.5px] leading-[1.68] text-[#3E4A59] text-pretty" />
               )}
               {prog.objectives.length > 0 && (
                 <div className="grid gap-px mt-7.5 bg-[#EAE5DC] border-y border-[#EAE5DC]">
@@ -632,48 +715,68 @@ const ProgramDetailPage = async ({ params }: { params: Promise<{ slug: string }>
                   {" "}· {prog.duration}
                 </div>
               </div>
-              <p className="mt-4 max-w-[40em] font-body text-[16px] leading-[1.66] text-[#3E4A59] text-pretty">
-                The programme is structured across {prog.modules.length} modules, each covering one stage of learning with live sessions, self-paced content, and a practical assignment.
-              </p>
+              {prog.outlineIntro?.trim() ? (
+                <RichText value={prog.outlineIntro} className="mt-4 max-w-[40em] font-body text-[16px] leading-[1.66] text-[#3E4A59] text-pretty" />
+              ) : (
+                <p className="mt-4 max-w-[40em] font-body text-[16px] leading-[1.66] text-[#3E4A59] text-pretty">
+                  The programme is structured across {prog.modules.length} {prog.modules.length === 1 ? "module" : "modules"}, each covering one stage of learning.
+                </p>
+              )}
               <CurriculumAccordion modules={prog.modules} />
             </section>
           )}
 
-          {prog.instructor.name && (
+          {prog.facilitators.length > 0 && (
             <section className="mt-18 pt-14 border-t border-[#EAE5DC] max-[760px]:mt-12 max-[760px]:pt-10">
-              <Kicker>Programme facilitator</Kicker>
-              <div className="mt-3.5 mb-6"><SectionHeading>Meet Your Instructor</SectionHeading></div>
-
-              <div className="flex gap-5.5 items-center flex-wrap">
-                <div className="w-19 h-19 rounded-full bg-[#0B2239] text-white flex items-center justify-center font-heading text-[20px] tracking-[0.04em] shrink-0">
-                  {prog.instructor.initials}
-                </div>
-                <div className="flex-1 min-w-55">
-                  <div className="font-heading text-[22px] text-[#0B2239]">{prog.instructor.name}</div>
-                  {prog.instructor.title && (
-                    <div className="mt-1.25 font-body text-[11px] tracking-[0.16em] uppercase text-[#0B6FC4]">{prog.instructor.title}</div>
-                  )}
-                  <div className="mt-2.5 font-body text-[14.5px] text-[#6B7684]">
-                    {prog.instructorProgramCount} {prog.instructorProgramCount === 1 ? "programme" : "programmes"} on ARPS Institute · {prog.cat.label}
-                  </div>
-                </div>
-                <InstructorProfileModal
-                  name={prog.instructor.name}
-                  title={prog.instructor.title}
-                  categoryLabel={prog.cat.label}
-                  initials={prog.instructor.initials}
-                  bio={prog.instructor.bio}
-                  avgRating={prog.instructorAvgRating}
-                  totalReviews={prog.instructorTotalReviews}
-                  programmeCount={prog.instructorProgramCount}
-                  programs={prog.instructorPrograms}
-                />
+              <Kicker>{prog.facilitators.length === 1 ? "Programme facilitator" : "Programme facilitators"}</Kicker>
+              <div className="mt-3.5 mb-7">
+                <SectionHeading>{prog.facilitators.length === 1 ? "Meet Your Instructor" : "Meet Your Instructors"}</SectionHeading>
               </div>
 
-              {prog.moreByInstructor.length > 0 && (
+              {/* Two per row from small screens up; one per row on phones. */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-8">
+                {prog.facilitators.map(f => (
+                  <div key={f.name} className="flex gap-5 items-start min-w-0">
+                    {f.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- facilitator photos come from arbitrary hosts
+                      <img src={f.imageUrl} alt="" className="w-19 h-19 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-19 h-19 rounded-full bg-[#0B2239] text-white flex items-center justify-center font-heading text-[20px] tracking-[0.04em] shrink-0" aria-hidden>
+                        {f.initials}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-heading text-[22px] leading-tight text-[#0B2239]">{f.name}</div>
+                      {f.title && (
+                        <div className="mt-1.25 font-body text-[11px] leading-[1.5] tracking-[0.16em] uppercase text-[#0B6FC4]">{f.title}</div>
+                      )}
+                      <div className="mt-2.5 font-body text-[14.5px] text-[#6B7684]">
+                        {f.programmeCount} {f.programmeCount === 1 ? "programme" : "programmes"} on ARPS Institute · {prog.cat.label}
+                      </div>
+                      <div className="mt-3">
+                        <InstructorProfileModal
+                          name={f.name}
+                          title={f.title}
+                          categoryLabel={prog.cat.label}
+                          initials={f.initials}
+                          bio={f.bio}
+                          avgRating={f.avgRating}
+                          totalReviews={f.totalReviews}
+                          programmeCount={f.programmeCount}
+                          programs={f.programs}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* "More by" is tied to the single assigned instructor's account,
+                  so it only reads correctly when there's one facilitator. */}
+              {prog.facilitators.length === 1 && prog.moreByInstructor.length > 0 && (
                 <>
                   <div className="mt-9 font-body text-[11px] tracking-[0.16em] uppercase text-[#5A6675]">
-                    More by {prog.instructor.name}
+                    More by {prog.facilitators[0].name}
                   </div>
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-4.5 mt-4">
                     {prog.moreByInstructor.map((r) => <ProgramMiniCard key={r.slug} program={r} />)}

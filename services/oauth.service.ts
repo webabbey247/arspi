@@ -1,6 +1,8 @@
 import { db } from "@/lib/db"
 import type { Role } from "@prisma/client"
 import type { OAuthProfile, OAuthProviderName } from "@/lib/oauth/providers"
+import { notifySafely } from "@/services/notification.service"
+import { notifyNewStudent } from "@/services/notification-events.service"
 
 export type OAuthUser = {
   id:           string
@@ -85,6 +87,7 @@ export async function findOrCreateOAuthUser(
     })
     return created
   })
+  notifySafely(() => notifyNewStudent({ id: user.id, email: user.email }))
 
   return {
     success: true,

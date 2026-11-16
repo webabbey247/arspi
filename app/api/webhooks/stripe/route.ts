@@ -4,6 +4,8 @@ import { stripe } from "@/lib/stripe"
 import { db } from "@/lib/db"
 import { sendWorkshopConfirmationEmail } from "@/lib/email"
 import { computeDurationHours, normalizeFacilitators } from "@/lib/workshop-helpers"
+import { notifySafely } from "@/services/notification.service"
+import { notifyEnrolment, notifyWorkshopRegistration } from "@/services/notification-events.service"
 
 /** POST /api/webhooks/stripe
  *  Listens for Stripe events and confirms/cancels workshop registrations.
@@ -57,6 +59,7 @@ export async function POST(req: NextRequest) {
             await db.enrollment.create({
               data: { userId, courseId, status: "ACTIVE" },
             })
+            notifySafely(() => notifyEnrolment({ userId, courseId, paid: true }))
           }
         } else {
           // ── Workshop payment ──────────────────────────────────────────────
@@ -79,6 +82,12 @@ export async function POST(req: NextRequest) {
               data:  { registered: { increment: 1 } },
             })
           }
+
+          notifySafely(() => notifyWorkshopRegistration({
+            workshopId: workshopId ?? null, workshopTitle: registration.workshopTitle,
+            firstName: registration.firstName, lastName: registration.lastName,
+            email: registration.email, paid: true,
+          }))
 
           // Send confirmation email — non-blocking, errors are logged only
           const workshop = workshopId
