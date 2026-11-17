@@ -30,7 +30,7 @@ async function enrolledProgram(slug: string, userId: string) {
   const enrollment = await db.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId: program.id } },
   })
-  if (!enrollment) return { error: NextResponse.json({ error: "You are not enrolled in this program." }, { status: 403 }) }
+  if (!enrollment || enrollment.status === "DROPPED") return { error: NextResponse.json({ error: "You are not enrolled in this program." }, { status: 403 }) }
   return { program }
 }
 

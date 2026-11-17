@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 
 import { useForm, useWatch, Controller, type Resolver } from "react-hook-form"
-import RichTextEditor from "@/components/ui/RichTextEditor"
+import dynamic from "next/dynamic"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import { Clock, Globe } from "lucide-react"
@@ -12,6 +12,10 @@ import { cn } from "@/lib/utils"
 import { useUploadThing } from "@/lib/uploadthing-client"
 import { computeDurationHours, normalizeFacilitators, type Facilitator } from "@/lib/workshop-helpers"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
+
+// The editor (Tiptap + ProseMirror) is only needed once a form opens — load
+// it on demand instead of with the page, as the insights page does.
+const RichTextEditor = dynamic(() => import("@/components/ui/RichTextEditor"), { ssr: false })
 
 // ── Timezone list (built from Intl API — evaluated once at module load) ────────
 const TIMEZONES: string[] = (Intl as unknown as { supportedValuesOf(key: string): string[] })

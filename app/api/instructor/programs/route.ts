@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { getPrograms, CourseLevel } from "@/services/program.service"
+import { getProgramList, CourseLevel } from "@/services/program.service"
 
 /** GET /api/instructor/programs — list programs belonging to the logged-in instructor */
 export async function GET(req: NextRequest) {
@@ -14,7 +14,9 @@ export async function GET(req: NextRequest) {
     const levelRaw    = searchParams.get("level")    ?? undefined
     const featuredRaw = searchParams.get("featured")
 
-    const programs = await getPrograms({
+    // Narrow rows for the table — the editor fetches the full record (with
+    // curriculum, FAQs, overview…) by id when it opens.
+    const programs = await getProgramList({
       instructorId: session.sub,
       ...(levelRaw             && { level: levelRaw as CourseLevel }),
       ...(featuredRaw !== null && { featured: featuredRaw === "true" }),

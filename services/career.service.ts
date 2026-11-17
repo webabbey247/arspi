@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import { CareerType, ExperienceLevel, CareerStatus } from "@prisma/client"
+import { bumpCareersPublicCache } from "@/lib/public-cache"
 
 export type { CareerType, ExperienceLevel, CareerStatus }
 
@@ -31,6 +32,7 @@ export async function createCareerDepartment(
   if (existing) return { success: false, error: "A department with this name already exists." }
 
   const row = await db.careerDepartment.create({ data: { name } })
+  bumpCareersPublicCache()
   return { success: true, data: { ...row, _count: { careers: 0 } } }
 }
 
@@ -46,6 +48,7 @@ export async function updateCareerDepartment(
 
   const row = await db.careerDepartment.update({ where: { id }, data: { name } })
   const careersCount = await db.career.count({ where: { department: name } })
+  bumpCareersPublicCache()
   return { success: true, data: { ...row, _count: { careers: careersCount } } }
 }
 
@@ -61,6 +64,7 @@ export async function deleteCareerDepartment(
   }
 
   await db.careerDepartment.delete({ where: { id } })
+  bumpCareersPublicCache()
   return { success: true, data: null }
 }
 
@@ -181,6 +185,8 @@ export async function createCareer(
     },
   })
 
+  bumpCareersPublicCache()
+
   return { success: true, data: career }
 }
 
@@ -221,6 +227,8 @@ export async function updateCareer(
     },
   })
 
+  bumpCareersPublicCache()
+
   return { success: true, data: career }
 }
 
@@ -229,6 +237,7 @@ export async function deleteCareer(id: string): Promise<CareerServiceResult<null
   if (!existing) return { success: false, error: "Career posting not found." }
 
   await db.career.delete({ where: { id } })
+  bumpCareersPublicCache()
   return { success: true, data: null }
 }
 
@@ -242,6 +251,8 @@ export async function toggleCareerStatus(
     where: { id },
     data: { status: existing.status === "PUBLISHED" ? "ARCHIVED" : "PUBLISHED" },
   })
+
+  bumpCareersPublicCache()
 
   return { success: true, data: career }
 }

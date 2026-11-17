@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { renderToBuffer } from "@react-pdf/renderer"
 import type { ReactElement } from "react"
 import { createElement } from "react"
-import { getCertificateByToken, displayName } from "@/services/certificate.service"
+import { getCertificateByToken, displayName, publicName } from "@/services/certificate.service"
 import { CertificatePDF } from "@/components/CertificatePDF"
 
 type Context = { params: Promise<{ token: string }> }
@@ -28,7 +28,7 @@ export async function GET(_req: NextRequest, { params }: Context) {
       createElement(CertificatePDF, {
         recipientName: displayName(cert.user),
         programTitle:  cert.course.title,
-        facilitator:   displayName(cert.course.instructor),
+        facilitator:   publicName(cert.course.instructor),
         issuedAt,
         verifyCode:    cert.verifyCode,
         verifyBaseUrl: baseUrl,

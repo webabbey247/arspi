@@ -5,6 +5,7 @@ import { db } from "@/lib/db"
 import { getProgramBySlug } from "@/services/program.service"
 import { submitQuizAttempt, submitProjectAttempt } from "@/services/assessment.service"
 import { syncCourseCompletion } from "@/services/course-completion.service"
+import { isUploadThingUrl } from "@/lib/upload-url"
 
 type Context = { params: Promise<{ slug: string; attemptId: string }> }
 
@@ -18,7 +19,7 @@ const submitSchema = z.union([
   z.object({
     kind:  z.literal("project"),
     files: z.array(z.object({
-      url:  z.string().url(),
+      url:  z.string().url().refine(isUploadThingUrl, "Upload the file here rather than linking to it."),
       name: z.string().min(1).max(255),
       size: z.number().int().min(0).optional(),
     })).min(1).max(10),
@@ -45,6 +46,16 @@ export async function PATCH(req: NextRequest, { params }: Context) {
     })
     if (!attempt || attempt.userId !== session.sub || attempt.assessment.courseId !== program.id) {
       return NextResponse.json({ error: "Attempt not found." }, { status: 404 })
+    }
+
+    // A learner dropped from the programme can't hand in an attempt they
+    // started before being dropped.
+    const enrollment = await db.enrollment.findUnique({
+      where:  { userId_courseId: { userId: session.sub, courseId: program.id } },
+      select: { status: true },
+    })
+    if (!enrollment || enrollment.status === "DROPPED") {
+      return NextResponse.json({ error: "You are not enrolled in this program." }, { status: 403 })
     }
 
     const parsed = submitSchema.safeParse(await req.json())

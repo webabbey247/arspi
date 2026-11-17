@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { safeInternalPath } from "@/lib/safe-redirect"
 
 type LoginPayload = {
   email:      string
@@ -51,8 +52,11 @@ export function useLogin() {
       // Fully onboarded — honor a same-origin callbackUrl (e.g. "Enrol Now" on a
       // program page redirects here to sign in first), else go to role dashboard.
       // Never redirect to an absolute/external URL from a query param.
-      const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl")
-      if (callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")) {
+      const callbackUrl = safeInternalPath(
+        new URLSearchParams(window.location.search).get("callbackUrl"),
+        window.location.origin,
+      )
+      if (callbackUrl) {
         router.push(callbackUrl)
         router.refresh()
         return { success: true }

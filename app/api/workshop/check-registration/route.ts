@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { enforceRateLimit } from "@/lib/rate-limit"
 
 /**
  * GET /api/workshop/check-registration?email=...&workshopId=...
@@ -10,6 +11,11 @@ import { db } from "@/lib/db"
  *   { status: "pending", invoiceId: string, paymentDate: string }
  */
 export async function GET(req: NextRequest) {
+  // Public and keyed on an email address: capped so it can't be used to probe
+  // which emails registered for which workshops.
+  const limited = enforceRateLimit(req, { name: "workshop-check-registration", limit: 20, windowMs: 60 * 60_000 })
+  if (limited) return limited
+
   const { searchParams } = req.nextUrl
   const email      = searchParams.get("email")?.trim().toLowerCase()
   const workshopId = searchParams.get("workshopId")?.trim()
@@ -46,7 +52,8 @@ export async function GET(req: NextRequest) {
     // PENDING (or any other non-confirmed state)
     return NextResponse.json({
       status:      "pending",
-      invoiceId:   registration.id,
+      // A short reference for the visitor — not the internal record id.
+      invoiceId:   registration.id.slice(-8).toUpperCase(),
       paymentDate: registration.createdAt.toISOString(),
     })
   } catch (error) {

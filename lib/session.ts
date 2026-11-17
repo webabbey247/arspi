@@ -1,5 +1,6 @@
 import "server-only"
 import { cookies } from "next/headers"
+import { cache } from "react"
 import { headers } from "next/headers"
 import { jwtVerify, SignJWT } from "jose"
 import { redirect } from "next/navigation"
@@ -175,14 +176,14 @@ async function verifyRefresh(): Promise<RefreshedSession | null> {
     const parsed = refreshClaimsSchema.safeParse(payload)
     if (!parsed.success) return null
 
-    const session = await loadSessionPayload(parsed.data.sub)
-    if (!session) return null
-
-    // A revoked or expired device session must not be able to refresh — this
-    // is what makes "sign out other sessions" actually end them.
-    if (parsed.data.sid && !(await isSessionLive(parsed.data.sid, parsed.data.sub))) {
-      return null
-    }
+    // Independent lookups — run them together rather than back to back.
+    const [session, live] = await Promise.all([
+      loadSessionPayload(parsed.data.sub),
+      // A revoked or expired device session must not be able to refresh —
+      // this is what makes "sign out other sessions" actually end them.
+      parsed.data.sid ? isSessionLive(parsed.data.sid, parsed.data.sub) : Promise.resolve(true),
+    ])
+    if (!session || !live) return null
 
     return { payload: session, refreshClaims: parsed.data }
   } catch {
@@ -196,7 +197,9 @@ async function verifyRefresh(): Promise<RefreshedSession | null> {
  *  Safe to call from Server Components. Never persists a refreshed token —
  *  use `getSessionAndRefresh()` from a Route Handler or Server Action for
  *  that, or the cookies simply refresh on the next API call. */
-export async function getSession(): Promise<SessionPayload | null> {
+export const getSession = cache(readSession)
+
+async function readSession(): Promise<SessionPayload | null> {
   const env = getAuthEnv()
   const jar = await cookies()
   const accessToken = jar.get(env.accessCookieName)?.value

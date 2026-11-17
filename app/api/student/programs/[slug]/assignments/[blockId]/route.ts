@@ -7,6 +7,7 @@ import { findAssignment, validateSubmission, submitAssignment } from "@/services
 import { getCurrentVersion, getVersionById } from "@/services/rubric.service"
 import { learnerPreview, releasedMarks } from "@/services/rubric-marking.service"
 import type { AssignmentSubmission } from "@prisma/client"
+import { isUploadThingUrl } from "@/lib/upload-url"
 
 type Context = { params: Promise<{ slug: string; blockId: string }> }
 
@@ -14,7 +15,7 @@ const bodySchema = z.object({
   text:    z.string().max(20000).optional(),
   linkUrl: z.string().max(2000).optional(),
   files:   z.array(z.object({
-    url:  z.string().url(),
+    url:  z.string().url().refine(isUploadThingUrl, "Upload the file here rather than linking to it."),
     name: z.string().min(1).max(255),
     size: z.number().int().min(0).optional(),
   })).max(10).optional(),
@@ -51,7 +52,7 @@ async function enrolled(slug: string, userId: string) {
   const enrollment = await db.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId: program.id } },
   })
-  if (!enrollment) return { error: NextResponse.json({ error: "You are not enrolled in this program." }, { status: 403 }) }
+  if (!enrollment || enrollment.status === "DROPPED") return { error: NextResponse.json({ error: "You are not enrolled in this program." }, { status: 403 }) }
   return { program }
 }
 

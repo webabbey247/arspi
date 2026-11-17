@@ -9,7 +9,6 @@ import { Button } from "../ui/button";
 import { ChevronRight, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRegister } from "@/hooks/useRegister";
-import SocialLoginButtons from "./SocialLoginButtons";
 
 const schema = yup.object({
   email: yup.string().email("Enter a valid email").required("Email is required"),
@@ -84,16 +83,6 @@ const StepOneRegisterForm = ({
         Start with your email and a secure password.
       </p>
 
-      {/* Social buttons */}
-      <SocialLoginButtons />
-
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex-1 h-px bg-[#DFE2ED]" />
-        <span className="text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6]">
-          or sign in with email
-        </span>
-        <div className="flex-1 h-px bg-[#DFE2ED]" />
-      </div>
 
       <form className="flex flex-col gap-3.5" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-1.5">

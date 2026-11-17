@@ -1,5 +1,6 @@
 import "server-only"
 import { getAuthEnv } from "@/lib/env"
+import { getClientIp } from "@/lib/rate-limit"
 
 /**
  * Login-specific throttle: locks an email+IP pair out after N failed
@@ -21,22 +22,26 @@ const WINDOW_MS = 15 * 60 * 1000
 
 export type RateLimitKeys = readonly string[]
 
+/**
+ * Three counters per attempt:
+ *  - email + IP: the normal lockout (LOGIN_MAX_ATTEMPTS)
+ *  - IP:         stops one client spraying many accounts
+ *  - email:      a much higher ceiling (×EMAIL_ONLY_FACTOR) that only catches
+ *                guessing spread across many IPs. Keeping it high is what stops
+ *                a stranger locking someone out with a few wrong passwords.
+ * The IP comes from getClientIp, which ignores client-forged
+ * X-Forwarded-For values.
+ */
+const EMAIL_ONLY_FACTOR = 5
+
 export function loginRateLimitKeys(email: string, req: Request): RateLimitKeys {
-  const ip = clientIp(req)
-  const keys = [`login:email:${email.trim().toLowerCase()}`]
-  // A missing or spoofed header is untrusted, so the email key still holds the line on its own.
-  if (ip) keys.push(`login:ip:${ip}`)
-  return keys
+  const ip = getClientIp(req)
+  const e = email.trim().toLowerCase()
+  return [`login:email-ip:${e}:${ip}`, `login:ip:${ip}`, `login:email:${e}`]
 }
 
-function clientIp(req: Request): string | null {
-  const forwarded = req.headers.get("x-forwarded-for")
-  if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim()
-    if (first) return first
-  }
-  return req.headers.get("x-real-ip")
-}
+const thresholdFor = (key: string, base: number) =>
+  key.startsWith("login:email:") ? base * EMAIL_ONLY_FACTOR : base
 
 export type RateLimitResult = { allowed: true } | { allowed: false; retryAfterSeconds: number }
 
@@ -78,7 +83,7 @@ export function recordLoginFailure(keys: RateLimitKeys, now = Date.now()): void 
     }
 
     entry.count += 1
-    if (entry.count >= loginMaxAttempts) {
+    if (entry.count >= thresholdFor(key, loginMaxAttempts)) {
       entry.lockedUntil = now + loginLockoutSeconds * 1000
     }
   }

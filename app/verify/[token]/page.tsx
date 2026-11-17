@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { getCertificateByToken, displayName } from "@/services/certificate.service"
+import { getCertificateByToken, displayName, publicName } from "@/services/certificate.service"
 import { SITE_NAME, SITE_URL, absoluteUrl, organizationJsonLd } from "@/lib/seo"
 import JsonLd from "@/components/seo/JsonLd"
 
@@ -134,14 +134,13 @@ export default async function VerifyPage({ params }: Props) {
               <div className="text-center mb-6 sm:mb-8">
                 <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-white/35 mb-2 sm:mb-3">Awarded to</p>
                 <h1 className="text-[1.5rem] sm:text-[1.875rem] md:text-[2.25rem] lg:text-[2.4rem] font-serif text-[#C8A96E] leading-tight mb-1 break-words">{recipientName}</h1>
-                <p className="text-[10px] sm:text-[11px] text-white/35 tracking-wide break-all">{cert.user.email}</p>
               </div>
 
               {/* Program */}
               <div className="text-center mb-6 sm:mb-8">
                 <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-white/35 mb-2 sm:mb-3">For successfully completing</p>
                 <h2 className="text-[1.0625rem] sm:text-[1.1875rem] md:text-[1.35rem] font-semibold text-[#F7F3ED] leading-snug">{cert.course.title}</h2>
-                <p className="text-[11px] sm:text-[12px] text-white/40 mt-1.5">Facilitated by {displayName(cert.course.instructor)}</p>
+                <p className="text-[11px] sm:text-[12px] text-white/40 mt-1.5">Facilitated by {publicName(cert.course.instructor)}</p>
               </div>
 
               {/* Meta grid */}

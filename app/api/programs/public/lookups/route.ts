@@ -1,26 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
-import {
-  getProgramLevels,
-  getProgramFormats,
-  getProgramPricings,
-} from "@/services/program-lookup.service"
+import { getPublicLookupItems } from "@/lib/public-data"
 
 /** GET /api/programs/public/lookups?kind=levels|formats|pricing — public lookup options */
 export async function GET(req: NextRequest) {
   try {
     const kind = req.nextUrl.searchParams.get("kind")
 
-    const rows =
-      kind === "levels"  ? await getProgramLevels()  :
-      kind === "formats" ? await getProgramFormats() :
-      kind === "pricing" ? await getProgramPricings() :
-      null
-
-    if (!rows) {
+    const items = kind ? await getPublicLookupItems(kind) : null
+    if (!items) {
       return NextResponse.json({ error: "Invalid 'kind' (expected levels|formats|pricing)." }, { status: 400 })
     }
 
-    const items = rows.map(r => ({ id: r.id, name: r.name, slug: r.slug }))
     return NextResponse.json({ items })
   } catch (error) {
     console.error("[GET /api/programs/public/lookups]", error)

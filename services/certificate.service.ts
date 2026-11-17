@@ -3,6 +3,13 @@ import { notifySafely } from "@/services/notification.service"
 import { notifyCertificate } from "@/services/notification-events.service"
 
 /** Formats a name from an optional first/last name pair, falling back to email. */
+/** For public pages: a person's name, never their email — "ARPS Institute"
+ *  when there's no name to show. */
+export function publicName(person: { profile: { firstName: string | null; lastName: string | null } | null } | null): string {
+  const name = [person?.profile?.firstName, person?.profile?.lastName].filter(Boolean).join(" ")
+  return name || "ARPS Institute"
+}
+
 /** A person's name, else their email. No person (e.g. a programme with no
  *  assigned instructor) reads as the institute itself. */
 export function displayName(person: { email: string; profile: { firstName: string | null; lastName: string | null } | null } | null): string {

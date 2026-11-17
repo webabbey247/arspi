@@ -2,6 +2,7 @@ import crypto from "crypto"
 import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 import { sendPasswordResetEmail } from "@/lib/email"
+import { revokeOtherSessions } from "@/services/session.service"
 
 const TOKEN_TTL_MS = 60 * 60 * 1000 // 1 hour
 const BASE_URL     = process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
@@ -76,6 +77,10 @@ export async function resetPassword(rawToken: string, newPassword: string): Prom
       data:  { used: true },
     }),
   ])
+
+  // A reset is the "I've lost control of my account" path: end every
+  // existing session so whoever else is signed in is signed out.
+  await revokeOtherSessions(record.userId, null)
 
   return { success: true }
 }

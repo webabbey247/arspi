@@ -1,6 +1,6 @@
 "use client"
 
-import RichText from "@/components/ui/RichText"
+import RichTextView from "@/components/ui/RichTextView"
 import { useState } from "react"
 
 type Faq = { q: string; a: string }
@@ -29,7 +29,7 @@ export default function FaqAccordion({ faqs }: { faqs: Faq[] }) {
               style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
             >
               <div className="overflow-hidden">
-                <RichText value={faq.a} className="mb-5 max-w-[42em] font-body text-[15px] leading-[1.62] text-[#3E4A59]" />
+                <RichTextView value={faq.a} className="mb-5 max-w-[42em] font-body text-[15px] leading-[1.62] text-[#3E4A59]" />
               </div>
             </div>
           </div>

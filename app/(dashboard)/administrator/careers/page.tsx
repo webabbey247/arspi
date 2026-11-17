@@ -8,11 +8,15 @@ import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import RichTextEditor from "@/components/ui/RichTextEditor"
+import dynamic from "next/dynamic"
 import { cn } from "@/lib/utils"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 import { AdminPageHeader, RowActions, RowIcon, StatTile } from "@/components/admin/AdminKit"
 import { useRouter } from "next/navigation"
+
+// The editor (Tiptap + ProseMirror) is only needed once a form opens — load
+// it on demand instead of with the page, as the insights page does.
+const RichTextEditor = dynamic(() => import("@/components/ui/RichTextEditor"), { ssr: false })
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

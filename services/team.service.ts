@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import { TeamCategory } from "@prisma/client"
+import { bumpTeamPublicCache } from "@/lib/public-cache"
 
 export type { TeamCategory }
 
@@ -76,6 +77,7 @@ export async function createTeamMember(
       displayOrder: input.displayOrder ?? 0,
     },
   })
+  bumpTeamPublicCache()
   return { success: true, data: member }
 }
 
@@ -97,6 +99,7 @@ export async function updateTeamMember(
       ...(input.displayOrder !== undefined && { displayOrder: input.displayOrder }),
     },
   })
+  bumpTeamPublicCache()
   return { success: true, data: member }
 }
 
@@ -104,5 +107,6 @@ export async function deleteTeamMember(id: string): Promise<TeamServiceResult<nu
   const existing = await db.teamMember.findUnique({ where: { id } })
   if (!existing) return { success: false, error: "Team member not found." }
   await db.teamMember.delete({ where: { id } })
+  bumpTeamPublicCache()
   return { success: true, data: null }
 }

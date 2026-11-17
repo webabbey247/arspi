@@ -1,42 +1,18 @@
-import { NextResponse } from "next/server"
-import { getWorkshops, computeDurationHours, normalizeFacilitators } from "@/services/workshop.service"
+import { NextRequest, NextResponse } from "next/server"
+import { getPublicWorkshopsPayload, selectWorkshops } from "@/lib/public-data"
 
-/** GET /api/workshops/public — publicly accessible list of published workshops */
-export async function GET() {
+/** GET /api/workshops/public?limit=6&sort=upcoming — published workshops.
+ *  `sort=upcoming` returns future workshops soonest first (what the home page
+ *  asks for); otherwise newest first. `limit` caps the count (max 50).
+ *  Cached in lib/public-data, shared with the server-rendered pages. */
+export async function GET(req: NextRequest) {
   try {
-    const workshops = await getWorkshops({ published: true })
-
-    // Serialise Dates to ISO strings for the client
-    const payload = workshops.map(w => ({
-      id:          w.id,
-      title:       w.title,
-      slug:        w.slug,
-      description: w.description,
-      type:        w.type,
-      category:    w.category,
-      fee:         w.fee,
-      featured:    w.featured,
-      date:           w.date ? w.date.toISOString() : null,
-      startTime:      w.startTime,
-      endTime:        w.endTime,
-      timezone:       w.timezone,
-      duration:       computeDurationHours(w.startTime, w.endTime),
-      level:          w.level,
-      facilitator:    w.facilitator,
-      facilitators:   normalizeFacilitators(w.facilitators),
-      medium:         w.medium,
-      onlinePlatform: w.onlinePlatform,
-      onlineLink:     w.onlineLink,
-      venueAddress:   w.venueAddress,
-      venueCity:      w.venueCity,
-      venueState:     w.venueState,
-      venueCountry:   w.venueCountry,
-      capacity:       w.capacity,
-      registered:     w._count?.registrations ?? 0,
-      coverImage:     w.coverImage,
-    }))
-
-    return NextResponse.json({ workshops: payload })
+    const all = await getPublicWorkshopsPayload()
+    const workshops = selectWorkshops(all, {
+      sort:  req.nextUrl.searchParams.get("sort"),
+      limit: Number(req.nextUrl.searchParams.get("limit")) || 50,
+    })
+    return NextResponse.json({ workshops })
   } catch (error) {
     console.error("[GET /api/workshops/public]", error)
     return NextResponse.json({ error: "Something went wrong." }, { status: 500 })

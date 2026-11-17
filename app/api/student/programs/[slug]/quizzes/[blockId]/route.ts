@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireApiRole } from "@/lib/guard"
 import { db } from "@/lib/db"
-import { getProgramBySlug } from "@/services/program.service"
-import { setQuizAnswer, findQuizBlock, isLessonUnlocked, getLessonProgress, getQuizProgress } from "@/services/lesson-progress.service"
+import { getProgramCoreBySlug } from "@/services/program.service"
+import { setQuizAnswer, findQuizBlock, isLessonUnlocked, getProgress } from "@/services/lesson-progress.service"
 import { z } from "zod"
 
 const patchSchema = z.object({
@@ -29,15 +29,18 @@ export async function PATCH(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 })
     }
 
-    const program = await getProgramBySlug(slug)
+    const program = await getProgramCoreBySlug(slug)
     if (!program) {
       return NextResponse.json({ error: "Program not found." }, { status: 404 })
     }
 
-    const enrollment = await db.enrollment.findUnique({
-      where: { userId_courseId: { userId: session.sub, courseId: program.id } },
-    })
-    if (!enrollment) {
+    const [enrollment, progress] = await Promise.all([
+      db.enrollment.findUnique({
+        where: { userId_courseId: { userId: session.sub, courseId: program.id } },
+      }),
+      getProgress(session.sub, program.id),
+    ])
+    if (!enrollment || enrollment.status === "DROPPED") {
       return NextResponse.json({ error: "You are not enrolled in this program." }, { status: 403 })
     }
 
@@ -46,17 +49,14 @@ export async function PATCH(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: "Quiz not found in this program." }, { status: 404 })
     }
 
-    const [completedIds, passedQuizIds] = await Promise.all([
-      getLessonProgress(session.sub, program.id),
-      getQuizProgress(session.sub, program.id),
-    ])
+    const { completedIds, passedQuizIds } = progress
     if (!isLessonUnlocked(program.curriculum, found.lessonId, new Set(completedIds), new Set(passedQuizIds))) {
       return NextResponse.json({ error: "Complete the previous chapter before continuing." }, { status: 403 })
     }
 
     const result = await setQuizAnswer(
       session.sub, program.id, program.curriculum, blockId,
-      parsed.data.selectedIndex, parsed.data.variantIndex,
+      parsed.data.selectedIndex, parsed.data.variantIndex, progress,
     )
     if (!result) {
       return NextResponse.json({ error: "Quiz not found in this program." }, { status: 404 })

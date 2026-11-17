@@ -3,6 +3,7 @@ import { WorkshopPaymentMethod, WorkshopType, WorkshopCategory, WorkshopRegistra
 import type { WorkshopRegistrationPayload } from "@/lib/validators/workshop"
 import { notifySafely } from "@/services/notification.service"
 import { notifyWorkshopRegistration } from "@/services/notification-events.service"
+import { bumpWorkshopsPublicCache } from "@/lib/public-cache"
 
 export type { WorkshopType, WorkshopCategory, WorkshopRegistrationStatus }
 export { computeDurationHours, normalizeFacilitators } from "@/lib/workshop-helpers"
@@ -130,6 +131,8 @@ export async function getWorkshops(filters?: {
   published?: boolean
   featured?: boolean
   instructorId?: string
+  /** Cap the number of rows (newest first). */
+  take?: number
 }): Promise<WorkshopRow[]> {
   return db.workshop.findMany({
     where: {
@@ -141,6 +144,7 @@ export async function getWorkshops(filters?: {
     },
     include: { _count: { select: { registrations: true } } },
     orderBy: { createdAt: "desc" },
+    ...(filters?.take !== undefined && { take: filters.take }),
   })
 }
 
@@ -199,6 +203,8 @@ export async function createWorkshop(
     include: { _count: { select: { registrations: true } } },
   })
 
+  bumpWorkshopsPublicCache()
+
   return { success: true, data: workshop }
 }
 
@@ -247,6 +253,8 @@ export async function updateWorkshop(
     },
     include: { _count: { select: { registrations: true } } },
   })
+
+  bumpWorkshopsPublicCache()
 
   return { success: true, data: workshop }
 }
@@ -297,5 +305,6 @@ export async function deleteWorkshop(id: string): Promise<WorkshopServiceResult<
   }
 
   await db.workshop.delete({ where: { id } })
+  bumpWorkshopsPublicCache()
   return { success: true, data: null }
 }

@@ -26,7 +26,7 @@ export async function GET(_req: NextRequest, { params }: Context) {
     const enrollment = await db.enrollment.findUnique({
       where: { userId_courseId: { userId: session.sub, courseId: program.id } },
     })
-    if (!enrollment) {
+    if (!enrollment || enrollment.status === "DROPPED") {
       return NextResponse.json({ error: "You are not enrolled in this program." }, { status: 403 })
     }
 
@@ -81,7 +81,7 @@ export async function PATCH(req: NextRequest, { params }: Context) {
     const enrollment = await db.enrollment.findUnique({
       where: { userId_courseId: { userId: session.sub, courseId: program.id } },
     })
-    if (!enrollment) {
+    if (!enrollment || enrollment.status === "DROPPED") {
       return NextResponse.json({ error: "You are not enrolled in this program." }, { status: 403 })
     }
 

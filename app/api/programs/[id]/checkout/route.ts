@@ -45,7 +45,9 @@ export async function POST(req: NextRequest, { params }: Context) {
     }
 
     const program = await getProgramById(id)
-    if (!program) {
+    // Drafts (and archived programmes) aren't open for enrolment — without
+    // this, knowing a draft's id was enough to enrol and read its content.
+    if (!program || program.status !== "PUBLISHED") {
       return NextResponse.json({ error: "Program not found." }, { status: 404 })
     }
 

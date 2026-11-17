@@ -106,7 +106,11 @@ export async function PUT(req: NextRequest, { params }: Context) {
     const input = parsed.data
     if (input.title && !input.slug) input.slug = slugify(input.title)
 
-    const result = await updateProgram(id, input)
+    // Always write to the programme that passed the ownership check. The URL
+    // segment may be a slug OR an id, so it must never be used as the write
+    // target: a slug set to another programme's id would redirect the update.
+    const programId = check.program.id
+    const result = await updateProgram(programId, input)
     if (!result.success) {
       const status = result.error === "Program not found." ? 404 : 409
       return NextResponse.json({ error: result.error }, { status })
@@ -115,7 +119,7 @@ export async function PUT(req: NextRequest, { params }: Context) {
     // A curriculum edit can change what's graded (a block flagged as the final
     // project, assignments added or removed), so refresh learners' grades.
     if (input.curriculum !== undefined && result.data.gradingEnabled) {
-      await recomputeCourseGradesForAll(id).catch(e => console.error("[grade recompute]", e))
+      await recomputeCourseGradesForAll(programId).catch(e => console.error("[grade recompute]", e))
     }
     return NextResponse.json({ program: result.data })
   } catch (error) {

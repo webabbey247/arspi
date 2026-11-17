@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -181,77 +181,71 @@ function RecentPanel({
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-const AdministratorDashboardPage = () => {
-  const [programs, setPrograms]   = useState<ProgramRow[]>([])
-  const [insights, setInsights]   = useState<InsightRow[]>([])
-  const [workshops, setWorkshops] = useState<WorkshopRow[]>([])
-  const [projects, setProjects]   = useState<ProjectRow[]>([])
-  const [loading, setLoading]     = useState(true)
+type DashboardData = {
+  counts: {
+    programs:  { total: number; published: number }
+    insights:  { total: number; published: number }
+    workshops: { total: number; published: number; upcoming: number }
+    projects:  { total: number; active: number }
+  }
+  programs: ProgramRow[]
+  insights: InsightRow[]
+  workshops: WorkshopRow[]
+  projects: ProjectRow[]
+}
 
+const AdministratorDashboardPage = () => {
+  const [data, setData]       = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  // One lean request: grouped counts plus the five newest of each section
+  // (it used to download all four tables in full just to count them).
   useEffect(() => {
     let cancelled = false
-    async function load() {
-      const [pRes, iRes, wRes, jRes] = await Promise.all([
-        fetch("/api/programs"),
-        fetch("/api/insights"),
-        fetch("/api/workshops"),
-        fetch("/api/projects"),
-      ])
-      const [pData, iData, wData, jData] = await Promise.all([pRes.json(), iRes.json(), wRes.json(), jRes.json()])
-      if (cancelled) return
-      if (pRes.ok) setPrograms(pData.programs ?? [])
-      if (iRes.ok) setInsights(iData.insights ?? [])
-      if (wRes.ok) setWorkshops(wData.workshops ?? [])
-      if (jRes.ok) setProjects(jData.projects ?? [])
-      setLoading(false)
-    }
-    load()
+    fetch("/api/admin/dashboard")
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (!cancelled && d) setData(d) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [])
 
-  const now = useMemo(() => new Date().getTime(), [])
-
-  const programsPublished = programs.filter(p => p.status === "PUBLISHED").length
-  const programsDraft     = programs.length - programsPublished
-  const insightsPublished = insights.filter(i => i.published).length
-  const insightsDraft     = insights.length - insightsPublished
-  const workshopsUpcoming = workshops.filter(w => w.date && new Date(w.date).getTime() >= now).length
-  const workshopsPast     = workshops.length - workshopsUpcoming
-  const projectsActive    = projects.filter(p => p.status === "ACTIVE").length
-  const projectsComplete  = projects.length - projectsActive
+  const c = data?.counts
+  const programsPublished = c?.programs.published ?? 0
+  const programsDraft     = (c?.programs.total ?? 0) - programsPublished
+  const insightsPublished = c?.insights.published ?? 0
+  const insightsDraft     = (c?.insights.total ?? 0) - insightsPublished
+  const workshopsUpcoming = c?.workshops.upcoming ?? 0
+  const workshopsPast     = (c?.workshops.total ?? 0) - workshopsUpcoming
+  const projectsActive    = c?.projects.active ?? 0
+  const projectsComplete  = (c?.projects.total ?? 0) - projectsActive
 
   // Header figures: what the public can see, and what is still unfinished.
   // Workshops and projects have no draft state, so only the two that do
   // contribute to the draft count — otherwise it would read as zero-inflated.
-  const livePublished = programsPublished + insightsPublished + workshops.filter(w => w.published).length
+  const livePublished = programsPublished + insightsPublished + (c?.workshops.published ?? 0)
   const totalDrafts   = programsDraft + insightsDraft
 
-  const sortedByCreated = <T extends { createdAt: string }>(rows: T[]) =>
-    [...rows].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-
-  const recentPrograms: RecentEntry[] = sortedByCreated(programs).slice(0, 5).map(p => ({
+  const recentPrograms: RecentEntry[] = (data?.programs ?? []).map(p => ({
     title: p.title, meta: timeAgo(p.createdAt),
     statusLabel: p.status === "DRAFT" ? "Draft" : "Published",
     statusTone:  p.status === "DRAFT" ? "amber" : "emerald",
   }))
 
-  const upcomingWorkshops: RecentEntry[] = workshops
-    .filter(w => w.date && new Date(w.date).getTime() >= now)
-    .sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime())
-    .slice(0, 5)
-    .map(w => ({
-      title: w.title, meta: `${fmtDate(w.date!)} · ${untilLabel(w.date!)}`,
-      statusLabel: w.published ? "Published" : "Draft",
-      statusTone:  w.published ? "emerald" : "amber",
-    }))
+  // Already the next five by date, soonest first.
+  const upcomingWorkshops: RecentEntry[] = (data?.workshops ?? []).map(w => ({
+    title: w.title, meta: `${fmtDate(w.date!)} · ${untilLabel(w.date!)}`,
+    statusLabel: w.published ? "Published" : "Draft",
+    statusTone:  w.published ? "emerald" : "amber",
+  }))
 
-  const recentInsights: RecentEntry[] = sortedByCreated(insights).slice(0, 5).map(i => ({
+  const recentInsights: RecentEntry[] = (data?.insights ?? []).map(i => ({
     title: i.title, meta: timeAgo(i.createdAt),
     statusLabel: i.published ? "Published" : "Draft",
     statusTone:  i.published ? "emerald" : "amber",
   }))
 
-  const recentProjects: RecentEntry[] = sortedByCreated(projects).slice(0, 5).map(p => ({
+  const recentProjects: RecentEntry[] = (data?.projects ?? []).map(p => ({
     title: p.title, meta: p.client,
     statusLabel: p.status === "ACTIVE" ? "Active" : "Complete",
     statusTone:  p.status === "ACTIVE" ? "emerald" : "slate",
@@ -271,28 +265,28 @@ const AdministratorDashboardPage = () => {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <StatCard
-          section="insights" loading={loading} total={insights.length}
+          section="insights" loading={loading} total={c?.insights.total ?? 0}
           breakdown={[
             { label: "published", value: insightsPublished, tone: "emerald" },
             { label: "draft",     value: insightsDraft,     tone: "amber" },
           ]}
         />
         <StatCard
-          section="workshops" loading={loading} total={workshops.length}
+          section="workshops" loading={loading} total={c?.workshops.total ?? 0}
           breakdown={[
             { label: "upcoming", value: workshopsUpcoming, tone: "emerald" },
             { label: "past",     value: workshopsPast,     tone: "slate" },
           ]}
         />
         <StatCard
-          section="programs" loading={loading} total={programs.length}
+          section="programs" loading={loading} total={c?.programs.total ?? 0}
           breakdown={[
             { label: "published", value: programsPublished, tone: "emerald" },
             { label: "draft",     value: programsDraft,     tone: "amber" },
           ]}
         />
         <StatCard
-          section="projects" loading={loading} total={projects.length}
+          section="projects" loading={loading} total={c?.projects.total ?? 0}
           breakdown={[
             { label: "active",   value: projectsActive,   tone: "emerald" },
             { label: "complete", value: projectsComplete, tone: "slate" },

@@ -4,10 +4,16 @@ import { registerForWorkshop, getWorkshopById, computeDurationHours, normalizeFa
 import type { WorkshopRegistrationPayload } from "@/lib/validators/workshop"
 import { sendWorkshopConfirmationEmail } from "@/lib/email"
 import { getSession } from "@/lib/session"
+import { enforceRateLimit } from "@/lib/rate-limit"
 import { isStaffRole, STAFF_REGISTRATION_MESSAGE } from "@/lib/enrolment"
+import { fmtWorkshopDate, fmtWorkshopTime } from "@/lib/workshop-format"
 
 export async function POST(req: NextRequest) {
   try {
+    // Public, unauthenticated, and it sends an email: cap it per client.
+    const limited = enforceRateLimit(req, { name: "workshop-register", limit: 10, windowMs: 60 * 60_000 })
+    if (limited) return limited
+
     // The form itself is public — a visitor needs no account — so this only
     // catches the case of a signed-in staff member using it.
     const session = await getSession()
@@ -17,14 +23,27 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
 
-    const { workshopId, workshopTitle, workshopDate, workshopTime, fee, ...userFields } = body
-
-    // Validate event metadata presence
-    if (!workshopTitle || !workshopDate || !workshopTime || fee === undefined) {
-      return NextResponse.json({ error: "Invalid workshop data." }, { status: 400 })
+    // Only the workshop id is taken from the client. The fee, title, date and
+    // time come from the database — trusting the browser's `fee` let anyone
+    // book a paid workshop as free (and put arbitrary text into the email).
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { workshopId, workshopTitle: _t, workshopDate: _d, workshopTime: _tm, fee: _f, ...userFields } = body
+    if (!workshopId || typeof workshopId !== "string") {
+      return NextResponse.json({ error: "Invalid workshop." }, { status: 400 })
     }
+    const workshop = await getWorkshopById(workshopId)
+    if (!workshop || !workshop.published) {
+      return NextResponse.json({ error: "This workshop isn't open for registration." }, { status: 404 })
+    }
+    if (workshop.capacity != null && workshop.registered >= workshop.capacity) {
+      return NextResponse.json({ error: "This workshop is full." }, { status: 409 })
+    }
+    const fee            = workshop.type === "FREE" ? 0 : workshop.fee
+    const workshopTitle  = workshop.title
+    const workshopDate   = fmtWorkshopDate(workshop.date)
+    const workshopTime   = fmtWorkshopTime(workshop.startTime, workshop.endTime, workshop.timezone)
 
-    const requirePayment = Number(fee) > 0
+    const requirePayment = fee > 0
 
     let validated: Awaited<ReturnType<ReturnType<typeof workshopSchema>["validate"]>>
     try {
@@ -44,11 +63,11 @@ export async function POST(req: NextRequest) {
 
     const payload: WorkshopRegistrationPayload = {
       ...validated,
-      workshopId:    workshopId ? String(workshopId) : undefined,
-      workshopTitle: String(workshopTitle),
-      workshopDate:  String(workshopDate),
-      workshopTime:  String(workshopTime),
-      fee:           Number(fee),
+      workshopId:    workshop.id,
+      workshopTitle,
+      workshopDate,
+      workshopTime,
+      fee,
     }
 
     const result = await registerForWorkshop(payload)
@@ -58,13 +77,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Send confirmation email (non-blocking — don't fail the request if email fails)
-    const workshop = workshopId ? await getWorkshopById(String(workshopId)).catch(() => null) : null
     sendWorkshopConfirmationEmail(validated.email, {
       firstName:      validated.firstName,
-      workshopTitle:  String(workshopTitle),
-      workshopDate:   String(workshopDate),
-      workshopTime:   String(workshopTime),
-      fee:            Number(fee),
+      workshopTitle,
+      workshopDate,
+      workshopTime,
+      fee,
       isConfirmed:    !requirePayment,
       category:       workshop?.category,
       level:          workshop?.level,

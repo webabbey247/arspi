@@ -19,7 +19,14 @@ const ALLOWED_TAGS = [
 
 const ALLOWED_ATTRIBUTES = {
   a: ["href", "name", "target", "rel", "class"],
-  "*": ["class"],
+}
+
+/** The only classes stored content uses: the link styling the editors apply.
+ *  Any other class is dropped — with Tailwind on the page, an arbitrary class
+ *  like "fixed inset-0 z-50" would let authored content draw a fake overlay
+ *  over the real UI. */
+const ALLOWED_CLASSES = {
+  a: ["text-[#6655DF]", "text-[#0474C4]", "underline", "underline-offset-2"],
 }
 
 /** Sanitize HTML stored in the DB (Tiptap rich-text output) before rendering
@@ -30,6 +37,20 @@ export function sanitizeHtml(input: string | null | undefined): string {
   return sanitizeHtmlLib(input, {
     allowedTags: ALLOWED_TAGS,
     allowedAttributes: ALLOWED_ATTRIBUTES,
+    allowedClasses: ALLOWED_CLASSES,
     allowedSchemes: ["http", "https", "mailto", "tel"],
   })
+}
+
+const HAS_TAG = /<\/?[a-z][\s\S]*?>/i
+
+/**
+ * For fields that hold plain text OR editor HTML: sanitises the HTML and
+ * leaves plain text untouched (React escapes it when rendered as text, and
+ * running it through the sanitiser would mangle characters like `<` or `&`).
+ * Pair with <RichTextView> in client components.
+ */
+export function sanitizeRich<T extends string | null | undefined>(value: T): T {
+  if (!value || !HAS_TAG.test(value)) return value
+  return sanitizeHtml(value) as T
 }

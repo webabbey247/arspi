@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getInsights, getInsightBySlug } from "@/services/insight.service"
+import { sanitizeHtml } from "@/lib/sanitize"
 
 type PublicInsight = {
   id: string
@@ -53,7 +54,8 @@ function toPublicInsight(insight: NonNullable<Awaited<ReturnType<typeof getInsig
     title: insight.title,
     slug: insight.slug,
     excerpt: insight.excerpt,
-    body: insight.body,
+    // Sanitised here so the article page doesn't ship the sanitiser.
+    body: sanitizeHtml(insight.body),
     featured: insight.featured,
     readTime: insight.readTime || "5 min read",
     author: authorName,

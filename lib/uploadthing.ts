@@ -1,6 +1,7 @@
 import { createUploadthing, type FileRouter } from "uploadthing/server"
 import { UploadThingError } from "uploadthing/server"
 import { getSession } from "@/lib/session"
+import { getClientIp, rateLimit } from "@/lib/rate-limit"
 
 const f = createUploadthing()
 
@@ -30,13 +31,18 @@ export const ourFileRouter = {
     }),
 
   /** Document upload (resumes, cover letters) — used by public career applicants, intentionally unauthenticated.
-   *  Abuse is bounded by the 8 MB cap and file-type whitelist; consider IP rate-limiting in proxy.ts. */
+   *  Abuse is bounded by the 8 MB cap, the file-type whitelist, and a per-IP
+   *  cap (a real applicant uploads a CV and maybe a cover letter). */
   documentUploader: f({
     pdf: { maxFileSize: "8MB", maxFileCount: 1 },
     "application/msword": { maxFileSize: "8MB", maxFileCount: 1 },
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": { maxFileSize: "8MB", maxFileCount: 1 },
   })
-    .middleware(async () => ({}))
+    .middleware(async ({ req }) => {
+      const r = rateLimit({ key: `document-upload:${getClientIp(req)}`, limit: 10, windowMs: 60 * 60_000 })
+      if (!r.allowed) throw new UploadThingError("Too many uploads — please try again later.")
+      return {}
+    })
     .onUploadComplete(async ({ file }) => {
       return { url: file.ufsUrl }
     }),

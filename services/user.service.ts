@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
 import { Role, UserStatus } from "@prisma/client"
+import { revokeOtherSessions } from "@/services/session.service"
 
 export type { Role, UserStatus }
 
@@ -227,6 +228,9 @@ export async function adminSetPassword(
 
   const hashed = await bcrypt.hash(newPassword, 12)
   await db.user.update({ where: { id }, data: { password: hashed } })
+  // An admin resetting someone's password (usually because the account may be
+  // compromised) signs that user out everywhere.
+  await revokeOtherSessions(id, null)
 
   return { success: true, data: null }
 }

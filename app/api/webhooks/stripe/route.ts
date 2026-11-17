@@ -37,19 +37,26 @@ export async function POST(req: NextRequest) {
 
   try {
     switch (event.type) {
-      case "checkout.session.completed": {
+      // "completed" fires as soon as checkout finishes — for delayed payment
+      // methods that's before the money arrives, so act only when Stripe says
+      // it's paid; those methods confirm later with async_payment_succeeded.
+      case "checkout.session.completed":
+      case "checkout.session.async_payment_succeeded": {
         const session = event.data.object as Stripe.Checkout.Session
+        if (session.payment_status !== "paid") break
 
         if (session.metadata?.type === "program") {
           // ── Program payment ───────────────────────────────────────────────
           const { paymentId, courseId, userId } = session.metadata ?? {}
           if (!paymentId || !courseId || !userId) break
 
-          // Mark payment as succeeded
-          await db.payment.update({
-            where: { id: paymentId },
+          // Mark payment as succeeded. Stripe retries and re-delivers events,
+          // so only the first delivery for a still-pending payment does work.
+          const marked = await db.payment.updateMany({
+            where: { id: paymentId, status: { in: ["PENDING", "FAILED"] } },
             data:  { status: "SUCCEEDED", stripePaymentId: session.id },
           })
+          if (marked.count === 0) break
 
           // Create enrollment (skip if somehow already enrolled)
           const existing = await db.enrollment.findUnique({
@@ -68,13 +75,18 @@ export async function POST(req: NextRequest) {
 
           if (!registrationId) break
 
-          const registration = await db.workshopRegistration.update({
-            where: { id: registrationId },
+          // Idempotent: confirm only a still-pending registration. A re-delivered
+          // event finds nothing to update and stops here, so the seat count and
+          // confirmation email aren't repeated.
+          const confirmed = await db.workshopRegistration.updateMany({
+            where: { id: registrationId, status: "PENDING" },
             data:  {
               status:                  "CONFIRMED",
               stripeCheckoutSessionId: session.id,
             },
           })
+          if (confirmed.count === 0) break
+          const registration = await db.workshopRegistration.findUniqueOrThrow({ where: { id: registrationId } })
 
           if (workshopId) {
             await db.workshop.update({

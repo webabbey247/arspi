@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const isProd = process.env.NODE_ENV === "production"
+
 const nextConfig: NextConfig = {
   // Produce a self-contained server in .next/standalone — required for shared/cPanel
   // hosting. Must NOT be set when building on Vercel: standalone mode changes where
@@ -22,11 +24,7 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Baseline security headers on every response. Not included: Content-Security-Policy
-  // (needs deliberate allowlisting against every third-party embed this app uses —
-  // Stripe Checkout, UploadThing, YouTube/Vimeo, Google Forms/Typeform survey blocks —
-  // and Strict-Transport-Security (best set at the reverse proxy / hosting layer, since
-  // an incorrect max-age is hard for users to undo once a browser has cached it).
+  // Baseline security headers on every response (see the CSP and HSTS notes below).
   async headers() {
     return [
       {
@@ -36,6 +34,23 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // A deliberately narrow CSP: the directives that are safe for every
+          // page and embed. No plugins, no <base> hijacking, no framing by
+          // other sites. A script-src policy would need nonces on Next's own
+          // inline scripts plus allowlisting every embed — left for later.
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "object-src 'none'",
+              "base-uri 'self'",
+              "frame-ancestors 'self'",
+              ...(isProd ? ["upgrade-insecure-requests"] : []),
+            ].join("; "),
+          },
+          // HTTPS-only for returning visitors. Production only (localhost is
+          // http), a modest max-age, no includeSubDomains/preload — easy to
+          // back out if a subdomain ever needs plain http.
+          ...(isProd ? [{ key: "Strict-Transport-Security", value: "max-age=15552000" }] : []),
         ],
       },
     ];

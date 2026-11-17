@@ -339,6 +339,7 @@ export type ProgramListingRow = {
  *  Anything that edits a programme must re-fetch the full record by id first,
  *  or it will save a form that was populated from fields it never received. */
 export type ProgramListRow = {
+  facilitators: unknown | null
   /** Set while the assigned instructor's submission awaits an admin. */
   submittedForReviewAt: Date | null
   submissionNote:       string | null
@@ -396,6 +397,9 @@ export async function getProgramList(filters?: {
       programLevelId: true, programFormatId: true, programPricingId: true,
       createdAt: true, updatedAt: true,
       submittedForReviewAt: true, submissionNote: true,
+      // The list's "Instructors" column summarises these; without them it
+      // always rendered "—".
+      facilitators: true,
       instructor: {
         select: { id: true, email: true, profile: { select: { firstName: true, lastName: true } } },
       },
@@ -512,12 +516,20 @@ export async function getProgramBySlug(slug: string): Promise<ProgramRow | null>
 /** Creates a programme. It starts unassigned unless `input.instructorId` is
  *  given — an admin then assigns it for review with "Assign for review". The
  *  creator is no longer made its instructor by default. */
+/** Several routes accept a programme's slug OR its id in the same URL
+ *  segment. A slug equal to another programme's id would make those lookups
+ *  resolve to the wrong programme, so it's refused outright. */
+async function slugShadowsAnId(slug: string) {
+  return !!(await db.course.findUnique({ where: { id: slug }, select: { id: true } }))
+}
+
 export async function createProgram(
   input: ProgramInput,
 ): Promise<ProgramServiceResult<ProgramRow>> {
   const slug     = input.slug ?? slugify(input.title)
   const existing = await db.course.findUnique({ where: { slug } })
   if (existing) return { success: false, error: "A program with this slug already exists." }
+  if (await slugShadowsAnId(slug)) return { success: false, error: "That slug isn't allowed — choose another." }
 
   const row = await db.course.create({
     data: {
@@ -584,6 +596,7 @@ export async function updateProgram(
   if (input.slug && input.slug !== existing.slug) {
     const conflict = await db.course.findUnique({ where: { slug: input.slug } })
     if (conflict) return { success: false, error: "A program with this slug already exists." }
+    if (await slugShadowsAnId(input.slug)) return { success: false, error: "That slug isn't allowed — choose another." }
   }
 
   const row = await db.course.update({
@@ -713,4 +726,11 @@ export async function getPublishedProgramFacilitators() {
       rating: true, reviewCount: true, facilitators: true,
     },
   })
+}
+
+/** The minimum the learner's hot paths need (ticking a lesson, answering a
+ *  quiz): no relations, no counts, no marketing JSON. getProgramBySlug loads
+ *  the full row plus two COUNT aggregates — wasted work on every click. */
+export async function getProgramCoreBySlug(slug: string) {
+  return db.course.findUnique({ where: { slug }, select: { id: true, curriculum: true } })
 }

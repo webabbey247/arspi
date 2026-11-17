@@ -278,15 +278,21 @@ export const DEFAULT_RUBRIC_ID = "rubric_generic_written"
  * is cheap (one indexed lookup) and means no seed step to forget. If an admin
  * archives or edits the default it's left alone — this only ever creates it.
  */
+// Once seen, the default rubric is never re-checked by this server process —
+// it's only ever created, never deleted by the app.
+let defaultRubricEnsured = false
+
 export async function ensureDefaultRubric() {
+  if (defaultRubricEnsured) return
   const existing = await db.rubric.findUnique({ where: { id: DEFAULT_RUBRIC_ID }, select: { id: true } })
-  if (existing) return
+  if (existing) { defaultRubricEnsured = true; return }
   try {
     await createRubric(GENERIC_WRITTEN_RUBRIC, "ACTIVE", null, { id: DEFAULT_RUBRIC_ID, isDefault: true })
   } catch (e) {
     // Another request created it first.
     if ((e as { code?: string }).code !== "P2002") throw e
   }
+  defaultRubricEnsured = true
 }
 
 /** The rubric a programme may attach: any library rubric, or its own copy. */

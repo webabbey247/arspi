@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireApiRole } from "@/lib/guard"
 import { db } from "@/lib/db"
-import { getProgramBySlug } from "@/services/program.service"
+import { getProgramCoreBySlug } from "@/services/program.service"
 import {
   collectLessonIds, setLessonCompletion, findLessonById, lessonRequiresQuiz,
-  isLessonUnlocked, getLessonProgress, getQuizProgress,
+  isLessonUnlocked, getProgress,
 } from "@/services/lesson-progress.service"
 import { z } from "zod"
 
@@ -31,15 +31,19 @@ export async function PATCH(req: NextRequest, { params }: Context) {
       )
     }
 
-    const program = await getProgramBySlug(slug)
+    const program = await getProgramCoreBySlug(slug)
     if (!program) {
       return NextResponse.json({ error: "Program not found." }, { status: 404 })
     }
 
-    const enrollment = await db.enrollment.findUnique({
-      where: { userId_courseId: { userId: session.sub, courseId: program.id } },
-    })
-    if (!enrollment) {
+    // Enrolment and progress don't depend on each other: read them together.
+    const [enrollment, progress] = await Promise.all([
+      db.enrollment.findUnique({
+        where: { userId_courseId: { userId: session.sub, courseId: program.id } },
+      }),
+      getProgress(session.sub, program.id),
+    ])
+    if (!enrollment || enrollment.status === "DROPPED") {
       return NextResponse.json({ error: "You are not enrolled in this program." }, { status: 403 })
     }
 
@@ -59,11 +63,7 @@ export async function PATCH(req: NextRequest, { params }: Context) {
         )
       }
 
-      const [completedIds, passedQuizIds] = await Promise.all([
-        getLessonProgress(session.sub, program.id),
-        getQuizProgress(session.sub, program.id),
-      ])
-      if (!isLessonUnlocked(program.curriculum, lessonId, new Set(completedIds), new Set(passedQuizIds))) {
+      if (!isLessonUnlocked(program.curriculum, lessonId, new Set(progress.completedIds), new Set(progress.passedQuizIds))) {
         return NextResponse.json(
           { error: "Complete the previous chapter before continuing." },
           { status: 403 }
@@ -72,7 +72,7 @@ export async function PATCH(req: NextRequest, { params }: Context) {
     }
 
     const result = await setLessonCompletion(
-      session.sub, program.id, lessonId, parsed.data.completed, allLessonIds
+      session.sub, program.id, lessonId, parsed.data.completed, allLessonIds, progress.completedIds,
     )
 
     const updatedEnrollment = result.courseCompleted

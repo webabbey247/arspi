@@ -293,6 +293,8 @@ model Course {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([instructorId])
+  @@index([status])
   @@map("courses")
 }
 
@@ -402,6 +404,7 @@ model Enrollment {
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
+  @@index([courseId])
   @@map("enrollments")
 }
 
@@ -434,6 +437,7 @@ model LessonProgress {
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
+  @@index([courseId])
   @@map("lesson_progress")
 }
 
@@ -570,6 +574,8 @@ model AssessmentAttempt {
 
   @@unique([assessmentId, userId, attemptNo])
   @@index([userId, assessmentId])
+  @@index([status])
+  @@index([rubricVersionId])
   @@map("assessment_attempts")
 }
 
@@ -593,6 +599,7 @@ model CourseGrade {
   computedAt DateTime @updatedAt
 
   @@unique([userId, courseId])
+  @@index([courseId])
   @@map("course_grades")
 }
 
@@ -688,6 +695,7 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, readAt])
+  @@index([userId, createdAt])
   @@map("notifications")
 }
 
@@ -831,6 +839,7 @@ model AssignmentSubmission {
   @@unique([userId, blockId])
   @@index([courseId, blockId])
   @@index([courseId, status])
+  @@index([rubricVersionId])
   @@map("assignment_submissions")
 }
 
@@ -937,6 +946,7 @@ model WorkshopRegistration {
   workshopId String?
   workshop   Workshop? @relation(fields: [workshopId], references: [id], onDelete: SetNull)
 
+  @@index([workshopId])
   @@map("workshop_registrations")
 }
 

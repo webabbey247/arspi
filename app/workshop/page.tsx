@@ -1,5 +1,6 @@
 "use client";
 
+import { fmtWorkshopDate, fmtWorkshopTime } from "@/lib/workshop-format"
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import withLayout from "@/hooks/useLayout";
 import type { Facilitator } from "@/lib/workshop-helpers";
 import PageHero from "@/components/sections/PageHero";
-import { sanitizeHtml } from "@/lib/sanitize";
 
 type PublicWorkshop = {
   id:             string
@@ -29,7 +29,6 @@ type PublicWorkshop = {
   facilitators:   Facilitator[]
   medium:         string
   onlinePlatform: string | null
-  onlineLink:     string | null
   venueAddress:   string | null
   venueCity:      string | null
   venueState:     string | null
@@ -40,21 +39,8 @@ type PublicWorkshop = {
   featured:       boolean
 }
 
-function fmtDate(iso: string | null) {
-  if (!iso) return "TBA"
-  return new Date(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
-}
-
-function fmtTime(startTime: string, endTime: string, tz: string) {
-  if (!startTime) return "Time TBA"
-  const tzAbbr = (() => {
-    try {
-      return new Intl.DateTimeFormat("en-US", { timeZone: tz || "UTC", timeZoneName: "short" })
-        .formatToParts(new Date()).find(p => p.type === "timeZoneName")?.value ?? tz
-    } catch { return tz || "UTC" }
-  })()
-  return endTime ? `${startTime} – ${endTime} · ${tzAbbr}` : `${startTime} · ${tzAbbr}`
-}
+const fmtDate = fmtWorkshopDate
+const fmtTime = fmtWorkshopTime
 
 function fmtDelivery(medium: string, platform: string | null, city: string | null) {
   if (medium === "IN_PERSON") return city ? `In Person · ${city}` : "In Person"
@@ -496,7 +482,7 @@ const WorkshopPage = () => {
                   {nearest.title}
                 </h3>
 
-                <p className="font-body text-[0.875rem] sm:text-[0.9375rem] md:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 mb-5 sm:mb-6 max-w-lg line-clamp-3"  dangerouslySetInnerHTML={{ __html: sanitizeHtml(nearest.description) }} />
+                <p className="font-body text-[0.875rem] sm:text-[0.9375rem] md:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-slate-600 mb-5 sm:mb-6 max-w-lg line-clamp-3"  dangerouslySetInnerHTML={{ __html: nearest.description /* sanitised by /api/workshops/public */ }} />
 
                 {(nearest.facilitators.length > 0 || nearest.facilitator) && (
                   <div className="mb-5 sm:mb-6">

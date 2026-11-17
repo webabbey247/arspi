@@ -53,12 +53,26 @@ export function rateLimit(opts: {
 /** Pull the client IP from forwarded headers; fall back to a constant so
  *  unidentifiable callers all share a single bucket (worst case: limit applies
  *  globally to anonymous-source traffic, which is fine). */
+/**
+ * The caller's IP for rate limiting, preferring values a client can't forge.
+ *
+ * The left-most X-Forwarded-For entry is whatever the client sent, so keying
+ * on it let anyone dodge every limit by sending a fresh fake header. Instead:
+ *   1. x-vercel-forwarded-for — set by Vercel's edge, not passed through;
+ *   2. x-real-ip — set by the reverse proxy (Vercel, nginx/cPanel);
+ *   3. the RIGHT-most X-Forwarded-For entry — the one our own proxy appended.
+ */
 export function getClientIp(req: NextRequest | Request): string {
   const h = "headers" in req ? req.headers : (req as Request).headers
-  const xff = h.get("x-forwarded-for")
-  if (xff) return xff.split(",")[0]!.trim()
+  const vercel = h.get("x-vercel-forwarded-for")
+  if (vercel) return vercel.split(",")[0]!.trim()
   const real = h.get("x-real-ip")
   if (real) return real.trim()
+  const xff = h.get("x-forwarded-for")
+  if (xff) {
+    const parts = xff.split(",").map(p => p.trim()).filter(Boolean)
+    if (parts.length) return parts[parts.length - 1]!
+  }
   return "unknown"
 }
 

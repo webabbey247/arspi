@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { cache } from "react"
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
@@ -16,9 +17,19 @@ import ProjectShareCard from "@/components/sections/ProjectShareCard"
 import { sanitizeHtml } from "@/lib/sanitize"
 import RegisterCTA from "./RegisterCTA"
 
-// Always render at request time so the past-event check reflects "today".
-export const dynamic = "force-dynamic"
-export const revalidate = 0
+// Cached for 5 minutes and cleared immediately on any workshop edit
+// (bumpWorkshopsPublicCache). The "past event" check works at day level, so a
+// few minutes of staleness can't mislabel an event.
+export const revalidate = 300
+
+/** Nothing pre-built: each workshop renders on its first visit, then is
+ *  served from cache. Without this the route renders on every request. */
+export async function generateStaticParams() {
+  return []
+}
+
+/** generateMetadata and the page both need the workshop: look it up once. */
+const loadWorkshop = cache((slug: string) => getWorkshopBySlug(slug))
 
 const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "")
 
@@ -71,7 +82,7 @@ function htmlToExcerpt(html: string, max = 220): string {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug }   = await params
-  const workshop   = await getWorkshopBySlug(slug)
+  const workshop   = await loadWorkshop(slug)
   if (!workshop) return {}
   return {
     title:       `${workshop.title} — Workshops`,
@@ -85,7 +96,7 @@ const WorkshopDetailPage = async ({
   params: Promise<{ slug: string }>
 }) => {
   const { slug }   = await params
-  const workshop   = await getWorkshopBySlug(slug)
+  const workshop   = await loadWorkshop(slug)
   if (!workshop || !workshop.published) notFound()
 
   const facilitators = normalizeFacilitators(workshop.facilitators)
@@ -103,7 +114,8 @@ const WorkshopDetailPage = async ({
   const excerpt      = htmlToExcerpt(workshop.description)
   const workshopUrl  = `${APP_URL}/workshop/${workshop.slug}`
 
-  const related = (await getWorkshops({ category: workshop.category, published: true }))
+  // Five newest covers four others even when this one is among them.
+  const related = (await getWorkshops({ category: workshop.category, published: true, take: 5 }))
     .filter(w => w.slug !== workshop.slug)
     .slice(0, 4)
 

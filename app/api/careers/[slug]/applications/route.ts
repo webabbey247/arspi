@@ -2,18 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { getCareerBySlug } from "@/services/career.service"
 import { createCareerApplication } from "@/services/career.application.service"
+import { isUploadThingUrl } from "@/lib/upload-url"
 
-/** Allow only URLs hosted on UploadThing's CDN for uploaded documents.
- *  Mirrors the remotePatterns in next.config.ts. Prevents applicants from
- *  submitting arbitrary URLs (SSRF / phishing risk when admins click them). */
-function isUploadThingUrl(value: string): boolean {
-  try {
-    const host = new URL(value).hostname.toLowerCase()
-    return host === "utfs.io" || host.endsWith(".ufs.sh")
-  } catch {
-    return false
-  }
-}
+
 
 const uploadthingUrl = z
   .string()

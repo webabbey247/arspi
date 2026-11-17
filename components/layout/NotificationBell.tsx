@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useState, useSyncExternalStore } from "react"
 import { useRouter } from "next/navigation"
 import { Dialog as DialogPrimitive } from "radix-ui"
 import { Bell, X, ChevronRight } from "lucide-react"
@@ -19,34 +19,69 @@ import {
  * marks notifications read. The drawer is a Radix dialog: focus is trapped,
  * Esc closes it, and screen readers announce it.
  */
+// ── Shared store ─────────────────────────────────────────────────────────────
+// The bell is mounted twice (desktop sidebar + mobile top bar, one hidden by
+// CSS). One module-level store means one request and one timer however many
+// bells are on screen, and polling pauses while the tab is hidden.
+
+type Snapshot = { items: NotificationItem[]; unread: number }
+let snapshot: Snapshot = { items: [], unread: 0 }
+const listeners = new Set<() => void>()
+let timer: ReturnType<typeof setInterval> | null = null
+let inflight: Promise<void> | null = null
+
+function emit(next: Snapshot) {
+  snapshot = next
+  listeners.forEach(l => l())
+}
+
+/** Fetches once even if several bells ask at the same moment. */
+function refresh() {
+  if (inflight) return inflight
+  inflight = fetchNotifications(30)
+    .then(d => { if (d) emit({ items: d.items, unread: d.unread }) })
+    .finally(() => { inflight = null })
+  return inflight
+}
+
+const onVisible = () => { if (document.visibilityState === "visible") refresh() }
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  if (listeners.size === 1) {
+    refresh()
+    // Poll only while someone can see the page.
+    timer = setInterval(() => { if (document.visibilityState === "visible") refresh() }, 60_000)
+    document.addEventListener("visibilitychange", onVisible)
+    window.addEventListener("notifications:changed", refresh)
+  }
+  return () => {
+    listeners.delete(listener)
+    if (listeners.size === 0) {
+      if (timer) clearInterval(timer)
+      timer = null
+      document.removeEventListener("visibilitychange", onVisible)
+      window.removeEventListener("notifications:changed", refresh)
+    }
+  }
+}
+
+const EMPTY: Snapshot = { items: [], unread: 0 }
+
 export default function NotificationBell({ className }: { className?: string }) {
   const router = useRouter()
-  const [items, setItems]   = useState<NotificationItem[]>([])
-  const [unread, setUnread] = useState(0)
+  const { items, unread } = useSyncExternalStore(subscribe, () => snapshot, () => EMPTY)
   const [open, setOpen]     = useState(false)
   const [tab, setTab]       = useState<"all" | "unread">("all")
-
-  const load = useCallback(() => fetchNotifications(30).then(d => {
-    if (!d) return
-    setItems(d.items)
-    setUnread(d.unread)
-  }), [])
-
-  useEffect(() => {
-    load()
-    const t = setInterval(load, 60_000)
-    window.addEventListener("focus", load)
-    window.addEventListener("notifications:changed", load)
-    return () => {
-      clearInterval(t)
-      window.removeEventListener("focus", load)
-      window.removeEventListener("notifications:changed", load)
-    }
-  }, [load])
+  const load = refresh
 
   function markRead(ids?: string[]) {
-    setItems(cur => cur.map(n => (!ids || ids.includes(n.id) ? { ...n, read: true } : n)))
-    setUnread(u => (ids ? Math.max(0, u - ids.filter(id => items.some(n => n.id === id && !n.read)).length) : 0))
+    // Optimistic: every bell updates at once; the server write follows.
+    const cleared = items.filter(n => !n.read && (!ids || ids.includes(n.id))).length
+    emit({
+      items: items.map(n => (!ids || ids.includes(n.id) ? { ...n, read: true } : n)),
+      unread: Math.max(0, unread - cleared),
+    })
     markNotificationsRead(ids)
   }
 

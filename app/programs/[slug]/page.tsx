@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import RichText from "@/components/ui/RichText"
+import { sanitizeRich } from "@/lib/sanitize"
 import { notFound } from "next/navigation"
 import { draftMode } from "next/headers"
 import Link from "next/link"
@@ -125,7 +126,9 @@ function toModules(v: unknown): PageModule[] {
   return (v as Record<string, unknown>[]).map((m) => ({
     week:   m.week as string | undefined,
     title:  (m.title as string) ?? "",
-    desc:   m.desc as string | undefined,
+    // Sanitised here so the client accordion can render it without
+    // shipping the sanitiser to the browser.
+    desc:   sanitizeRich(m.desc as string | undefined),
     topics: m.lessons
       ? (m.lessons as { title: string }[]).map((l) => l.title)
       : toStrArr(m.topics),
@@ -134,7 +137,9 @@ function toModules(v: unknown): PageModule[] {
 
 function toFaqs(v: unknown): PageFaq[] {
   if (!Array.isArray(v)) return []
-  return (v as { q: string; a: string }[]).filter((f) => f.q && f.a)
+  return (v as { q: string; a: string }[])
+    .filter((f) => f.q && f.a)
+    .map((f) => ({ q: f.q, a: sanitizeRich(f.a) }))
 }
 
 // ── Small shared bits ────────────────────────────────────────────────────────
@@ -167,7 +172,7 @@ function ProgramMiniCard({ program }: { program: RelatedProgram }) {
     >
       <div className="relative aspect-video bg-[#EFEAE1]">
         {program.thumbnail ? (
-          <Image src={program.thumbnail} alt={program.title} fill className="object-cover" />
+          <Image src={program.thumbnail} alt={program.title} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
         ) : (
           <div className="absolute inset-0" style={{ background: "repeating-linear-gradient(135deg,#EFEAE1 0 8px,#E7E1D6 8px 16px)" }} />
         )}
@@ -196,7 +201,8 @@ function PurchaseCard({ prog }: { prog: PageProgram }) {
     <div className="bg-white rounded-[4px] overflow-hidden shadow-[0_24px_60px_rgba(6,28,50,0.28)] text-[#1C2430]">
       {/* Preview */}
       <div className="relative aspect-[16/10] flex items-center justify-center" style={{ background: "repeating-linear-gradient(135deg,#E7E2D9 0 8px,#DFD9CE 8px 16px)" }}>
-        {prog.thumbnail && <Image src={prog.thumbnail} alt={prog.title} fill className="object-cover" />}
+        {/* Above the fold beside the hero — fetch it early, at sidebar width. */}
+        {prog.thumbnail && <Image src={prog.thumbnail} alt={prog.title} fill preload sizes="(min-width: 901px) 372px, 100vw" className="object-cover" />}
         <button
           type="button"
           className="relative z-10 w-13 h-13 rounded-full bg-white shadow-[0_6px_18px_rgba(0,0,0,0.2)] cursor-pointer text-[#0A3D6B] text-[15px] flex items-center justify-center pl-[3px]"
@@ -355,7 +361,11 @@ async function resolvePreviewer(slug: string): Promise<{ role: string; isDraft: 
   return { role: session.role, isDraft: dbProg.status !== "PUBLISHED" }
 }
 
-async function resolveProgram(slug: string, allowDraft = false): Promise<PageProgram | null> {
+/** Wrapped in React cache(): generateMetadata and the page both resolve the
+ *  same programme in one render, and this used to run every query twice. */
+const resolveProgram = cache(resolveProgramUncached)
+
+async function resolveProgramUncached(slug: string, allowDraft = false): Promise<PageProgram | null> {
   const dbProg = await getProgramBySlug(slug)
   if (!dbProg || (dbProg.status !== "PUBLISHED" && !allowDraft)) return null
 
@@ -367,12 +377,22 @@ async function resolveProgram(slug: string, allowDraft = false): Promise<PagePro
   // Status is explicitly PUBLISHED-only here — getProgramCards() has no
   // default status filter, so omitting this would leak draft programmes onto
   // a public page (their cards would render but 404 on click).
-  const siblingRows = dbProg.categoryId
-    ? await getProgramCards({ categoryId: dbProg.categoryId, status: "PUBLISHED" })
-    : []
+  // The four lookups below only depend on dbProg, not on each other — run
+  // them together instead of one round trip after another.
+  const [siblingRows, fillerRows, instructorRowsAll, catalogue] = await Promise.all([
+    dbProg.categoryId
+      ? getProgramCards({ categoryId: dbProg.categoryId, status: "PUBLISHED" })
+      : Promise.resolve([]),
+    publishedCards(),
+    // Unassigned programmes have no "more by" list — filtering on a null id
+    // would otherwise match every other unassigned programme.
+    dbProg.instructorId
+      ? getProgramCards({ instructorId: dbProg.instructorId, status: "PUBLISHED" })
+      : Promise.resolve([]),
+    publishedFacilitatorRows(),
+  ])
   // Deduped per render: this same catalogue is also needed further down, and
   // without cache() the page fetched every published programme twice.
-  const fillerRows = await publishedCards()
   const relatedPool = [...siblingRows, ...fillerRows]
     .filter((p) => p.slug !== slug)
     .filter((p, i, arr) => arr.findIndex((q) => q.slug === p.slug) === i)
@@ -387,12 +407,7 @@ async function resolveProgram(slug: string, allowDraft = false): Promise<PagePro
   // "instructor stats" like Udemy's review/course counts, since this app doesn't
   // track those in aggregate). Full list kept for an accurate count; only the
   // first 3 are shown as cards.
-  // Unassigned programmes have no "more by" list — filtering on a null id
-  // would otherwise match every other unassigned programme.
-  const instructorRows = (dbProg.instructorId
-    ? await getProgramCards({ instructorId: dbProg.instructorId, status: "PUBLISHED" })
-    : [])
-    .filter((p) => p.slug !== slug)
+  const instructorRows = instructorRowsAll.filter((p) => p.slug !== slug)
   const moreByInstructor = instructorRows.slice(0, 3).map(toRelated)
 
   // Instructor profile modal — real aggregates from every published programme
@@ -426,7 +441,6 @@ async function resolveProgram(slug: string, allowDraft = false): Promise<PagePro
   // Each facilitator's own profile: this programme plus every other published
   // programme that lists them (matched by name, since facilitators are
   // free-text entries rather than accounts).
-  const catalogue = await publishedFacilitatorRows()
   const facilitators: FacilitatorCard[] = parseFacilitators(dbProg.facilitators).map(f => {
     const key = facilitatorKey(f.name)
     const others = catalogue.filter(p => p.slug !== dbProg.slug && facilitatorKeys(p.facilitators).has(key))
@@ -481,7 +495,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const prog = await resolveProgram(slug)
+  // Same arguments as the page's call (for a normal visitor), so React's
+  // cache() shares one resolution between metadata and the page.
+  const prog = await resolveProgram(slug, false)
   if (!prog) return {}
 
   const title       = `${prog.title} — ARPS Institute`

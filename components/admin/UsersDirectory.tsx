@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useForm, type Resolver } from "react-hook-form"
@@ -279,15 +279,29 @@ export default function UsersDirectory({ audience }: { audience: Audience }) {
     setTimeout(() => setToast(null), 3500)
   }
 
+  // Typing in the search box shouldn't fire a request per keystroke: the
+  // query used for fetching trails the input by 300ms.
+  const [query, setQuery] = useState(search)
+  useEffect(() => {
+    const t = setTimeout(() => setQuery(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
+  // Only the newest request may update the list; older ones are cancelled so
+  // a slow response can't overwrite a newer one.
+  const inflight = useRef<AbortController | null>(null)
+
   const fetchUsers = useCallback(async () => {
+    inflight.current?.abort()
+    const controller = new AbortController()
+    inflight.current = controller
     setLoading(true)
     try {
       const p = new URLSearchParams()
       // Students are always USER; staff are ADMIN + INSTRUCTOR unless narrowed.
       p.set("role", staff ? (roleFilter === "ALL" ? "STAFF" : roleFilter) : "USER")
       if (statusFilter !== "ALL") p.set("status", statusFilter)
-      if (search)                 p.set("search", search)
-      const res  = await fetch(`/api/admin/users?${p}`)
+      if (query)                  p.set("search", query)
+      const res  = await fetch(`/api/admin/users?${p}`, { signal: controller.signal })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         showToast(err.error ?? `Error ${res.status}: Failed to load users`, false)
@@ -295,12 +309,13 @@ export default function UsersDirectory({ audience }: { audience: Audience }) {
       }
       const data = await res.json()
       setUsers(Array.isArray(data) ? data : [])
-    } catch {
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return
       showToast("Network error — could not reach server", false)
     } finally {
-      setLoading(false)
+      if (inflight.current === controller) setLoading(false)
     }
-  }, [search, roleFilter, statusFilter, staff])
+  }, [query, roleFilter, statusFilter, staff])
 
   useEffect(() => { fetchUsers() }, [fetchUsers])
 

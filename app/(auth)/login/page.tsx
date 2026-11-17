@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import ForgetPasswordForm from "@/components/forms/ForgetPasswordForm";
 import LoginForm from "@/components/forms/LoginForm";
-import SocialLoginButtons from "@/components/forms/SocialLoginButtons";
 import withAuthLayout from "@/hooks/useAuthLayout";
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
@@ -42,16 +41,6 @@ const LoginPage = () => {
           Access your ARPS Institute account to continue learning.
         </p>
 
-        <SocialLoginButtons />
-
-        {/* Divider */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex-1 h-px bg-[#DFE2ED]" />
-          <span className="text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6]">
-            or sign in with email
-          </span>
-          <div className="flex-1 h-px bg-[#DFE2ED]" />
-        </div>
 
         <LoginForm
           showPw={showPw}

@@ -64,8 +64,21 @@ export async function findOrCreateOAuthUser(
   })
   if (existingUser) {
     if (existingUser.status !== "ACTIVE") return { success: false, reason: "disabled" }
-    await db.account.create({
-      data: { userId: existingUser.id, type: "oauth", provider, providerAccountId: profile.providerAccountId },
+    await db.$transaction(async tx => {
+      await tx.account.create({
+        data: { userId: existingUser.id, type: "oauth", provider, providerAccountId: profile.providerAccountId },
+      })
+      // The existing account never proved it owns this email, so whoever set
+      // its password may not be this person (account pre-hijacking: register
+      // someone's email with your own password, wait for them to sign in with
+      // Google). The provider has now verified the email: drop that password
+      // and mark the account verified. The owner can set a password later.
+      if (!existingUser.emailVerified) {
+        await tx.user.update({
+          where: { id: existingUser.id },
+          data:  { password: null, emailVerified: true },
+        })
+      }
     })
     return { success: true, user: toOAuthUser(existingUser) }
   }

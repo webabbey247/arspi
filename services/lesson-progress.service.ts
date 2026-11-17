@@ -158,6 +158,18 @@ export async function getLessonProgress(userId: string, courseId: string): Promi
   return Array.isArray(row?.completedIds) ? (row.completedIds as string[]) : []
 }
 
+/** Both halves of a learner's progress row in one read. */
+export async function getProgress(userId: string, courseId: string): Promise<{ completedIds: string[]; passedQuizIds: string[] }> {
+  const row = await db.lessonProgress.findUnique({
+    where:  { userId_courseId: { userId, courseId } },
+    select: { completedIds: true, passedQuizIds: true },
+  })
+  return {
+    completedIds:  Array.isArray(row?.completedIds) ? (row.completedIds as string[]) : [],
+    passedQuizIds: Array.isArray(row?.passedQuizIds) ? (row.passedQuizIds as string[]) : [],
+  }
+}
+
 export async function getQuizProgress(userId: string, courseId: string): Promise<string[]> {
   const row = await db.lessonProgress.findUnique({ where: { userId_courseId: { userId, courseId } } })
   return Array.isArray(row?.passedQuizIds) ? (row.passedQuizIds as string[]) : []
@@ -182,8 +194,11 @@ export async function setLessonCompletion(
   lessonId:    string,
   completed:   boolean,
   allLessonIds: string[],
+  /** The learner's completed lesson ids, when the caller already read them —
+   *  saves re-reading the same row. */
+  knownCompletedIds?: string[],
 ): Promise<SetLessonCompletionResult> {
-  const existing = await getLessonProgress(userId, courseId)
+  const existing = knownCompletedIds ?? await getLessonProgress(userId, courseId)
   const next = completed
     ? Array.from(new Set([...existing, lessonId]))
     : existing.filter(id => id !== lessonId)
@@ -239,6 +254,8 @@ export async function setQuizAnswer(
    *  original question; 1..n index into the block's variants. The client says
    *  which variant it is showing, never whether the answer was right. */
   variantIndex = 0,
+  /** The learner's progress row, when the caller already read it. */
+  known?: { completedIds: string[]; passedQuizIds: string[] },
 ): Promise<SetQuizAnswerResult | null> {
   const found = findQuizBlock(curriculum, blockId)
   if (!found) return null
@@ -251,11 +268,13 @@ export async function setQuizAnswer(
       : found.variantKeys[variantIndex - 1] ?? -1
 
   const correct = key === selectedIndex && key >= 0
-  const existingQuizIds = await getQuizProgress(userId, courseId)
+  // One read of the progress row for the whole answer (it used to be read up
+  // to four times).
+  const progress = known ?? await getProgress(userId, courseId)
+  const existingQuizIds = progress.passedQuizIds
 
   if (!correct) {
-    const completedIds = await getLessonProgress(userId, courseId)
-    return { correct: false, passedQuizIds: existingQuizIds, completedIds, courseCompleted: false, certificate: null }
+    return { correct: false, passedQuizIds: existingQuizIds, completedIds: progress.completedIds, courseCompleted: false, certificate: null }
   }
 
   const nextQuizIds = Array.from(new Set([...existingQuizIds, blockId]))
@@ -272,10 +291,9 @@ export async function setQuizAnswer(
 
   if (lessonNowDone) {
     const allLessonIds = collectLessonIds(curriculum)
-    const result = await setLessonCompletion(userId, courseId, found.lessonId, true, allLessonIds)
+    const result = await setLessonCompletion(userId, courseId, found.lessonId, true, allLessonIds, progress.completedIds)
     return { correct: true, passedQuizIds: nextQuizIds, ...result }
   }
 
-  const completedIds = await getLessonProgress(userId, courseId)
-  return { correct: true, passedQuizIds: nextQuizIds, completedIds, courseCompleted: false, certificate: null }
+  return { correct: true, passedQuizIds: nextQuizIds, completedIds: progress.completedIds, courseCompleted: false, certificate: null }
 }

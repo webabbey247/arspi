@@ -3,6 +3,7 @@ import { learningInterestsSchema } from "@/lib/validators/onboarding"
 import { saveInterests } from "@/services/interests.service"
 import { sendVerificationEmail } from "@/services/email-verification.service"
 import { enforceRateLimit } from "@/lib/rate-limit"
+import { canOnboard } from "@/lib/onboarding-auth"
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,6 +18,10 @@ export async function POST(req: NextRequest) {
     const result = learningInterestsSchema.safeParse(body)
     if (!result.success) {
       return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 })
+    }
+
+    if (!(await canOnboard(req, result.data.userId))) {
+      return NextResponse.json({ error: "Your registration session has expired. Please sign in to continue." }, { status: 403 })
     }
 
     await saveInterests(result.data)

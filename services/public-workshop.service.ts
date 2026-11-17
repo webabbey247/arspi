@@ -18,7 +18,6 @@ export type PublicWorkshop = {
   fee:            string | number
   medium:         string
   onlinePlatform: string | null
-  onlineLink:     string | null
   venueAddress:   string | null
   venueCity:      string | null
   venueState:     string | null

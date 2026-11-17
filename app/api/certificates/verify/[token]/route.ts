@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getCertificateByToken, displayName } from "@/services/certificate.service"
+import { getCertificateByToken, displayName, publicName } from "@/services/certificate.service"
 
 type Context = { params: Promise<{ token: string }> }
 
@@ -20,10 +20,10 @@ export async function GET(_req: NextRequest, { params }: Context) {
         issuedAt:       cert.issuedAt.toISOString(),
         expiresAt:      cert.expiresAt?.toISOString() ?? null,
         recipientName:  displayName(cert.user),
-        recipientEmail: cert.user.email,
+        // No email: this endpoint is public to anyone holding the link.
         programTitle:   cert.course.title,
         programSlug:    cert.course.slug,
-        facilitator:    displayName(cert.course.instructor),
+        facilitator:    publicName(cert.course.instructor),
       },
     })
   } catch (error) {

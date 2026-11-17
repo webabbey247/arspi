@@ -129,18 +129,34 @@ const LEVEL_LABEL: Record<string, string> = {
 }
 
 export async function sendWorkshopConfirmationEmail(to: string, data: WorkshopConfirmationData): Promise<void> {
-  const {
-    firstName, workshopTitle, workshopDate, workshopTime, fee,
-    isConfirmed, category, level, duration, facilitators,
-    medium, onlinePlatform, onlineLink, venueAddress, venueCity, venueCountry,
-  } = data
+  // Every text value is HTML-escaped before it goes into the HTML body —
+  // names and titles can contain anything. The plain-text body uses `data`.
+  const esc = <T extends string | null | undefined>(v: T) => (v == null ? v : escapeHtml(v)) as T
+  const { fee, isConfirmed, duration, medium } = data
+  const firstName      = esc(data.firstName)
+  const workshopTitle  = esc(data.workshopTitle)
+  const workshopDate   = esc(data.workshopDate)
+  const workshopTime   = esc(data.workshopTime)
+  const category       = esc(data.category)
+  const level          = esc(data.level)
+  const onlinePlatform = esc(data.onlinePlatform)
+  const venueAddress   = esc(data.venueAddress)
+  const venueCity      = esc(data.venueCity)
+  const venueCountry   = esc(data.venueCountry)
+  const facilitators   = data.facilitators?.map(f => escapeHtml(f))
+  // The join link only goes to confirmed registrants — an unpaid ("awaiting
+  // payment") registration must not receive a paid session's link — and only
+  // if it's a real http(s) URL.
+  const onlineLink = isConfirmed && data.onlineLink && /^https?:\/\//i.test(data.onlineLink)
+    ? escapeHtml(data.onlineLink)
+    : null
 
   const feeLabel    = fee === 0 ? "Free" : `$${fee.toLocaleString()}`
   const statusColor = isConfirmed ? "#059669" : "#D97706"
   const statusText  = isConfirmed ? "Confirmed" : "Pending Payment"
   const subject     = isConfirmed
-    ? `You're registered: ${workshopTitle}`
-    : `Registration received: ${workshopTitle} — payment required`
+    ? `You're registered: ${data.workshopTitle}`
+    : `Registration received: ${data.workshopTitle} — payment required`
 
   const deliveryRow = (() => {
     if (!medium) return null
@@ -171,7 +187,7 @@ export async function sendWorkshopConfirmationEmail(to: string, data: WorkshopCo
     from:    FROM,
     to,
     subject,
-    text: `Hi ${firstName},\n\n${isConfirmed ? "You are confirmed!" : "Your registration has been received."}\n\nWorkshop: ${workshopTitle}\nDate: ${workshopDate}\nTime: ${workshopTime}\nFee: ${feeLabel}\nStatus: ${statusText}\n\nFor help, contact support@iarps.com`,
+    text: `Hi ${data.firstName},\n\n${isConfirmed ? "You are confirmed!" : "Your registration has been received."}\n\nWorkshop: ${data.workshopTitle}\nDate: ${data.workshopDate}\nTime: ${data.workshopTime}\nFee: ${feeLabel}\nStatus: ${statusText}\n\nFor help, contact support@iarps.com`,
     html: `
 <!DOCTYPE html>
 <html lang="en">

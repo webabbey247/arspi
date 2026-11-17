@@ -113,52 +113,88 @@ export function buildAttemptQuestions(
 
 // ── Attempt lifecycle ────────────────────────────────────────────────────────
 
+type AttemptPolicyCourse = {
+  gradingEnabled: boolean
+  maxProjectResubmissions: number
+  maxQuizAttempts: number
+  attemptCooldownHours: number
+}
+type PolicyAttempt = {
+  id: string; status: AttemptStatus; passed: boolean | null; voided: boolean
+  attemptNo: number; submittedAt: Date | null; startedAt: Date
+}
+
+/**
+ * The attempt policy as a pure function of data the caller already holds.
+ * Returns `null` when a new attempt may start. `attempts` are this learner's
+ * attempts at this one assessment (voided ones are ignored here).
+ *
+ * Kept separate from the database so the assessments board can evaluate
+ * every assessment from one batch of reads instead of three queries each.
+ */
+export function attemptBlockFor(
+  assessment: { kind: AssessmentKind },
+  course: AttemptPolicyCourse,
+  attempts: PolicyAttempt[],
+  enrolled: boolean,
+): AttemptBlock | null {
+  if (!course.gradingEnabled) return { reason: "grading-disabled" }
+  if (!enrolled) return { reason: "not-enrolled" }
+
+  // Voided attempts stay in the history but don't consume the allowance.
+  const counted = attempts.filter(a => !a.voided).sort((a, b) => b.attemptNo - a.attemptNo)
+
+  const open = counted.find(a => a.status === "IN_PROGRESS")
+  if (open) return { reason: "in-progress", attemptId: open.id }
+
+  // Passing closes the instrument — no grinding for a better mark.
+  if (counted.some(a => a.passed)) return { reason: "already-passed" }
+
+  const max = assessment.kind === "PROJECT"
+    ? course.maxProjectResubmissions + 1
+    : course.maxQuizAttempts
+  if (counted.length >= max) {
+    return { reason: "no-attempts-left", used: counted.length, max }
+  }
+
+  // Cooldown applies to quizzes only — a project resubmission is gated by the
+  // instructor returning it, which is a slower loop already.
+  if (assessment.kind === "CHAPTER_QUIZ" && counted.length > 0) {
+    const last = counted[0]
+    const since = last.submittedAt ?? last.startedAt
+    const availableAt = new Date(since.getTime() + course.attemptCooldownHours * 3_600_000)
+    if (availableAt > new Date()) return { reason: "cooldown", availableAt }
+  }
+
+  return null
+}
+
 /** Policy gate for starting a new attempt. Returns `null` when allowed. */
 export async function checkCanAttempt(
   userId: string,
   assessmentId: string,
 ): Promise<AttemptBlock | null> {
   const assessment = await db.assessment.findUnique({
-    where:   { id: assessmentId },
-    include: { course: true },
+    where:  { id: assessmentId },
+    select: {
+      kind: true, courseId: true,
+      course: { select: { gradingEnabled: true, maxProjectResubmissions: true, maxQuizAttempts: true, attemptCooldownHours: true } },
+    },
   })
   if (!assessment) return { reason: "not-enrolled" }
-  if (!assessment.course.gradingEnabled) return { reason: "grading-disabled" }
 
-  const enrollment = await db.enrollment.findUnique({
-    where: { userId_courseId: { userId, courseId: assessment.courseId } },
-  })
-  if (!enrollment) return { reason: "not-enrolled" }
-
-  // Voided attempts stay in the history but don't consume the allowance.
-  const attempts = await db.assessmentAttempt.findMany({
-    where:   { assessmentId, userId, voided: false },
-    orderBy: { attemptNo: "desc" },
-  })
-
-  const open = attempts.find(a => a.status === "IN_PROGRESS")
-  if (open) return { reason: "in-progress", attemptId: open.id }
-
-  // Passing closes the instrument — no grinding for a better mark.
-  if (attempts.some(a => a.passed)) return { reason: "already-passed" }
-
-  const max = assessment.kind === "PROJECT"
-    ? assessment.course.maxProjectResubmissions + 1
-    : assessment.course.maxQuizAttempts
-  if (attempts.length >= max) {
-    return { reason: "no-attempts-left", used: attempts.length, max }
-  }
-
-  // Cooldown applies to quizzes only — a project resubmission is gated by the
-  // instructor returning it, which is a slower loop already.
-  if (assessment.kind === "CHAPTER_QUIZ" && attempts.length > 0) {
-    const last = attempts[0]
-    const since = last.submittedAt ?? last.startedAt
-    const availableAt = new Date(since.getTime() + assessment.course.attemptCooldownHours * 3_600_000)
-    if (availableAt > new Date()) return { reason: "cooldown", availableAt }
-  }
-
-  return null
+  const [enrollment, attempts] = await Promise.all([
+    db.enrollment.findUnique({
+      where:  { userId_courseId: { userId, courseId: assessment.courseId } },
+      select: { status: true },
+    }),
+    db.assessmentAttempt.findMany({
+      where:  { assessmentId, userId },
+      select: { id: true, status: true, passed: true, voided: true, attemptNo: true, submittedAt: true, startedAt: true },
+    }),
+  ])
+  const enrolled = !!enrollment && enrollment.status !== "DROPPED"
+  return attemptBlockFor(assessment, assessment.course, attempts, enrolled)
 }
 
 /** Opens an attempt and pins its questions. Pinning matters: without it, an
@@ -352,7 +388,23 @@ export async function applyProjectGrade(
 
 // ── Grade rollup ─────────────────────────────────────────────────────────────
 
-/** Recomputes and caches a student's marks for one course.
+type GradeCourse = {
+  id: string; curriculum: unknown; assignmentsInCoursework: boolean
+  quizWeight: number; projectWeight: number; passMark: number; componentPassMark: number
+}
+type GradeAttempt = { assessmentId: string; score: number | null; maxScore: number | null }
+type GradeSubmission = { blockId: string; scorePct: number | null; priorBestPct: number | null }
+
+const GRADE_COURSE_SELECT = {
+  id: true, curriculum: true, assignmentsInCoursework: true,
+  quizWeight: true, projectWeight: true, passMark: true, componentPassMark: true,
+} as const
+
+/**
+ * One learner's grade for a course, from data already in memory — no queries.
+ * Shared by the single-learner path (after a submission is marked) and the
+ * whole-course path (after the programme or its policy changes), so both
+ * always agree.
  *
  *  Coursework (quiz) half = the average, item by item, of
  *    - each chapter quiz (best attempt), and
@@ -366,22 +418,14 @@ export async function applyProjectGrade(
  *  Highest-counts rewards mastery: a learner who revises and retakes isn't
  *  punished for the attempt that prompted the revision. Anything not yet
  *  attempted or not yet marked counts as zero, so the mark reflects the whole
- *  course rather than only the parts someone chose to do. */
-export async function recomputeCourseGrade(userId: string, courseId: string) {
-  const course = await db.course.findUnique({ where: { id: courseId } })
-  if (!course) return null
-
-  const [assessments, attempts, submissions] = await Promise.all([
-    db.assessment.findMany({ where: { courseId } }),
-    db.assessmentAttempt.findMany({
-      where: { userId, assessment: { courseId }, voided: false, status: { in: ["GRADED", "CHANGES_REQUESTED"] } },
-    }),
-    db.assignmentSubmission.findMany({
-      where:  { userId, courseId },
-      select: { blockId: true, scorePct: true, priorBestPct: true },
-    }),
-  ])
-
+ *  course rather than only the parts someone chose to do.
+ */
+function computeGrade(
+  course: GradeCourse,
+  assessments: { id: string; kind: AssessmentKind }[],
+  attempts: GradeAttempt[],
+  submissions: GradeSubmission[],
+) {
   const bestPct = (assessmentId: string): number => {
     const mine = attempts.filter(a => a.assessmentId === assessmentId && a.maxScore && a.maxScore > 0)
     if (mine.length === 0) return 0
@@ -405,11 +449,10 @@ export async function recomputeCourseGrade(userId: string, courseId: string) {
     ...assessments.filter(a => a.kind === "PROJECT").map(a => bestPct(a.id)),
     ...finalProjects.map(a => assignmentPct(a.blockId)),
   ]
-  const mean = (xs: number[]) => (xs.length > 0 ? xs.reduce((s, x) => s + x, 0) / xs.length : 0)
+  const mean = (xs: number[]) => (xs.length > 0 ? xs.reduce((sum, x) => sum + x, 0) / xs.length : 0)
 
   const quizPct    = mean(courseworkItems)
   const projectPct = mean(projectItems)
-
   const quizMarks    = (quizPct / 100) * course.quizWeight
   const projectMarks = (projectPct / 100) * course.projectWeight
   const finalMarks   = quizMarks + projectMarks
@@ -422,26 +465,75 @@ export async function recomputeCourseGrade(userId: string, courseId: string) {
     (projectItems.length    === 0 || projectPct >= course.componentPassMark)
 
   const round = (n: number) => Math.round(n * 100) / 100
+  return {
+    quizMarks: round(quizMarks), projectMarks: round(projectMarks), finalMarks: round(finalMarks),
+    quizPct: round(quizPct), projectPct: round(projectPct), passed,
+  }
+}
 
+/** Recomputes and caches one learner's marks for a course. */
+export async function recomputeCourseGrade(userId: string, courseId: string) {
+  const [course, assessments, attempts, submissions] = await Promise.all([
+    db.course.findUnique({ where: { id: courseId }, select: GRADE_COURSE_SELECT }),
+    db.assessment.findMany({ where: { courseId }, select: { id: true, kind: true } }),
+    db.assessmentAttempt.findMany({
+      where:  { userId, assessment: { courseId }, voided: false, status: { in: ["GRADED", "CHANGES_REQUESTED"] } },
+      select: { assessmentId: true, score: true, maxScore: true },
+    }),
+    db.assignmentSubmission.findMany({
+      where:  { userId, courseId },
+      select: { blockId: true, scorePct: true, priorBestPct: true },
+    }),
+  ])
+  if (!course) return null
+
+  const grade = computeGrade(course, assessments, attempts, submissions)
   return db.courseGrade.upsert({
     where:  { userId_courseId: { userId, courseId } },
-    create: {
-      userId, courseId,
-      quizMarks: round(quizMarks), projectMarks: round(projectMarks), finalMarks: round(finalMarks),
-      quizPct: round(quizPct), projectPct: round(projectPct), passed,
-    },
-    update: {
-      quizMarks: round(quizMarks), projectMarks: round(projectMarks), finalMarks: round(finalMarks),
-      quizPct: round(quizPct), projectPct: round(projectPct), passed,
-    },
+    create: { userId, courseId, ...grade },
+    update: grade,
   })
 }
 
-/** Rebuilds every enrolled learner's cached grade — after a change to how the
- *  programme is graded (policy, final-project flag, assignments added). */
+/**
+ * Rebuilds every enrolled learner's cached grade — after a change to how the
+ * programme is graded (policy, final-project flag, assignments added).
+ *
+ * Batched: four reads for the whole course, the grades computed in memory,
+ * then one transaction of upserts. Recomputing learner by learner made a save
+ * cost ~3 round trips per learner (minutes for a large cohort).
+ */
 export async function recomputeCourseGradesForAll(courseId: string) {
-  const enrolled = await db.enrollment.findMany({ where: { courseId }, select: { userId: true } })
-  for (const e of enrolled) await recomputeCourseGrade(e.userId, courseId)
+  const [course, assessments, enrolled, attempts, submissions] = await Promise.all([
+    db.course.findUnique({ where: { id: courseId }, select: GRADE_COURSE_SELECT }),
+    db.assessment.findMany({ where: { courseId }, select: { id: true, kind: true } }),
+    db.enrollment.findMany({ where: { courseId }, select: { userId: true } }),
+    db.assessmentAttempt.findMany({
+      where:  { assessment: { courseId }, voided: false, status: { in: ["GRADED", "CHANGES_REQUESTED"] } },
+      select: { userId: true, assessmentId: true, score: true, maxScore: true },
+    }),
+    db.assignmentSubmission.findMany({
+      where:  { courseId },
+      select: { userId: true, blockId: true, scorePct: true, priorBestPct: true },
+    }),
+  ])
+  if (!course || enrolled.length === 0) return 0
+
+  const attemptsBy = new Map<string, GradeAttempt[]>()
+  for (const a of attempts) attemptsBy.set(a.userId, [...(attemptsBy.get(a.userId) ?? []), a])
+  const subsBy = new Map<string, GradeSubmission[]>()
+  for (const sub of submissions) subsBy.set(sub.userId, [...(subsBy.get(sub.userId) ?? []), sub])
+
+  const writes = enrolled.map(({ userId }) => {
+    const grade = computeGrade(course, assessments, attemptsBy.get(userId) ?? [], subsBy.get(userId) ?? [])
+    return db.courseGrade.upsert({
+      where:  { userId_courseId: { userId, courseId } },
+      create: { userId, courseId, ...grade },
+      update: grade,
+    })
+  })
+  // Chunked so a very large cohort never builds one enormous transaction.
+  for (let i = 0; i < writes.length; i += 200) await db.$transaction(writes.slice(i, i + 200))
   return enrolled.length
 }
 

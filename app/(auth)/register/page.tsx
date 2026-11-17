@@ -6,7 +6,6 @@ import { Check } from "lucide-react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import StepIndicator from "@/components/ui/step-indicator";
-import SocialLoginButtons from "@/components/forms/SocialLoginButtons";
 import StepOneRegisterForm from "@/components/forms/StepOneRegisterForm";
 import StepTwoRegisterForm from "@/components/forms/StepTwoRegisterForm";
 import StepThreeRegisterForm from "@/components/forms/StepThreeRegisterForm";

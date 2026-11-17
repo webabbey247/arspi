@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { getSession } from "@/lib/session"
+import { getSession, getCurrentSessionId } from "@/lib/session"
 import { changeOwnPassword } from "@/services/profile.service"
+import { revokeOtherSessions } from "@/services/session.service"
 
 const schema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
@@ -36,6 +37,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: result.error }, { status })
     }
 
+    // A changed password should end every other signed-in device — otherwise
+    // a stolen session survives the very change meant to lock it out.
+    await revokeOtherSessions(session.sub, await getCurrentSessionId())
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error("[POST /api/account/password]", error)
