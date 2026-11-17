@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
+import NotificationBanner from "@/components/notifications/NotificationBanner"
 import {
   AdminPageHeader, StatTile, Panel, PanelLink, Pill, metaCls,
   type StatBreakdown, type PillTone,
@@ -262,6 +263,8 @@ const AdministratorDashboardPage = () => {
           { label: "Drafts", value: totalDrafts },
         ]}
       />
+
+      <NotificationBanner className="mb-6" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <StatCard

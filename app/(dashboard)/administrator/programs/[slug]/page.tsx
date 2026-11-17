@@ -1518,8 +1518,8 @@ export default function ProgramDetailPage() {
                 )}
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <StatTile label="Quiz weight"    value={`${program.quizWeight}%`} />
-                  <StatTile label="Project weight" value={`${program.projectWeight}%`} />
+                  <StatTile label="Coursework weight"    value={`${program.quizWeight}%`} />
+                  <StatTile label="Final project weight" value={`${program.projectWeight}%`} />
                   <StatTile label="Pass mark"      value={program.passMark} />
                   <StatTile label="Component pass" value={program.componentPassMark} />
                 </div>
@@ -1543,7 +1543,7 @@ export default function ProgramDetailPage() {
                     } />
                     <InfoRow label="Weighting" value={
                       program.quizWeight + program.projectWeight === 100
-                        ? <span className="text-emerald-700 font-semibold">Quiz and project weights total 100%</span>
+                        ? <span className="text-emerald-700 font-semibold">Coursework and final project weights total 100%</span>
                         : <span className="text-amber-700 font-semibold">
                             Weights total {program.quizWeight + program.projectWeight}% — grades will not scale to the pass mark correctly
                           </span>

@@ -184,7 +184,7 @@ export default function InstructorStudentsPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 max-w-60">
-                    <Link href={`/instructor/programs/${r.programme.slug}`} className="font-semibold text-[#171C35] hover:text-[#6655DF] line-clamp-2">{r.programme.title}</Link>
+                    <Link href={`/programs/${r.programme.slug}`} className="font-semibold text-[#171C35] hover:text-[#6655DF] line-clamp-2">{r.programme.title}</Link>
                   </td>
                   <td className="px-4 py-3"><Progress r={r} /></td>
                   <td className="px-4 py-3 whitespace-nowrap">

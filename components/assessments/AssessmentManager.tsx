@@ -624,7 +624,7 @@ function AssessmentManagerInner({ programId }: { programId: string }) {
         <div>
           <h2 className="text-[14px] font-bold text-[#171C35]">Assessments & grading</h2>
           <p className="text-[12px] font-bold text-[#8A90A6] mt-0.5">
-            Chapter quizzes carry 50 marks between them; the project carries the other 50.
+            Coursework carries {policy?.quizWeight ?? 50} marks between its items; the final project carries the other {policy?.projectWeight ?? 50}.
           </p>
         </div>
         <div className="flex items-center gap-2">

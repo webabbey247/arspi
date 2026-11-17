@@ -10,6 +10,7 @@ import {
 import { cn } from "@/lib/utils"
 import { StudentHomeSkeleton } from "@/components/ui/skeleton"
 import { TickProgress } from "@/components/ui/TickProgress"
+import NotificationBanner from "@/components/notifications/NotificationBanner"
 
 // ── Types (mirrors /api/student/dashboard) ──────────────────────────────────
 
@@ -479,6 +480,8 @@ const StudentDashboardPage = () => {
             : "Here's an overview of your learning."}
         </p>
       </div>
+
+      <NotificationBanner className="mb-6" />
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 mt-6">

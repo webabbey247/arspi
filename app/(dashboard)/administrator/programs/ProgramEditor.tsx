@@ -363,7 +363,7 @@ export const programSchema = yup.object({
     .test("0-100", "Must be between 0 and 100", pct)
     // A grade is quizWeight% + projectWeight% of 100, so anything else scores
     // out of the wrong total and the pass mark stops meaning what it says.
-    .test("sums-to-100", "Quiz and project weights must add up to 100", function (value) {
+    .test("sums-to-100", "Coursework and final project weights must add up to 100", function (value) {
       const quiz = Number(this.parent.quizWeight ?? 0)
       const project = Number(value ?? 0)
       if (Number.isNaN(quiz) || Number.isNaN(project)) return true
@@ -1504,17 +1504,17 @@ export function ProgramModalInner({
               <span className="min-w-0">
                 <span className="block text-[13px] font-bold text-[#171C35]">Grade this programme</span>
                 <span className="block text-[12px] text-[#69708A] mt-0.5">
-                  Computes an overall mark from quizzes and the project, and decides who passes.
+                  Computes an overall mark from coursework and the final project, and decides who passes.
                 </span>
               </span>
             </label>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Quiz weight (%)" hint="Share of the overall mark that comes from chapter quizzes">
+              <Field label="Coursework weight (%)" hint="Chapter quizzes plus module assignments (when they count — see the Assessments tab)">
                 <input type="number" min={0} max={100} {...register("quizWeight")} className={inputCls} />
                 <FieldError msg={errors.quizWeight?.message} />
               </Field>
-              <Field label="Project weight (%)" hint="Must add up to 100 with the quiz weight">
+              <Field label="Final project weight (%)" hint="Must add up to 100 with the coursework weight">
                 <input type="number" min={0} max={100} {...register("projectWeight")} className={inputCls} />
                 <FieldError msg={errors.projectWeight?.message} />
               </Field>

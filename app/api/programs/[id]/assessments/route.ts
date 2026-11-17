@@ -122,7 +122,7 @@ export async function PATCH(req: NextRequest, { params }: Context) {
     // The two halves have to add up, or "out of 100" stops being true.
     if (d.quizWeight !== undefined && d.projectWeight !== undefined
         && d.quizWeight + d.projectWeight !== 100) {
-      return NextResponse.json({ error: "Quiz and project weights must add up to 100." }, { status: 400 })
+      return NextResponse.json({ error: "Coursework and final project weights must add up to 100." }, { status: 400 })
     }
 
     const course = await db.course.update({ where: { id }, data: d })

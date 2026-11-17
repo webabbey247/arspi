@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AdminPageHeader, StatTile, Panel, PanelLink, Pill, metaCls, type PillTone } from "@/components/admin/AdminKit"
 import { TypeTile, timeAgo, type NotificationItem } from "@/components/notifications/meta"
+import NotificationBanner from "@/components/notifications/NotificationBanner"
 
 type Programme = {
   id: string; title: string; slug: string; thumbnail: string | null
@@ -108,6 +109,8 @@ export default function InstructorDashboard({ firstName }: { firstName: string |
         ) : undefined}
       />
 
+      <NotificationBanner className="mb-6" />
+
       {error && (
         <p className="mb-6 rounded-[12px] border border-red-200 bg-red-50 px-4 py-3 text-[13.5px] text-red-700">
           Couldn&apos;t load your dashboard. Refresh to try again.
@@ -172,7 +175,7 @@ export default function InstructorDashboard({ firstName }: { firstName: string |
                       ? <img src={p.thumbnail} alt="" className="w-10 h-10 rounded-[10px] object-cover shrink-0" />
                       : <span className="w-10 h-10 rounded-[10px] bg-[#EEECFF] text-[#6655DF] grid place-items-center shrink-0"><GraduationCap className="w-4.5 h-4.5" /></span>}
                     <div className="min-w-0">
-                      <Link href={`/instructor/programs/${p.slug}`} className="block text-[14px] font-bold text-[#171C35] hover:text-[#6655DF] truncate no-underline">{p.title}</Link>
+                      <Link href={`/programs/${p.slug}`} className="block text-[14px] font-bold text-[#171C35] hover:text-[#6655DF] truncate no-underline">{p.title}</Link>
                       <div className="flex items-center gap-2 mt-1">
                         <Pill tone={STATE[p.state].tone}>{STATE[p.state].label}</Pill>
                         <span className={metaCls}>{p.learners} learner{p.learners === 1 ? "" : "s"}</span>
