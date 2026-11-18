@@ -31,6 +31,10 @@ export type OutlineResult = {
   chapters: { id: string; title: string; desc: string; outcome: string }[]
   faqs: { q: string; a: string }[]
   categoryId: string; level: string; levelLabel: string; categoryName: string
+  /** Programme length; the admin's figure when they gave one. */
+  durationWeeks: number
+  /** Suggested weekly study time, e.g. "6 to 8"; may be empty. */
+  hoursPerWeek: string
 }
 
 export type BuiltLesson = PlannedLesson & { blocks: ContentBlock[] }
@@ -117,6 +121,8 @@ async function validateDiagrams(
 
 export type BuildInput = {
   topic: string; categoryId: string; level: string; notes?: string
+  /** Fixed programme length in weeks; omit to let the AI suggest one. */
+  durationWeeks?: number
   provider: Provider
   /** Generate a cover image. The form requires a thumbnail, so without this the
    *  admin has to supply one by hand before the draft can be saved. */
@@ -165,6 +171,7 @@ export async function buildCourse(
     {
       topic: input.topic, categoryId: input.categoryId,
       level: input.level, notes: input.notes, provider: input.provider,
+      ...(input.durationWeeks ? { durationWeeks: input.durationWeeks } : {}),
     },
     signal
   )

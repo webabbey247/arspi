@@ -4,6 +4,7 @@ import { requireApiRole } from "@/lib/guard"
 import { enforceRateLimit } from "@/lib/rate-limit"
 import { getProgramCategories } from "@/services/program.service"
 import { plainTextToHtml } from "@/lib/ai-text"
+import { MAX_DURATION_WEEKS, cleanHours } from "@/lib/program-duration"
 import {
   callStructured, glossaryEntrySchema, providerSchema, HOUSE_STYLE,
 } from "@/lib/ai-course"
@@ -17,6 +18,8 @@ const requestSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
   level:      z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
   notes:      z.string().max(1000).optional(),
+  /** Set by the admin to fix the programme length; otherwise the AI proposes one. */
+  durationWeeks: z.number().int().min(1).max(MAX_DURATION_WEEKS).optional(),
   provider:   providerSchema,
 })
 
@@ -46,6 +49,15 @@ const outlineSchema = z.object({
     "chapter's lessons from its outcome."
   ),
   faqs: z.array(z.object({ q: z.string(), a: z.string() })).min(4).max(6),
+  // No numeric min/max here: not every provider's structured output enforces
+  // them. The value is clamped after the call instead.
+  durationWeeks: z.number().int().describe(
+    "Total programme length in weeks, realistic for the level and the chapter workload " +
+    "(typically 4 to 12)"
+  ),
+  hoursPerWeek: z.string().describe(
+    "Expected weekly study time as a number or range of hours, digits only, e.g. '6 to 8'"
+  ),
 })
 
 export async function POST(req: NextRequest) {
@@ -67,7 +79,7 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     )
   }
-  const { topic, categoryId, level, notes, provider } = parsed.data
+  const { topic, categoryId, level, notes, provider, durationWeeks } = parsed.data
 
   const category = (await getProgramCategories()).find(c => c.id === categoryId)
   if (!category) return NextResponse.json({ error: "Category not found." }, { status: 404 })
@@ -89,7 +101,11 @@ export async function POST(req: NextRequest) {
         `Plan a course for the "${category.name}" category.\n` +
         `Topic: ${topic}\n` +
         `Level: ${levelLabel}\n` +
-        (notes ? `Additional notes from the administrator: ${notes}\n` : ""),
+        (notes ? `Additional notes from the administrator: ${notes}\n` : "") +
+        (durationWeeks
+          ? `Duration: the programme runs for exactly ${durationWeeks} week${durationWeeks === 1 ? "" : "s"}. ` +
+            `Set durationWeeks to ${durationWeeks} and size the chapters and weekly study time to fit.\n`
+          : ""),
     })
 
     return NextResponse.json({
@@ -106,6 +122,9 @@ export async function POST(req: NextRequest) {
         level:      level ?? "BEGINNER",
         levelLabel,
         categoryName: category.name,
+        // The admin's figure wins over the model's if they gave one.
+        durationWeeks: durationWeeks ?? Math.min(Math.max(Math.round(outline.durationWeeks) || 6, 1), MAX_DURATION_WEEKS),
+        hoursPerWeek:  cleanHours(outline.hoursPerWeek ?? ""),
       },
     })
   } catch (error) {

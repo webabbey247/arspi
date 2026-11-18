@@ -20,6 +20,7 @@ import FullRichTextEditor from "@/components/ui/RichTextEditor"
 import { SearchableSelect } from "@/components/ui/SearchableSelect"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
+import { formatDuration, parseDuration, MAX_DURATION_WEEKS } from "@/lib/program-duration"
 import { type CourseLevel, type Category, type Program, type FacilitatorItem, slugify, inputCls, Field, AiBuilderTrigger, Toggle } from "./program-shared"
 
 
@@ -106,6 +107,9 @@ export type ProgramFormValues = {
   format:    string
   programFormatId: string
   duration:  string
+  /** Editor-only: combined into `duration` (lib/program-duration). */
+  durationWeeks: string
+  hoursPerWeek:  string
   startDate: string
   endDate:   string
   cohortSize: string
@@ -131,7 +135,7 @@ export const EMPTY_FORM: ProgramFormValues = {
   title: "", slug: "", excerpt: "", thumbnail: "",
   pricing: "free", paymentType: "", price: "0",
   level: "BEGINNER", categoryId: "", tagline: "", featured: false,
-  format: "", programFormatId: "", duration: "", startDate: "", endDate: "", cohortSize: "",
+  format: "", programFormatId: "", duration: "", durationWeeks: "", hoursPerWeek: "", startDate: "", endDate: "", cohortSize: "",
   overview: "", outlineIntro: "", targetAudience: [], learningObjectives: [], whatIsIncluded: [],
   curriculum: [], facilitators: [], faqs: [],
 }
@@ -233,6 +237,13 @@ export const programSchema = yup.object({
   format:    yup.string(),
   programFormatId: yup.string(),
   duration:  yup.string(),
+  durationWeeks: yup.string()
+    .required("Enter the duration in weeks")
+    .test("weeks", `Whole number of weeks, 1 to ${MAX_DURATION_WEEKS}`, v => {
+      const n = Number(v)
+      return Number.isInteger(n) && n >= 1 && n <= MAX_DURATION_WEEKS
+    }),
+  hoursPerWeek: yup.string().max(20, "Keep it short, e.g. 8 to 10"),
   startDate: yup.string().when("format", {
     is:   (f: string) => ["Cohort Based", "Live Online", "Blended"].includes(f),
     then: s => s.required("Start date is required for this format"),
@@ -287,7 +298,7 @@ export const programSchema = yup.object({
 })
 
 export const STEP_FIELDS: Record<number, (keyof ProgramFormValues)[]> = {
-  1: ["title", "slug", "excerpt", "thumbnail", "pricing", "paymentType", "price", "level", "categoryId", "tagline", "featured", "format", "duration", "startDate", "endDate", "cohortSize"],
+  1: ["title", "slug", "excerpt", "thumbnail", "pricing", "paymentType", "price", "level", "categoryId", "tagline", "featured", "format", "duration", "durationWeeks", "hoursPerWeek", "startDate", "endDate", "cohortSize"],
   2: ["overview", "targetAudience", "learningObjectives", "whatIsIncluded"],
   3: ["outlineIntro", "curriculum"],
   4: ["facilitators"],
@@ -1013,6 +1024,8 @@ export function ProgramModalInner({
     format:      program.format     ?? "",
     programFormatId: program.programFormatId ?? "",
     duration:    program.duration   ?? "",
+    durationWeeks: parseDuration(program.duration).weeks,
+    hoursPerWeek:  parseDuration(program.duration).hoursPerWeek,
     startDate:   program.startDate  ?? "",
     endDate:     program.endDate    ?? "",
     cohortSize:  program.cohortSize != null ? String(program.cohortSize) : "",
@@ -1085,16 +1098,30 @@ export function ProgramModalInner({
 
   // Auto-compute end date from start date + duration (not for Live Online)
   const watchedStartDate = watch("startDate")
-  const watchedDuration  = watch("duration")
+  const watchedWeeks     = watch("durationWeeks")
+  const watchedHours     = watch("hoursPerWeek")
+  const watchedDurationText = formatDuration(watchedWeeks, watchedHours)
+
+  // Keep the stored text in step with the two inputs. Untouched, it stays
+  // exactly as saved (so e.g. "2 months" isn't rewritten just by opening it).
+  const [initialDuration] = useState(() => ({
+    text: defaultValues.duration, weeks: defaultValues.durationWeeks, hours: defaultValues.hoursPerWeek,
+  }))
+  useEffect(() => {
+    const untouched = (watchedWeeks ?? "") === initialDuration.weeks && (watchedHours ?? "") === initialDuration.hours
+    const next = untouched && initialDuration.text ? initialDuration.text : formatDuration(watchedWeeks, watchedHours)
+    setValue("duration", next, { shouldValidate: false, shouldDirty: !untouched })
+  }, [watchedWeeks, watchedHours, initialDuration, setValue])
+
   useEffect(() => {
     if (formatCfg.endEditable) return
-    const weeks = parseInt(watchedDuration ?? "") || 0
+    const weeks = parseInt(watchedWeeks ?? "") || 0
     if (watchedStartDate && weeks > 0) {
       const d = new Date(watchedStartDate)
       d.setDate(d.getDate() + weeks * 7)
       setValue("endDate", d.toISOString().split("T")[0], { shouldValidate: false, shouldDirty: false })
     }
-  }, [watchedStartDate, watchedDuration, formatCfg.endEditable, setValue])
+  }, [watchedStartDate, watchedWeeks, formatCfg.endEditable, setValue])
 
   async function handleNext() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1122,7 +1149,7 @@ export function ProgramModalInner({
 
   return (
     <div className="fixed inset-0 z-100 flex items-start justify-end bg-[#171C35]/40">
-      <div className="bg-white h-full w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
+      <div className="bg-white h-full w-full max-w-6xl shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}
         <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] px-6 py-5 shrink-0 relative">
@@ -1248,9 +1275,19 @@ export function ProgramModalInner({
                     <option value="Blended">Blended</option>
                   </select>
                 </Field>
-                <Field label={formatCfg.durationLabel} hint={formatCfg.durationHint}>
-                  <input type="number" min="1" {...register("duration")} className={inputCls} placeholder="e.g. 8" />
+                <Field label="Duration (weeks)" required hint="How long the programme runs">
+                  <input type="number" min={1} max={MAX_DURATION_WEEKS} step={1} inputMode="numeric" {...register("durationWeeks")} className={inputCls} placeholder="e.g. 7" />
+                  <FieldError msg={errors.durationWeeks?.message} />
                 </Field>
+                <Field label="Study time per week" hint="optional — hours, e.g. 8 to 10">
+                  <input {...register("hoursPerWeek")} className={inputCls} placeholder="e.g. 8 to 10" />
+                  <FieldError msg={errors.hoursPerWeek?.message} />
+                </Field>
+                {watchedDurationText && (
+                  <p className="sm:col-span-2 text-[12px] text-[#69708A] -mt-1">
+                    Shown on the programme page as <span className="font-bold text-[#171C35]">{watchedDurationText}</span>
+                  </p>
+                )}
                 {formatCfg.showDates && <>
                   <Field label="Start Date" required>
                     <input type="date" {...register("startDate")} className={inputCls} />

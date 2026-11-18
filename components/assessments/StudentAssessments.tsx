@@ -426,8 +426,8 @@ export default function StudentAssessments({ slug, preview = false }: { slug: st
         </div>
         <div className="px-5 py-4 grid grid-cols-3 gap-3">
           {[
-            { label: `${board.assignmentsInCoursework ? "Coursework" : "Quizzes"} / ${policy.quizWeight}`, marks: grade?.quizMarks ?? 0, pct: grade?.quizPct ?? 0 },
-            { label: `Project / ${policy.projectWeight}`, marks: grade?.projectMarks ?? 0, pct: grade?.projectPct ?? 0 },
+            { label: `Coursework / ${policy.quizWeight}`, marks: grade?.quizMarks ?? 0, pct: grade?.quizPct ?? 0 },
+            { label: `Final project / ${policy.projectWeight}`, marks: grade?.projectMarks ?? 0, pct: grade?.projectPct ?? 0 },
             { label: "Final / 100", marks: grade?.finalMarks ?? 0, pct: null },
           ].map(s => (
             <div key={s.label} className="rounded-[12px] bg-[#FAFAFF] border border-[#F0EFFA] px-3.5 py-3">

@@ -193,6 +193,10 @@ export default function ProgramProgress({ programId }: { programId: string }) {
                         l.grade.passed ? "text-emerald-700" : "text-amber-700")}>
                         {l.grade.passed ? "Passing" : "Not yet"}
                       </p>
+                      {/* Same halves the learner sees on their grade card. */}
+                      <p className={cn(metaCls, "mt-1 tabular-nums")}>
+                        Coursework {Math.round(l.grade.quizPct)}% · Final project {Math.round(l.grade.projectPct)}%
+                      </p>
                     </div>
                   )}
                 </div>

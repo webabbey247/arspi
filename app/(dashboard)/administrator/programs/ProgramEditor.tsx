@@ -23,6 +23,7 @@ import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
 import { toast } from "sonner"
 import { buildCourse, regenerateLesson, type Progress } from "@/lib/ai-course-client"
+import { formatDuration, parseDuration, MAX_DURATION_WEEKS } from "@/lib/program-duration"
 import { TickProgress } from "@/components/ui/TickProgress"
 import { type CourseLevel, type Category, type Program, type Lookup, type FacilitatorItem, slugify, inputCls, Field, AiBuilderTrigger, Toggle } from "./program-shared"
 
@@ -127,6 +128,9 @@ export type ProgramFormValues = {
 
   format:         string
   duration:       string
+  /** Editor-only: combined into `duration` (lib/program-duration). */
+  durationWeeks:  string
+  hoursPerWeek:   string
   startDate:      string
   endDate:        string
   cohortSize:     string
@@ -172,7 +176,7 @@ export const EMPTY_FORM: ProgramFormValues = {
   title: "", slug: "", excerpt: "", thumbnail: "",
   pricing: "free", paymentType: "", price: "0",
   level: "BEGINNER", categoryId: "", tagline: "", featured: false, predefinedAnalytics: false,
-  format: "", duration: "", startDate: "", endDate: "", cohortSize: "",
+  format: "", duration: "", durationWeeks: "", hoursPerWeek: "", startDate: "", endDate: "", cohortSize: "",
   rating: "", reviewCount: "", enrolledCount: "", countriesCount: "",
   programLevelId: "", programFormatId: "", programPricingId: "",
   overview: "", outlineIntro: "", targetAudience: [], learningObjectives: [], whatIsIncluded: [],
@@ -304,6 +308,13 @@ export const programSchema = yup.object({
 
   format:      yup.string(),
   duration:    yup.string(),
+  durationWeeks: yup.string()
+    .required("Enter the duration in weeks")
+    .test("weeks", `Whole number of weeks, 1 to ${MAX_DURATION_WEEKS}`, v => {
+      const n = Number(v)
+      return Number.isInteger(n) && n >= 1 && n <= MAX_DURATION_WEEKS
+    }),
+  hoursPerWeek: yup.string().max(20, "Keep it short, e.g. 8 to 10"),
   startDate:   yup.string().when("format", {
     is:   (f: string) => ["Cohort Based", "Live Online", "Blended"].includes(f),
     then: s => s.required("Start date is required for this format"),
@@ -383,7 +394,7 @@ export const programSchema = yup.object({
 })
 
 export const STEP_FIELDS: Record<number, (keyof ProgramFormValues)[]> = {
-  1: ["title", "slug", "excerpt", "thumbnail", "pricing", "paymentType", "price", "level", "categoryId", "tagline", "featured", "predefinedAnalytics", "rating", "reviewCount", "enrolledCount", "countriesCount"],
+  1: ["title", "slug", "excerpt", "thumbnail", "pricing", "paymentType", "price", "level", "categoryId", "tagline", "featured", "durationWeeks", "hoursPerWeek", "predefinedAnalytics", "rating", "reviewCount", "enrolledCount", "countriesCount"],
   2: ["overview", "targetAudience", "learningObjectives", "whatIsIncluded"],
   3: ["outlineIntro", "curriculum"],
   4: ["facilitators"],
@@ -1113,6 +1124,8 @@ export function ProgramModalInner({
     predefinedAnalytics: program.predefinedAnalytics ?? false,
     format:         program.format         ?? "",
     duration:       program.duration       ?? "",
+    durationWeeks:  parseDuration(program.duration).weeks,
+    hoursPerWeek:   parseDuration(program.duration).hoursPerWeek,
     startDate:      program.startDate      ?? "",
     endDate:        program.endDate        ?? "",
     cohortSize:     program.cohortSize     != null ? String(program.cohortSize)     : "",
@@ -1211,16 +1224,30 @@ export function ProgramModalInner({
 
   // Auto-compute end date from start date + duration (not for Live Online)
   const watchedStartDate = watch("startDate")
-  const watchedDuration  = watch("duration")
+  const watchedWeeks     = watch("durationWeeks")
+  const watchedHours     = watch("hoursPerWeek")
+  const watchedDurationText = formatDuration(watchedWeeks, watchedHours)
+
+  // Keep the stored text in step with the two inputs. Untouched, it stays
+  // exactly as saved (so e.g. "2 months" isn't rewritten just by opening it).
+  const [initialDuration] = useState(() => ({
+    text: defaultValues.duration, weeks: defaultValues.durationWeeks, hours: defaultValues.hoursPerWeek,
+  }))
+  useEffect(() => {
+    const untouched = (watchedWeeks ?? "") === initialDuration.weeks && (watchedHours ?? "") === initialDuration.hours
+    const next = untouched && initialDuration.text ? initialDuration.text : formatDuration(watchedWeeks, watchedHours)
+    setValue("duration", next, { shouldValidate: false, shouldDirty: !untouched })
+  }, [watchedWeeks, watchedHours, initialDuration, setValue])
+
   useEffect(() => {
     if (formatCfg.endEditable) return
-    const weeks = parseInt(watchedDuration ?? "") || 0
+    const weeks = parseInt(watchedWeeks ?? "") || 0
     if (watchedStartDate && weeks > 0) {
       const d = new Date(watchedStartDate)
       d.setDate(d.getDate() + weeks * 7)
       setValue("endDate", d.toISOString().split("T")[0], { shouldValidate: false, shouldDirty: false })
     }
-  }, [watchedStartDate, watchedDuration, formatCfg.endEditable, setValue])
+  }, [watchedStartDate, watchedWeeks, formatCfg.endEditable, setValue])
 
   async function handleNext() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1248,7 +1275,7 @@ export function ProgramModalInner({
 
   return (
     <div className="fixed inset-0 z-100 flex items-start justify-end bg-[#171C35]/40">
-      <div className="bg-white h-full w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
+      <div className="bg-white h-full w-full max-w-6xl shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}
         <div className="bg-[linear-gradient(135deg,#241C61,#6756DF)] px-6 py-5 shrink-0 relative">
@@ -1359,6 +1386,23 @@ export function ProgramModalInner({
                   <FieldError msg={errors.price?.message} />
                 </Field>
               </div>
+            )}
+
+            {/* Duration — stored as display text ("7 weeks (8 to 10 hours per week)") */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Duration (weeks)" required hint="How long the programme runs">
+                <input type="number" min={1} max={MAX_DURATION_WEEKS} step={1} inputMode="numeric" {...register("durationWeeks")} className={inputCls} placeholder="e.g. 7" />
+                <FieldError msg={errors.durationWeeks?.message} />
+              </Field>
+              <Field label="Study time per week" hint="optional — hours, e.g. 8 to 10">
+                <input {...register("hoursPerWeek")} className={inputCls} placeholder="e.g. 8 to 10" />
+                <FieldError msg={errors.hoursPerWeek?.message} />
+              </Field>
+            </div>
+            {watchedDurationText && (
+              <p className="text-[12px] text-[#69708A] -mt-1">
+                Shown on the programme page as <span className="font-bold text-[#171C35]">{watchedDurationText}</span>
+              </p>
             )}
 
             <div className="flex items-center gap-6 pt-1 flex-wrap">
@@ -1626,6 +1670,10 @@ export function AiCourseBuilderModal({
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "")
   const [level, setLevel]           = useState<CourseLevel>("BEGINNER")
   const [notes, setNotes]           = useState("")
+  const [aiWeeks, setAiWeeks]       = useState("")
+  const parsedAiWeeks = Number(aiWeeks)
+  /** Blank lets the AI choose; otherwise the outline is sized to fit. */
+  const aiWeeksNumber = Number.isInteger(parsedAiWeeks) && parsedAiWeeks >= 1 && parsedAiWeeks <= MAX_DURATION_WEEKS ? parsedAiWeeks : undefined
   const [provider, setProvider]     = useState<"anthropic" | "openai">("anthropic")
   const [withCover, setWithCover]   = useState(true)
   const [withHandouts, setWithHandouts] = useState(true)
@@ -1644,6 +1692,7 @@ export function AiCourseBuilderModal({
         {
           topic: topic.trim(), categoryId, level,
           notes: notes.trim() || undefined, provider,
+          durationWeeks: aiWeeksNumber,
           withCoverImage: withCover,
           withHandouts:   withHandouts,
         },
@@ -1661,6 +1710,9 @@ export function AiCourseBuilderModal({
         faqs:               outline.faqs,
         categoryId:         outline.categoryId,
         level:              outline.level as CourseLevel,
+        durationWeeks:      String(outline.durationWeeks),
+        hoursPerWeek:       outline.hoursPerWeek ?? "",
+        duration:           formatDuration(outline.durationWeeks, outline.hoursPerWeek),
         // Satisfies the form's required cover image when one was generated;
         // the admin can still replace it in review.
         ...(thumbnail ? { thumbnail } : {}),
@@ -1774,6 +1826,15 @@ export function AiCourseBuilderModal({
                   </select>
                 </Field>
               </div>
+              <Field label="Duration (weeks)" hint="optional — leave blank and the AI suggests one">
+                <input
+                  type="number" min={1} max={MAX_DURATION_WEEKS} step={1} inputMode="numeric"
+                  value={aiWeeks}
+                  onChange={e => setAiWeeks(e.target.value)}
+                  className={inputCls}
+                  placeholder="e.g. 7"
+                />
+              </Field>
               <Field label="Notes" hint="optional">
                 <textarea
                   value={notes}
