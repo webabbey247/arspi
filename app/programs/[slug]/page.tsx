@@ -295,7 +295,7 @@ function parseFacilitators(v: unknown): Omit<FacilitatorCard, "programmeCount" |
     return [{
       name,
       title:    typeof f.title === "string" && f.title.trim() ? f.title.trim() : null,
-      bio:      typeof f.bio === "string" && f.bio.trim() ? f.bio : null,
+      bio:      typeof f.bio === "string" && f.bio.trim() ? sanitizeRich(f.bio) : null,
       initials: name.split(/\s+/).filter(Boolean).map(w => w[0].toUpperCase()).join("").slice(0, 4),
       imageUrl: typeof f.imageUrl === "string" && f.imageUrl ? f.imageUrl : null,
     }]

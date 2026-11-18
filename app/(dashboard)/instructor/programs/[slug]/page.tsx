@@ -348,7 +348,7 @@ export default function InstructorProgramDetailPage() {
               <p className="text-[11px] font-bold text-[#8A90A6] uppercase tracking-wide">Description</p>
             </div>
             <div className="px-5 py-4">
-              <p className="text-[13px] text-[#171C35] leading-relaxed whitespace-pre-wrap">{program.description}</p>
+              <RichText value={program.description} className="text-[13px] text-[#171C35] leading-relaxed" />
             </div>
           </div>
 

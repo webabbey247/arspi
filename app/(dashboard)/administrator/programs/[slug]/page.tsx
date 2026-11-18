@@ -1587,7 +1587,7 @@ export default function ProgramDetailPage() {
                           <InfoRow label="Name"  value={f.name} />
                           <InfoRow label="Title" value={f.title} />
                           <InfoRow label="Bio"   value={
-                            f.bio ? <span className="whitespace-pre-wrap leading-relaxed">{f.bio}</span> : null
+                            f.bio ? <RichText value={f.bio} className="leading-relaxed" /> : null
                           } />
                           <InfoRow label="Credentials" value={f.credentials} />
                           <InfoRow label="Photo" value={

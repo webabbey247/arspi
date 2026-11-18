@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import RichTextView from "@/components/ui/RichTextView"
 
 export type InstructorProgramStat = {
   slug:        string
@@ -109,7 +110,7 @@ export default function InstructorProfileModal({
 
             {/* Body */}
             <div className="px-8 pt-6.5 pb-8">
-              {bio && <p className="mb-6.5 font-body text-[15px] leading-[1.65] text-[#3E4A59] text-pretty">{bio}</p>}
+              <RichTextView value={bio} as="p" className="mb-6.5 font-body text-[15px] leading-[1.65] text-[#3E4A59] text-pretty" />
               <div className="font-body text-[10.5px] tracking-[0.18em] uppercase text-[#128C6E]">Programmes by this facilitator</div>
               <div className="mt-3.5 border-t border-[#EAE5DC]">
                 {programs.map((p) => (

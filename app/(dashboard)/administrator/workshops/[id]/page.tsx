@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import RichText from "@/components/ui/RichText"
 import { computeDurationHours } from "@/lib/workshop-helpers"
 import { DetailPageSkeleton, InlineSkeleton } from "@/components/ui/skeleton"
 import { AdminPageHeader, StatTile } from "@/components/admin/AdminKit"
@@ -350,7 +351,7 @@ export default function WorkshopDetailPage() {
               <h2 className="text-[14px] font-bold text-[#171C35]">Description</h2>
             </div>
             <div className="px-5 py-4">
-              <p className="text-[13px] text-[#171C35] leading-relaxed whitespace-pre-wrap">{workshop.description}</p>
+              <RichText value={workshop.description} className="text-[13px] text-[#171C35] leading-relaxed" />
             </div>
           </div>
 
