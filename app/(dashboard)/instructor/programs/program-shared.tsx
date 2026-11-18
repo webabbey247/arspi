@@ -57,6 +57,8 @@ export type Program = {
 }
 
 export type FacilitatorItem = {
+  /** Set for directory picks (components/facilitators). */
+  facilitatorId?: string
   name:        string
   imageUrl:    string
   title:       string

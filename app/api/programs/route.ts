@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { createProgram, slugify, CourseLevel, getProgramList } from "@/services/program.service"
 import { z } from "zod"
+import { resolveFacilitatorSelection } from "@/services/facilitator.service"
 
 const facilitatorSchema = z.object({
+  // Set when picked from the directory; the server refreshes the rest from it.
+  facilitatorId: z.string().max(64).optional(),
   name:        z.string().min(1),
   imageUrl:    z.string().nullable().optional(),
   title:       z.string().min(1),
@@ -138,6 +141,8 @@ export async function POST(req: NextRequest) {
     }
 
     const input = parsed.data
+    // Directory picks are re-read from the directory, not trusted as sent.
+    input.facilitators = await resolveFacilitatorSelection(input.facilitators)
     const slug  = input.slug ?? slugify(input.title)
 
     const result = await createProgram({ ...input, slug })

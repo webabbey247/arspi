@@ -230,8 +230,9 @@ model Course {
   whatIsIncluded     Json? // String[]
   faqs               Json? // { q, a }[]
 
-  // Facilitators array (replaces standalone instructor columns)
-  facilitators Json? // { name, imageUrl?, title, bio, credentials? }[]
+  // Facilitators array (replaces standalone instructor columns). A snapshot of
+  // directory entries (model Facilitator), kept in sync when one is edited.
+  facilitators Json? // { facilitatorId?, name, imageUrl?, title, bio, credentials? }[]
 
   // Instructor (User relation)
   /// The instructor assigned to review, edit and grade this programme. Null
@@ -712,6 +713,27 @@ enum RubricStatus {
 enum RubricType {
   ANALYTIC // one level + score per criterion
   HOLISTIC // one overall level — not built yet
+}
+
+/// The facilitator directory. Programmes pick from it; each programme keeps a
+/// snapshot in Course.facilitators (with facilitatorId) that is rewritten
+/// whenever the entry is edited, so public pages read one row as before.
+model Facilitator {
+  id          String   @id @default(cuid())
+  name        String
+  title       String
+  /// Rich-text HTML from the editor; sanitised when rendered.
+  bio         String
+  imageUrl    String?
+  /// One per line.
+  credentials String?
+  /// The institute itself — the default on new programmes; can't be deleted.
+  isInstitute Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([name])
+  @@map("facilitators")
 }
 
 /// A reusable marking rubric. This row is the stable identity that assignment

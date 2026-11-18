@@ -7,6 +7,7 @@ import { RowActions, RowIcon } from "@/components/admin/AdminKit"
 import type { DropdownItem } from "@/components/ui/DropdownMenu"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { facilitatorsPayload as toFacilitatorsPayload } from "@/components/facilitators/types"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 import dynamic from "next/dynamic"
 import { type CourseLevel, type Category, type Program, LEVEL_LABELS, LEVEL_COLORS, slugify, fmtDate, fmtPrice, facilitatorSummary } from "./program-shared"
@@ -124,15 +125,8 @@ export default function InstructorProgramsPage() {
           })),
       }))
 
-    const facilitatorsPayload = values.facilitators
-      .filter(f => f.name.trim())
-      .map(f => ({
-        name:        f.name.trim(),
-        imageUrl:    f.imageUrl?.trim() || null,
-        title:       f.title.trim(),
-        bio:         f.bio,
-        credentials: f.credentials?.trim() || null,
-      }))
+    // Directory picks carry facilitatorId; the server re-reads them from the directory.
+    const facilitatorsPayload = toFacilitatorsPayload(values.facilitators)
 
     const faqsPayload = values.faqs.filter(f => f.q.trim())
 

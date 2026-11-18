@@ -8,9 +8,11 @@ import { AdminPageHeader, EmptyState, RowActions, RowIcon, StatTile } from "@/co
 import type { DropdownItem } from "@/components/ui/DropdownMenu"
 import { useRouter } from "next/navigation"
 import RubricManager from "@/components/rubrics/RubricManager"
+import FacilitatorsManager from "@/components/facilitators/FacilitatorsManager"
+import { DEFAULT_PROGRAMME_FACILITATOR, facilitatorsPayload as toFacilitatorsPayload } from "@/components/facilitators/types"
 import AssignReviewModal from "@/components/admin/AssignReviewModal"
 import dynamic from "next/dynamic"
-import { type CourseLevel, type CourseStatus, type Category, type Program, type Tab, type Lookup, type LookupKind, LOOKUP_LABEL, LOOKUP_ENDPOINT, LOOKUP_RESPONSE_KEY, LEVEL_LABELS, LEVEL_COLORS, slugify, fmtDate, fmtPrice, instructorName, facilitatorSummary, inputCls, ConfirmDialog, INSTITUTE_FACILITATOR, intOr } from "./program-shared"
+import { type CourseLevel, type CourseStatus, type Category, type Program, type Tab, type Lookup, type LookupKind, LOOKUP_LABEL, LOOKUP_ENDPOINT, LOOKUP_RESPONSE_KEY, LEVEL_LABELS, LEVEL_COLORS, slugify, fmtDate, fmtPrice, instructorName, facilitatorSummary, inputCls, ConfirmDialog, intOr } from "./program-shared"
 import { type ProgramFormValues } from "./ProgramEditor"
 
 // The editor is heavy (rich-text editors, form + validation libraries) and
@@ -264,6 +266,8 @@ export default function AdminProgramsPage() {
   // Rubrics manage their own data; the header button bumps this to open the builder.
   const [rubricCreate, setRubricCreate] = useState(0)
   const [rubricCount, setRubricCount]   = useState<number | null>(null)
+  const [facilitatorCreate, setFacilitatorCreate] = useState(0)
+  const [facilitatorCount, setFacilitatorCount]   = useState<number | null>(null)
 
   // Programs
   const [programs, setPrograms]               = useState<Program[]>([])
@@ -444,15 +448,8 @@ export default function AdminProgramsPage() {
           })),
       }))
 
-    const facilitatorsPayload = values.facilitators
-      .filter(f => f.name.trim())
-      .map(f => ({
-        name:        f.name.trim(),
-        imageUrl:    f.imageUrl?.trim() || null,
-        title:       f.title.trim(),
-        bio:         f.bio,
-        credentials: f.credentials?.trim() || null,
-      }))
+    // Directory picks carry facilitatorId; the server re-reads them from the directory.
+    const facilitatorsPayload = toFacilitatorsPayload(values.facilitators)
 
     const faqsPayload = values.faqs.filter(f => f.q.trim())
 
@@ -493,7 +490,7 @@ export default function AdminProgramsPage() {
       curriculum:         curriculumPayload.length   > 0 ? curriculumPayload   : null,
       // Never null: a programme without authored facilitators is credited to
       // the institute rather than showing nobody.
-      facilitators:       facilitatorsPayload.length > 0 ? facilitatorsPayload : [INSTITUTE_FACILITATOR],
+      facilitators:       facilitatorsPayload.length > 0 ? facilitatorsPayload : toFacilitatorsPayload([DEFAULT_PROGRAMME_FACILITATOR]),
 
       gradingEnabled:          values.gradingEnabled,
       quizWeight:              intOr(values.quizWeight, 50),
@@ -762,6 +759,7 @@ export default function AdminProgramsPage() {
               if (tab === "programs")   setProgramModal("create")
               else if (tab === "categories") setCategoryModal("create")
               else if (tab === "levels")     setLevelModal("create")
+              else if (tab === "facilitators") setFacilitatorCreate(n => n + 1)
               else if (tab === "rubrics")    setRubricCreate(n => n + 1)
               else if (tab === "formats")    setFormatModal("create")
               else                           setPricingModal("create")
@@ -772,6 +770,7 @@ export default function AdminProgramsPage() {
             {tab === "programs"   ? "New Program"
              : tab === "categories" ? "New Category"
              : tab === "levels"     ? "New Level"
+             : tab === "facilitators" ? "New Facilitator"
              : tab === "rubrics"    ? "New Rubric"
              : tab === "formats"    ? "New Format"
              :                        "New Pricing"}
@@ -819,11 +818,12 @@ export default function AdminProgramsPage() {
 
       {/* Tabs — formats / pricing intentionally hidden until those features ship */}
       <div className="flex gap-1 mb-5 bg-[#F5F6FB] rounded-[12px] p-1 overflow-x-auto sm:overflow-x-visible sm:w-fit sm:flex-wrap">
-        {(["programs", "categories", "levels", "rubrics"] as Tab[]).map(t => {
+        {(["programs", "categories", "levels", "facilitators", "rubrics"] as Tab[]).map(t => {
           const count =
             t === "programs"   ? programs.length :
             t === "categories" ? categories.length :
             t === "levels"     ? levels.length :
+            t === "facilitators" ? (facilitatorCount ?? "…") :
             t === "rubrics"    ? (rubricCount ?? "…") :
             t === "formats"    ? formats.length :
                                  pricingList.length
@@ -1273,6 +1273,11 @@ export default function AdminProgramsPage() {
           onDelete={(item) => setDeleteLevel(item)}
         />
       )}
+
+      {/* Always mounted (hidden off-tab) so the tab shows its count. */}
+      <div hidden={tab !== "facilitators"}>
+        <FacilitatorsManager createRequest={facilitatorCreate} onCount={setFacilitatorCount} />
+      </div>
 
       {/* Always mounted (hidden off-tab) so the tab shows its count and the
           builder's state survives tab switches. */}

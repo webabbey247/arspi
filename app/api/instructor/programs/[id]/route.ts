@@ -3,8 +3,11 @@ import { recomputeCourseGradesForAll } from "@/services/assessment.service"
 import { getSession } from "@/lib/session"
 import { getProgramById, getProgramBySlug, updateProgram, slugify } from "@/services/program.service"
 import { z } from "zod"
+import { resolveFacilitatorSelection } from "@/services/facilitator.service"
 
 const facilitatorSchema = z.object({
+  // Set when picked from the directory; the server refreshes the rest from it.
+  facilitatorId: z.string().max(64).optional(),
   name:        z.string().min(1),
   imageUrl:    z.string().nullable().optional(),
   title:       z.string().min(1),
@@ -104,6 +107,8 @@ export async function PUT(req: NextRequest, { params }: Context) {
     }
 
     const input = parsed.data
+    // Directory picks are re-read from the directory, not trusted as sent.
+    input.facilitators = await resolveFacilitatorSelection(input.facilitators)
     if (input.title && !input.slug) input.slug = slugify(input.title)
 
     // Always write to the programme that passed the ownership check. The URL

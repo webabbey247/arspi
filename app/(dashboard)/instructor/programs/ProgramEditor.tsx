@@ -21,6 +21,8 @@ import { SearchableSelect } from "@/components/ui/SearchableSelect"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
 import { formatDuration, parseDuration, MAX_DURATION_WEEKS } from "@/lib/program-duration"
+import FacilitatorPicker from "@/components/facilitators/FacilitatorPicker"
+import { DEFAULT_PROGRAMME_FACILITATOR, readProgrammeFacilitators } from "@/components/facilitators/types"
 import { type CourseLevel, type Category, type Program, type FacilitatorItem, slugify, inputCls, Field, AiBuilderTrigger, Toggle } from "./program-shared"
 
 
@@ -137,7 +139,7 @@ export const EMPTY_FORM: ProgramFormValues = {
   level: "BEGINNER", categoryId: "", tagline: "", featured: false,
   format: "", programFormatId: "", duration: "", durationWeeks: "", hoursPerWeek: "", startDate: "", endDate: "", cohortSize: "",
   overview: "", outlineIntro: "", targetAudience: [], learningObjectives: [], whatIsIncluded: [],
-  curriculum: [], facilitators: [], faqs: [],
+  curriculum: [], facilitators: [DEFAULT_PROGRAMME_FACILITATOR], faqs: [],
 }
 
 // ── Format config ─────────────────────────────────────────────────────────────
@@ -279,11 +281,14 @@ export const programSchema = yup.object({
   })),
 
   // Step 4
+  // Picked from the directory (validated there); the server re-reads each
+  // pick by facilitatorId, so only the name is checked here.
   facilitators: yup.array(yup.object({
+    facilitatorId: yup.string(),
     name:        yup.string().required("Full name is required"),
     imageUrl:    yup.string(),
-    title:       yup.string().required("Title / Role is required"),
-    bio:         yup.string().required("Biography is required").max(2000, "Biography is too long"),
+    title:       yup.string(),
+    bio:         yup.string(),
     credentials: yup.string(),
   })).when("format", {
     is:   (f: string) => ["Cohort Based", "Live Online", "Blended"].includes(f),
@@ -456,56 +461,6 @@ export function RichTextEditor({ value, onChange, placeholder }: {
 }
 
 // ── Facilitator avatar upload ─────────────────────────────────────────────────
-
-export function FacilitatorAvatarUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
-  const [uploading, setUploading] = useState(false)
-  const { startUpload } = useUploadThing("imageUploader")
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    try {
-      const res = await startUpload([file])
-      if (res?.[0]?.url) onChange(res[0].url)
-    } finally {
-      setUploading(false)
-      if (inputRef.current) inputRef.current.value = ""
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-3">
-      {value ? (
-        <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-[#DFE2ED] shrink-0 group">
-          <Image src={value} alt="Facilitator" fill className="object-cover" />
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            className="absolute inset-0 bg-[#171C35]/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer"
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-      ) : (
-        <div className="w-14 h-14 rounded-full border-2 border-dashed border-[#DFE2ED] flex items-center justify-center shrink-0 text-[#8A90A6]">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={uploading}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold border border-[#DFE2ED] rounded-[8px] text-[#69708A] hover:border-[#6655DF] hover:text-[#6655DF] disabled:opacity-50 transition-colors cursor-pointer"
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        {uploading ? "Uploading…" : value ? "Change photo" : "Upload photo"}
-      </button>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-    </div>
-  )
-}
 
 // ── Lessons editor (nested within a chapter) ──────────────────────────────────
 
@@ -754,102 +709,6 @@ export function CurriculumEditor({
 
 // ── Facilitators editor ───────────────────────────────────────────────────────
 
-export function FacilitatorsEditor({
-  control, register, errors,
-}: {
-  control:  Control<ProgramFormValues>
-  register: UseFormRegister<ProgramFormValues>
-  errors:   FieldErrors<ProgramFormValues>
-}) {
-  const { fields, append, remove } = useFieldArray({ control, name: "facilitators" })
-  return (
-    <div className="space-y-4">
-      {fields.length === 0 && (
-        <p className="text-[12px] text-[#8A90A6] italic">No facilitators added yet.</p>
-      )}
-      {fields.map((field, i) => (
-        <div key={field.id} className="border border-[#DFE2ED] rounded-[12px] overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAFAFF] border-b border-[#DFE2ED]">
-            <span className="text-[11px] font-bold text-[#6655DF] uppercase tracking-wide">Facilitator {i + 1}</span>
-            <button type="button" onClick={() => remove(i)} className="w-6 h-6 flex items-center justify-center rounded-full text-[#8A90A6] hover:bg-red-50 hover:text-red-500 cursor-pointer">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-          <div className="px-4 py-4 space-y-3">
-            <Field label="Photo" hint="optional">
-              <Controller
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                name={`facilitators.${i}.imageUrl` as any}
-                control={control}
-                render={({ field }) => (
-                  <FacilitatorAvatarUpload
-                    value={(field.value as string) ?? ""}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Full Name" required>
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <input {...register(`facilitators.${i}.name` as any)} className={inputCls} placeholder="e.g. Dr. Rachel Osei" />
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <FieldError msg={(errors.facilitators?.[i] as any)?.name?.message} />
-              </Field>
-              <Field label="Title / Role" required>
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <input {...register(`facilitators.${i}.title` as any)} className={inputCls} placeholder="e.g. Senior Researcher & M&E Specialist" />
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <FieldError msg={(errors.facilitators?.[i] as any)?.title?.message} />
-              </Field>
-            </div>
-            <Field label="Biography" required hint="max 2000 characters">
-              <Controller
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                name={`facilitators.${i}.bio` as any}
-                control={control}
-                render={({ field }) => (
-                  <RichTextEditor
-                    value={(field.value as string) ?? ""}
-                    onChange={field.onChange}
-                    placeholder="Short biography of the programme facilitator…"
-                  />
-                )}
-              />
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <FieldError msg={(errors.facilitators?.[i] as any)?.bio?.message} />
-            </Field>
-            <Field label="Credentials" hint="optional — separate by line">
-              <textarea
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                {...register(`facilitators.${i}.credentials` as any)}
-                rows={2}
-                className={inputCls}
-                placeholder="e.g. PhD Research Methods — University of Ghana"
-              />
-            </Field>
-          </div>
-        </div>
-      ))}
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      {(errors.facilitators as any)?.message && (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        <p className="text-[11px] text-red-600">{(errors.facilitators as any).message}</p>
-      )}
-      <button
-        type="button"
-        onClick={() => append({ name: "", imageUrl: "", title: "", bio: "", credentials: "" })}
-        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6655DF] hover:text-[#2C2368] transition-colors cursor-pointer"
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Facilitator
-      </button>
-    </div>
-  )
-}
-
-// ── FAQ editor ────────────────────────────────────────────────────────────────
-
 export function FaqEditor({
   control, register, errors,
 }: {
@@ -1052,15 +911,7 @@ export function ProgramModalInner({
             : [],
         }))
       : [],
-    facilitators: Array.isArray(program.facilitators)
-      ? (program.facilitators as Record<string, unknown>[]).map(f => ({
-          name:        String(f.name        ?? ""),
-          imageUrl:    String(f.imageUrl    ?? ""),
-          title:       String(f.title       ?? ""),
-          bio:         String(f.bio         ?? ""),
-          credentials: String(f.credentials ?? ""),
-        }))
-      : [],
+    facilitators: readProgrammeFacilitators(program.facilitators),
     faqs: Array.isArray(program.faqs) ? (program.faqs as FaqItem[]) : [],
   } : EMPTY_FORM
 
@@ -1402,7 +1253,16 @@ export function ProgramModalInner({
                 At least one facilitator is required for <strong>{watchedFormat}</strong> programmes.
               </p>
             )}
-            <FacilitatorsEditor control={control} register={register} errors={errors} />
+            <Controller
+              name="facilitators"
+              control={control}
+              render={({ field }) => (
+                <FacilitatorPicker value={field.value ?? []} onChange={field.onChange} />
+              )}
+            />
+            {(errors.facilitators as { message?: string } | undefined)?.message && (
+              <p className="text-[12px] text-red-600">{(errors.facilitators as { message?: string }).message}</p>
+            )}
           </>}
 
           {/* Step 5 — FAQs */}

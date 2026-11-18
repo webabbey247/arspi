@@ -18,12 +18,13 @@ import ContentBlockEditor from "@/components/forms/ContentBlockEditor"
 import { RubricScopeProvider } from "@/components/rubrics/RubricScope"
 import FullRichTextEditor from "@/components/ui/RichTextEditor"
 import { SearchableSelect } from "@/components/ui/SearchableSelect"
-import { SITE_NAME } from "@/lib/seo"
 import type { ContentBlock } from "@/components/forms/ContentBlockEditor"
 import AiFieldBuilderModal from "@/components/forms/AiFieldBuilderModal"
 import { toast } from "sonner"
 import { buildCourse, regenerateLesson, type Progress } from "@/lib/ai-course-client"
 import { formatDuration, parseDuration, MAX_DURATION_WEEKS } from "@/lib/program-duration"
+import FacilitatorPicker from "@/components/facilitators/FacilitatorPicker"
+import { DEFAULT_PROGRAMME_FACILITATOR, readProgrammeFacilitators } from "@/components/facilitators/types"
 import { TickProgress } from "@/components/ui/TickProgress"
 import { type CourseLevel, type Category, type Program, type Lookup, type FacilitatorItem, slugify, inputCls, Field, AiBuilderTrigger, Toggle } from "./program-shared"
 
@@ -154,8 +155,7 @@ export type ProgramFormValues = {
   // Step 3 — Curriculum
   curriculum: CurriculumItem[]
 
-  // Carried in form state but no longer authored: see the note on the
-  // grading step. Existing facilitators round-trip so a save cannot drop them.
+  // Chosen on the Facilitators step from the directory (FacilitatorPicker).
   facilitators: FacilitatorItem[]
 
   // Step 4 — Grading
@@ -180,7 +180,8 @@ export const EMPTY_FORM: ProgramFormValues = {
   rating: "", reviewCount: "", enrolledCount: "", countriesCount: "",
   programLevelId: "", programFormatId: "", programPricingId: "",
   overview: "", outlineIntro: "", targetAudience: [], learningObjectives: [], whatIsIncluded: [],
-  curriculum: [], facilitators: [], faqs: [],
+  // New programmes credit the institute until someone is added.
+  curriculum: [], facilitators: [DEFAULT_PROGRAMME_FACILITATOR], faqs: [],
   // Mirrors the column defaults in prisma/schema.prisma.
   gradingEnabled: false,
   quizWeight: "50", projectWeight: "50",
@@ -255,6 +256,7 @@ export const STEPS = [
   { label: "Objectives",   desc: "Outcomes & target audience"   },
   { label: "Curriculum",   desc: "Programme outline"            },
   { label: "Grading",      desc: "Marks, pass marks & attempts" },
+  { label: "Facilitators", desc: "Who is credited on the page"  },
   { label: "FAQs",         desc: "Frequently asked questions"   },
 ]
 
@@ -359,11 +361,14 @@ export const programSchema = yup.object({
   })),
 
   // Step 4
+  // Picked from the directory (validated there); the server re-reads each
+  // pick by facilitatorId, so only the name is checked here.
   facilitators: yup.array(yup.object({
+    facilitatorId: yup.string(),
     name:        yup.string().required("Full name is required"),
     imageUrl:    yup.string(),
-    title:       yup.string().required("Title / Role is required"),
-    bio:         yup.string().required("Biography is required").max(2000, "Biography is too long"),
+    title:       yup.string(),
+    bio:         yup.string(),
     credentials: yup.string(),
   })),
 
@@ -397,8 +402,9 @@ export const STEP_FIELDS: Record<number, (keyof ProgramFormValues)[]> = {
   1: ["title", "slug", "excerpt", "thumbnail", "pricing", "paymentType", "price", "level", "categoryId", "tagline", "featured", "durationWeeks", "hoursPerWeek", "predefinedAnalytics", "rating", "reviewCount", "enrolledCount", "countriesCount"],
   2: ["overview", "targetAudience", "learningObjectives", "whatIsIncluded"],
   3: ["outlineIntro", "curriculum"],
-  4: ["facilitators"],
-  5: ["faqs"],
+  4: ["gradingEnabled", "quizWeight", "projectWeight", "passMark", "componentPassMark", "maxQuizAttempts", "attemptCooldownHours", "maxProjectResubmissions"],
+  5: ["facilitators"],
+  6: ["faqs"],
 }
 
 // ── Inline field error ────────────────────────────────────────────────────────
@@ -1175,15 +1181,7 @@ export function ProgramModalInner({
             : [],
         }))
       : [],
-    facilitators: Array.isArray(program.facilitators)
-      ? (program.facilitators as Record<string, unknown>[]).map(f => ({
-          name:        String(f.name        ?? ""),
-          imageUrl:    String(f.imageUrl    ?? ""),
-          title:       String(f.title       ?? ""),
-          bio:         String(f.bio         ?? ""),
-          credentials: String(f.credentials ?? ""),
-        }))
-      : [],
+    facilitators: readProgrammeFacilitators(program.facilitators),
     faqs: Array.isArray(program.faqs) ? (program.faqs as FaqItem[]) : [],
   } : { ...EMPTY_FORM, ...initialValues }
 
@@ -1584,14 +1582,21 @@ export function ProgramModalInner({
               </Field>
             </div>
 
-            <p className="text-[12px] text-[#8A90A6] leading-relaxed">
-              Facilitation is credited to {SITE_NAME}. Programme-specific facilitators are no longer
-              authored here; any already saved against this programme are kept.
-            </p>
           </>}
 
-          {/* Step 5 — FAQs */}
-          {step === 5 && <>
+          {/* Step 5 — Facilitators */}
+          {step === 5 && (
+            <Controller
+              name="facilitators"
+              control={control}
+              render={({ field }) => (
+                <FacilitatorPicker value={field.value ?? []} onChange={field.onChange} />
+              )}
+            />
+          )}
+
+          {/* Step 6 — FAQs */}
+          {step === 6 && <>
             <div className="flex items-start justify-between gap-4">
               <p className="text-[13px] text-[#69708A] leading-relaxed">
                 Add frequently asked questions shown in an accordion on the programme page. At least one FAQ is required.

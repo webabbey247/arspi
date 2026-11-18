@@ -1,6 +1,5 @@
 // Types and small helpers shared by the programs list page and the
 // programme editor (ProgramEditor.tsx).
-import { SITE_NAME } from "@/lib/seo"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -82,7 +81,7 @@ export type Program = {
   facilitators?:       unknown | null
 }
 
-export type Tab = "programs" | "categories" | "levels" | "rubrics" | "formats" | "pricing"
+export type Tab = "programs" | "categories" | "levels" | "facilitators" | "rubrics" | "formats" | "pricing"
 
 export type Lookup = {
   id: string
@@ -113,6 +112,8 @@ export const LOOKUP_RESPONSE_KEY: Record<LookupKind, "levels" | "formats" | "pri
 }
 
 export type FacilitatorItem = {
+  /** Set for directory picks (components/facilitators). */
+  facilitatorId?: string
   name:        string
   imageUrl:    string
   title:       string
@@ -230,17 +231,6 @@ export function ConfirmDialog({ message, onConfirm, onCancel }: { message: strin
 
 
 
-
-/** The facilitator every programme is credited to. Taken from SITE_NAME so
- *  the institute is named in one place rather than typed into each
- *  programme — rename it there and new saves follow. */
-export const INSTITUTE_FACILITATOR = {
-  name:        SITE_NAME,
-  imageUrl:    null,
-  title:       "Programme Faculty",
-  bio:         `Delivered by the faculty of ${SITE_NAME}.`,
-  credentials: null,
-}
 
 /** Parses a numeric form field, falling back rather than writing NaN. */
 export function intOr(value: string | undefined, fallback: number): number {
