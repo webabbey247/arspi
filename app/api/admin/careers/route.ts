@@ -19,7 +19,7 @@ const createSchema = z.object({
     .check(z.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase with hyphens only"))
     .optional(),
   department:      z.string().min(1).max(120),
-  type:            z.enum(["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP", "TEMPORARY"]).optional(),
+  type:            z.enum(["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP", "TEMPORARY", "VOLUNTEER"]).optional(),
   experienceLevel: z.enum(["ENTRY", "JUNIOR", "MID", "SENIOR", "LEAD", "EXECUTIVE"]).optional(),
   location:        z.string().min(1).max(120),
   remote:          z.boolean().optional(),

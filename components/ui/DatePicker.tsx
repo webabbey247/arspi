@@ -33,6 +33,17 @@ export function parseISODate(value: string | null | undefined): Date | null {
   return Number.isNaN(d.getTime()) ? null : d
 }
 
+/** Typed `dd/mm/yyyy` (also `-` or `.`) → `yyyy-mm-dd`, or null when it isn't
+ *  a real calendar date (31/04, 29/02 in a non-leap year, US-style 12/31…). */
+export function parseTypedDate(text: string): string | null {
+  const m = /^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})$/.exec(text.trim())
+  if (!m) return null
+  const [d, mo, y] = [Number(m[1]), Number(m[2]), Number(m[3])]
+  const date = new Date(y, mo - 1, d)
+  if (date.getFullYear() !== y || date.getMonth() !== mo - 1 || date.getDate() !== d) return null
+  return toISODate(date)
+}
+
 /** Date → `yyyy-mm-dd`, read in local time. */
 export function toISODate(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0")
@@ -52,6 +63,8 @@ export function DatePicker({
   toYear,
   min,
   max,
+  typeable,
+  footer,
 }: {
   /** ISO `yyyy-mm-dd`, or "" for empty. */
   value: string
@@ -68,10 +81,16 @@ export function DatePicker({
   /** ISO bounds; days outside are not selectable. */
   min?: string
   max?: string
+  /** Adds a DD/MM/YYYY box above the calendar, for typing instead of clicking. */
+  typeable?: boolean
+  /** Adds Today / Clear buttons under the calendar. */
+  footer?: boolean
 }) {
   const id = useId()
   const [open, setOpen] = useState(false)
   const [box, setBox] = useState<{ top: number; left: number; width: number } | null>(null)
+  const [typed, setTyped] = useState("")
+  const [typedError, setTypedError] = useState("")
 
   const wrapper = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
@@ -80,6 +99,40 @@ export function DatePicker({
   const selected = parseISODate(value)
   const minDate = parseISODate(min)
   const maxDate = parseISODate(max)
+
+  const inRange = (d: Date) => (!minDate || d >= minDate) && (!maxDate || d <= maxDate)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  function pick(iso: string) {
+    onChange(iso)
+    setOpen(false)
+    trigger.current?.focus()
+  }
+
+  function toggle() {
+    if (!open) {
+      // Start the typing box from the current value each time it opens.
+      setTyped(selected ? selected.toLocaleDateString("en-GB") : "")
+      setTypedError("")
+    }
+    setOpen(o => !o)
+  }
+
+  function commitTyped() {
+    const iso = parseTypedDate(typed)
+    if (!iso) { setTypedError("Use DD/MM/YYYY, e.g. 31/12/2026."); return }
+    const d = parseISODate(iso)!
+    if (!inRange(d)) {
+      setTypedError(minDate && d < minDate
+        ? `Pick ${minDate.toLocaleDateString("en-GB")} or later.`
+        : `Pick ${maxDate!.toLocaleDateString("en-GB")} or earlier.`)
+      return
+    }
+    pick(iso)
+  }
+
+  const panelHeight = PANEL_HEIGHT + (typeable ? 64 : 0) + (footer ? 44 : 0)
 
   const place = useCallback(() => {
     const anchor = trigger.current?.getBoundingClientRect()
@@ -91,13 +144,13 @@ export function DatePicker({
     const below = anchor.bottom + GAP
     const roomBelow = viewBottom - below - MARGIN
     const roomAbove = anchor.top - GAP - (viewTop + MARGIN)
-    const downward = PANEL_HEIGHT <= roomBelow || roomBelow >= roomAbove
+    const downward = panelHeight <= roomBelow || roomBelow >= roomAbove
 
     const width = Math.min(Math.max(anchor.width, PANEL_WIDTH), window.innerWidth - MARGIN * 2)
-    const top = downward ? below : Math.max(viewTop + MARGIN, anchor.top - GAP - PANEL_HEIGHT)
+    const top = downward ? below : Math.max(viewTop + MARGIN, anchor.top - GAP - panelHeight)
     const left = Math.min(Math.max(MARGIN, anchor.left), window.innerWidth - width - MARGIN)
     setBox({ top, left, width })
-  }, [])
+  }, [panelHeight])
 
   // A portal panel can only be positioned once it has been laid out: its
   // height decides whether it opens downward or flips up, and that is
@@ -124,7 +177,12 @@ export function DatePicker({
     }
     // A fixed panel cannot follow its anchor, so closing is the honest response
     // to a scroll rather than letting it drift away from the field.
-    function onScrollOrResize() { setOpen(false) }
+    // Except while typing in the panel: on Android the on-screen keyboard
+    // resizes the window, which would shut the panel as soon as it opens.
+    function onScrollOrResize() {
+      if (panel.current?.contains(document.activeElement)) return
+      setOpen(false)
+    }
 
     document.addEventListener("mousedown", onPointerDown)
     document.addEventListener("keydown", onKey)
@@ -152,7 +210,7 @@ export function DatePicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={label}
-        onClick={() => setOpen(o => !o)}
+        onClick={toggle}
         className={cn(
           "flex w-full items-center justify-between gap-2 rounded-[10px] border bg-[#FAFAFF] px-3.5 py-2.5 text-left text-[14px] outline-none transition-colors",
           "focus:border-[#6655DF] focus:ring-2 focus:ring-[#6655DF]/20",
@@ -192,8 +250,28 @@ export function DatePicker({
           role="dialog"
           aria-label={label}
           style={{ position: "fixed", top: box.top, left: box.left, width: box.width }}
-          className="z-[70] rounded-[14px] border border-[#DFE2ED] bg-white shadow-[0_18px_44px_rgba(5,8,26,0.18)]"
+          // Above the dashboard's drawers and modals (z-100 to z-270), which
+          // are where most date fields live.
+          className="z-[300] rounded-[14px] border border-[#DFE2ED] bg-white shadow-[0_18px_44px_rgba(5,8,26,0.18)]"
         >
+          {typeable && (
+            <div className="px-3 pt-3">
+              <input
+                value={typed}
+                onChange={e => { setTyped(e.target.value); setTypedError("") }}
+                onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commitTyped() } }}
+                inputMode="numeric"
+                placeholder="Type DD/MM/YYYY and press Enter"
+                aria-label={`${label}, typed as DD/MM/YYYY`}
+                aria-invalid={!!typedError}
+                className={cn(
+                  "w-full rounded-[8px] border bg-[#FAFAFF] px-3 py-2 text-[13px] text-[#171C35] outline-none placeholder:text-[#8A90A6] focus:border-[#6655DF] transition-colors",
+                  typedError ? "border-red-300" : "border-[#DFE2ED]",
+                )}
+              />
+              {typedError && <p className="mt-1 text-[11px] text-red-500">{typedError}</p>}
+            </div>
+          )}
           <Calendar
             mode="single"
             selected={selected ?? undefined}
@@ -205,13 +283,28 @@ export function DatePicker({
               ...(minDate ? [{ before: minDate }] : []),
               ...(maxDate ? [{ after: maxDate }] : []),
             ]}
-            onSelect={day => {
-              if (!day) return
-              onChange(toISODate(day))
-              setOpen(false)
-              trigger.current?.focus()
-            }}
+            onSelect={day => { if (day) pick(toISODate(day)) }}
           />
+          {footer && (
+            <div className="flex items-center justify-between border-t border-[#F0EFFA] px-3 py-2">
+              <button
+                type="button"
+                onClick={() => pick(toISODate(today))}
+                disabled={!inRange(today)}
+                className="text-[12px] font-bold text-[#6655DF] hover:text-[#2C2368] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={() => pick("")}
+                disabled={!value}
+                className="text-[12px] font-semibold text-[#8A90A6] hover:text-rose-600 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Clear
+              </button>
+            </div>
+          )}
         </div>,
         document.body,
       )}

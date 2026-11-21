@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { getCareerBySlug } from "@/services/career.service"
+import { isCareerClosed } from "@/lib/career-closing"
 import { createCareerApplication } from "@/services/career.application.service"
 import { isUploadThingUrl } from "@/lib/upload-url"
 
@@ -30,6 +31,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
     const career = await getCareerBySlug(slug)
     if (!career || career.status !== "PUBLISHED") {
       return NextResponse.json({ error: "Career posting not found." }, { status: 404 })
+    }
+    if (isCareerClosed(career.closingDate)) {
+      return NextResponse.json({ error: "This posting has closed and is no longer taking applications." }, { status: 410 })
     }
 
     const body   = await req.json()

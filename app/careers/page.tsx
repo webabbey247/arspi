@@ -8,7 +8,7 @@ import PageHero from "@/components/sections/PageHero"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type CareerType      = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY"
+type CareerType      = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY" | "VOLUNTEER"
 type ExperienceLevel = "ENTRY" | "JUNIOR" | "MID" | "SENIOR" | "LEAD" | "EXECUTIVE"
 
 type PublicCareer = {
@@ -35,6 +35,7 @@ const TYPE_LABEL: Record<CareerType, string> = {
   CONTRACT:   "Contract",
   INTERNSHIP: "Internship",
   TEMPORARY:  "Temporary",
+  VOLUNTEER:  "Volunteer",
 }
 
 const LEVEL_LABEL: Record<ExperienceLevel, string> = {

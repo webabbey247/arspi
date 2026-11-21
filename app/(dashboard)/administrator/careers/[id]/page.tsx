@@ -21,7 +21,7 @@ type Applicant = {
   createdAt:      string
 }
 
-type CareerType      = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY"
+type CareerType      = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY" | "VOLUNTEER"
 type ExperienceLevel = "ENTRY" | "JUNIOR" | "MID" | "SENIOR" | "LEAD" | "EXECUTIVE"
 type CareerStatus    = "PUBLISHED" | "ARCHIVED"
 
@@ -51,7 +51,7 @@ type Career = {
 }
 
 const TYPE_LABELS: Record<CareerType, string> = {
-  FULL_TIME: "Full-time", PART_TIME: "Part-time", CONTRACT: "Contract", INTERNSHIP: "Internship", TEMPORARY: "Temporary",
+  FULL_TIME: "Full-time", PART_TIME: "Part-time", CONTRACT: "Contract", INTERNSHIP: "Internship", TEMPORARY: "Temporary", VOLUNTEER: "Volunteer",
 }
 const LEVEL_LABELS: Record<ExperienceLevel, string> = {
   ENTRY: "Entry", JUNIOR: "Junior", MID: "Mid-Level", SENIOR: "Senior", LEAD: "Lead", EXECUTIVE: "Executive",

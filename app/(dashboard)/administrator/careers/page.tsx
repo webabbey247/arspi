@@ -4,12 +4,9 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { useForm, Controller, type Resolver } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { DatePicker, toISODate } from "@/components/ui/DatePicker"
 import dynamic from "next/dynamic"
-import { cn } from "@/lib/utils"
+import { isCareerClosed } from "@/lib/career-closing"
 import { TableSkeletonRows, SkeletonCardList } from "@/components/ui/skeleton"
 import { AdminPageHeader, RowActions, RowIcon, StatTile } from "@/components/admin/AdminKit"
 import { useRouter } from "next/navigation"
@@ -28,7 +25,7 @@ type Department = {
   createdAt: string
 }
 
-type CareerType      = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY"
+type CareerType      = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY" | "VOLUNTEER"
 type ExperienceLevel = "ENTRY" | "JUNIOR" | "MID" | "SENIOR" | "LEAD" | "EXECUTIVE"
 type CareerStatus    = "PUBLISHED" | "ARCHIVED"
 
@@ -63,6 +60,7 @@ const TYPE_LABELS: Record<CareerType, string> = {
   CONTRACT:   "Contract",
   INTERNSHIP: "Internship",
   TEMPORARY:  "Temporary",
+  VOLUNTEER:  "Volunteer",
 }
 
 const LEVEL_LABELS: Record<ExperienceLevel, string> = {
@@ -198,7 +196,7 @@ const careerSchema = yup.object({
                       .matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Lowercase, numbers and hyphens only")
                       .required("Slug is required"),
   department:      yup.string().trim().min(1).max(120).required("Department is required"),
-  type:            yup.string().oneOf(["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP", "TEMPORARY"] as const).required(),
+  type:            yup.string().oneOf(["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP", "TEMPORARY", "VOLUNTEER"] as const).required(),
   experienceLevel: yup.string().oneOf(["ENTRY", "JUNIOR", "MID", "SENIOR", "LEAD", "EXECUTIVE"] as const).required(),
   location:        yup.string().trim().min(1).max(120).required("Location is required"),
   remote:          yup.boolean().required().default(false),
@@ -324,7 +322,6 @@ function CareerDrawer({
   onSave: (values: CareerFormValues) => Promise<void>
   onClose: () => void
 }) {
-  const [dateOpen, setDateOpen] = useState(false)
 
   const {
     register,
@@ -518,33 +515,22 @@ function CareerDrawer({
               <Controller
                 name="closingDate"
                 control={control}
-                render={({ field }) => {
-                  const selected = field.value ? new Date(field.value + "T00:00:00") : undefined
-                  return (
-                    <Popover open={dateOpen} onOpenChange={setDateOpen}>
-                      <PopoverTrigger asChild>
-                        <button
-                          type="button"
-                          className={cn(inputCls, "flex items-center gap-2 text-left w-full", !field.value && "text-[#8A90A6]")}
-                        >
-                          <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-[#8A90A6]" />
-                          {selected ? format(selected, "dd MMM yyyy") : "Pick a date"}
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={selected}
-                          onSelect={(date) => {
-                            field.onChange(date ? format(date, "yyyy-MM-dd") : "")
-                            setDateOpen(false)
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  )
-                }}
+                render={({ field }) => (
+                  <DatePicker
+                    label="Closing date"
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="No closing date"
+                    triggerClassName="py-2 text-[13px] bg-white"
+                    typeable
+                    footer
+                    // New dates can't be in the past. An expired posting's
+                    // saved date still shows and saves unchanged.
+                    min={toISODate(new Date())}
+                  />
+                )}
               />
+              <p className="text-[11px] text-[#8A90A6] mt-0.5">Last day to apply. Leave empty to keep it open.</p>
             </Field>
           </div>
         </form>
@@ -926,6 +912,7 @@ export default function AdminCareersPage() {
                         <span className={`w-1.5 h-1.5 rounded-full ${career.status === "PUBLISHED" ? "bg-emerald-500" : "bg-amber-400"}`} />
                         {career.status === "PUBLISHED" ? "Published" : "Archived"}
                       </span>
+                      {isCareerClosed(career.closingDate) && <span title="Past its closing date: hidden from the public careers page" className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">Closed</span>}
                     </td>
                     <td className="px-4 py-3">
                       <RowActions
@@ -974,6 +961,7 @@ export default function AdminCareersPage() {
                     <span className={`w-1.5 h-1.5 rounded-full ${career.status === "PUBLISHED" ? "bg-emerald-500" : "bg-amber-400"}`} />
                     {career.status === "PUBLISHED" ? "Published" : "Archived"}
                   </span>
+                  {isCareerClosed(career.closingDate) && <span title="Past its closing date: hidden from the public careers page" className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">Closed</span>}
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700">
                     {TYPE_LABELS[career.type]}
                   </span>

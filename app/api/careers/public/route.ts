@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { unstable_cache } from "next/cache"
 import { getCareers } from "@/services/career.service"
+import { isCareerClosed } from "@/lib/career-closing"
 import { CAREERS_PUBLIC_TAG, PUBLIC_REVALIDATE_SECONDS } from "@/lib/public-cache"
 
 /** The finished public payload, cached under CAREERS_PUBLIC_TAG (cleared on
@@ -33,7 +34,10 @@ const getPublicCareers = unstable_cache(async () => {
 /** GET /api/careers/public — list published career postings */
 export async function GET() {
   try {
-    return NextResponse.json({ careers: await getPublicCareers() })
+    // Filtered per request, outside the cache, so a posting drops off as soon
+    // as its closing date passes rather than when the cache next refreshes.
+    const careers = (await getPublicCareers()).filter(c => !isCareerClosed(c.closingDate))
+    return NextResponse.json({ careers })
   } catch (error) {
     console.error("[GET /api/careers/public]", error)
     return NextResponse.json({ error: "Something went wrong." }, { status: 500 })

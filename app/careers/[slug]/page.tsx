@@ -5,8 +5,9 @@ import { getCareerBySlug } from "@/services/career.service"
 import withLayout from "@/hooks/useLayout"
 import ApplyCTA from "./ApplyCTA"
 import { sanitizeHtml } from "@/lib/sanitize"
+import { isCareerClosed } from "@/lib/career-closing"
 
-type CareerType      = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY"
+type CareerType      = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY" | "VOLUNTEER"
 type ExperienceLevel = "ENTRY" | "JUNIOR" | "MID" | "SENIOR" | "LEAD" | "EXECUTIVE"
 
 const TYPE_LABEL: Record<CareerType, string> = {
@@ -15,6 +16,7 @@ const TYPE_LABEL: Record<CareerType, string> = {
   CONTRACT:   "Contract",
   INTERNSHIP: "Internship",
   TEMPORARY:  "Temporary",
+  VOLUNTEER:  "Volunteer",
 }
 
 const LEVEL_LABEL: Record<ExperienceLevel, string> = {
@@ -56,6 +58,7 @@ const CareerDetailPage = async ({
   const requirements     = asStringArray(career.requirements)
   const benefits         = asStringArray(career.benefits)
   const salary           = fmtSalary(career.salaryMin, career.salaryMax, career.currency)
+  const closed           = isCareerClosed(career.closingDate)
 
   return (
     <div className="bg-[#F7F9FC] min-h-screen w-full">
@@ -148,6 +151,7 @@ const CareerDetailPage = async ({
                 slug:  career.slug,
                 title: career.title,
               }}
+              closed={closed}
             />
 
             {/* Meta */}
@@ -182,7 +186,7 @@ const CareerDetailPage = async ({
                 <div className="flex items-start gap-3">
                   <Calendar className="h-4 w-4 text-[#0474C4] mt-0.5 shrink-0" />
                   <div className="flex flex-col leading-tight">
-                    <span className="font-body text-[0.6875rem] tracking-[0.06em] uppercase font-medium text-slate-400">Closing date</span>
+                    <span className="font-body text-[0.6875rem] tracking-[0.06em] uppercase font-medium text-slate-400">{closed ? "Closed on" : "Closing date"}</span>
                     <span className="font-body text-[0.875rem] font-medium text-ink">{fmtDate(career.closingDate)}</span>
                   </div>
                 </div>

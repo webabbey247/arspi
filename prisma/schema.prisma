@@ -1103,6 +1103,7 @@ enum CareerType {
   CONTRACT
   INTERNSHIP
   TEMPORARY
+  VOLUNTEER
 }
 
 enum ExperienceLevel {
