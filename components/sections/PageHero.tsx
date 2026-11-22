@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import { programCountLabel } from "@/lib/program-count"
 
 type PageHeroProps = {
   /** Small uppercase kicker shown above the headline. e.g. "Get in Touch" */
@@ -16,6 +17,8 @@ type PageHeroProps = {
   pageType:       string
   /** Path to the right-side hero image. */
   imageUrl:       string
+  /** Programmes page: the live count for the "Certificate Programs" stat. */
+  programCount?:  number
 }
 
 export default function PageHero({
@@ -26,6 +29,7 @@ export default function PageHero({
   description,
   pageType,
   imageUrl,
+  programCount,
 }: PageHeroProps) {
   return (
     <section className="bg-[#071639] px-4 lg:px-0 relative w-full py-24 grid lg:grid-cols-2 gap-16 items-center">
@@ -106,7 +110,7 @@ export default function PageHero({
         {pageType === "programs" && (
 <div className="flex gap-8 flex-wrap mt-8 border-t border-[#0474C4]/15">
             {[
-              { value: "40+",  label: "Certificate Programs" },
+              { value: programCountLabel(programCount), label: "Certificate Programs" },
               { value: "1–4",  label: "Months Duration" },
               { value: "100%", label: "Online & Flexible" },
               { value: "120+", label: "Countries Served" },

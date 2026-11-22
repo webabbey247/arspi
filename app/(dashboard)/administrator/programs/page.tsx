@@ -469,7 +469,6 @@ export default function AdminProgramsPage() {
 
       programLevelId:   values.programLevelId   || null,
       programFormatId:  values.programFormatId  || null,
-      programPricingId: values.programPricingId || null,
 
       tagline:        values.tagline       || null,
       duration:       values.duration      || null,

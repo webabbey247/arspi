@@ -1655,7 +1655,7 @@ export default function ProgramDetailPage() {
                         ? `$${program.price}`
                         : <span className="text-emerald-700 font-semibold">Free</span>
                     } />
-                    <InfoRow label="Pricing" value={program.programPricing?.name ?? program.pricing} />
+                    <InfoRow label="Pricing" value={program.price > 0 ? "Paid" : "Free"} />
                     <InfoRow label="Payment" value={program.paymentType} />
                     <InfoRow label="Updated" value={fmtDate(program.updatedAt)} />
                     <InfoRow label="Public page" value={

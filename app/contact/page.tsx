@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 
 import GeneralContactForm from "@/components/forms/GeneralContactForm";
 import PageHero from "@/components/sections/PageHero";
@@ -25,8 +24,8 @@ const ContactPage = () => {
 
           <div className="flex flex-col gap-2">
             <p className="font-body text-[0.9375rem] sm:text-[1rem] tracking-[-0.005em] leading-[1.7] font-normal text-[#262b40]">
-              Got a question about artful counselling that isn't in our FAQ? Or
-              have a specific question? Simply complete this form .
+              Have a question that isn&apos;t covered in our FAQ? Simply complete
+              the form below.
             </p>
           </div>
 

@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react";
+import StrategicAdvantages from "@/components/sections/StrategicAdvantages"
+import { programCountLabel } from "@/lib/program-count"
 import withLayout from "@/hooks/useLayout";
 import { CalendarHeart, ChevronLeft, ChevronRight, TargetIcon } from "lucide-react";
 import Image from "next/image";
@@ -127,6 +129,8 @@ export type HomeInitialData = {
   insights:  PublicInsight[] | null
   workshops: PublicWorkshop[] | null
   programs:  PublicProgram[] | null
+  /** Published programmes in total (programs above is only the first six). */
+  programCount?: number | null
 }
 
 const HomePage = ({ initial }: { initial?: HomeInitialData }) => {
@@ -281,7 +285,7 @@ const HomePage = ({ initial }: { initial?: HomeInitialData }) => {
             </div>
             <div>
               <div className="font-heading text-[1.375rem] sm:text-[1.5rem] md:text-[1.75rem] tracking-[-0.01em] leading-[1.1] font-semibold text-[#0474C4] block mb-1">
-                40+
+                {programCountLabel(initial?.programCount)}
               </div>
               <div className="font-body text-[0.625rem] sm:text-[0.6875rem] tracking-[0.07em] uppercase font-medium text-[#EBF3FC]">
                 Certifications
@@ -383,6 +387,9 @@ const HomePage = ({ initial }: { initial?: HomeInitialData }) => {
           </div>
         </div>
       </section>
+
+      {/* ============ STRATEGIC ADVANTAGES (shared with /about) ============ */}
+      <StrategicAdvantages layout="split" className="pt-0 sm:pt-0 md:pt-0 lg:pt-0" />
 
       {/* ============ SOFTWARE SECTION ============ */}
       <section className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F7F3ED]/50 grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 lg:gap-24 items-center w-full">

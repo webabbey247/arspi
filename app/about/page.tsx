@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import PageHero from "@/components/sections/PageHero";
+import StrategicAdvantages from "@/components/sections/StrategicAdvantages";
 
 export const metadata: Metadata = { title: "About Us" };
 
@@ -105,36 +106,7 @@ const AboutPage = () => {
    </div>
   </div>
 
-    <div className="flex flex-col gap-3 sm:gap-4">
-          <p className="font-body text-[0.6875rem] sm:text-[0.75rem] tracking-[0.07em] uppercase font-medium text-[#0474C4]">
-           Strategic Advantages
-          </p>
-
-          <h2 className="font-heading text-[1.5rem] sm:text-[1.625rem] md:text-[1.75rem] tracking-[-0.01em] leading-tight font-semibold text-[#071639]">
-          Why ARPS Institute
-          </h2>
-
-          <div className="mt-6 sm:mt-8 flex flex-col gap-px bg-slate-200 border border-slate-200 ">
-            {[
-              "Growing global demand for professional certification programs",
-              "Rising interest in research methodology training worldwide",
-              "Expanding need for monitoring, evaluation, and policy research services",
-              "Rapid growth of online professional education platforms",
-              "Growing demand for digital management and analytics platforms",
-              "Increasing recognition of participatory and community-engaged research",
-            ].map((item) => (
-              <div
-                key={item}
-                className="bg-white py-3.5 sm:py-4 md:py-[1.2rem] px-4 sm:px-5 md:px-6 flex items-center gap-3 sm:gap-3.5 transition-colors duration-200"
-              >
-                <span className="w-2 h-2 rounded-full bg-[#0474C4] shrink-0" />
-                <span className="font-body text-[0.8125rem] sm:text-[0.875rem] tracking-[0em] leading-[1.6] font-normal text-slate-600">
-                  {item}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+    <StrategicAdvantages />
 </section>
 
 {/* ============ VISION & MISSION SECTION ============ */}

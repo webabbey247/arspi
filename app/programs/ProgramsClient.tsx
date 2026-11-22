@@ -100,11 +100,17 @@ function toggleIn<T extends string>(arr: T[], value: T): T[] {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
+const PRICE_BUCKETS = [
+  { id: "free", label: "Free" },
+  { id: "paid", label: "Paid" },
+] as const
+
+const priceBucket = (p: PublicProgram) => (p.price > 0 ? "paid" : "free")
+
 /** Catalogue data the server page already loaded; null means fetch it here. */
 export type ProgramsInitialData = {
   programs: PublicProgram[]
   levels:   ProgramLookup[]
-  pricing:  ProgramLookup[]
 } | null
 
 const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
@@ -113,9 +119,8 @@ const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
   const [page, setPage]         = React.useState(1);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
 
-  // Lookup-table options (Levels / Pricing tabs in admin)
-  const [levelOptionsList,   setLevelOptionsList]   = React.useState<ProgramLookup[]>(initial?.levels ?? [])
-  const [pricingOptionsList, setPricingOptionsList] = React.useState<ProgramLookup[]>(initial?.pricing ?? [])
+  // Lookup-table options (Levels tab in admin)
+  const [levelOptionsList, setLevelOptionsList] = React.useState<ProgramLookup[]>(initial?.levels ?? [])
   const [needsFetch] = React.useState(!initial)
 
   // Filter state — store ids for managed lookups
@@ -129,7 +134,6 @@ const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
     Promise.all([
       getPrograms().then(setPrograms).catch(() => setPrograms([])),
       getProgramLookups("levels").then(setLevelOptionsList).catch(() => setLevelOptionsList([])),
-      getProgramLookups("pricing").then(setPricingOptionsList).catch(() => setPricingOptionsList([])),
     ]).finally(() => setLoading(false));
   }, [needsFetch]);
 
@@ -155,13 +159,15 @@ const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
     [levelOptionsList, programs],
   );
 
+  // Free / Paid from each programme's actual price, not the hand-set pricing
+  // tag (which can disagree with the price, or be missing), so the counts
+  // always add up to the number of programmes. Options with nothing in them
+  // are hidden.
   const priceOptions = React.useMemo(
-    () => pricingOptionsList.map(o => ({
-      id:    o.id,
-      label: o.name,
-      count: programs.filter(p => p.programPricing?.id === o.id).length,
-    })),
-    [pricingOptionsList, programs],
+    () => PRICE_BUCKETS
+      .map(b => ({ id: b.id, label: b.label, count: programs.filter(p => priceBucket(p) === b.id).length }))
+      .filter(o => o.count > 0),
+    [programs],
   );
 
   const hasActiveFilter =
@@ -177,7 +183,7 @@ const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
   function passesFilters(p: PublicProgram): boolean {
     return (categoryFilter.length === 0 || (!!p.category       && categoryFilter.includes(p.category.id)))
       && (levelFilter.length    === 0   || (!!p.programLevel   && levelFilter.includes(p.programLevel.id)))
-      && (priceFilter.length    === 0   || (!!p.programPricing && priceFilter.includes(p.programPricing.id)))
+      && (priceFilter.length    === 0   || priceFilter.includes(priceBucket(p)))
   }
 
   const filtered   = programs.filter(passesFilters)
@@ -198,11 +204,12 @@ const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
       <PageHero
         tagline="Professional Certificate Academy"
         captionTextOne="Build "
-        highlightText="Expert Sessions"
+        highlightText="Expert Skills."
         captionTextTwo="Earn a Global Certificate"
         description="Short-term professional certification programs — typically 1 to 4 months — combining theoretical knowledge with applied learning across six key discipline areas."
         pageType="programs"
         imageUrl="/images/about-arps.webp"
+        programCount={programs.length}
       />
 
       {/* How it works — process flow */}

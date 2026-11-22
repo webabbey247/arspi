@@ -10,12 +10,11 @@ export const revalidate = 300
 export default async function ProgramsPage() {
   let initial: ProgramsInitialData = null
   try {
-    const [programs, levels, pricing] = await Promise.all([
+    const [programs, levels] = await Promise.all([
       getPublicProgramsPayload({}),
       getPublicLookupItems("levels"),
-      getPublicLookupItems("pricing"),
     ])
-    initial = { programs, levels: levels ?? [], pricing: pricing ?? [] }
+    initial = { programs, levels: levels ?? [] }
   } catch (err) {
     // The client fetches it instead.
     console.error("[programs] initial data", err)

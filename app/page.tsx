@@ -17,9 +17,14 @@ export default async function Home() {
   const [insights, workshops, programs] = await Promise.all([
     orNull(getPublicInsightsPayload({})),
     orNull(getPublicWorkshopsPayload().then(all => selectWorkshops(all, { sort: "upcoming", limit: 6 }))),
-    orNull(getPublicProgramsPayload({}).then(all => all.slice(0, 6))),
+    orNull(getPublicProgramsPayload({})),
   ])
 
-  const initial: HomeInitialData = { insights, workshops, programs }
+  const initial: HomeInitialData = {
+    insights,
+    workshops,
+    programs:     programs?.slice(0, 6) ?? null,
+    programCount: programs?.length ?? null,
+  }
   return <HomeClient initial={initial} />
 }
