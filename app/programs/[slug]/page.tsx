@@ -5,7 +5,6 @@ import { notFound } from "next/navigation"
 import { draftMode } from "next/headers"
 import Link from "next/link"
 import Image from "next/image"
-import { programCategories } from "@/lib/data"
 import { cache } from "react"
 import {
   getProgramBySlug, getProgramCards, getPublishedProgramSlugs, getPublishedProgramFacilitators,
@@ -99,12 +98,12 @@ const DEFAULT_CAT: CatMeta = {
   id: "general", label: "Professional Development", color: "#0474C4", bg: "#EEF6FF",
 }
 
+/** The programme's category exactly as named in the admin. (This used to
+ *  fuzzy-match the name against the old fixed list in lib/data, so e.g.
+ *  "Leadership and Management" showed as "Management Sciences".) */
 function catMetaFor(name?: string | null): CatMeta {
-  if (!name) return DEFAULT_CAT
-  const match = programCategories.find(
-    (c) => c.label.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(c.id)
-  )
-  return match ?? DEFAULT_CAT
+  const label = name?.trim()
+  return label ? { ...DEFAULT_CAT, label } : DEFAULT_CAT
 }
 
 /** Fisher-Yates shuffle — used to randomize the "You May Also Like" picks. */
