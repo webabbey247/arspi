@@ -141,7 +141,6 @@ export type ProgramFormValues = {
   countriesCount: string
 
   // Lookup-table relations (parallel to the legacy fields above)
-  programLevelId:   string
   programFormatId:  string
 
   // Step 2 — Objectives
@@ -177,7 +176,7 @@ export const EMPTY_FORM: ProgramFormValues = {
   level: "BEGINNER", categoryId: "", tagline: "", featured: false, predefinedAnalytics: false,
   format: "", duration: "", durationWeeks: "", hoursPerWeek: "", startDate: "", endDate: "", cohortSize: "",
   rating: "", reviewCount: "", enrolledCount: "", countriesCount: "",
-  programLevelId: "", programFormatId: "",
+  programFormatId: "",
   overview: "", outlineIntro: "", targetAudience: [], learningObjectives: [], whatIsIncluded: [],
   // New programmes credit the institute until someone is added.
   curriculum: [], facilitators: [DEFAULT_PROGRAMME_FACILITATOR], faqs: [],
@@ -1138,7 +1137,6 @@ export function ProgramModalInner({
     reviewCount:    program.reviewCount    != null ? String(program.reviewCount)    : "",
     enrolledCount:  program.enrolledCount  != null ? String(program.enrolledCount)  : "",
     countriesCount: program.countriesCount != null ? String(program.countriesCount) : "",
-    programLevelId:   program.programLevelId   ?? "",
     programFormatId:  program.programFormatId  ?? "",
 
     gradingEnabled:          program.gradingEnabled ?? false,

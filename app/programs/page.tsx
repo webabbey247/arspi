@@ -1,5 +1,5 @@
 import ProgramsClient, { type ProgramsInitialData } from "./ProgramsClient"
-import { getPublicLookupItems, getPublicProgramsPayload } from "@/lib/public-data"
+import { getPublicProgramsPayload } from "@/lib/public-data"
 
 // Rendered on the server so the catalogue is in the first HTML (no loading
 // state, indexable). Filtering and paging stay in the browser. The data is
@@ -10,11 +10,7 @@ export const revalidate = 300
 export default async function ProgramsPage() {
   let initial: ProgramsInitialData = null
   try {
-    const [programs, levels] = await Promise.all([
-      getPublicProgramsPayload({}),
-      getPublicLookupItems("levels"),
-    ])
-    initial = { programs, levels: levels ?? [] }
+    initial = { programs: await getPublicProgramsPayload({}) }
   } catch (err) {
     // The client fetches it instead.
     console.error("[programs] initial data", err)

@@ -467,7 +467,6 @@ export default function AdminProgramsPage() {
       predefinedAnalytics: values.predefinedAnalytics,
       ...(programModal === "ai" && !editing && { status: "DRAFT" as const }),
 
-      programLevelId:   values.programLevelId   || null,
       programFormatId:  values.programFormatId  || null,
 
       tagline:        values.tagline       || null,

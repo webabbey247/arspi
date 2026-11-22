@@ -7,9 +7,7 @@ import Link from "next/link";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import {
   getPrograms,
-  getProgramLookups,
   type PublicProgram,
-  type ProgramLookup,
 } from "@/services/public-program.service";
 import PageHero from "@/components/sections/PageHero";
 
@@ -107,10 +105,16 @@ const PRICE_BUCKETS = [
 
 const priceBucket = (p: PublicProgram) => (p.price > 0 ? "paid" : "free")
 
+/** The editor's Level field: the same value the cards and programme pages show. */
+const LEVELS = [
+  { id: "BEGINNER",     label: "Beginner" },
+  { id: "INTERMEDIATE", label: "Intermediate" },
+  { id: "ADVANCED",     label: "Advanced" },
+] as const
+
 /** Catalogue data the server page already loaded; null means fetch it here. */
 export type ProgramsInitialData = {
   programs: PublicProgram[]
-  levels:   ProgramLookup[]
 } | null
 
 const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
@@ -119,8 +123,6 @@ const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
   const [page, setPage]         = React.useState(1);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
 
-  // Lookup-table options (Levels tab in admin)
-  const [levelOptionsList, setLevelOptionsList] = React.useState<ProgramLookup[]>(initial?.levels ?? [])
   const [needsFetch] = React.useState(!initial)
 
   // Filter state — store ids for managed lookups
@@ -131,14 +133,11 @@ const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
   React.useEffect(() => {
     if (!needsFetch) return;
     setLoading(true);
-    Promise.all([
-      getPrograms().then(setPrograms).catch(() => setPrograms([])),
-      getProgramLookups("levels").then(setLevelOptionsList).catch(() => setLevelOptionsList([])),
-    ]).finally(() => setLoading(false));
+    getPrograms().then(setPrograms).catch(() => setPrograms([])).finally(() => setLoading(false));
   }, [needsFetch]);
 
   // Derived filter options with counts. Counts are drawn from the loaded
-  // programs against the new managed-lookup relations (programLevel/Format/Pricing).
+  // programs themselves, so every filter adds up to the total.
   const categories = React.useMemo(() => {
     const counts = new Map<string, { label: string; count: number }>();
     for (const p of programs) {
@@ -150,13 +149,14 @@ const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
     return Array.from(counts.entries()).map(([id, { label, count }]) => ({ id, label, count }));
   }, [programs]);
 
+  // From each programme's own Level (not the old level tag, which most
+  // programmes don't have and some contradict), so the counts add up to the
+  // total. Levels with no programmes are hidden.
   const levelOptions = React.useMemo(
-    () => levelOptionsList.map(o => ({
-      id:    o.id,
-      label: o.name,
-      count: programs.filter(p => p.programLevel?.id === o.id).length,
-    })),
-    [levelOptionsList, programs],
+    () => LEVELS
+      .map(l => ({ id: l.id, label: l.label, count: programs.filter(p => p.level === l.id).length }))
+      .filter(o => o.count > 0),
+    [programs],
   );
 
   // Free / Paid from each programme's actual price, not the hand-set pricing
@@ -182,7 +182,7 @@ const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
 
   function passesFilters(p: PublicProgram): boolean {
     return (categoryFilter.length === 0 || (!!p.category       && categoryFilter.includes(p.category.id)))
-      && (levelFilter.length    === 0   || (!!p.programLevel   && levelFilter.includes(p.programLevel.id)))
+      && (levelFilter.length    === 0   || levelFilter.includes(p.level))
       && (priceFilter.length    === 0   || priceFilter.includes(priceBucket(p)))
   }
 
