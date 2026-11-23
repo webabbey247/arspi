@@ -3,6 +3,7 @@
 import * as React from "react";
 import StrategicAdvantages from "@/components/sections/StrategicAdvantages"
 import { programCountLabel } from "@/lib/program-count"
+import { cn } from "@/lib/utils"
 import withLayout from "@/hooks/useLayout";
 import { CalendarHeart, ChevronLeft, ChevronRight, TargetIcon } from "lucide-react";
 import Image from "next/image";
@@ -125,6 +126,52 @@ function InsightCard({ insight }: { insight: PublicInsight }) {
 
 /** Data the server page already loaded. A section left null (its load failed
  *  on the server) is fetched in the browser instead, as before. */
+/**
+ * Homepage hero, right half: "video" plays the promo clip, muted and looping;
+ * "image" shows the original photo. To go back to the photo, change this to
+ * "image". Nothing else needs touching.
+ */
+const HERO_BACKGROUND: "video" | "image" = "video"
+const HERO_VIDEO_URL = "https://22ief6gnpe.ufs.sh/f/swQXhLUx8k7SmCyVMK9D3jUOSy6KuzRFYo7fbQks4nWqvlxr"
+
+/** Plays the hero clip over the photo, fading in once it is actually
+ *  playing, so the photo shows while it loads and wherever it doesn't play.
+ *  It is only fetched where the right half is visible (tablet and up) and
+ *  the visitor hasn't asked for reduced motion; phones never download it. */
+function HeroVideo() {
+  const ref = React.useRef<HTMLVideoElement>(null)
+  const [playing, setPlaying] = React.useState(false)
+
+  React.useEffect(() => {
+    const video = ref.current
+    if (!video) return
+    const ok = window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)")
+    if (!ok.matches) return
+    video.preload = "auto"
+    video.play().catch(() => { /* autoplay blocked: the photo stays */ })
+  }, [])
+
+  return (
+    <video
+      ref={ref}
+      src={HERO_VIDEO_URL}
+      muted
+      loop
+      playsInline
+      preload="none"
+      aria-hidden
+      tabIndex={-1}
+      onPlaying={() => setPlaying(true)}
+      // object-right keeps the people in frame and crops the clip's own
+      // titles, which sit on its left and would compete with the headline.
+      className={cn(
+        "absolute inset-0 w-full h-full object-cover object-right transition-opacity duration-700",
+        playing ? "opacity-[0.8]" : "opacity-0",
+      )}
+    />
+  )
+}
+
 export type HomeInitialData = {
   insights:  PublicInsight[] | null
   workshops: PublicWorkshop[] | null
@@ -312,6 +359,7 @@ const HomePage = ({ initial }: { initial?: HomeInitialData }) => {
               loading="eager"
               className="w-full h-full object-cover opacity-[0.65] filter-[grayscale(15%)] block"
             />
+            {HERO_BACKGROUND === "video" && <HeroVideo />}
             <div
               className="absolute inset-0"
               style={{
@@ -732,14 +780,21 @@ const HomePage = ({ initial }: { initial?: HomeInitialData }) => {
         id="research-highlight"
       >
         <div className="relative w-full">
-          <iframe
-            className="w-full aspect-video lg:aspect-4/3 rounded-sm block opacity-70"
-            src="https://www.youtube.com/embed/zlRl8sJU_4I?si=wIGyhgKvevZC22vc"
-            title="YouTube video player"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerPolicy="strict-origin-when-cross-origin"
-            allowFullScreen
-          />
+          {/* Hosted on UploadThing (16 MB, 1080p, 46 s). 16:9 to match the
+              video, so its on-screen text isn't cropped. preload="metadata"
+              fetches only the header until someone presses play; the poster
+              is the opening frame. */}
+          <video
+            className="w-full aspect-video rounded-sm block bg-[#071639] object-cover"
+            src="https://22ief6gnpe.ufs.sh/f/swQXhLUx8k7SzWD5QqfxuPmTBjUOl4NCvQVE0s38d1WqKrpH"
+            poster="https://22ief6gnpe.ufs.sh/f/swQXhLUx8k7SB5tSurPhCY1SXp4MEqIoxDbfaPnrW0TVjGK2"
+            controls
+            playsInline
+            preload="metadata"
+            aria-label="Research Training at ARPS Institute"
+          >
+            Your browser can&apos;t play this video.
+          </video>
         </div>
 
         <div className="w-full">
