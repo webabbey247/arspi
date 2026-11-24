@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react";
-import StrategicAdvantages from "@/components/sections/StrategicAdvantages"
+import VideoLightbox from "@/components/sections/VideoLightbox"
 import { programCountLabel } from "@/lib/program-count"
+import { fmtTotalHours, fmtWeeks } from "@/lib/program-duration"
 import { cn } from "@/lib/utils"
 import withLayout from "@/hooks/useLayout";
-import { CalendarHeart, ChevronLeft, ChevronRight, TargetIcon } from "lucide-react";
+import { CalendarHeart, ChevronLeft, ChevronRight, Clock, TargetIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { getInsights, type PublicInsight } from "@/services/public-insight.service";
@@ -26,6 +27,8 @@ function renderProgramCard(
     .join("")
   const price = prog.price > 0 ? `$${prog.price.toLocaleString()}` : "Free"
   const level = prog.level.charAt(0) + prog.level.slice(1).toLowerCase()
+  const weeks = fmtWeeks(prog.weeks)
+  const hours = fmtTotalHours(prog.totalHours)
 
   return (
     <Link
@@ -68,14 +71,25 @@ function renderProgramCard(
           {prog.title}
         </h3>
 
-        <div className="flex gap-[1.2rem] items-center">
-          {prog.duration && (
-            <span className="flex items-center capitalize gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
-              <CalendarHeart className="w-3.5 h-3.5 opacity-50" />
-              {`${prog.duration} ${prog.duration > "1" ? "weeks" : "week"}`}
-            </span>
+        <div className="flex flex-wrap gap-x-[1.2rem] gap-y-1.5 items-center">
+          {weeks && (
+            <>
+              <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
+                <CalendarHeart className="w-3.5 h-3.5 opacity-50" />
+                {weeks}
+              </span>
+              <span className="w-0.75 h-0.75 rounded-full bg-slate-400/30" />
+            </>
           )}
-          {prog.duration && <span className="w-0.75 h-0.75 rounded-full bg-slate-400/30" />}
+          {hours && (
+            <>
+              <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light" title="Estimated total study time">
+                <Clock className="w-3.5 h-3.5 opacity-50" />
+                {hours}
+              </span>
+              <span className="w-0.75 h-0.75 rounded-full bg-slate-400/30" />
+            </>
+          )}
           <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
             <TargetIcon className="w-3.5 h-3.5 opacity-50" />
             {level}
@@ -128,10 +142,13 @@ function InsightCard({ insight }: { insight: PublicInsight }) {
  *  on the server) is fetched in the browser instead, as before. */
 /**
  * Homepage hero, right half: "video" plays the promo clip, muted and looping;
- * "image" shows the original photo. To go back to the photo, change this to
- * "image". Nothing else needs touching.
+ * "image" shows the original photo. Switched back to the photo on
+ * 2026-11-24; the same clip now plays from the About section's play button.
+ * Change this to "video" to bring the moving hero back.
  */
-const HERO_BACKGROUND: "video" | "image" = "video"
+type HeroBackground = "video" | "image"
+// `as` keeps the type wide, so the check below compiles whichever is set.
+const HERO_BACKGROUND = "image" as HeroBackground
 const HERO_VIDEO_URL = "https://22ief6gnpe.ufs.sh/f/swQXhLUx8k7SmCyVMK9D3jUOSy6KuzRFYo7fbQks4nWqvlxr"
 
 /** Plays the hero clip over the photo, fading in once it is actually
@@ -425,6 +442,9 @@ const HomePage = ({ initial }: { initial?: HomeInitialData }) => {
             className="w-full aspect-4/3 object-cover rounded-xs block"
           />
           <div className="absolute inset-0 border border-border rounded-xs pointer-events-none"></div>
+          <div className="absolute inset-3 sm:inset-4">
+            <VideoLightbox src={HERO_VIDEO_URL} title="About ARPS Institute" />
+          </div>
           <div className="absolute -bottom-2 -left-2 bg-[#0B1625] text-[#D4BA85] py-3 px-4 sm:py-4 sm:px-5 md:py-5 md:px-6">
             <span className="font-heading text-[1.5rem] sm:text-[1.75rem] md:text-[2rem] font-normal leading-none block">
               120+
@@ -435,9 +455,6 @@ const HomePage = ({ initial }: { initial?: HomeInitialData }) => {
           </div>
         </div>
       </section>
-
-      {/* ============ STRATEGIC ADVANTAGES (shared with /about) ============ */}
-      <StrategicAdvantages layout="split" className="pt-0 sm:pt-0 md:pt-0 lg:pt-0" />
 
       {/* ============ SOFTWARE SECTION ============ */}
       <section className="py-12 sm:py-16 md:py-20 lg:py-28 px-4 sm:px-6 md:px-10 lg:px-16 xl:px-20 bg-[#F7F3ED]/50 grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10 lg:gap-24 items-center w-full">

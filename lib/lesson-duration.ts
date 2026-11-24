@@ -75,6 +75,18 @@ export function isAuthoredDuration(lesson: DurationLesson): boolean {
   return Number.isFinite(authored) && authored > 0
 }
 
+/** Estimated minutes for a whole programme: every lesson in every chapter of
+ *  the stored `Course.curriculum` JSON. 0 when it has no lessons. */
+export function curriculumMinutes(curriculum: unknown): number {
+  if (!Array.isArray(curriculum)) return 0
+  let total = 0
+  for (const chapter of curriculum as { lessons?: unknown }[]) {
+    if (!Array.isArray(chapter?.lessons)) continue
+    for (const lesson of chapter.lessons as DurationLesson[]) total += estimateLessonMinutes(lesson)
+  }
+  return total
+}
+
 export function fmtMins(total: number): string {
   if (total < 60) return `${total}min`
   const h = Math.floor(total / 60)

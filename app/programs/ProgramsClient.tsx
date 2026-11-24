@@ -4,7 +4,8 @@ import * as React from "react";
 import withLayout from "@/hooks/useLayout";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import { CalendarHeart, ChevronDown, SlidersHorizontal } from "lucide-react";
+import { fmtTotalHours, fmtWeeks } from "@/lib/program-duration";
 import {
   getPrograms,
   type PublicProgram,
@@ -443,15 +444,24 @@ const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
                           </p>
               
 
-                        <div className="flex gap-[1.2rem] items-center mt-4">
-                          {prog.duration && (
+                        <div className="flex flex-wrap gap-x-[1.2rem] gap-y-1.5 items-center mt-4">
+                          {fmtWeeks(prog.weeks) && (
                             <>
                               <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light">
+                                <CalendarHeart className="w-3.5 h-3.5 opacity-50" />
+                                {fmtWeeks(prog.weeks)}
+                              </span>
+                              <span className="w-0.75 h-0.75 rounded-full bg-slate-400/30" />
+                            </>
+                          )}
+                          {fmtTotalHours(prog.totalHours) && (
+                            <>
+                              <span className="flex items-center gap-1.25 text-[0.78rem] text-[#637AA3] font-light" title="Estimated total study time">
                                 <svg className="w-3.5 h-3.5 opacity-50" viewBox="0 0 16 16" fill="none">
                                   <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2" />
                                   <path d="M8 5v3.5l2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                                 </svg>
-                                {prog.duration.length > 1 ? `${prog.duration} hrs` : `${prog.duration} hr`}
+                                {fmtTotalHours(prog.totalHours)}
                               </span>
                               <span className="w-0.75 h-0.75 rounded-full bg-slate-400/30" />
                             </>

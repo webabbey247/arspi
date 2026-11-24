@@ -13,6 +13,10 @@ export type PublicProgram = {
   createdAt:   string
   tagline:     string | null
   duration:    string | null
+  /** Weeks, read from the duration text. */
+  weeks:       number | null
+  /** Estimated total study hours across the whole curriculum. */
+  totalHours:  number | null
   format:      string | null
   startDate:   string | null
   rating:      number | null

@@ -1,5 +1,7 @@
 import "server-only"
 import { unstable_cache } from "next/cache"
+import { parseDuration } from "@/lib/program-duration"
+import { curriculumMinutes } from "@/lib/lesson-duration"
 import { getProgramsForListing, PROGRAMS_PUBLIC_TAG, type CourseLevel } from "@/services/program.service"
 import { getWorkshops, computeDurationHours, normalizeFacilitators } from "@/services/workshop.service"
 import { getInsightsForListing, INSIGHTS_PUBLIC_TAG, type InsightListingRow } from "@/services/insight.service"
@@ -18,6 +20,9 @@ import { getProgramLevels, getProgramFormats, getProgramPricings } from "@/servi
 
 export type ProgramListingFilters = { level?: CourseLevel; featured?: boolean; categoryId?: string }
 
+/** Whole hours, at least 1; null when there is no curriculum to measure. */
+const hoursFromMinutes = (mins: number) => (mins > 0 ? Math.max(1, Math.round(mins / 60)) : null)
+
 /** 60s revalidate; invalidated on programme, category or lookup changes. */
 export const getPublicProgramsPayload = unstable_cache(
   async (filters: ProgramListingFilters) => {
@@ -35,6 +40,8 @@ export const getPublicProgramsPayload = unstable_cache(
       featured:    p.featured,
       tagline:     p.tagline,
       duration:    p.duration,
+      weeks:       Number(parseDuration(p.duration).weeks) || null,
+      totalHours:  hoursFromMinutes(curriculumMinutes(p.curriculum)),
       format:      p.format,
       startDate:   p.startDate,
       endDate:     p.endDate,
@@ -53,7 +60,7 @@ export const getPublicProgramsPayload = unstable_cache(
       programPricing: p.programPricing,
     }))
   },
-  ["programs:public:v1"],
+  ["programs:public:v2"], // v2: adds weeks + totalHours
   { tags: [PROGRAMS_PUBLIC_TAG], revalidate: 60 },
 )
 

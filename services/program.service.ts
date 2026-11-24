@@ -305,6 +305,7 @@ export type ProgramListingRow = {
   featured:    boolean
   tagline:     string | null
   duration:    string | null
+  curriculum:  unknown
   format:      string | null
   startDate:   string | null
   endDate:     string | null
@@ -487,6 +488,9 @@ export async function getProgramsForListing(filters?: {
       rating:      true,
       reviewCount: true,
       createdAt:   true,
+      // Only to total up study hours in the cached public payload; the
+      // payload itself never includes it.
+      curriculum:  true,
       instructor: {
         select: {
           email:   true,
