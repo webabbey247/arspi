@@ -4,8 +4,8 @@
  *  Nothing in the schema records how long a lesson actually takes — there is no
  *  playback tracking and no authored runtime — so a time here is modelled from
  *  the content: reading speed for prose, a flat allowance per video, quiz or
- *  assignment. Always present these as estimates ("~"), never as measured
- *  durations, and prefer an author's own figure when one exists.
+ *  assignment. Shown as plain times, without a "~" prefix (the owner's call,
+ *  2026-11-24). Prefer an author's own figure when one exists.
  */
 
 export type DurationBlock = {
@@ -69,7 +69,7 @@ export function estimateLessonMinutes(lesson: DurationLesson): number {
 }
 
 /** True when the figure came from an author rather than from the content
- *  model — lets the UI drop the "~" where it would be misleading. */
+ *  model. */
 export function isAuthoredDuration(lesson: DurationLesson): boolean {
   const authored = Number(lesson.estimatedMinutes)
   return Number.isFinite(authored) && authored > 0

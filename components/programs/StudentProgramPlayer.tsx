@@ -513,7 +513,7 @@ export default function StudentProgramPlayer({ slug, preview }: { slug: string; 
                     <span className="line-clamp-2">Section {ci + 1}: {chapter.title}</span>
                   </span>
                   <span className="block text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6] mt-1">
-                    {doneCount} / {lessons.length} · ~{fmtMins(minutes)}
+                    {doneCount} / {lessons.length} · {fmtMins(minutes)}
                   </span>
                 </span>
                 {unlocked && (
@@ -561,7 +561,7 @@ export default function StudentProgramPlayer({ slug, preview }: { slug: string; 
                           </span>
                           <span className="flex items-center gap-1 text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6] mt-1">
                             <span className="shrink-0">{KIND_ICON[kind]}</span>
-                            ~{fmtMins(mins)}
+                            {fmtMins(mins)}
                           </span>
                         </span>
                       </button>
@@ -719,7 +719,7 @@ export default function StudentProgramPlayer({ slug, preview }: { slug: string; 
                       </p>
                       <span className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full bg-white/18 text-white text-[11px] tracking-[0.12em] uppercase font-extrabold backdrop-blur-sm">
                         {KIND_ICON[lessonKind(selected.lesson)]}
-                        {KIND_LABEL[lessonKind(selected.lesson)]} · ~{fmtMins(estimateLessonMinutes(selected.lesson))}
+                        {KIND_LABEL[lessonKind(selected.lesson)]} · {fmtMins(estimateLessonMinutes(selected.lesson))}
                       </span>
                     </div>
                   </div>
@@ -741,7 +741,7 @@ export default function StudentProgramPlayer({ slug, preview }: { slug: string; 
                         <span>{KIND_ICON[lessonKind(selected.lesson)]}</span>
                         {KIND_LABEL[lessonKind(selected.lesson)]}
                         <span className="text-[#D8DAE5]">·</span>
-                        ~{fmtMins(estimateLessonMinutes(selected.lesson))}
+                        {fmtMins(estimateLessonMinutes(selected.lesson))}
                       </p>
                     </div>
 
@@ -897,7 +897,7 @@ export default function StudentProgramPlayer({ slug, preview }: { slug: string; 
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
                       <StatTile label="Level"   value={LEVEL_LABELS[program.level] ?? program.level} />
                       <StatTile label="Lessons" value={totalLessons} />
-                      <StatTile label="Content" value={`~${fmtMins(totalMinutes)}`} />
+                      <StatTile label="Content" value={`${fmtMins(totalMinutes)}`} />
                       <StatTile label="Sections" value={chapters.length} />
                       {program.duration && <StatTile label="Duration" value={program.duration} />}
                       {program.format   && <StatTile label="Format"   value={program.format} />}

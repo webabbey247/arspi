@@ -372,7 +372,7 @@ export default function StudyPlanner({ slug }: { slug: string }) {
                   <Clock className="w-3.5 h-3.5" />
                   {hhmm(s.startMinute)}–{hhmm(s.endMinute)}
                   <span className="text-[#C9CCDD]">·</span>
-                  ~{fmtMins(s.estimatedMinutes)}
+                  {fmtMins(s.estimatedMinutes)}
                 </p>
                 {s.chapterTitle && (
                   <p className={cn(metaCls, "mt-1 truncate")}>{s.chapterTitle}</p>

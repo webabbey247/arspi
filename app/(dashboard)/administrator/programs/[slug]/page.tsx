@@ -695,7 +695,7 @@ export default function ProgramDetailPage() {
                     <span className="line-clamp-2">Section {ci + 1}: {chapter.title}</span>
                   </span>
                   <span className="flex items-center gap-1.5 text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6] mt-1">
-                    {lessons.length} lesson{lessons.length === 1 ? "" : "s"} · ~{fmtMins(minutes)}
+                    {lessons.length} lesson{lessons.length === 1 ? "" : "s"} · {fmtMins(minutes)}
                     {issues > 0 && (
                       <span className="text-amber-600 normal-case tracking-normal font-bold">· {issues} to fix</span>
                     )}
@@ -741,7 +741,7 @@ export default function ProgramDetailPage() {
                             {number}. {lesson.title || "Untitled lesson"}
                           </span>
                           <span className="flex items-center gap-1 text-[11px] tracking-[0.12em] uppercase font-extrabold text-[#8A90A6] mt-1">
-                            {KIND_LABEL[kind]} · {lesson.blocks?.length ?? 0} block{(lesson.blocks?.length ?? 0) === 1 ? "" : "s"} · ~{fmtMins(estimateLessonMinutes(lesson))}
+                            {KIND_LABEL[kind]} · {lesson.blocks?.length ?? 0} block{(lesson.blocks?.length ?? 0) === 1 ? "" : "s"} · {fmtMins(estimateLessonMinutes(lesson))}
                           </span>
                           {issueList.length > 0 && (
                             <span className="block text-[11px] font-bold text-amber-700 mt-1">{issueList[0]}</span>
@@ -926,7 +926,7 @@ export default function ProgramDetailPage() {
                   {lessonStage ? (
                     <span className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full bg-white/18 text-white text-[11px] tracking-[0.12em] uppercase font-extrabold backdrop-blur-sm">
                       {KIND_ICON[lessonKind(selected.lesson)]}
-                      {KIND_LABEL[lessonKind(selected.lesson)]} · ~{fmtMins(estimateLessonMinutes(selected.lesson))}
+                      {KIND_LABEL[lessonKind(selected.lesson)]} · {fmtMins(estimateLessonMinutes(selected.lesson))}
                     </span>
                   ) : program.tagline ? (
                     <p className="text-[14px] font-bold text-white/70 mt-2 max-w-2xl">{program.tagline}</p>
@@ -957,13 +957,13 @@ export default function ProgramDetailPage() {
                         <span className="text-[#D8DAE5]">·</span>
                         {selected.lesson.blocks?.length ?? 0} block{(selected.lesson.blocks?.length ?? 0) === 1 ? "" : "s"}
                         <span className="text-[#D8DAE5]">·</span>
-                        ~{fmtMins(estimateLessonMinutes(selected.lesson))}
+                        {fmtMins(estimateLessonMinutes(selected.lesson))}
                       </>
                     ) : (
                       <>
                         {lessonTotal} lesson{lessonTotal === 1 ? "" : "s"} across {chapterTotal} section{chapterTotal === 1 ? "" : "s"}
                         <span className="text-[#D8DAE5]">·</span>
-                        ~{fmtMins(totalMinutes)} of content
+                        {fmtMins(totalMinutes)} of content
                         <span className="text-[#D8DAE5]">·</span>
                         created {fmtDate(program.createdAt)}
                       </>
@@ -1139,7 +1139,7 @@ export default function ProgramDetailPage() {
                   <StatTile label="Revenue" value={program.price > 0 ? `$${revenue.toLocaleString()}` : "Free"} />
                   <StatTile label="Lessons"  value={lessonTotal} />
                   <StatTile label="Sections" value={chapterTotal} />
-                  <StatTile label="Content"  value={`~${fmtMins(totalMinutes)}`} />
+                  <StatTile label="Content"  value={`${fmtMins(totalMinutes)}`} />
                   <StatTile label="Level"    value={LEVEL_LABELS[program.level]} />
                   {program.duration && <StatTile label="Duration" value={program.duration} />}
                   {program.format   && <StatTile label="Format"   value={program.format} />}
@@ -1243,7 +1243,7 @@ export default function ProgramDetailPage() {
                         title={`Section ${ci + 1} — ${chapter.title}`}
                         aside={
                           <span className="text-[11px] font-bold text-[#8A90A6]">
-                            {lessons.length} lesson{lessons.length === 1 ? "" : "s"} · ~{fmtMins(lessons.reduce((s, l) => s + estimateLessonMinutes(l), 0))}
+                            {lessons.length} lesson{lessons.length === 1 ? "" : "s"} · {fmtMins(lessons.reduce((s, l) => s + estimateLessonMinutes(l), 0))}
                           </span>
                         }
                       >
@@ -1273,7 +1273,7 @@ export default function ProgramDetailPage() {
                                       </span>
                                     </div>
                                     <p className="text-[11.5px] text-[#8A90A6] mt-1">
-                                      {lesson.blocks?.length ?? 0} block{(lesson.blocks?.length ?? 0) === 1 ? "" : "s"} · ~{fmtMins(estimateLessonMinutes(lesson))}
+                                      {lesson.blocks?.length ?? 0} block{(lesson.blocks?.length ?? 0) === 1 ? "" : "s"} · {fmtMins(estimateLessonMinutes(lesson))}
                                     </p>
                                     {issues.length > 0 && (
                                       <p className="text-[11.5px] font-bold text-amber-700 mt-1">{issues.join(" · ")}</p>

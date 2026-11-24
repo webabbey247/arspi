@@ -29,10 +29,10 @@ export function fmtWeeks(weeks: number | null | undefined): string | null {
   return weeks && weeks > 0 ? `${weeks} week${weeks === 1 ? "" : "s"}` : null
 }
 
-/** Card label for a programme's total study time, e.g. "~93 hrs". It is
- *  estimated from the lesson content (lib/lesson-duration), hence the "~". */
+/** Card label for a programme's total study time, e.g. "93 hrs", worked out
+ *  from the lesson content (lib/lesson-duration). */
 export function fmtTotalHours(hours: number | null | undefined): string | null {
-  return hours && hours > 0 ? `~${hours} hr${hours === 1 ? "" : "s"}` : null
+  return hours && hours > 0 ? `${hours} hr${hours === 1 ? "" : "s"}` : null
 }
 
 /** "8 to 10 hours", "8-10 hrs" → "8 to 10" / "8-10". */
