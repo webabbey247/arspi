@@ -39,13 +39,16 @@ function renderProgramCard(
       data-program-card
       className={`group bg-white rounded-sm overflow-hidden border border-[#0474C4]/15 transition-all duration-300 cursor-pointer hover:-translate-y-1 shrink-0 ${extraClass}`}
     >
-      <div className="relative h-75 overflow-hidden bg-slate-100">
+      {/* 16:9 like the thumbnails (55 of 56 are 1600x900) and fitted, not
+          cropped, so the whole artwork shows. Any odd-shaped image gets navy
+          bands instead of losing its edges. No hover zoom: it would crop. */}
+      <div className="relative aspect-video overflow-hidden bg-[#0B1625]">
         <Image
           src={prog.thumbnail || "/images/dummy/course-1.jpg"}
           alt={prog.title}
-          width={600}
-          height={400}
-          className="w-full h-full object-cover transition-transform duration-400 group-hover:scale-[1.04]"
+          fill
+          sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
+          className="object-contain"
         />
         {prog.featured && (
           <span className="absolute top-3 left-3 font-body text-[0.625rem] tracking-[0.07em] uppercase font-medium bg-[#0474C4] text-white px-4 py-1.5 rounded">

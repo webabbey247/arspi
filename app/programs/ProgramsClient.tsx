@@ -409,12 +409,14 @@ const ProgramsPage = ({ initial }: { initial?: ProgramsInitialData }) => {
                       key={prog.id}
                       className="group bg-white rounded-sm overflow-hidden transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(13,27,42,0.1)]"
                     >
-                      <div className="relative aspect-16/10 overflow-hidden bg-slate-100">
+                      {/* 16:9 and fitted (not cropped) so the whole thumbnail shows. */}
+                      <div className="relative aspect-video overflow-hidden bg-[#0B1625]">
                         <Image
                           src={prog.thumbnail || "/images/dummy/course-1.jpg"}
                           alt={prog.title}
                           fill
-                          className="object-cover transition-transform duration-400 group-hover:scale-[1.04]"
+                          sizes="(min-width: 1280px) 400px, (min-width: 768px) 50vw, 100vw"
+                          className="object-contain"
                         />
                         {prog.featured && (
                           <span className="absolute top-3 left-3 bg-[#C8A96E] text-[#0D1B2A] text-[0.65rem] font-medium tracking-widest uppercase px-2.5 py-1 rounded-sm">

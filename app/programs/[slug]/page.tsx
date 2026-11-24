@@ -171,7 +171,7 @@ function ProgramMiniCard({ program }: { program: RelatedProgram }) {
     >
       <div className="relative aspect-video bg-[#EFEAE1]">
         {program.thumbnail ? (
-          <Image src={program.thumbnail} alt={program.title} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
+          <Image src={program.thumbnail} alt={program.title} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-contain bg-[#0B1625]" />
         ) : (
           <div className="absolute inset-0" style={{ background: "repeating-linear-gradient(135deg,#EFEAE1 0 8px,#E7E1D6 8px 16px)" }} />
         )}
@@ -199,9 +199,9 @@ function PurchaseCard({ prog }: { prog: PageProgram }) {
   return (
     <div className="bg-white rounded-[4px] overflow-hidden shadow-[0_24px_60px_rgba(6,28,50,0.28)] text-[#1C2430]">
       {/* Preview */}
-      <div className="relative aspect-[16/10] flex items-center justify-center" style={{ background: "repeating-linear-gradient(135deg,#E7E2D9 0 8px,#DFD9CE 8px 16px)" }}>
+      <div className="relative aspect-video flex items-center justify-center" style={{ background: "repeating-linear-gradient(135deg,#E7E2D9 0 8px,#DFD9CE 8px 16px)" }}>
         {/* Above the fold beside the hero — fetch it early, at sidebar width. */}
-        {prog.thumbnail && <Image src={prog.thumbnail} alt={prog.title} fill preload sizes="(min-width: 901px) 372px, 100vw" className="object-cover" />}
+        {prog.thumbnail && <Image src={prog.thumbnail} alt={prog.title} fill preload sizes="(min-width: 901px) 372px, 100vw" className="object-contain bg-[#0B1625]" />}
         <button
           type="button"
           className="relative z-10 w-13 h-13 rounded-full bg-white shadow-[0_6px_18px_rgba(0,0,0,0.2)] cursor-pointer text-[#0A3D6B] text-[15px] flex items-center justify-center pl-[3px]"
